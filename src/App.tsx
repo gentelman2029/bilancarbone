@@ -9,6 +9,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { DataCollection } from "./pages/DataCollection";
 import { Actions } from "./pages/Actions";
 import NotFound from "./pages/NotFound";
+import { Auth } from "./pages/Auth";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          <Route path="/auth" element={<Auth />} />
           <Route path="/" element={<Layout />}>
             <Route index element={<Index />} />
             <Route path="dashboard" element={<Dashboard />} />

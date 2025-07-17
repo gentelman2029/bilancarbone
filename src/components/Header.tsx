@@ -1,9 +1,29 @@
-import { Leaf, BarChart3, Users, Settings } from "lucide-react";
+import { Leaf, BarChart3, Users, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import type { User } from "@supabase/supabase-js";
 
 export const Header = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
   
   const navItems = [
     { path: "/", label: "Accueil", icon: Leaf },
@@ -11,6 +31,28 @@ export const Header = () => {
     { path: "/data", label: "Collecte", icon: Users },
     { path: "/actions", label: "Actions", icon: Settings },
   ];
+
+  const handleSignOut = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      navigate("/");
+      toast({
+        title: "Déconnexion réussie",
+        description: "À bientôt sur CarbonTrack !",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur de déconnexion",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <header className="bg-card border-b border-border shadow-card">
@@ -41,12 +83,40 @@ export const Header = () => {
           </nav>
 
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm">
-              Connexion
-            </Button>
-            <Button variant="eco" size="sm">
-              Essai gratuit
-            </Button>
+            {user ? (
+              <>
+                <span className="text-sm text-muted-foreground hidden md:block">
+                  {user.email}
+                </span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleSignOut}
+                  disabled={loading}
+                  className="flex items-center space-x-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Déconnexion</span>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => navigate("/auth")}
+                >
+                  Connexion
+                </Button>
+                <Button 
+                  variant="eco" 
+                  size="sm"
+                  onClick={() => navigate("/auth")}
+                >
+                  Essai gratuit
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>

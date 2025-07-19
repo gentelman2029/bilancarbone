@@ -60,9 +60,9 @@ const Index = () => {
 
               <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
                 <Button variant="hero" size="lg" asChild>
-                  <Link to="/dashboard">
+                  <Link to="/trial">
                     <BarChart3 className="w-5 h-5 mr-2" />
-                    Démarrer gratuitement
+                    Essai gratuit 14 jours
                   </Link>
                 </Button>
                 <Button variant="outline" size="lg">
@@ -197,7 +197,7 @@ const Index = () => {
 
             <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
               <Button variant="secondary" size="lg" asChild>
-                <Link to="/dashboard">
+                <Link to="/trial">
                   <CheckCircle className="w-5 h-5 mr-2" />
                   Essai gratuit 14 jours
                 </Link>

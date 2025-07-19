@@ -1,7 +1,10 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, TrendingDown, Activity, Target, Zap, Factory } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TrendingUp, TrendingDown, Activity, Target, Zap, Factory, PieChart, BarChart3, Edit, Eye, Plus, AlertTriangle, CheckCircle } from "lucide-react";
+import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line } from "recharts";
+import { Link } from "react-router-dom";
 
 export const Dashboard = () => {
   const metrics = [
@@ -39,11 +42,72 @@ export const Dashboard = () => {
     }
   ];
 
+  // Données pour les graphiques
+  const emissionsByScope = [
+    { name: "Scope 1", value: 342, color: "#059669" },
+    { name: "Scope 2", value: 445, color: "#3B82F6" },
+    { name: "Scope 3", value: 460, color: "#EF4444" }
+  ];
+
+  const monthlyEmissions = [
+    { month: "Jan", scope1: 35, scope2: 40, scope3: 38 },
+    { month: "Fév", scope1: 32, scope2: 38, scope3: 40 },
+    { month: "Mar", scope1: 30, scope2: 42, scope3: 39 },
+    { month: "Avr", scope1: 28, scope2: 37, scope3: 41 },
+    { month: "Mai", scope1: 26, scope2: 35, scope3: 38 },
+    { month: "Jun", scope1: 25, scope2: 33, scope3: 36 }
+  ];
+
+  const interpretEmissions = (total: number) => {
+    if (total > 1000) {
+      return {
+        level: "Élevé",
+        color: "text-destructive",
+        icon: AlertTriangle,
+        message: "Vos émissions sont importantes. Il est urgent de mettre en place un plan de réduction ambitieux.",
+        actions: ["Audit énergétique approfondi", "Plan de mobilité durable", "Transition énergétique"]
+      };
+    } else if (total > 500) {
+      return {
+        level: "Modéré",
+        color: "text-warning",
+        icon: Activity,
+        message: "Vos émissions sont dans la moyenne. Des actions ciblées peuvent améliorer votre performance.",
+        actions: ["Optimisation énergétique", "Sensibilisation équipes", "Mobilité douce"]
+      };
+    } else {
+      return {
+        level: "Faible",
+        color: "text-success",
+        icon: CheckCircle,
+        message: "Félicitations ! Vos émissions sont relativement faibles. Maintenez vos efforts.",
+        actions: ["Maintenir les bonnes pratiques", "Amélioration continue", "Certification environnementale"]
+      };
+    }
+  };
+
+  const interpretation = interpretEmissions(1247);
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard Carbone</h1>
-        <p className="text-muted-foreground">Vue d'ensemble de votre empreinte carbone</p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard Carbone</h1>
+          <p className="text-muted-foreground">Vue d'ensemble de votre empreinte carbone</p>
+        </div>
+        <div className="flex space-x-2">
+          <Button variant="outline" asChild>
+            <Link to="/pricing">
+              Tarification
+            </Link>
+          </Button>
+          <Button variant="eco" asChild>
+            <Link to="/data-collection">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Interpréter les résultats
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -67,6 +131,76 @@ export const Dashboard = () => {
             </div>
           </Card>
         ))}
+      </div>
+
+      {/* Interprétation des émissions */}
+      <Card className="p-6 bg-gradient-card border shadow-card mb-6">
+        <div className="flex items-center space-x-3 mb-4">
+          <interpretation.icon className={`w-6 h-6 ${interpretation.color}`} />
+          <div>
+            <h3 className="text-lg font-semibold text-foreground">Interprétation de vos émissions</h3>
+            <Badge variant={interpretation.level === "Élevé" ? "destructive" : interpretation.level === "Modéré" ? "secondary" : "default"}>
+              Niveau {interpretation.level}
+            </Badge>
+          </div>
+        </div>
+        <p className="text-muted-foreground mb-4">{interpretation.message}</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+          {interpretation.actions.map((action, index) => (
+            <div key={index} className="text-sm bg-secondary/50 rounded px-3 py-2">
+              • {action}
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Graphiques */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <Card className="p-6 bg-gradient-card border shadow-card">
+          <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center space-x-2">
+            <PieChart className="w-5 h-5 text-primary" />
+            <span>Répartition par Scope</span>
+          </h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsPieChart>
+                <Pie
+                  data={emissionsByScope}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  dataKey="value"
+                  label={({name, value}) => `${name}: ${value} tCO2e`}
+                >
+                  {emissionsByScope.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </RechartsPieChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        <Card className="p-6 bg-gradient-card border shadow-card">
+          <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center space-x-2">
+            <BarChart3 className="w-5 h-5 text-primary" />
+            <span>Évolution mensuelle</span>
+          </h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={monthlyEmissions}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="scope1" stroke="#059669" name="Scope 1" />
+                <Line type="monotone" dataKey="scope2" stroke="#3B82F6" name="Scope 2" />
+                <Line type="monotone" dataKey="scope3" stroke="#EF4444" name="Scope 3" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -98,28 +232,58 @@ export const Dashboard = () => {
         </Card>
 
         <Card className="p-6 bg-gradient-card border shadow-card">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Actions en cours</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-foreground">Actions en cours</h3>
+            <Button variant="outline" size="sm">
+              <Plus className="w-4 h-4 mr-2" />
+              Nouvelle action
+            </Button>
+          </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
-              <div>
+              <div className="flex-1">
                 <p className="font-medium text-foreground">Optimisation éclairage LED</p>
                 <p className="text-sm text-muted-foreground">Impact: -45 tCO2e/an</p>
               </div>
-              <Badge>En cours</Badge>
+              <div className="flex items-center space-x-2">
+                <Badge>En cours</Badge>
+                <Button variant="outline" size="sm">
+                  <Edit className="w-3 h-3" />
+                </Button>
+                <Button variant="outline" size="sm">
+                  <Eye className="w-3 h-3" />
+                </Button>
+              </div>
             </div>
             <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
-              <div>
+              <div className="flex-1">
                 <p className="font-medium text-foreground">Formation éco-conduite</p>
                 <p className="text-sm text-muted-foreground">Impact: -23 tCO2e/an</p>
               </div>
-              <Badge variant="secondary">Planifié</Badge>
+              <div className="flex items-center space-x-2">
+                <Badge variant="secondary">Planifié</Badge>
+                <Button variant="outline" size="sm">
+                  <Edit className="w-3 h-3" />
+                </Button>
+                <Button variant="outline" size="sm">
+                  <Eye className="w-3 h-3" />
+                </Button>
+              </div>
             </div>
             <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
-              <div>
+              <div className="flex-1">
                 <p className="font-medium text-foreground">Panneaux solaires</p>
                 <p className="text-sm text-muted-foreground">Impact: -120 tCO2e/an</p>
               </div>
-              <Badge>Terminé</Badge>
+              <div className="flex items-center space-x-2">
+                <Badge>Terminé</Badge>
+                <Button variant="outline" size="sm">
+                  <Edit className="w-3 h-3" />
+                </Button>
+                <Button variant="outline" size="sm">
+                  <Eye className="w-3 h-3" />
+                </Button>
+              </div>
             </div>
           </div>
         </Card>

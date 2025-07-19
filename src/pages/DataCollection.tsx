@@ -113,6 +113,7 @@ export const DataCollection = () => {
       spain: 0.256,
       italy: 0.315,
       poland: 0.781,
+      tunisia: 0.441, // Facteur d'émission pour la Tunisie
       // Types d'énergie
       heating: 0.227,
       cooling: 0.057,
@@ -495,10 +496,64 @@ export const DataCollection = () => {
                 </div>
               </div>
             </div>
-            <Button variant="eco" onClick={calculateGlobalScore}>
-              <Calculator className="w-4 h-4 mr-2" />
-              Recalculer le score
-            </Button>
+            <div className="flex space-x-2">
+              <Button variant="eco" onClick={calculateGlobalScore}>
+                <Calculator className="w-4 h-4 mr-2" />
+                Recalculer le score
+              </Button>
+              <Button variant="outline" onClick={() => {
+                setGlobalEmissions({ scope1: 0, scope2: 0, scope3: 0, total: 0 });
+                setScope1Data({
+                  fuelType: "",
+                  quantity: "",
+                  unit: "",
+                  period: "",
+                  vehicleType: "",
+                  vehicleFuel: "",
+                  fuelQuantity: "",
+                  equipmentType: "",
+                  equipmentFuel: "",
+                  equipmentQuantity: "",
+                  refrigerantType: "",
+                  refrigerantQuantity: ""
+                });
+                setScope2Data({
+                  electricity: "",
+                  provider: "",
+                  renewable: "",
+                  location: "",
+                  heating: "",
+                  cooling: "",
+                  steam: ""
+                });
+                setScope3Data({
+                  transportType: "",
+                  distance: "",
+                  frequency: "",
+                  wasteType: "",
+                  wasteQuantity: "",
+                  treatment: "",
+                  materialType: "",
+                  materialQuantity: "",
+                  businessTripType: "",
+                  businessDistance: "",
+                  businessFrequency: "",
+                  freightType: "",
+                  freightDistance: "",
+                  freightWeight: "",
+                  assetType: "",
+                  assetQuantity: "",
+                  assetLifespan: ""
+                });
+                toast({
+                  title: "Données réinitialisées",
+                  description: "Toutes les données ont été effacées",
+                  variant: "default"
+                });
+              }}>
+                Réinitialiser
+              </Button>
+            </div>
           </div>
         </Card>
       )}
@@ -753,6 +808,7 @@ export const DataCollection = () => {
                       <SelectItem value="spain">Espagne</SelectItem>
                       <SelectItem value="italy">Italie</SelectItem>
                       <SelectItem value="poland">Pologne</SelectItem>
+                      <SelectItem value="tunisia">Tunisie</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

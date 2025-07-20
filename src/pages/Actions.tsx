@@ -2,10 +2,18 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Target, Calendar, TrendingDown, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Target, Calendar, TrendingDown, CheckCircle, Clock, AlertCircle, Edit, Eye } from "lucide-react";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export const Actions = () => {
-  const actions = [
+  const { toast } = useToast();
+  const [actions, setActions] = useState([
     {
       id: 1,
       title: "Installation panneaux solaires",
@@ -50,7 +58,86 @@ export const Actions = () => {
       scope: "Scope 1",
       cost: "28,000 €"
     }
-  ];
+  ]);
+
+  const [newAction, setNewAction] = useState({
+    title: "",
+    description: "",
+    impact: "",
+    cost: "",
+    deadline: "",
+    scope: "Scope 1"
+  });
+
+  const [editingAction, setEditingAction] = useState<any>(null);
+  const [viewingAction, setViewingAction] = useState<any>(null);
+
+  const handleCreateAction = () => {
+    if (!newAction.title || !newAction.description || !newAction.impact || !newAction.cost || !newAction.deadline) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs obligatoires",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const action = {
+      id: actions.length + 1,
+      title: newAction.title,
+      description: newAction.description,
+      impact: parseInt(newAction.impact),
+      status: "planned",
+      progress: 0,
+      deadline: newAction.deadline,
+      scope: newAction.scope,
+      cost: newAction.cost
+    };
+
+    setActions([...actions, action]);
+    setNewAction({
+      title: "",
+      description: "",
+      impact: "",
+      cost: "",
+      deadline: "",
+      scope: "Scope 1"
+    });
+
+    toast({
+      title: "Action créée",
+      description: "L'action a été ajoutée avec succès au plan"
+    });
+  };
+
+  const handleEditAction = (action: any) => {
+    setEditingAction({...action});
+  };
+
+  const handleUpdateAction = () => {
+    if (!editingAction.title || !editingAction.description) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs obligatoires",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setActions(actions.map(action => 
+      action.id === editingAction.id ? editingAction : action
+    ));
+    setEditingAction(null);
+
+    toast({
+      title: "Action modifiée",
+      description: "L'action a été mise à jour avec succès"
+    });
+  };
+
+  const handleViewAction = (action: any) => {
+    setViewingAction(action);
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -94,10 +181,90 @@ export const Actions = () => {
           <h1 className="text-3xl font-bold text-foreground mb-2">Plan d'actions carbone</h1>
           <p className="text-muted-foreground">Pilotez vos initiatives de réduction d'empreinte</p>
         </div>
-        <Button variant="eco">
-          <Plus className="w-4 h-4 mr-2" />
-          Nouvelle action
-        </Button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="eco">
+              <Plus className="w-4 h-4 mr-2" />
+              Nouvelle action
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Créer une nouvelle action</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="title">Titre*</Label>
+                <Input
+                  id="title"
+                  value={newAction.title}
+                  onChange={(e) => setNewAction({...newAction, title: e.target.value})}
+                  placeholder="Nom de l'action"
+                />
+              </div>
+              <div>
+                <Label htmlFor="description">Description*</Label>
+                <Textarea
+                  id="description"
+                  value={newAction.description}
+                  onChange={(e) => setNewAction({...newAction, description: e.target.value})}
+                  placeholder="Description détaillée"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="impact">Impact (tCO2e)*</Label>
+                  <Input
+                    id="impact"
+                    type="number"
+                    value={newAction.impact}
+                    onChange={(e) => setNewAction({...newAction, impact: e.target.value})}
+                    placeholder="Ex: 50"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="cost">Coût*</Label>
+                  <Input
+                    id="cost"
+                    value={newAction.cost}
+                    onChange={(e) => setNewAction({...newAction, cost: e.target.value})}
+                    placeholder="Ex: 10,000 €"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="scope">Scope*</Label>
+                  <Select
+                    value={newAction.scope}
+                    onValueChange={(value) => setNewAction({...newAction, scope: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Scope 1">Scope 1</SelectItem>
+                      <SelectItem value="Scope 2">Scope 2</SelectItem>
+                      <SelectItem value="Scope 3">Scope 3</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="deadline">Échéance*</Label>
+                  <Input
+                    id="deadline"
+                    type="date"
+                    value={newAction.deadline}
+                    onChange={(e) => setNewAction({...newAction, deadline: e.target.value})}
+                  />
+                </div>
+              </div>
+              <Button onClick={handleCreateAction} className="w-full">
+                Créer l'action
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -180,12 +347,146 @@ export const Actions = () => {
             </div>
 
             <div className="flex justify-end space-x-2 mt-4">
-              <Button variant="outline" size="sm">
-                Modifier
-              </Button>
-              <Button variant="eco" size="sm">
-                Voir détails
-              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" onClick={() => handleEditAction(action)}>
+                    <Edit className="w-4 h-4 mr-1" />
+                    Modifier
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Modifier l'action</DialogTitle>
+                  </DialogHeader>
+                  {editingAction && (
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="edit-title">Titre</Label>
+                        <Input
+                          id="edit-title"
+                          value={editingAction.title}
+                          onChange={(e) => setEditingAction({...editingAction, title: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-description">Description</Label>
+                        <Textarea
+                          id="edit-description"
+                          value={editingAction.description}
+                          onChange={(e) => setEditingAction({...editingAction, description: e.target.value})}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="edit-impact">Impact (tCO2e)</Label>
+                          <Input
+                            id="edit-impact"
+                            type="number"
+                            value={editingAction.impact}
+                            onChange={(e) => setEditingAction({...editingAction, impact: parseInt(e.target.value)})}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="edit-progress">Progression (%)</Label>
+                          <Input
+                            id="edit-progress"
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={editingAction.progress}
+                            onChange={(e) => setEditingAction({...editingAction, progress: parseInt(e.target.value)})}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-status">Statut</Label>
+                        <Select
+                          value={editingAction.status}
+                          onValueChange={(value) => setEditingAction({...editingAction, status: value})}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="planned">Planifié</SelectItem>
+                            <SelectItem value="in-progress">En cours</SelectItem>
+                            <SelectItem value="completed">Terminé</SelectItem>
+                            <SelectItem value="delayed">En retard</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button onClick={handleUpdateAction} className="w-full">
+                        Mettre à jour
+                      </Button>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
+              
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="eco" size="sm" onClick={() => handleViewAction(action)}>
+                    <Eye className="w-4 h-4 mr-1" />
+                    Voir détails
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>Détails de l'action</DialogTitle>
+                  </DialogHeader>
+                  {viewingAction && (
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="font-semibold text-lg">{viewingAction.title}</h3>
+                        <p className="text-muted-foreground mt-1">{viewingAction.description}</p>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium">Impact carbone</p>
+                          <p className="text-2xl font-bold text-primary">-{viewingAction.impact} tCO2e/an</p>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium">Coût</p>
+                          <p className="text-xl font-semibold">{viewingAction.cost}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium">Scope</p>
+                          <Badge variant="secondary">{viewingAction.scope}</Badge>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium">Échéance</p>
+                          <p className="text-sm">{viewingAction.deadline}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <p className="text-sm font-medium">Statut</p>
+                          {getStatusBadge(viewingAction.status)}
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span>Progression</span>
+                            <span>{viewingAction.progress}%</span>
+                          </div>
+                          <Progress value={viewingAction.progress} className="h-2" />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">Ratio coût/impact</p>
+                        <p className="text-sm text-muted-foreground">
+                          {Math.round(parseInt(viewingAction.cost.replace(/[^0-9]/g, '')) / viewingAction.impact)} €/tCO2e économisée
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
             </div>
           </Card>
         ))}

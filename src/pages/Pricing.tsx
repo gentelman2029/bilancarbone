@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, X, Star, Building, Users, Zap, Shield, BarChart3, Target } from "lucide-react";
+import { CheckCircle, X, Star, Building, Users, Zap, Shield, BarChart3, Target, CreditCard } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const Pricing = () => {
+export const Pricing = () => {
   const plans = [
     {
       name: "Starter",
@@ -175,10 +175,22 @@ const Pricing = () => {
                 ))}
               </div>
 
-              <Button variant={plan.variant} size="lg" className="w-full" asChild>
-                <Link to={plan.name === "Professional" ? "/trial" : plan.name === "Enterprise" ? "/contact" : "/trial"}>
-                  {plan.cta}
-                </Link>
+              <Button 
+                variant={plan.variant} 
+                size="lg" 
+                className="w-full" 
+                onClick={() => {
+                  if (plan.name === "Professional") {
+                    window.location.href = "/trial";
+                  } else if (plan.name === "Enterprise") {
+                    alert("Contactez-nous à contact@carbontrack.fr");
+                  } else {
+                    window.location.href = "/trial";
+                  }
+                }}
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                {plan.cta}
               </Button>
             </Card>
           ))}
@@ -205,7 +217,10 @@ const Pricing = () => {
                     <p className="text-primary font-bold">{addon.price}</p>
                   </div>
                 </div>
-                <p className="text-muted-foreground text-sm">{addon.description}</p>
+                <p className="text-muted-foreground text-sm mb-4">{addon.description}</p>
+                <Button variant="outline" size="sm" onClick={() => alert("Contactez-nous pour ce service")}>
+                  Commander
+                </Button>
               </Card>
             ))}
           </div>
@@ -244,7 +259,12 @@ const Pricing = () => {
                   Essai gratuit 14 jours
                 </Link>
               </Button>
-              <Button variant="outline" size="lg" className="bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
+                onClick={() => alert("Demande de démo envoyée ! Nous vous recontacterons.")}
+              >
                 Demander une démo
               </Button>
             </div>

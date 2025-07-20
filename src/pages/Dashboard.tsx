@@ -5,45 +5,55 @@ import { Button } from "@/components/ui/button";
 import { TrendingUp, TrendingDown, Activity, Target, Zap, Factory, PieChart, BarChart3, Edit, Eye, Plus, AlertTriangle, CheckCircle } from "lucide-react";
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line } from "recharts";
 import { Link } from "react-router-dom";
+import { useEmissions } from "@/contexts/EmissionsContext";
 
 export const Dashboard = () => {
+  const { emissions, hasEmissions } = useEmissions();
+  
+  // Convertir en tonnes pour l'affichage
+  const toTonnes = (kg: number) => (kg / 1000).toFixed(3);
+  
   const metrics = [
     {
       title: "Émissions totales",
-      value: "1,247 tCO2e",
-      change: "+12%",
-      trend: "up",
+      value: hasEmissions ? `${toTonnes(emissions.total)} tCO2e` : "0 tCO2e",
+      change: hasEmissions ? "+12%" : "0%",
+      trend: hasEmissions ? "up" : "neutral",
       icon: Activity,
       color: "text-destructive"
     },
     {
       title: "Scope 1",
-      value: "342 tCO2e",
-      change: "-5%", 
-      trend: "down",
+      value: hasEmissions ? `${toTonnes(emissions.scope1)} tCO2e` : "0 tCO2e",
+      change: hasEmissions ? "-5%" : "0%", 
+      trend: hasEmissions ? "down" : "neutral",
       icon: Factory,
       color: "text-primary"
     },
     {
       title: "Scope 2",
-      value: "445 tCO2e",
-      change: "+8%",
-      trend: "up", 
+      value: hasEmissions ? `${toTonnes(emissions.scope2)} tCO2e` : "0 tCO2e",
+      change: hasEmissions ? "+8%" : "0%",
+      trend: hasEmissions ? "up" : "neutral", 
       icon: Zap,
       color: "text-accent"
     },
     {
       title: "Objectif 2024",
       value: "1,100 tCO2e",
-      change: "88%",
+      change: hasEmissions ? `${Math.round((emissions.total / 1100000) * 100)}%` : "0%",
       trend: "target",
       icon: Target,
       color: "text-primary"
     }
   ];
 
-  // Données pour les graphiques
-  const emissionsByScope = [
+  // Données pour les graphiques basées sur les vraies données
+  const emissionsByScope = hasEmissions ? [
+    { name: "Scope 1", value: Math.round(emissions.scope1 / 1000), color: "#059669" },
+    { name: "Scope 2", value: Math.round(emissions.scope2 / 1000), color: "#3B82F6" },
+    { name: "Scope 3", value: Math.round(emissions.scope3 / 1000), color: "#EF4444" }
+  ].filter(item => item.value > 0) : [
     { name: "Scope 1", value: 342, color: "#059669" },
     { name: "Scope 2", value: 445, color: "#3B82F6" },
     { name: "Scope 3", value: 460, color: "#EF4444" }
@@ -86,7 +96,7 @@ export const Dashboard = () => {
     }
   };
 
-  const interpretation = interpretEmissions(1247);
+  const interpretation = interpretEmissions(hasEmissions ? emissions.total : 1247);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -102,7 +112,7 @@ export const Dashboard = () => {
             </Link>
           </Button>
           <Button variant="eco" asChild>
-            <Link to="/data-collection">
+            <Link to="/data">
               <BarChart3 className="w-4 h-4 mr-2" />
               Interpréter les résultats
             </Link>

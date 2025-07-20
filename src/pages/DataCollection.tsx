@@ -4,20 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, Calculator, FileSpreadsheet, Zap, Car, Trash2, Building, Factory, TrendingUp } from "lucide-react";
+import { Upload, Calculator, FileSpreadsheet, Zap, Car, Trash2, Building, Factory, TrendingUp, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useEmissions } from "@/contexts/EmissionsContext";
 
 export const DataCollection = () => {
   const { toast } = useToast();
-  
-  // Global emissions tracking
-  const [globalEmissions, setGlobalEmissions] = useState({
-    scope1: 0,
-    scope2: 0,
-    scope3: 0,
-    total: 0
-  });
+  const { emissions, updateEmissions, resetEmissions, hasEmissions } = useEmissions();
 
   // Scope 1 states - élargi pour plus de sources
   const [scope1Data, setScope1Data] = useState({
@@ -239,11 +233,7 @@ export const DataCollection = () => {
       return;
     }
     
-    setGlobalEmissions(prev => ({
-      ...prev,
-      scope1: totalEmissions,
-      total: prev.scope2 + prev.scope3 + totalEmissions
-    }));
+    updateEmissions({ scope1: totalEmissions });
     
     toast({
       title: "Émissions Scope 1 calculées",
@@ -306,11 +296,7 @@ export const DataCollection = () => {
       return;
     }
     
-    setGlobalEmissions(prev => ({
-      ...prev,
-      scope2: totalEmissions,
-      total: prev.scope1 + prev.scope3 + totalEmissions
-    }));
+    updateEmissions({ scope2: totalEmissions });
     
     toast({
       title: "Émissions Scope 2 calculées",
@@ -424,11 +410,7 @@ export const DataCollection = () => {
       return;
     }
     
-    setGlobalEmissions(prev => ({
-      ...prev,
-      scope3: totalEmissions,
-      total: prev.scope1 + prev.scope2 + totalEmissions
-    }));
+    updateEmissions({ scope3: totalEmissions });
     
     toast({
       title: "Émissions Scope 3 calculées",
@@ -438,7 +420,7 @@ export const DataCollection = () => {
   };
 
   const calculateGlobalScore = () => {
-    const total = globalEmissions.scope1 + globalEmissions.scope2 + globalEmissions.scope3;
+    const total = emissions.scope1 + emissions.scope2 + emissions.scope3;
     
     if (total === 0) {
       toast({
@@ -449,14 +431,9 @@ export const DataCollection = () => {
       return;
     }
     
-    setGlobalEmissions(prev => ({
-      ...prev,
-      total: total
-    }));
-    
     toast({
       title: "Score global calculé",
-      description: `Total des émissions: ${total.toFixed(2)} kg CO2e\nScope 1: ${globalEmissions.scope1.toFixed(2)} kg CO2e (${((globalEmissions.scope1/total)*100).toFixed(1)}%)\nScope 2: ${globalEmissions.scope2.toFixed(2)} kg CO2e (${((globalEmissions.scope2/total)*100).toFixed(1)}%)\nScope 3: ${globalEmissions.scope3.toFixed(2)} kg CO2e (${((globalEmissions.scope3/total)*100).toFixed(1)}%)`,
+      description: `Total des émissions: ${total.toFixed(2)} kg CO2e\nScope 1: ${emissions.scope1.toFixed(2)} kg CO2e (${((emissions.scope1/total)*100).toFixed(1)}%)\nScope 2: ${emissions.scope2.toFixed(2)} kg CO2e (${((emissions.scope2/total)*100).toFixed(1)}%)\nScope 3: ${emissions.scope3.toFixed(2)} kg CO2e (${((emissions.scope3/total)*100).toFixed(1)}%)`,
       variant: "default"
     });
   };
@@ -469,7 +446,7 @@ export const DataCollection = () => {
       </div>
 
       {/* Score global */}
-      {(globalEmissions.scope1 > 0 || globalEmissions.scope2 > 0 || globalEmissions.scope3 > 0) && (
+      {hasEmissions && (
         <Card className="p-6 bg-gradient-card border shadow-card mb-6">
           <div className="flex items-center justify-between">
             <div>
@@ -480,29 +457,33 @@ export const DataCollection = () => {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">Scope 1</p>
-                  <p className="text-lg font-semibold text-foreground">{globalEmissions.scope1.toFixed(2)} kg CO2e</p>
+                  <p className="text-lg font-semibold text-foreground">{emissions.scope1.toFixed(2)} kg CO2e</p>
                 </div>
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">Scope 2</p>
-                  <p className="text-lg font-semibold text-foreground">{globalEmissions.scope2.toFixed(2)} kg CO2e</p>
+                  <p className="text-lg font-semibold text-foreground">{emissions.scope2.toFixed(2)} kg CO2e</p>
                 </div>
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">Scope 3</p>
-                  <p className="text-lg font-semibold text-foreground">{globalEmissions.scope3.toFixed(2)} kg CO2e</p>
+                  <p className="text-lg font-semibold text-foreground">{emissions.scope3.toFixed(2)} kg CO2e</p>
                 </div>
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">Total</p>
-                  <p className="text-xl font-bold text-primary">{globalEmissions.total.toFixed(2)} kg CO2e</p>
+                  <p className="text-xl font-bold text-primary">{emissions.total.toFixed(2)} kg CO2e</p>
                 </div>
               </div>
             </div>
             <div className="flex space-x-2">
+              <Button variant="destructive" onClick={resetEmissions}>
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Réinitialiser
+              </Button>
               <Button variant="eco" onClick={calculateGlobalScore}>
                 <Calculator className="w-4 h-4 mr-2" />
                 Recalculer le score
               </Button>
               <Button variant="outline" onClick={() => {
-                setGlobalEmissions({ scope1: 0, scope2: 0, scope3: 0, total: 0 });
+                resetEmissions();
                 setScope1Data({
                   fuelType: "",
                   quantity: "",

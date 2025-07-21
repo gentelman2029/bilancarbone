@@ -1,4 +1,4 @@
-import { Leaf, BarChart3, Users, Settings, LogOut } from "lucide-react";
+import { Leaf, BarChart3, Users, Settings, LogOut, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -12,6 +12,7 @@ export const Header = () => {
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -27,8 +28,8 @@ export const Header = () => {
   
   const navItems = [
     { path: "/", label: "Accueil", icon: Leaf },
-    { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
     { path: "/data", label: "Collecte", icon: Users },
+    { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
     { path: "/actions", label: "Actions", icon: Settings },
   ];
 
@@ -55,37 +56,39 @@ export const Header = () => {
   };
 
   return (
-    <header className="bg-card border-b border-border shadow-card">
-      <div className="container mx-auto px-4 py-4">
+    <header className="bg-card border-b border-border shadow-card sticky top-0 z-50">
+      <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center shadow-glow">
               <Leaf className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold text-foreground">CarbonTrack</span>
           </Link>
 
-          <nav className="hidden md:flex items-center space-x-6">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-1">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
                   location.pathname === item.path
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-gradient-primary text-primary-foreground shadow-eco"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                 }`}
               >
                 <item.icon className="w-4 h-4" />
-                <span>{item.label}</span>
+                <span className="font-medium">{item.label}</span>
               </Link>
             ))}
           </nav>
 
-          <div className="flex items-center space-x-4">
+          {/* Desktop Auth */}
+          <div className="hidden md:flex items-center space-x-3">
             {user ? (
               <>
-                <span className="text-sm text-muted-foreground hidden md:block">
+                <span className="text-sm text-muted-foreground hidden lg:block">
                   {user.email}
                 </span>
                 <Button 
@@ -109,16 +112,93 @@ export const Header = () => {
                   Connexion
                 </Button>
                 <Button 
-                  variant="eco" 
+                  variant="default" 
                   size="sm"
-                  onClick={() => navigate("/auth")}
+                  onClick={() => navigate("/trial")}
+                  className="bg-gradient-primary hover:scale-105 transition-transform shadow-eco"
                 >
                   Essai gratuit
                 </Button>
               </>
             )}
           </div>
+
+          {/* Mobile Menu Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </Button>
         </div>
+
+        {/* Mobile Navigation */}
+        {mobileMenuOpen && (
+          <div className="md:hidden mt-4 pb-4 border-t border-border">
+            <nav className="flex flex-col space-y-2 mt-4">
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
+                    location.pathname === item.path
+                      ? "bg-gradient-primary text-primary-foreground shadow-eco"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  }`}
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span className="font-medium">{item.label}</span>
+                </Link>
+              ))}
+            </nav>
+            
+            {/* Mobile Auth */}
+            <div className="mt-4 pt-4 border-t border-border space-y-2">
+              {user ? (
+                <>
+                  <div className="px-4 py-2 text-sm text-muted-foreground">
+                    {user.email}
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    onClick={handleSignOut}
+                    disabled={loading}
+                    className="w-full justify-start"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Déconnexion
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => {
+                      navigate("/auth");
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full justify-start"
+                  >
+                    Connexion
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    onClick={() => {
+                      navigate("/trial");
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full bg-gradient-primary shadow-eco"
+                  >
+                    Essai gratuit
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

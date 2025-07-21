@@ -5,7 +5,7 @@ export const Layout = () => {
   return (
     <div className="min-h-screen bg-gradient-eco">
       <Header />
-      <main>
+      <main className="pb-safe-area-inset-bottom">
         <Outlet />
       </main>
     </div>

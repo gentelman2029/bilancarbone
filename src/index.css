@@ -50,6 +50,10 @@ All colors MUST be HSL.
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    
+    /* Mobile optimizations */
+    --spacing-mobile: 1rem;
+    --text-mobile: 0.875rem;
 
     --radius: 0.5rem;
 
@@ -116,5 +120,35 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+  
+  /* Mobile touch improvements */
+  @media (max-width: 768px) {
+    button, a, [role="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+}
+
+@layer components {
+  /* Enhanced mobile card component */
+  .card-mobile {
+    @apply rounded-xl border bg-card text-card-foreground shadow-card p-4 sm:p-6;
+  }
+  
+  /* Mobile-first responsive grid */
+  .grid-responsive {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6;
+  }
+  
+  /* Enhanced buttons for mobile */
+  .btn-mobile {
+    @apply min-h-[44px] px-4 py-3 text-sm font-medium transition-all duration-200;
+  }
+  
+  /* Touch-friendly navigation */
+  .nav-mobile {
+    @apply flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-200 min-h-[44px];
   }
 }

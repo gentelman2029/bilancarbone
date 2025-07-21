@@ -245,6 +245,35 @@ export const Pricing = () => {
           </div>
         </div>
 
+        {/* ROI et bénéfices business */}
+        <div className="mb-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-foreground mb-4">Retour sur investissement garanti</h2>
+            <p className="text-xl text-muted-foreground">
+              Nos clients récupèrent leur investissement en moins de 6 mois
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card className="p-6 bg-gradient-card border shadow-card text-center">
+              <div className="text-3xl font-bold text-primary mb-2">6 mois</div>
+              <div className="text-sm text-muted-foreground">ROI moyen</div>
+            </Card>
+            <Card className="p-6 bg-gradient-card border shadow-card text-center">
+              <div className="text-3xl font-bold text-primary mb-2">€35k</div>
+              <div className="text-sm text-muted-foreground">Économies moyennes/an</div>
+            </Card>
+            <Card className="p-6 bg-gradient-card border shadow-card text-center">
+              <div className="text-3xl font-bold text-primary mb-2">-30%</div>
+              <div className="text-sm text-muted-foreground">Réduction émissions</div>
+            </Card>
+            <Card className="p-6 bg-gradient-card border shadow-card text-center">
+              <div className="text-3xl font-bold text-primary mb-2">100%</div>
+              <div className="text-sm text-muted-foreground">Conformité CSRD</div>
+            </Card>
+          </div>
+        </div>
+
         {/* CTA */}
         <div className="text-center mt-16">
           <Card className="p-8 bg-gradient-primary text-primary-foreground">
@@ -263,7 +292,12 @@ export const Pricing = () => {
                 variant="outline" 
                 size="lg" 
                 className="bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
-                onClick={() => alert("Demande de démo envoyée ! Nous vous recontacterons.")}
+                onClick={() => {
+                  const email = "demo@carbontrack.fr";
+                  const subject = "Demande de démonstration CarbonTrack";
+                  const body = "Bonjour,\n\nJe souhaiterais planifier une démonstration de CarbonTrack pour mon entreprise.\n\nCordialement";
+                  window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                }}
               >
                 Demander une démo
               </Button>

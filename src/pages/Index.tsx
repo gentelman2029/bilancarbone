@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Leaf, BarChart3, Target, Shield, Users, Zap, TrendingDown, CheckCircle } from "lucide-react";
+import { Leaf, BarChart3, Target, Shield, Users, Zap, TrendingDown, CheckCircle, Building } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-carbon.jpg";
 
@@ -181,6 +181,245 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Témoignages clients */}
+      <section className="py-20 bg-card">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
+              Témoignages
+            </Badge>
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
+              Nos clients témoignent
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              Découvrez comment CarbonTrack a transformé leur approche carbone
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold">MT</span>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground">Marie Toulon</h4>
+                  <p className="text-sm text-muted-foreground">Directrice RSE, TechnoVert</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground italic mb-4">
+                "CarbonTrack nous a permis d'identifier que 60% de nos émissions venaient de nos déplacements. 
+                Grâce aux recommandations précises, nous avons réduit notre empreinte de 35% en 6 mois."
+              </p>
+              <div className="flex items-center space-x-1">
+                {[...Array(5)].map((_, i) => (
+                  <span key={i} className="text-primary">★</span>
+                ))}
+              </div>
+            </Card>
+
+            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold">PD</span>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground">Pierre Durand</h4>
+                  <p className="text-sm text-muted-foreground">CEO, LogistiqueEco</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground italic mb-4">
+                "Interface intuitive, calculs précis et accompagnement excellent. Nous avons économisé 45 000€ 
+                en énergie la première année grâce aux analyses de CarbonTrack."
+              </p>
+              <div className="flex items-center space-x-1">
+                {[...Array(5)].map((_, i) => (
+                  <span key={i} className="text-primary">★</span>
+                ))}
+              </div>
+            </Card>
+
+            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold">SL</span>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground">Sophie Laurent</h4>
+                  <p className="text-sm text-muted-foreground">Responsable Environnement, ManufactPlus</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground italic mb-4">
+                "La conformité CSRD était notre priorité. CarbonTrack nous a guidés pas à pas et nos rapports 
+                sont maintenant approuvés par nos auditeurs. Un vrai gain de temps !"
+              </p>
+              <div className="flex items-center space-x-1">
+                {[...Array(5)].map((_, i) => (
+                  <span key={i} className="text-primary">★</span>
+                ))}
+              </div>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Études de cas */}
+      <section className="py-20 bg-gradient-eco">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
+              Études de cas
+            </Badge>
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
+              Résultats concrets obtenus
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              Découvrez comment nos clients ont transformé leur empreinte carbone
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
+              <div className="flex items-center space-x-3 mb-4">
+                <Building className="w-8 h-8 text-primary" />
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">PME Manufacturière - 150 employés</h3>
+                  <p className="text-sm text-muted-foreground">Secteur automobile • Chiffre d'affaires 25M€</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-4 bg-secondary/20 rounded-lg">
+                    <div className="text-2xl font-bold text-destructive">2,340</div>
+                    <div className="text-sm text-muted-foreground">tCO2e avant</div>
+                  </div>
+                  <div className="text-center p-4 bg-secondary/20 rounded-lg">
+                    <div className="text-2xl font-bold text-primary">1,520</div>
+                    <div className="text-sm text-muted-foreground">tCO2e après</div>
+                  </div>
+                </div>
+                
+                <div className="p-4 bg-primary/10 rounded-lg">
+                  <div className="text-lg font-bold text-primary text-center">-35% d'émissions en 18 mois</div>
+                </div>
+                
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-foreground">Actions mises en place :</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Remplacement éclairage LED (-180 tCO2e)</li>
+                    <li>• Optimisation flotte véhicules (-320 tCO2e)</li>
+                    <li>• Installation panneaux solaires (-220 tCO2e)</li>
+                    <li>• Formation éco-gestes équipes (-100 tCO2e)</li>
+                  </ul>
+                </div>
+                
+                <div className="pt-4 border-t border-border">
+                  <div className="text-sm text-primary font-semibold">
+                    💰 Économies générées : 78 000€/an
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
+              <div className="flex items-center space-x-3 mb-4">
+                <Users className="w-8 h-8 text-primary" />
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">Entreprise de Services - 75 employés</h3>
+                  <p className="text-sm text-muted-foreground">Conseil IT • Chiffre d'affaires 12M€</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-4 bg-secondary/20 rounded-lg">
+                    <div className="text-2xl font-bold text-destructive">890</div>
+                    <div className="text-sm text-muted-foreground">tCO2e avant</div>
+                  </div>
+                  <div className="text-center p-4 bg-secondary/20 rounded-lg">
+                    <div className="text-2xl font-bold text-primary">460</div>
+                    <div className="text-sm text-muted-foreground">tCO2e après</div>
+                  </div>
+                </div>
+                
+                <div className="p-4 bg-primary/10 rounded-lg">
+                  <div className="text-lg font-bold text-primary text-center">-48% d'émissions en 12 mois</div>
+                </div>
+                
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-foreground">Actions mises en place :</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Télétravail 3j/semaine (-240 tCO2e)</li>
+                    <li>• Remplacement voyages par visio (-120 tCO2e)</li>
+                    <li>• Fournisseur électricité verte (-50 tCO2e)</li>
+                    <li>• Matériel IT reconditionné (-20 tCO2e)</li>
+                  </ul>
+                </div>
+                
+                <div className="pt-4 border-t border-border">
+                  <div className="text-sm text-primary font-semibold">
+                    💰 Économies générées : 32 000€/an
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Proposition de valeur renforcée */}
+      <section className="py-20 bg-card">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
+              Pourquoi choisir CarbonTrack ?
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Nous résolvons les défis les plus courants des entreprises en matière de bilan carbone
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <Card className="p-6 bg-gradient-card border shadow-card text-center">
+              <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">⚡</span>
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Complexité simplifiée</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                <strong>Problème :</strong> Les normes carbone sont complexes<br/>
+                <strong>Solution :</strong> Interface guidée, calculs automatiques
+              </p>
+              <div className="text-primary font-semibold">Configuration en 5 minutes</div>
+            </Card>
+
+            <Card className="p-6 bg-gradient-card border shadow-card text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">💰</span>
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Coûts maîtrisés</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                <strong>Problème :</strong> Consultants à 15 000€+<br/>
+                <strong>Solution :</strong> À partir de 99€/mois tout inclus
+              </p>
+              <div className="text-primary font-semibold">90% moins cher qu'un consultant</div>
+            </Card>
+
+            <Card className="p-6 bg-gradient-card border shadow-card text-center">
+              <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">⏱️</span>
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Rapidité d'exécution</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                <strong>Problème :</strong> 6 mois avec un consultant<br/>
+                <strong>Solution :</strong> Bilan complet en 2 semaines
+              </p>
+              <div className="text-primary font-semibold">12x plus rapide</div>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 bg-gradient-primary text-primary-foreground relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10"></div>
@@ -202,7 +441,17 @@ const Index = () => {
                   Essai gratuit 14 jours
                 </Link>
               </Button>
-              <Button variant="outline" size="lg" className="bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
+                onClick={() => {
+                  const email = "demo@carbontrack.fr";
+                  const subject = "Demande de démonstration CarbonTrack";
+                  const body = "Bonjour,\n\nJe souhaiterais planifier une démonstration de CarbonTrack pour mon entreprise.\n\nCordialement";
+                  window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                }}
+              >
                 Demander une démo
               </Button>
             </div>

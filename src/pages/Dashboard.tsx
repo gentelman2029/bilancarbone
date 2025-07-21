@@ -6,6 +6,7 @@ import { TrendingUp, TrendingDown, Activity, Target, Zap, Factory, PieChart, Bar
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line } from "recharts";
 import { Link } from "react-router-dom";
 import { useEmissions } from "@/contexts/EmissionsContext";
+import { ReportGenerator } from "@/components/ReportGenerator";
 
 export const Dashboard = () => {
   const { emissions, hasEmissions } = useEmissions();
@@ -155,12 +156,83 @@ export const Dashboard = () => {
           </div>
         </div>
         <p className="text-muted-foreground mb-4">{interpretation.message}</p>
+        
+        {/* Benchmarking sectoriel */}
+        <div className="bg-secondary/20 rounded-lg p-4 mb-4">
+          <h4 className="font-semibold text-foreground mb-2">📊 Comparaison sectorielle</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="text-center">
+              <div className="text-lg font-bold text-foreground">{hasEmissions ? toTonnes(emissions.total) : "1.25"}</div>
+              <div className="text-muted-foreground">Vos émissions (tCO2e)</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-warning">1.8</div>
+              <div className="text-muted-foreground">Moyenne sectorielle</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-primary">0.9</div>
+              <div className="text-muted-foreground">Top 10% du secteur</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Recommandations prioritaires */}
+        <div className="mb-4">
+          <h4 className="font-semibold text-foreground mb-3">🎯 Recommandations prioritaires</h4>
+          <div className="space-y-3">
+            {hasEmissions && emissions.scope1 > emissions.scope2 ? (
+              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-foreground">🔥 Hot spot détecté: Scope 1</p>
+                    <p className="text-sm text-muted-foreground">Vos émissions directes représentent {Math.round((emissions.scope1/emissions.total)*100)}% du total</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-destructive">-{Math.round(emissions.scope1/2000)} tCO2e</div>
+                    <div className="text-xs text-muted-foreground">Potentiel réduction</div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-foreground">⚡ Hot spot détecté: Scope 2</p>
+                    <p className="text-sm text-muted-foreground">Votre consommation électrique représente {hasEmissions ? Math.round((emissions.scope2/emissions.total)*100) : 36}% du total</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-primary">-{hasEmissions ? Math.round(emissions.scope2/3000) : 150} tCO2e</div>
+                    <div className="text-xs text-muted-foreground">Potentiel réduction</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
           {interpretation.actions.map((action, index) => (
             <div key={index} className="text-sm bg-secondary/50 rounded px-3 py-2">
               • {action}
             </div>
           ))}
+        </div>
+
+        {/* Simulation de scénarios */}
+        <div className="mt-4 pt-4 border-t border-border">
+          <h4 className="font-semibold text-foreground mb-3">🔮 Simulation d'impact</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <div className="p-3 bg-primary/5 rounded border border-primary/20">
+              <div className="font-medium text-foreground">💡 Passage LED complet</div>
+              <div className="text-primary">-12% d'émissions Scope 2</div>
+              <div className="text-muted-foreground">ROI: 2.3 ans</div>
+            </div>
+            <div className="p-3 bg-primary/5 rounded border border-primary/20">
+              <div className="font-medium text-foreground">🚗 Flotte électrique</div>
+              <div className="text-primary">-25% d'émissions Scope 1</div>
+              <div className="text-muted-foreground">ROI: 4.1 ans</div>
+            </div>
+          </div>
         </div>
       </Card>
 
@@ -213,7 +285,7 @@ export const Dashboard = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="p-6 bg-gradient-card border shadow-card">
           <h3 className="text-lg font-semibold text-foreground mb-4">Progression vs Objectifs</h3>
           <div className="space-y-4">
@@ -244,7 +316,11 @@ export const Dashboard = () => {
         <Card className="p-6 bg-gradient-card border shadow-card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-foreground">Actions en cours</h3>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => alert("Création d'une nouvelle action de réduction carbone")}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Nouvelle action
             </Button>
@@ -257,10 +333,18 @@ export const Dashboard = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <Badge>En cours</Badge>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => alert("Modification de l'action 'Optimisation éclairage LED'")}
+                >
                   <Edit className="w-3 h-3" />
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => alert("Détails de l'action: Remplacement de 200 spots par des LED. Investissement: 15 000€. ROI: 2.5 ans")}
+                >
                   <Eye className="w-3 h-3" />
                 </Button>
               </div>
@@ -272,10 +356,18 @@ export const Dashboard = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <Badge variant="secondary">Planifié</Badge>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => alert("Modification de l'action 'Formation éco-conduite'")}
+                >
                   <Edit className="w-3 h-3" />
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => alert("Détails de l'action: Formation de 25 chauffeurs. Coût: 3 500€. Économies carburant: 15%")}
+                >
                   <Eye className="w-3 h-3" />
                 </Button>
               </div>
@@ -287,16 +379,27 @@ export const Dashboard = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <Badge>Terminé</Badge>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => alert("Modification de l'action 'Panneaux solaires'")}
+                >
                   <Edit className="w-3 h-3" />
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => alert("Détails de l'action: Installation 50kW. Investissement: 45 000€. Production: 65 MWh/an")}
+                >
                   <Eye className="w-3 h-3" />
                 </Button>
               </div>
             </div>
           </div>
         </Card>
+
+        {/* Nouveau composant pour les rapports intelligents */}
+        <ReportGenerator />
       </div>
     </div>
   );

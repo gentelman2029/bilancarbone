@@ -14,6 +14,160 @@ export type Database = {
   }
   public: {
     Tables: {
+      carbon_actions: {
+        Row: {
+          calculation_id: string | null
+          category: string
+          created_at: string
+          description: string
+          estimated_cost: number | null
+          estimated_reduction_kg: number | null
+          estimated_reduction_percent: number | null
+          id: string
+          implementation_time: string | null
+          is_custom: boolean | null
+          priority: string
+          scope_type: string
+          status: string
+          target_date: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calculation_id?: string | null
+          category: string
+          created_at?: string
+          description: string
+          estimated_cost?: number | null
+          estimated_reduction_kg?: number | null
+          estimated_reduction_percent?: number | null
+          id?: string
+          implementation_time?: string | null
+          is_custom?: boolean | null
+          priority: string
+          scope_type: string
+          status?: string
+          target_date?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calculation_id?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          estimated_cost?: number | null
+          estimated_reduction_kg?: number | null
+          estimated_reduction_percent?: number | null
+          id?: string
+          implementation_time?: string | null
+          is_custom?: boolean | null
+          priority?: string
+          scope_type?: string
+          status?: string
+          target_date?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carbon_actions_calculation_id_fkey"
+            columns: ["calculation_id"]
+            isOneToOne: false
+            referencedRelation: "emissions_calculations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emissions_calculations: {
+        Row: {
+          calculation_data: Json | null
+          created_at: string
+          id: string
+          scope1: number
+          scope2: number
+          scope3: number
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calculation_data?: Json | null
+          created_at?: string
+          id?: string
+          scope1?: number
+          scope2?: number
+          scope3?: number
+          total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calculation_data?: Json | null
+          created_at?: string
+          id?: string
+          scope1?: number
+          scope2?: number
+          scope3?: number
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      emissions_data: {
+        Row: {
+          calculation_id: string | null
+          category: string
+          co2_equivalent: number
+          created_at: string
+          data_details: Json | null
+          emission_factor: number | null
+          id: string
+          scope_type: string
+          subcategory: string | null
+          unit: string
+          value: number
+        }
+        Insert: {
+          calculation_id?: string | null
+          category: string
+          co2_equivalent: number
+          created_at?: string
+          data_details?: Json | null
+          emission_factor?: number | null
+          id?: string
+          scope_type: string
+          subcategory?: string | null
+          unit: string
+          value: number
+        }
+        Update: {
+          calculation_id?: string | null
+          category?: string
+          co2_equivalent?: number
+          created_at?: string
+          data_details?: Json | null
+          emission_factor?: number | null
+          id?: string
+          scope_type?: string
+          subcategory?: string | null
+          unit?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emissions_data_calculation_id_fkey"
+            columns: ["calculation_id"]
+            isOneToOne: false
+            referencedRelation: "emissions_calculations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           company_name: string | null

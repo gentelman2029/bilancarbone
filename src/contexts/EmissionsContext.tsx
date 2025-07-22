@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface EmissionsData {
   scope1: number;
@@ -6,6 +7,7 @@ interface EmissionsData {
   scope3: number;
   total: number;
   lastUpdated?: string;
+  calculationId?: string;
 }
 
 interface EmissionsContextType {
@@ -13,11 +15,11 @@ interface EmissionsContextType {
   updateEmissions: (newEmissions: Partial<EmissionsData>) => void;
   resetEmissions: () => void;
   hasEmissions: boolean;
+  saveToSupabase: (emissionsData: any) => Promise<string | null>;
+  loadFromSupabase: () => Promise<void>;
 }
 
 const EmissionsContext = createContext<EmissionsContextType | undefined>(undefined);
-
-const STORAGE_KEY = 'carbontrack_emissions';
 
 const initialEmissions: EmissionsData = {
   scope1: 0,
@@ -29,28 +31,76 @@ const initialEmissions: EmissionsData = {
 export const EmissionsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [emissions, setEmissions] = useState<EmissionsData>(initialEmissions);
 
-  // Charger les données depuis localStorage au démarrage
+  // Charger les données depuis Supabase au démarrage
   useEffect(() => {
-    const savedEmissions = localStorage.getItem(STORAGE_KEY);
-    if (savedEmissions) {
-      try {
-        const parsed = JSON.parse(savedEmissions);
-        setEmissions(parsed);
-      } catch (error) {
-        console.error('Erreur lors du chargement des émissions:', error);
-      }
-    }
+    loadFromSupabase();
   }, []);
 
-  // Sauvegarder dans localStorage à chaque modification
-  useEffect(() => {
-    if (emissions.scope1 > 0 || emissions.scope2 > 0 || emissions.scope3 > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        ...emissions,
-        lastUpdated: new Date().toISOString()
-      }));
+  const loadFromSupabase = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: calculations, error } = await supabase
+        .from('emissions_calculations')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error('Erreur lors du chargement des émissions:', error);
+        return;
+      }
+
+      if (calculations && calculations.length > 0) {
+        const calc = calculations[0];
+        setEmissions({
+          scope1: Number(calc.scope1),
+          scope2: Number(calc.scope2),
+          scope3: Number(calc.scope3),
+          total: Number(calc.total),
+          lastUpdated: calc.updated_at,
+          calculationId: calc.id
+        });
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des émissions:', error);
     }
-  }, [emissions]);
+  };
+
+  const saveToSupabase = async (emissionsData: any): Promise<string | null> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.error('Utilisateur non connecté');
+        return null;
+      }
+
+      const { data: calculation, error } = await supabase
+        .from('emissions_calculations')
+        .insert({
+          user_id: user.id,
+          scope1: emissionsData.scope1,
+          scope2: emissionsData.scope2,
+          scope3: emissionsData.scope3,
+          total: emissionsData.total,
+          calculation_data: emissionsData
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erreur lors de la sauvegarde:', error);
+        return null;
+      }
+
+      return calculation.id;
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      return null;
+    }
+  };
 
   const updateEmissions = (newEmissions: Partial<EmissionsData>) => {
     setEmissions(prev => {
@@ -60,9 +110,21 @@ export const EmissionsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
   };
 
-  const resetEmissions = () => {
+  const resetEmissions = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && emissions.calculationId) {
+        await supabase
+          .from('emissions_calculations')
+          .delete()
+          .eq('id', emissions.calculationId)
+          .eq('user_id', user.id);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+    }
+    
     setEmissions(initialEmissions);
-    localStorage.removeItem(STORAGE_KEY);
   };
 
   const hasEmissions = emissions.scope1 > 0 || emissions.scope2 > 0 || emissions.scope3 > 0;
@@ -72,7 +134,9 @@ export const EmissionsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       emissions,
       updateEmissions,
       resetEmissions,
-      hasEmissions
+      hasEmissions,
+      saveToSupabase,
+      loadFromSupabase
     }}>
       {children}
     </EmissionsContext.Provider>

@@ -11,7 +11,7 @@ import { useEmissions } from "@/contexts/EmissionsContext";
 
 export const DataCollection = () => {
   const { toast } = useToast();
-  const { emissions, updateEmissions, resetEmissions, hasEmissions } = useEmissions();
+  const { emissions, updateEmissions, resetEmissions, hasEmissions, saveToSupabase } = useEmissions();
 
   // Scope 1 states - élargi pour plus de sources
   const [scope1Data, setScope1Data] = useState({
@@ -419,7 +419,7 @@ export const DataCollection = () => {
     });
   };
 
-  const calculateGlobalScore = () => {
+  const calculateGlobalScore = async () => {
     const total = emissions.scope1 + emissions.scope2 + emissions.scope3;
     
     if (total === 0) {
@@ -430,9 +430,43 @@ export const DataCollection = () => {
       });
       return;
     }
+
+    // Préparer les données détaillées pour la sauvegarde
+    const detailedData = {
+      scope1Data,
+      scope2Data,
+      scope3Data,
+      emissionFactors,
+      calculationDate: new Date().toISOString(),
+      total
+    };
+
+    // Sauvegarder automatiquement dans Supabase
+    const calculationId = await saveToSupabase({
+      scope1: emissions.scope1,
+      scope2: emissions.scope2, 
+      scope3: emissions.scope3,
+      total: total,
+      detailedData,
+      inputData: {
+        scope1Data,
+        scope2Data,
+        scope3Data
+      }
+    });
+
+    if (calculationId) {
+      updateEmissions({
+        scope1: emissions.scope1,
+        scope2: emissions.scope2,
+        scope3: emissions.scope3,
+        total: total,
+        calculationId
+      });
+    }
     
     toast({
-      title: "Score global calculé",
+      title: "Score global calculé et sauvegardé",
       description: `Total des émissions: ${total.toFixed(2)} kg CO2e\nScope 1: ${emissions.scope1.toFixed(2)} kg CO2e (${((emissions.scope1/total)*100).toFixed(1)}%)\nScope 2: ${emissions.scope2.toFixed(2)} kg CO2e (${((emissions.scope2/total)*100).toFixed(1)}%)\nScope 3: ${emissions.scope3.toFixed(2)} kg CO2e (${((emissions.scope3/total)*100).toFixed(1)}%)`,
       variant: "default"
     });

@@ -6,7 +6,7 @@ import { TrendingUp, TrendingDown, Activity, Target, Zap, Factory, PieChart, Bar
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line } from "recharts";
 import { Link } from "react-router-dom";
 import { useEmissions } from "@/contexts/EmissionsContext";
-import { ReportGenerator } from "@/components/ReportGenerator";
+import { EnhancedReportGenerator } from "@/components/EnhancedReportGenerator";
 
 export const Dashboard = () => {
   const { emissions, hasEmissions } = useEmissions();
@@ -399,7 +399,7 @@ export const Dashboard = () => {
         </Card>
 
         {/* Nouveau composant pour les rapports intelligents */}
-        <ReportGenerator />
+        <EnhancedReportGenerator />
       </div>
     </div>
   );

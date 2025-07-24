@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Leaf, BarChart3, Target, Shield, Users, Zap, TrendingDown, CheckCircle, Building } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Leaf, BarChart3, Target, Shield, Users, Zap, TrendingDown, CheckCircle, Building, Eye, Search, FileText, Calculator, DollarSign, ClipboardCheck, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-carbon.jpg";
 
@@ -416,6 +417,320 @@ const Index = () => {
               </p>
               <div className="text-primary font-semibold">12x plus rapide</div>
             </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Nouvelles sections demandées */}
+      
+      {/* Visualisation Section */}
+      <section className="py-20 bg-gradient-eco">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
+              <Eye className="w-4 h-4 mr-2" />
+              Visualisation
+            </Badge>
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
+              Visualisez l'impact environnemental de votre entreprise
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Suivez les émissions de votre entreprise à l'aide de graphiques et de tableaux de bord personnalisables
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
+              <div className="flex items-start space-x-4">
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <BarChart3 className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">Tableaux de bord personnalisables</h3>
+                  <p className="text-muted-foreground">
+                    Visualisez vos progrès en matière de développement durable grâce à une analyse détaillée des tendances et à des comparaisons par périodes.
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
+              <div className="flex items-start space-x-4">
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <Users className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">Engagement des parties prenantes</h3>
+                  <p className="text-muted-foreground">
+                    Impliquez vos parties prenantes en partageant des données d'émissions précises avec des visualisations claires et percutantes.
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
+              <div className="flex items-start space-x-4">
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <TrendingDown className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">Suivi des tendances</h3>
+                  <p className="text-muted-foreground">
+                    Analysez l'évolution de vos émissions dans le temps avec des graphiques interactifs et des métriques de performance.
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Identification points chauds Section */}
+      <section className="py-20 bg-card">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
+              <Search className="w-4 h-4 mr-2" />
+              Analyse
+            </Badge>
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
+              Identifiez les points chauds d'émissions et leurs origines
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Analyse et visualisation détaillées des données pour cibler vos efforts de décarbonation
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
+              <div className="flex items-start space-x-4">
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <Building className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">Décomposition par source</h3>
+                  <p className="text-muted-foreground">
+                    Identifiez la source de vos émissions en décomposant votre empreinte carbone par département, installation, projet ou toute autre dimension spécifique.
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
+              <div className="flex items-start space-x-4">
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <Target className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">Optimisation ciblée</h3>
+                  <p className="text-muted-foreground">
+                    Ciblez vos efforts de décarbonation pour un maximum d'impact en utilisant des informations approfondies sur vos données d'émissions.
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Transparence Section */}
+      <section className="py-20 bg-gradient-eco">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
+              <Shield className="w-4 h-4 mr-2" />
+              Transparence
+            </Badge>
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
+              Apportez de la transparence à vos données d'émissions
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Une plateforme centralisée pour organiser et auditer toutes vos données carbone
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
+              <div className="flex items-start space-x-4">
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <FileText className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">Centralisation des données</h3>
+                  <p className="text-muted-foreground">
+                    Téléchargez toutes vos données d'émissions sur une seule plateforme, organisées par scopes 1, 2 et 3 et par catégories d'émissions pour une visibilité complète.
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
+              <div className="flex items-start space-x-4">
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <Building className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">Organisation multi-niveaux</h3>
+                  <p className="text-muted-foreground">
+                    Organisez vos données par département, installation ou filiale pour suivre les émissions à tous les niveaux de l'organisation.
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
+              <div className="flex items-start space-x-4">
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <CheckCircle className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">Prêt pour les audits</h3>
+                  <p className="text-muted-foreground">
+                    Soyez toujours prêt pour les audits et conformez-vous facilement avec des rapports détaillés et des ressources éducatives intégrées.
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Ressources Section */}
+      <section className="py-20 bg-card">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
+              <FileText className="w-4 h-4 mr-2" />
+              Ressources
+            </Badge>
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
+              Outils et ressources essentiels
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Accédez à nos calculateurs et outils d'évaluation spécialisés
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300 group cursor-pointer">
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto group-hover:bg-primary/20 transition-colors">
+                  <Calculator className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold text-foreground">Calculateur Carbone Rapide</h3>
+                <p className="text-muted-foreground">
+                  Estimez rapidement votre empreinte carbone avec notre calculateur intégré basé sur les derniers facteurs d'émission.
+                </p>
+                <Button variant="outline" className="w-full">
+                  Accéder au calculateur
+                </Button>
+              </div>
+            </Card>
+
+            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300 group cursor-pointer">
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto group-hover:bg-primary/20 transition-colors">
+                  <DollarSign className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold text-foreground">CBAM Checker</h3>
+                <p className="text-muted-foreground">
+                  Estimez vos futurs coûts MACF et les économies potentielles avec notre outil d'évaluation du mécanisme d'ajustement carbone aux frontières.
+                </p>
+                <Button variant="outline" className="w-full">
+                  Évaluer les coûts CBAM
+                </Button>
+              </div>
+            </Card>
+
+            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300 group cursor-pointer">
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto group-hover:bg-primary/20 transition-colors">
+                  <ClipboardCheck className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold text-foreground">CSRD Checker</h3>
+                <p className="text-muted-foreground">
+                  Vérifiez votre conformité aux nouvelles exigences de reporting de durabilité et préparez-vous à la directive CSRD.
+                </p>
+                <Button variant="outline" className="w-full">
+                  Vérifier la conformité CSRD
+                </Button>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 bg-gradient-eco">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
+              Support
+            </Badge>
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
+              Questions fréquemment posées
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Trouvez rapidement les réponses à vos questions les plus courantes
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <Accordion type="single" collapsible className="space-y-4">
+              <AccordionItem value="item-1" className="bg-gradient-card border shadow-card rounded-lg px-6">
+                <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
+                  Qu'est-ce qu'un calculateur d'empreinte carbone?
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground pt-4">
+                  Un calculateur d'empreinte carbone est un outil qui permet de quantifier les émissions de gaz à effet de serre générées par les activités d'une entreprise. Il mesure les émissions directes (Scope 1), indirectes liées à l'énergie (Scope 2) et autres émissions indirectes (Scope 3) selon les standards internationaux comme le GHG Protocol.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-2" className="bg-gradient-card border shadow-card rounded-lg px-6">
+                <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
+                  Quels sont les avantages d'un logiciel permettant de calculer l'empreinte carbone d'une entreprise ?
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground pt-4">
+                  Un logiciel de calcul d'empreinte carbone offre plusieurs avantages : automatisation des calculs, gain de temps considérable, précision des données, suivi en temps réel, génération de rapports conformes aux réglementations, identification des leviers de réduction, et aide à la prise de décision stratégique pour la transition écologique.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-3" className="bg-gradient-card border shadow-card rounded-lg px-6">
+                <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
+                  Comment la plateforme de développement durable de Plan A aide-t-elle les entreprises à mesurer leurs émissions ?
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground pt-4">
+                  Notre plateforme CarbonTrack simplifie la mesure des émissions grâce à une interface intuitive, des facteurs d'émission actualisés automatiquement, l'intégration avec vos systèmes existants, des tableaux de bord personnalisables, et un accompagnement expert pour interpréter les résultats et définir un plan d'action.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-4" className="bg-gradient-card border shadow-card rounded-lg px-6">
+                <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
+                  Plan A permet-elle de calculer les émissions de scopes 1, 2 et 3 ?
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground pt-4">
+                  Oui, CarbonTrack couvre l'intégralité des émissions selon la méthodologie GHG Protocol : Scope 1 (émissions directes), Scope 2 (électricité, chauffage, refroidissement), et Scope 3 (chaîne de valeur complète). Notre plateforme inclut plus de 15 catégories du Scope 3 pour une mesure exhaustive.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-5" className="bg-gradient-card border shadow-card rounded-lg px-6">
+                <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
+                  Quelles sont les principales caractéristiques du logiciel de bilan carbone ?
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground pt-4">
+                  Les principales caractéristiques incluent : calcul automatisé selon les normes ISO 14064 et GHG Protocol, interface collaborative multi-utilisateurs, tableaux de bord personnalisables, génération de rapports conformes CSRD, suivi des actions de réduction, alertes et notifications, API pour l'intégration, et support expert inclus.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-6" className="bg-gradient-card border shadow-card rounded-lg px-6">
+                <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
+                  Pourquoi les entreprises doivent-elles calculer leur empreinte carbone ?
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground pt-4">
+                  Le calcul de l'empreinte carbone est devenu essentiel pour : respecter les nouvelles réglementations (CSRD, taxonomie européenne), répondre aux attentes des investisseurs et clients, identifier des opportunités d'économies, améliorer sa compétitivité, contribuer aux objectifs climatiques, et préparer l'avenir face aux enjeux environnementaux.
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
         </div>
       </section>

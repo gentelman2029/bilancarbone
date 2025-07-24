@@ -8,10 +8,26 @@ import {
   FileText, Download, Mail, Share2, CheckCircle, AlertTriangle, 
   TrendingDown, Building, Target, Clock, Users, Zap, 
   Truck, Factory, Lightbulb, Award, BarChart3, PieChart,
-  Calendar, MapPin, Leaf, DollarSign, Recycle, Calculator
+  Calendar, MapPin, Leaf, DollarSign, Recycle, Calculator, RotateCcw
 } from "lucide-react";
 import { useEmissions } from "@/contexts/EmissionsContext";
-import { PieChart as RechartsPC, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, Area, AreaChart } from 'recharts';
+import { 
+  PieChart as RechartsPC, 
+  Cell, 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer, 
+  LineChart, 
+  Line, 
+  Area, 
+  AreaChart,
+  Pie
+} from 'recharts';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { supabase } from "@/integrations/supabase/client";
@@ -31,10 +47,16 @@ interface ActionPlan {
 }
 
 export const EnhancedReportGenerator = () => {
-  const { emissions, hasEmissions } = useEmissions();
+  const { emissions, hasEmissions, resetEmissions } = useEmissions();
   const [actionPlans, setActionPlans] = useState<ActionPlan[]>([]);
+  const [activeTab, setActiveTab] = useState("overview");
   
   const toTonnes = (kg: number) => (kg / 1000).toFixed(3);
+
+  const handleResetData = () => {
+    resetEmissions();
+    setActionPlans([]);
+  };
 
   // Génération automatique d'actions basées sur les émissions
   const generateActionPlans = (): ActionPlan[] => {
@@ -171,9 +193,15 @@ export const EnhancedReportGenerator = () => {
 
   // Données pour les graphiques
   const pieData = hasEmissions ? [
-    { name: 'Scope 1', value: emissions.scope1, color: '#ef4444' },
-    { name: 'Scope 2', value: emissions.scope2, color: '#f97316' },
-    { name: 'Scope 3', value: emissions.scope3, color: '#3b82f6' }
+    { name: 'Scope 1', value: Math.round(emissions.scope1), color: '#ef4444' },
+    { name: 'Scope 2', value: Math.round(emissions.scope2), color: '#f97316' },
+    { name: 'Scope 3', value: Math.round(emissions.scope3), color: '#3b82f6' }
+  ].filter(item => item.value > 0) : [];
+
+  const barData = hasEmissions ? [
+    { name: 'Scope 1', emissions: Math.round(emissions.scope1/1000), target: Math.round(emissions.scope1/1000 * 0.7) },
+    { name: 'Scope 2', emissions: Math.round(emissions.scope2/1000), target: Math.round(emissions.scope2/1000 * 0.5) },
+    { name: 'Scope 3', emissions: Math.round(emissions.scope3/1000), target: Math.round(emissions.scope3/1000 * 0.6) }
   ] : [];
 
   const reductionData = actionPlans.map((action, index) => ({
@@ -321,28 +349,62 @@ export const EnhancedReportGenerator = () => {
           </div>
         </div>
         
-        {hasEmissions ? (
-          <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 h-auto p-1">
-              <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">
-                <PieChart className="w-4 h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Vue d'ensemble</span>
-              </TabsTrigger>
-              <TabsTrigger value="analysis" className="text-xs sm:text-sm py-2">
-                <BarChart3 className="w-4 h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Analyse</span>
-              </TabsTrigger>
-              <TabsTrigger value="actions" className="text-xs sm:text-sm py-2">
-                <Target className="w-4 h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Actions</span>
-              </TabsTrigger>
-              <TabsTrigger value="projections" className="text-xs sm:text-sm py-2">
-                <TrendingDown className="w-4 h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Projections</span>
-              </TabsTrigger>
-            </TabsList>
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex space-x-2">
+            <Button
+              variant={activeTab === "overview" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveTab("overview")}
+              className="flex items-center"
+            >
+              <PieChart className="w-4 h-4 mr-2" />
+              Vue d'ensemble
+            </Button>
+            <Button
+              variant={activeTab === "analysis" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveTab("analysis")}
+              className="flex items-center"
+            >
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Analyse
+            </Button>
+            <Button
+              variant={activeTab === "actions" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveTab("actions")}
+              className="flex items-center"
+            >
+              <Target className="w-4 h-4 mr-2" />
+              Actions
+            </Button>
+            <Button
+              variant={activeTab === "projections" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveTab("projections")}
+              className="flex items-center"
+            >
+              <TrendingDown className="w-4 h-4 mr-2" />
+              Projections
+            </Button>
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleResetData}
+            className="flex items-center text-destructive hover:bg-destructive/10"
+          >
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Réinitialiser
+          </Button>
+        </div>
 
-            <TabsContent value="overview" className="mt-6 space-y-4">
+        {hasEmissions ? (
+          <div className="w-full">{/* Replace Tabs component with conditional rendering */}
+
+            {activeTab === "overview" && (
+              <div className="mt-6 space-y-4">
               {/* KPIs clés */}
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <Card className="p-4 bg-primary/5 border-primary/20">
@@ -390,24 +452,54 @@ export const EnhancedReportGenerator = () => {
                 </Card>
               </div>
 
-              {/* Graphique en camembert */}
-              <Card className="p-4 sm:p-6">
-                <h4 className="font-semibold text-foreground mb-4">Répartition des émissions</h4>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RechartsPC data={pieData}>
-                      {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                      <Tooltip formatter={(value: number) => [`${(value/1000).toFixed(2)} tCO2e`, 'Émissions']} />
-                      <Legend />
-                    </RechartsPC>
-                  </ResponsiveContainer>
-                </div>
-              </Card>
-            </TabsContent>
+              {/* Graphiques interactifs */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card className="p-4 sm:p-6">
+                  <h4 className="font-semibold text-foreground mb-4">Répartition des émissions</h4>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsPC data={pieData}>
+                        <Pie
+                          data={pieData}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                          dataKey="value"
+                          label={({name, value}) => `${name}: ${(value/1000).toFixed(1)} tCO2e`}
+                        >
+                          {pieData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: number) => [`${(value/1000).toFixed(2)} tCO2e`, 'Émissions']} />
+                        <Legend />
+                      </RechartsPC>
+                    </ResponsiveContainer>
+                  </div>
+                </Card>
 
-            <TabsContent value="analysis" className="mt-6 space-y-4">
+                <Card className="p-4 sm:p-6">
+                  <h4 className="font-semibold text-foreground mb-4">Émissions vs Objectifs</h4>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={barData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="emissions" fill="#ef4444" name="Émissions actuelles" />
+                        <Bar dataKey="target" fill="#22c55e" name="Objectif 2030" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </Card>
+              </div>
+              </div>
+            )}
+
+            {activeTab === "analysis" && (
+              <div className="mt-6 space-y-4">
               {/* Benchmark détaillé */}
               <Card className="p-4 sm:p-6">
                 <h4 className="font-semibold text-foreground mb-4">Benchmark sectoriel</h4>
@@ -443,9 +535,11 @@ export const EnhancedReportGenerator = () => {
                   </div>
                 </div>
               </Card>
-            </TabsContent>
+              </div>
+            )}
 
-            <TabsContent value="actions" className="mt-6 space-y-4">
+            {activeTab === "actions" && (
+              <div className="mt-6 space-y-4">
               {/* Plan d'action chiffré */}
               <Card className="p-4 sm:p-6">
                 <h4 className="font-semibold text-foreground mb-4 flex items-center">
@@ -502,9 +596,11 @@ export const EnhancedReportGenerator = () => {
                   </ResponsiveContainer>
                 </div>
               </Card>
-            </TabsContent>
+              </div>
+            )}
 
-            <TabsContent value="projections" className="mt-6 space-y-4">
+            {activeTab === "projections" && (
+              <div className="mt-6 space-y-4">
               {/* Projection de réduction */}
               <Card className="p-4 sm:p-6">
                 <h4 className="font-semibold text-foreground mb-4">Trajectoire de décarbonation</h4>
@@ -561,8 +657,9 @@ export const EnhancedReportGenerator = () => {
                   <Progress value={85} className="h-2" />
                 </div>
               </Card>
-            </TabsContent>
-          </Tabs>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="text-center py-8">
             <AlertTriangle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />

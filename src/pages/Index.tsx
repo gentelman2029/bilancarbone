@@ -5,6 +5,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Leaf, BarChart3, Target, Shield, Users, Zap, TrendingDown, CheckCircle, Building, Eye, Search, FileText, Calculator, DollarSign, ClipboardCheck, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-carbon.jpg";
+import { QuickCarbonCalculator } from "@/components/QuickCarbonCalculator";
+import { CBAMChecker } from "@/components/CBAMChecker";
+import { CSRDChecker } from "@/components/CSRDChecker";
 
 const Index = () => {
   const features = [
@@ -612,7 +615,7 @@ const Index = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300 group cursor-pointer">
+            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300 group">
               <div className="text-center space-y-4">
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto group-hover:bg-primary/20 transition-colors">
                   <Calculator className="w-8 h-8 text-primary" />
@@ -621,13 +624,11 @@ const Index = () => {
                 <p className="text-muted-foreground">
                   Estimez rapidement votre empreinte carbone avec notre calculateur intégré basé sur les derniers facteurs d'émission.
                 </p>
-                <Button variant="outline" className="w-full">
-                  Accéder au calculateur
-                </Button>
+                <QuickCarbonCalculator />
               </div>
             </Card>
 
-            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300 group cursor-pointer">
+            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300 group">
               <div className="text-center space-y-4">
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto group-hover:bg-primary/20 transition-colors">
                   <DollarSign className="w-8 h-8 text-primary" />
@@ -636,13 +637,11 @@ const Index = () => {
                 <p className="text-muted-foreground">
                   Estimez vos futurs coûts MACF et les économies potentielles avec notre outil d'évaluation du mécanisme d'ajustement carbone aux frontières.
                 </p>
-                <Button variant="outline" className="w-full">
-                  Évaluer les coûts CBAM
-                </Button>
+                <CBAMChecker />
               </div>
             </Card>
 
-            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300 group cursor-pointer">
+            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300 group">
               <div className="text-center space-y-4">
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto group-hover:bg-primary/20 transition-colors">
                   <ClipboardCheck className="w-8 h-8 text-primary" />
@@ -651,9 +650,7 @@ const Index = () => {
                 <p className="text-muted-foreground">
                   Vérifiez votre conformité aux nouvelles exigences de reporting de durabilité et préparez-vous à la directive CSRD.
                 </p>
-                <Button variant="outline" className="w-full">
-                  Vérifier la conformité CSRD
-                </Button>
+                <CSRDChecker />
               </div>
             </Card>
           </div>

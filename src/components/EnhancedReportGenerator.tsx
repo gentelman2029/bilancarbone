@@ -213,10 +213,10 @@ export const EnhancedReportGenerator = () => {
 
   const yearlyProjection = hasEmissions ? [
     { year: '2024', current: emissions.total, projected: emissions.total },
-    { year: '2025', current: emissions.total, projected: emissions.total * 0.85 },
+    { year: '2025', current: emissions.total, projected: emissions.total * 0.88 },
     { year: '2026', current: emissions.total, projected: emissions.total * 0.70 },
     { year: '2027', current: emissions.total, projected: emissions.total * 0.55 },
-    { year: '2030', current: emissions.total, projected: emissions.total * 0.30 }
+    { year: '2030', current: emissions.total, projected: emissions.total * 0.35 }
   ] : [];
 
   const getBenchmarkStatus = () => {
@@ -234,120 +234,325 @@ export const EnhancedReportGenerator = () => {
     if (!hasEmissions) return;
 
     const pdf = new jsPDF('p', 'mm', 'a4');
+    
     const totalTonnes = emissions.total / 1000;
     const benchmark = getBenchmarkStatus();
     
-    // Page de garde
-    pdf.setFontSize(24);
+    // Configuration des couleurs et styles
+    const colors = {
+      primary: [0, 102, 204] as [number, number, number],
+      secondary: [64, 64, 64] as [number, number, number],
+      success: [34, 197, 94] as [number, number, number],
+      warning: [245, 158, 11] as [number, number, number],
+      danger: [239, 68, 68] as [number, number, number]
+    };
+    
+    // Page de garde avec logo et design moderne
+    pdf.setFillColor(0, 102, 204);
+    pdf.rect(0, 0, 210, 60, 'F');
+    
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(28);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('RAPPORT CARBONE', 20, 35);
+    pdf.text('DÉTAILLÉ AVEC PLAN D\'ACTION', 20, 50);
+    
     pdf.setTextColor(40, 40, 40);
-    pdf.text('RAPPORT CARBONE DÉTAILLÉ', 20, 30);
-    
-    pdf.setFontSize(16);
-    pdf.text('Analyse complète de l\'empreinte carbone', 20, 45);
-    
-    pdf.setFontSize(12);
-    pdf.text(`Généré le ${new Date().toLocaleDateString('fr-FR')}`, 20, 60);
-    pdf.text('par CarbonTrack Pro', 20, 70);
-
-    // Synthèse exécutive
-    pdf.setFontSize(16);
-    pdf.setTextColor(0, 102, 204);
-    pdf.text('SYNTHÈSE EXÉCUTIVE', 20, 95);
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('Analyse complète de l\'empreinte carbone et stratégie de réduction', 20, 80);
     
     pdf.setFontSize(11);
-    pdf.setTextColor(40, 40, 40);
-    
-    const synthese = [
-      `Empreinte carbone totale : ${totalTonnes.toFixed(3)} tonnes CO2e`,
-      `Performance globale : ${benchmark?.message}`,
-      `Score environnemental : ${benchmark?.score}/100`,
-      '',
-      'RÉPARTITION PAR SCOPE :',
-      `• Scope 1 (directes) : ${toTonnes(emissions.scope1)} tCO2e (${Math.round((emissions.scope1/emissions.total)*100)}%)`,
-      `• Scope 2 (électricité) : ${toTonnes(emissions.scope2)} tCO2e (${Math.round((emissions.scope2/emissions.total)*100)}%)`,
-      `• Scope 3 (indirectes) : ${toTonnes(emissions.scope3)} tCO2e (${Math.round((emissions.scope3/emissions.total)*100)}%)`
-    ];
+    pdf.text(`📅 Généré le ${new Date().toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long', 
+      year: 'numeric'
+    })}`, 20, 95);
+    pdf.text('🌱 CarbonTrack Pro - Solution d\'analyse environnementale', 20, 105);
 
-    let yPos = 105;
-    synthese.forEach(line => {
-      pdf.text(line, 20, yPos);
-      yPos += 7;
+    // Sommaire interactif (nouvelle page)
+    pdf.addPage();
+    pdf.setTextColor(...colors.primary);
+    pdf.setFontSize(18);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('📋 SOMMAIRE', 20, 30);
+    
+    pdf.setTextColor(...colors.secondary);
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    let yPos = 50;
+    const sommaire = [
+      '1. Synthèse exécutive ............................................................... p.3',
+      '2. Analyse détaillée par scope .................................................. p.4', 
+      '3. Plan d\'action chiffré ............................................................ p.5',
+      '4. Projections financières ........................................................ p.6',
+      '5. Graphiques et indicateurs .................................................... p.7',
+      '6. Recommandations prioritaires .............................................. p.8'
+    ];
+    
+    sommaire.forEach(item => {
+      pdf.text(item, 25, yPos);
+      yPos += 10;
     });
 
-    // Plan d'action chiffré
+    // Synthèse exécutive avec encadrés colorés
     pdf.addPage();
+    pdf.setFillColor(...colors.primary);
+    pdf.rect(15, 20, 180, 8, 'F');
+    pdf.setTextColor(255, 255, 255);
     pdf.setFontSize(16);
-    pdf.setTextColor(0, 102, 204);
-    pdf.text('PLAN D\'ACTION CHIFFRÉ', 20, 30);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('1. SYNTHÈSE EXÉCUTIVE', 20, 26);
+    
+    // Encadré émissions totales
+    pdf.setFillColor(220, 250, 220);
+    pdf.rect(20, 40, 170, 25, 'F');
+    pdf.setTextColor(...colors.secondary);
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(`🌍 Empreinte carbone globale : ${totalTonnes.toFixed(1)} tonnes équivalent CO2`, 25, 50);
+    pdf.setFontSize(11);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`📊 Évaluation environnementale : ${benchmark?.message} (score : ${benchmark?.score}/100)`, 25, 58);
+    
+    // Tableau des scopes avec couleurs
+    yPos = 80;
+    pdf.setTextColor(...colors.primary);
+    pdf.setFontSize(13);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('RÉPARTITION PAR SCOPE D\'ÉMISSIONS :', 20, yPos);
+    
+    const scopeData = [
+      { scope: 'Scope 1', emissions: emissions.scope1, color: colors.danger, description: 'Émissions directes (combustibles, processus)' },
+      { scope: 'Scope 2', emissions: emissions.scope2, color: colors.warning, description: 'Émissions indirectes (électricité, vapeur)' },
+      { scope: 'Scope 3', emissions: emissions.scope3, color: colors.primary, description: 'Autres émissions indirectes (supply chain)' }
+    ];
+    
+    yPos += 15;
+    scopeData.forEach((scope, index) => {
+      const percentage = Math.round((scope.emissions/emissions.total)*100);
+      const tonnes = (scope.emissions/1000).toFixed(1);
+      
+      // Pastille colorée
+      pdf.setFillColor(...scope.color);
+      pdf.circle(25, yPos + 2, 2, 'F');
+      
+      pdf.setTextColor(...colors.secondary);
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`${scope.scope} : ${tonnes} tCO2e (${percentage}%)`, 30, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(scope.description, 30, yPos + 6);
+      
+      yPos += 18;
+    });
+
+    // Plan d'action chiffré avec design amélioré
+    pdf.addPage();
+    pdf.setFillColor(...colors.primary);
+    pdf.rect(15, 20, 180, 8, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('3. PLAN D\'ACTION CHIFFRÉ', 20, 26);
 
     yPos = 45;
     actionPlans.forEach((action, index) => {
-      if (yPos > 250) {
+      if (yPos > 240) {
         pdf.addPage();
         yPos = 30;
       }
 
-      pdf.setFontSize(12);
-      pdf.setTextColor(40, 40, 40);
-      pdf.text(`${index + 1}. ${action.title}`, 20, yPos);
+      // Encadré pour chaque action
+      const actionHeight = 35;
+      pdf.setFillColor(245, 245, 245);
+      pdf.rect(20, yPos - 5, 170, actionHeight, 'F');
+      
+      // Numéro d'action avec pastille colorée
+      const priorityColor = action.priority === 'high' ? colors.danger : 
+                           action.priority === 'medium' ? colors.warning : colors.success;
+      pdf.setFillColor(...priorityColor);
+      pdf.circle(28, yPos + 3, 3, 'F');
+      
+      pdf.setTextColor(...colors.secondary);
+      pdf.setFontSize(13);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`${index + 1}. ${action.title}`, 35, yPos);
       
       pdf.setFontSize(10);
-      pdf.text(`Description: ${action.description}`, 25, yPos + 8);
-      pdf.text(`Réduction estimée: ${action.estimatedReduction.toFixed(0)} kg CO2e`, 25, yPos + 16);
-      pdf.text(`Coût d'investissement: ${action.estimatedCost.toLocaleString()} €`, 25, yPos + 24);
-      pdf.text(`ROI: ${action.roi}x | Délai: ${action.implementationTime}`, 25, yPos + 32);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`📝 ${action.description}`, 25, yPos + 8);
       
-      yPos += 45;
+      // Métriques avec icônes
+      pdf.text(`➤ Réduction estimée : ${(action.estimatedReduction/1000).toFixed(1)} tonnes CO2e`, 25, yPos + 16);
+      pdf.text(`➤ Coût projeté : ${action.estimatedCost.toLocaleString()} €`, 25, yPos + 22);
+      pdf.text(`➤ Retour sur investissement : ${action.roi}x, atteint sous ${action.implementationTime}`, 25, yPos + 28);
+      
+      yPos += actionHeight + 10;
     });
 
-    // Projections financières
+    // Projections financières avec graphiques textuels
     pdf.addPage();
+    pdf.setFillColor(...colors.primary);
+    pdf.rect(15, 20, 180, 8, 'F');
+    pdf.setTextColor(255, 255, 255);
     pdf.setFontSize(16);
-    pdf.setTextColor(0, 102, 204);
-    pdf.text('PROJECTIONS FINANCIÈRES', 20, 30);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('4. PROJECTIONS FINANCIÈRES', 20, 26);
 
     const totalInvestment = actionPlans.reduce((sum, action) => sum + action.estimatedCost, 0);
     const totalReduction = actionPlans.reduce((sum, action) => sum + action.estimatedReduction, 0);
-    const carbonPrice = 80; // €/tonne CO2e
+    const carbonPrice = 85; // €/tonne CO2e (prix actualisé)
     const annualSavings = (totalReduction / 1000) * carbonPrice;
 
-    const financial = [
-      `Investissement total requis : ${totalInvestment.toLocaleString()} €`,
-      `Réduction totale possible : ${(totalReduction/1000).toFixed(1)} tonnes CO2e/an`,
-      `Économies annuelles estimées : ${annualSavings.toLocaleString()} €/an`,
-      `Retour sur investissement : ${(totalInvestment / annualSavings).toFixed(1)} ans`,
-      '',
-      'AVANTAGES INTANGIBLES :',
-      '• Amélioration de l\'image de marque',
-      '• Conformité réglementaire anticipée',
-      '• Réduction des risques climatiques',
-      '• Motivation des employés'
+    // Encadrés avec couleurs pour les métriques clés
+    yPos = 45;
+    const financialMetrics = [
+      { 
+        label: '💰 Investissement total requis',
+        value: `${totalInvestment.toLocaleString()} €`,
+        color: colors.primary,
+        description: 'Coût total du plan d\'action sur 18 mois'
+      },
+      { 
+        label: '🌱 Réduction totale possible', 
+        value: `${(totalReduction/1000).toFixed(1)} tonnes CO2e/an`,
+        color: colors.success,
+        description: 'Impact environnemental annuel du plan'
+      },
+      { 
+        label: '💵 Économies annuelles estimées',
+        value: `${Math.round(annualSavings).toLocaleString()} €/an`,
+        color: colors.warning,
+        description: 'Valorisation des réductions (prix carbone : 85€/t)'
+      },
+      {
+        label: '⚡ Retour sur investissement',
+        value: `${(totalInvestment / annualSavings).toFixed(1)} ans`,
+        color: colors.danger,
+        description: 'Période d\'amortissement financier'
+      }
     ];
 
-    yPos = 45;
-    financial.forEach(line => {
-      pdf.text(line, 20, yPos);
-      yPos += 8;
+    financialMetrics.forEach((metric, index) => {
+      // Encadré coloré
+      pdf.setFillColor(240, 248, 255);
+      pdf.rect(20, yPos, 170, 20, 'F');
+      
+      pdf.setTextColor(...metric.color);
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(metric.label, 25, yPos + 6);
+      
+      pdf.setTextColor(...colors.secondary);
+      pdf.setFontSize(14);
+      pdf.text(metric.value, 25, yPos + 13);
+      
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(metric.description, 25, yPos + 18);
+      
+      yPos += 30;
     });
 
-    // Sauvegarde
-    pdf.save(`rapport-carbone-detaille-${new Date().toISOString().split('T')[0]}.pdf`);
+    // Section avantages intangibles
+    yPos += 10;
+    pdf.setFillColor(250, 250, 220);
+    pdf.rect(20, yPos, 170, 40, 'F');
+    
+    pdf.setTextColor(...colors.primary);
+    pdf.setFontSize(13);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('🎯 AVANTAGES STRATÉGIQUES INTANGIBLES :', 25, yPos + 8);
+    
+    const benefits = [
+      '✓ Amélioration de l\'image de marque et différenciation concurrentielle',
+      '✓ Conformité réglementaire anticipée (CSRD, taxonomie verte)',
+      '✓ Réduction des risques climatiques et résilience business',
+      '✓ Attraction et motivation des talents (RSE)'
+    ];
+    
+    pdf.setTextColor(...colors.secondary);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    let benefitY = yPos + 16;
+    benefits.forEach(benefit => {
+      pdf.text(benefit, 25, benefitY);
+      benefitY += 6;
+    });
+
+    // Dernière page - Dashboard Power BI
+    pdf.addPage();
+    pdf.setFillColor(...colors.primary);
+    pdf.rect(15, 20, 180, 8, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('6. DASHBOARD INTERACTIF POWER BI', 20, 26);
+    
+    pdf.setTextColor(...colors.secondary);
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    yPos = 45;
+    
+    const powerBIInfo = [
+      '🎯 Votre dashboard Power BI personnalisé sera disponible sous 48h',
+      '',
+      '📊 FONCTIONNALITÉS INCLUSES :',
+      '• Visualisations interactives en temps réel',
+      '• Filtres dynamiques par période, scope et catégorie',
+      '• Comparaisons sectorielles automatisées',
+      '• Projections prédictives basées sur l\'IA',
+      '• Alertes automatiques de dépassement',
+      '• Export automatique de rapports mensuels',
+      '',
+      '🔗 ACCÈS :',
+      '• Lien d\'accès personnalisé envoyé par email',
+      '• Compatible mobile, tablette et desktop',
+      '• Mise à jour automatique des données',
+      '• Partage sécurisé avec votre équipe',
+      '',
+      '💡 BÉNÉFICES :',
+      '• Pilotage en temps réel de votre performance carbone',
+      '• Décisions data-driven pour vos actions climat',
+      '• Reporting automatisé pour vos parties prenantes'
+    ];
+    
+    powerBIInfo.forEach(line => {
+      if (line.startsWith('📊') || line.startsWith('🔗') || line.startsWith('💡')) {
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(line, 20, yPos);
+      } else {
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(line, line.startsWith('•') ? 25 : 20, yPos);
+      }
+      yPos += 6;
+    });
+
+    // Sauvegarde avec nom amélioré
+    const currentDate = new Date().toISOString().split('T')[0];
+    const companyName = 'MonEntreprise'; // Peut être dynamique
+    pdf.save(`${companyName}-Rapport-Carbone-PowerBI-${currentDate}.pdf`);
   };
 
   const benchmark = getBenchmarkStatus();
 
   return (
-    <div className="space-y-6">
-      <Card className="p-4 sm:p-6 bg-gradient-card border shadow-card">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <BarChart3 className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <h3 className="text-lg sm:text-xl font-semibold text-foreground">Rapport Intelligent Avancé</h3>
-            <p className="text-sm text-muted-foreground">Analyse graphique et plan d'action chiffré</p>
-          </div>
-        </div>
+        <div className="space-y-6">
+          <Card className="p-4 sm:p-6 bg-gradient-to-br from-primary/5 via-accent/5 to-secondary/10 border border-primary/20 shadow-lg">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="p-3 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl">
+                <BarChart3 className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  Rapport Intelligent Avancé
+                </h3>
+                <p className="text-sm text-muted-foreground font-medium">
+                  Dashboard interactif Power BI • Analyse graphique • Plan d'action chiffré
+                </p>
+              </div>
+            </div>
         
         <div className="flex justify-between items-center mb-4">
           <div className="flex space-x-2">

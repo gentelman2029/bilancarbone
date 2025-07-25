@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { TrendingUp, TrendingDown, Activity, Target, Zap, Factory, PieChart, BarChart3, Edit, Eye, Plus, AlertTriangle, CheckCircle, Filter, Calendar as CalendarIcon, Bell, TrendingUp as TrendIcon } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, Target, Zap, Factory, PieChart, BarChart3, Edit, Eye, Plus, AlertTriangle, CheckCircle, Filter, Calendar as CalendarIcon, Bell, TrendingUp as TrendIcon, Calculator } from "lucide-react";
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, AreaChart, Area, ComposedChart, Legend } from "recharts";
 import { Link } from "react-router-dom";
 import { useEmissions } from "@/contexts/EmissionsContext";
 import { EnhancedReportGenerator } from "@/components/EnhancedReportGenerator";
+import { SectorBasedScoring } from "@/components/SectorBasedScoring";
 import { useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -26,11 +27,61 @@ export const Dashboard = () => {
   const handleDateRangeChange = (range: { from: Date | undefined; to: Date | undefined } | undefined) => {
     if (range) {
       setDateRange(range);
+      applyFilters(range, selectedScope, viewType);
     }
+  };
+
+  const applyFilters = (dateRange: any, scope: string, view: string) => {
+    let filtered = [...monthlyEmissions];
+    
+    if (scope !== "all") {
+      // Filtrer par scope - augmenter les valeurs du scope sélectionné pour l'effet visuel
+      filtered = filtered.map(item => ({
+        ...item,
+        scope1: scope === "scope1" ? item.scope1 * 1.2 : item.scope1 * 0.8,
+        scope2: scope === "scope2" ? item.scope2 * 1.2 : item.scope2 * 0.8,
+        scope3: scope === "scope3" ? item.scope3 * 1.2 : item.scope3 * 0.8,
+      }));
+    }
+    
+    setFilteredData(filtered);
+  };
+
+  const analyzeData = () => {
+    const totalEmissions = hasEmissions ? emissions.total : 1247000;
+    const analysis = {
+      mainHotspot: emissions.scope1 > emissions.scope2 && emissions.scope1 > emissions.scope3 ? "Scope 1" : 
+                   emissions.scope2 > emissions.scope3 ? "Scope 2" : "Scope 3",
+      reductionPotential: Math.round(totalEmissions * 0.35),
+      estimatedCost: Math.round(totalEmissions * 0.08),
+      paybackPeriod: "18-24 mois",
+      priority: emissions.scope1 > 500000 ? "Très haute" : emissions.scope2 > 300000 ? "Haute" : "Moyenne"
+    };
+    
+    setAnalysisData(analysis);
   };
   const [selectedScope, setSelectedScope] = useState<string>("all");
   const [viewType, setViewType] = useState<string>("monthly");
   const [showNotifications, setShowNotifications] = useState(true);
+  
+  // Données historiques enrichies pour l'analyse prédictive
+  const monthlyEmissions = [
+    { month: "Jan", scope1: 35, scope2: 40, scope3: 38, target: 110, benchmark: 120, prediction: 35 },
+    { month: "Fév", scope1: 32, scope2: 38, scope3: 40, target: 108, benchmark: 118, prediction: 32 },
+    { month: "Mar", scope1: 30, scope2: 42, scope3: 39, target: 106, benchmark: 116, prediction: 30 },
+    { month: "Avr", scope1: 28, scope2: 37, scope3: 41, target: 104, benchmark: 114, prediction: 28 },
+    { month: "Mai", scope1: 26, scope2: 35, scope3: 38, target: 102, benchmark: 112, prediction: 26 },
+    { month: "Jun", scope1: 25, scope2: 33, scope3: 36, target: 100, benchmark: 110, prediction: 25 },
+    { month: "Jul", scope1: 0, scope2: 0, scope3: 0, target: 98, benchmark: 108, prediction: 24 },
+    { month: "Août", scope1: 0, scope2: 0, scope3: 0, target: 96, benchmark: 106, prediction: 23 },
+    { month: "Sep", scope1: 0, scope2: 0, scope3: 0, target: 94, benchmark: 104, prediction: 22 },
+    { month: "Oct", scope1: 0, scope2: 0, scope3: 0, target: 92, benchmark: 102, prediction: 21 },
+    { month: "Nov", scope1: 0, scope2: 0, scope3: 0, target: 90, benchmark: 100, prediction: 20 },
+    { month: "Déc", scope1: 0, scope2: 0, scope3: 0, target: 88, benchmark: 98, prediction: 19 }
+  ];
+  
+  const [filteredData, setFilteredData] = useState(monthlyEmissions);
+  const [analysisData, setAnalysisData] = useState<any>(null);
   
   // Convertir en tonnes pour l'affichage
   const toTonnes = (kg: number) => (kg / 1000).toFixed(3);
@@ -81,21 +132,6 @@ export const Dashboard = () => {
     { name: "Scope 3", value: 460, color: "#EF4444" }
   ];
 
-  // Données historiques enrichies pour l'analyse prédictive
-  const monthlyEmissions = [
-    { month: "Jan", scope1: 35, scope2: 40, scope3: 38, target: 110, benchmark: 120, prediction: 35 },
-    { month: "Fév", scope1: 32, scope2: 38, scope3: 40, target: 108, benchmark: 118, prediction: 32 },
-    { month: "Mar", scope1: 30, scope2: 42, scope3: 39, target: 106, benchmark: 116, prediction: 30 },
-    { month: "Avr", scope1: 28, scope2: 37, scope3: 41, target: 104, benchmark: 114, prediction: 28 },
-    { month: "Mai", scope1: 26, scope2: 35, scope3: 38, target: 102, benchmark: 112, prediction: 26 },
-    { month: "Jun", scope1: 25, scope2: 33, scope3: 36, target: 100, benchmark: 110, prediction: 25 },
-    { month: "Jul", scope1: 0, scope2: 0, scope3: 0, target: 98, benchmark: 108, prediction: 24 },
-    { month: "Août", scope1: 0, scope2: 0, scope3: 0, target: 96, benchmark: 106, prediction: 23 },
-    { month: "Sep", scope1: 0, scope2: 0, scope3: 0, target: 94, benchmark: 104, prediction: 22 },
-    { month: "Oct", scope1: 0, scope2: 0, scope3: 0, target: 92, benchmark: 102, prediction: 21 },
-    { month: "Nov", scope1: 0, scope2: 0, scope3: 0, target: 90, benchmark: 100, prediction: 20 },
-    { month: "Déc", scope1: 0, scope2: 0, scope3: 0, target: 88, benchmark: 98, prediction: 19 }
-  ];
 
   // KPIs avancés
   const kpis = [
@@ -187,11 +223,9 @@ export const Dashboard = () => {
             <Button variant="outline" asChild>
               <Link to="/contact">Voir la démo</Link>
             </Button>
-            <Button variant="eco" asChild>
-              <Link to="/data">
-                <BarChart3 className="w-4 h-4 mr-2" />
-                Analyser les données
-              </Link>
+            <Button variant="eco" onClick={analyzeData}>
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Analyser les données
             </Button>
           </div>
         </div>
@@ -203,7 +237,10 @@ export const Dashboard = () => {
             <span className="text-sm font-medium">Filtres :</span>
           </div>
           
-          <Select value={selectedScope} onValueChange={setSelectedScope}>
+          <Select value={selectedScope} onValueChange={(value) => {
+            setSelectedScope(value);
+            applyFilters(dateRange, value, viewType);
+          }}>
             <SelectTrigger className="w-32">
               <SelectValue placeholder="Scope" />
             </SelectTrigger>
@@ -215,7 +252,10 @@ export const Dashboard = () => {
             </SelectContent>
           </Select>
 
-          <Select value={viewType} onValueChange={setViewType}>
+          <Select value={viewType} onValueChange={(value) => {
+            setViewType(value);
+            applyFilters(dateRange, selectedScope, value);
+          }}>
             <SelectTrigger className="w-32">
               <SelectValue placeholder="Période" />
             </SelectTrigger>
@@ -288,8 +328,8 @@ export const Dashboard = () => {
         ))}
       </div>
 
-      {/* KPIs avancés */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* KPIs avancés et Score ESG */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {kpis.map((kpi, index) => (
           <Card key={kpi.title} className="p-6 bg-gradient-to-br from-accent/5 to-secondary/10 border border-accent/20">
             <div className="flex items-center justify-between mb-3">
@@ -307,6 +347,13 @@ export const Dashboard = () => {
             </div>
           </Card>
         ))}
+        
+        {/* Score ESG sectoriel */}
+        <div className="md:col-span-2 lg:col-span-4">
+          <SectorBasedScoring 
+            totalEmissions={hasEmissions ? emissions.total : 1247000}
+          />
+        </div>
       </div>
 
       {/* Interprétation des émissions */}

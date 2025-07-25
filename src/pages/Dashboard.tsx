@@ -2,14 +2,35 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, TrendingDown, Activity, Target, Zap, Factory, PieChart, BarChart3, Edit, Eye, Plus, AlertTriangle, CheckCircle } from "lucide-react";
-import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line } from "recharts";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { TrendingUp, TrendingDown, Activity, Target, Zap, Factory, PieChart, BarChart3, Edit, Eye, Plus, AlertTriangle, CheckCircle, Filter, Calendar as CalendarIcon, Bell, TrendingUp as TrendIcon } from "lucide-react";
+import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, AreaChart, Area, ComposedChart, Legend } from "recharts";
 import { Link } from "react-router-dom";
 import { useEmissions } from "@/contexts/EmissionsContext";
 import { EnhancedReportGenerator } from "@/components/EnhancedReportGenerator";
+import { useState } from "react";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 export const Dashboard = () => {
   const { emissions, hasEmissions } = useEmissions();
+  
+  // États pour les filtres interactifs
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: new Date(2024, 0, 1),
+    to: new Date()
+  });
+  
+  const handleDateRangeChange = (range: { from: Date | undefined; to: Date | undefined } | undefined) => {
+    if (range) {
+      setDateRange(range);
+    }
+  };
+  const [selectedScope, setSelectedScope] = useState<string>("all");
+  const [viewType, setViewType] = useState<string>("monthly");
+  const [showNotifications, setShowNotifications] = useState(true);
   
   // Convertir en tonnes pour l'affichage
   const toTonnes = (kg: number) => (kg / 1000).toFixed(3);
@@ -40,7 +61,7 @@ export const Dashboard = () => {
       color: "text-accent"
     },
     {
-      title: "Objectif 2024",
+      title: "Objectif 2026",
       value: "1,100 tCO2e",
       change: hasEmissions ? `${Math.round((emissions.total / 1100000) * 100)}%` : "0%",
       trend: "target",
@@ -60,13 +81,48 @@ export const Dashboard = () => {
     { name: "Scope 3", value: 460, color: "#EF4444" }
   ];
 
+  // Données historiques enrichies pour l'analyse prédictive
   const monthlyEmissions = [
-    { month: "Jan", scope1: 35, scope2: 40, scope3: 38 },
-    { month: "Fév", scope1: 32, scope2: 38, scope3: 40 },
-    { month: "Mar", scope1: 30, scope2: 42, scope3: 39 },
-    { month: "Avr", scope1: 28, scope2: 37, scope3: 41 },
-    { month: "Mai", scope1: 26, scope2: 35, scope3: 38 },
-    { month: "Jun", scope1: 25, scope2: 33, scope3: 36 }
+    { month: "Jan", scope1: 35, scope2: 40, scope3: 38, target: 110, benchmark: 120, prediction: 35 },
+    { month: "Fév", scope1: 32, scope2: 38, scope3: 40, target: 108, benchmark: 118, prediction: 32 },
+    { month: "Mar", scope1: 30, scope2: 42, scope3: 39, target: 106, benchmark: 116, prediction: 30 },
+    { month: "Avr", scope1: 28, scope2: 37, scope3: 41, target: 104, benchmark: 114, prediction: 28 },
+    { month: "Mai", scope1: 26, scope2: 35, scope3: 38, target: 102, benchmark: 112, prediction: 26 },
+    { month: "Jun", scope1: 25, scope2: 33, scope3: 36, target: 100, benchmark: 110, prediction: 25 },
+    { month: "Jul", scope1: 0, scope2: 0, scope3: 0, target: 98, benchmark: 108, prediction: 24 },
+    { month: "Août", scope1: 0, scope2: 0, scope3: 0, target: 96, benchmark: 106, prediction: 23 },
+    { month: "Sep", scope1: 0, scope2: 0, scope3: 0, target: 94, benchmark: 104, prediction: 22 },
+    { month: "Oct", scope1: 0, scope2: 0, scope3: 0, target: 92, benchmark: 102, prediction: 21 },
+    { month: "Nov", scope1: 0, scope2: 0, scope3: 0, target: 90, benchmark: 100, prediction: 20 },
+    { month: "Déc", scope1: 0, scope2: 0, scope3: 0, target: 88, benchmark: 98, prediction: 19 }
+  ];
+
+  // KPIs avancés
+  const kpis = [
+    {
+      title: "Intensité carbone",
+      value: hasEmissions ? `${(emissions.total / 1000).toFixed(2)} tCO2e/M€` : "1.25 tCO2e/M€",
+      change: "-8.5%",
+      trend: "down",
+      icon: TrendIcon,
+      target: "0.95 tCO2e/M€"
+    },
+    {
+      title: "Réduction YTD",
+      value: "12.3%",
+      change: "+2.1%",
+      trend: "up",
+      icon: TrendingDown,
+      target: "15%"
+    },
+    {
+      title: "Score ESG",
+      value: "B+",
+      change: "↑ 1 niveau",
+      trend: "up",
+      icon: CheckCircle,
+      target: "A-"
+    }
   ];
 
   const interpretEmissions = (total: number) => {
@@ -100,45 +156,154 @@ export const Dashboard = () => {
   const interpretation = interpretEmissions(hasEmissions ? emissions.total : 1247);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard Carbone</h1>
-          <p className="text-muted-foreground">Vue d'ensemble de votre empreinte carbone</p>
+    <div className="container mx-auto px-4 py-8 space-y-8">
+      {/* Header modernisé avec notifications */}
+      <div className="bg-gradient-to-r from-primary/5 via-accent/5 to-secondary/5 rounded-2xl p-6 border border-primary/10">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-primary/10 rounded-xl">
+              <Activity className="w-8 h-8 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Dashboard Carbone Intelligent
+              </h1>
+              <p className="text-muted-foreground text-lg">Analyse prédictive et pilotage ESG en temps réel</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-3">
+            {showNotifications && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="relative"
+                onClick={() => setShowNotifications(false)}
+              >
+                <Bell className="w-4 h-4 mr-2" />
+                Alertes
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full animate-pulse"></span>
+              </Button>
+            )}
+            <Button variant="outline" asChild>
+              <Link to="/contact">Voir la démo</Link>
+            </Button>
+            <Button variant="eco" asChild>
+              <Link to="/data">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Analyser les données
+              </Link>
+            </Button>
+          </div>
         </div>
-        <div className="flex space-x-2">
-          <Button variant="outline" asChild>
-            <Link to="/pricing">
-              Tarification
-            </Link>
-          </Button>
-          <Button variant="eco" asChild>
-            <Link to="/data">
-              <BarChart3 className="w-4 h-4 mr-2" />
-              Interpréter les résultats
-            </Link>
-          </Button>
+
+        {/* Filtres interactifs */}
+        <div className="flex flex-wrap items-center gap-4 p-4 bg-background/50 rounded-xl border">
+          <div className="flex items-center space-x-2">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Filtres :</span>
+          </div>
+          
+          <Select value={selectedScope} onValueChange={setSelectedScope}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Scope" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous scopes</SelectItem>
+              <SelectItem value="scope1">Scope 1</SelectItem>
+              <SelectItem value="scope2">Scope 2</SelectItem>
+              <SelectItem value="scope3">Scope 3</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={viewType} onValueChange={setViewType}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Période" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="daily">Journalier</SelectItem>
+              <SelectItem value="weekly">Hebdomadaire</SelectItem>
+              <SelectItem value="monthly">Mensuel</SelectItem>
+              <SelectItem value="yearly">Annuel</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-64">
+                <CalendarIcon className="w-4 h-4 mr-2" />
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    `${format(dateRange.from, "dd/MM/yyyy", { locale: fr })} - ${format(dateRange.to, "dd/MM/yyyy", { locale: fr })}`
+                  ) : (
+                    format(dateRange.from, "dd/MM/yyyy", { locale: fr })
+                  )
+                ) : (
+                  "Sélectionner période"
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange?.from}
+                selected={dateRange}
+                onSelect={handleDateRangeChange}
+                numberOfMonths={2}
+                locale={fr}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* KPIs principaux modernisés */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {metrics.map((metric) => (
-          <Card key={metric.title} className="p-6 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <metric.icon className={`w-8 h-8 ${metric.color}`} />
-              <Badge 
-                variant={metric.trend === "down" ? "secondary" : metric.trend === "target" ? "default" : "destructive"}
-                className="flex items-center space-x-1"
-              >
-                {metric.trend === "up" && <TrendingUp className="w-3 h-3" />}
-                {metric.trend === "down" && <TrendingDown className="w-3 h-3" />}
-                {metric.trend === "target" && <Target className="w-3 h-3" />}
-                <span>{metric.change}</span>
+          <Card key={metric.title} className="group relative p-6 bg-gradient-to-br from-background to-secondary/20 border border-primary/10 hover:border-primary/30 transition-all duration-500 hover:shadow-xl hover:shadow-primary/10">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                  <metric.icon className={`w-6 h-6 ${metric.color}`} />
+                </div>
+                <Badge 
+                  variant={metric.trend === "down" ? "secondary" : metric.trend === "target" ? "default" : "destructive"}
+                  className="flex items-center space-x-1 px-3 py-1"
+                >
+                  {metric.trend === "up" && <TrendingUp className="w-3 h-3" />}
+                  {metric.trend === "down" && <TrendingDown className="w-3 h-3" />}
+                  {metric.trend === "target" && <Target className="w-3 h-3" />}
+                  <span className="font-semibold">{metric.change}</span>
+                </Badge>
+              </div>
+              <div>
+                <p className="text-3xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent mb-2">
+                  {metric.value}
+                </p>
+                <p className="text-sm text-muted-foreground font-medium">{metric.title}</p>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* KPIs avancés */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {kpis.map((kpi, index) => (
+          <Card key={kpi.title} className="p-6 bg-gradient-to-br from-accent/5 to-secondary/10 border border-accent/20">
+            <div className="flex items-center justify-between mb-3">
+              <kpi.icon className={`w-5 h-5 ${kpi.trend === "down" ? "text-primary" : "text-accent"}`} />
+              <Badge variant={kpi.trend === "down" ? "default" : "secondary"} className="text-xs">
+                {kpi.change}
               </Badge>
             </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground mb-1">{metric.value}</p>
-              <p className="text-sm text-muted-foreground">{metric.title}</p>
+            <div className="space-y-2">
+              <div className="flex items-baseline justify-between">
+                <span className="text-2xl font-bold text-foreground">{kpi.value}</span>
+                <span className="text-xs text-muted-foreground">vs {kpi.target}</span>
+              </div>
+              <p className="text-sm font-medium text-muted-foreground">{kpi.title}</p>
             </div>
           </Card>
         ))}
@@ -236,50 +401,130 @@ export const Dashboard = () => {
         </div>
       </Card>
 
-      {/* Graphiques */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card className="p-6 bg-gradient-card border shadow-card">
-          <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center space-x-2">
-            <PieChart className="w-5 h-5 text-primary" />
-            <span>Répartition par Scope</span>
-          </h3>
-          <div className="h-64">
+      {/* Graphiques interactifs avancés */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Graphique en camembert interactif */}
+        <Card className="p-6 bg-gradient-to-br from-background to-primary/5 border border-primary/10">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-semibold text-foreground flex items-center space-x-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <PieChart className="w-5 h-5 text-primary" />
+              </div>
+              <span>Répartition par Scope</span>
+            </h3>
+            <Badge variant="outline" className="text-xs">
+              Filtré: {selectedScope === "all" ? "Tous" : selectedScope.toUpperCase()}
+            </Badge>
+          </div>
+          <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <RechartsPieChart>
                 <Pie
                   data={emissionsByScope}
                   cx="50%"
                   cy="50%"
-                  outerRadius={80}
+                  innerRadius={60}
+                  outerRadius={120}
+                  paddingAngle={5}
                   dataKey="value"
-                  label={({name, value}) => `${name}: ${value} tCO2e`}
                 >
                   {emissionsByScope.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={entry.color}
+                      stroke={entry.color}
+                      strokeWidth={2}
+                    />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip 
+                  formatter={(value: any, name: any) => [`${value} tCO2e`, name]}
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px'
+                  }}
+                />
+                <Legend />
               </RechartsPieChart>
             </ResponsiveContainer>
           </div>
         </Card>
 
-        <Card className="p-6 bg-gradient-card border shadow-card">
-          <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center space-x-2">
-            <BarChart3 className="w-5 h-5 text-primary" />
-            <span>Évolution mensuelle</span>
-          </h3>
-          <div className="h-64">
+        {/* Graphique combiné avec prédictions */}
+        <Card className="p-6 bg-gradient-to-br from-background to-accent/5 border border-accent/10">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-semibold text-foreground flex items-center space-x-3">
+              <div className="p-2 bg-accent/10 rounded-lg">
+                <BarChart3 className="w-5 h-5 text-accent" />
+              </div>
+              <span>Analyse Prédictive</span>
+            </h3>
+            <Badge variant="outline" className="text-xs">
+              Vue: {viewType}
+            </Badge>
+          </div>
+          <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={monthlyEmissions}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="scope1" stroke="#059669" name="Scope 1" />
-                <Line type="monotone" dataKey="scope2" stroke="#3B82F6" name="Scope 2" />
-                <Line type="monotone" dataKey="scope3" stroke="#EF4444" name="Scope 3" />
-              </LineChart>
+              <ComposedChart data={monthlyEmissions} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px'
+                  }}
+                />
+                <Legend />
+                <Area 
+                  type="monotone" 
+                  dataKey="benchmark" 
+                  fill="hsl(var(--muted))" 
+                  stroke="hsl(var(--muted-foreground))"
+                  fillOpacity={0.3}
+                  name="Benchmark sectoriel"
+                />
+                <Bar 
+                  dataKey="scope1" 
+                  stackId="a" 
+                  fill="hsl(var(--primary))" 
+                  name="Scope 1"
+                  radius={[0, 0, 4, 4]}
+                />
+                <Bar 
+                  dataKey="scope2" 
+                  stackId="a" 
+                  fill="hsl(var(--accent))" 
+                  name="Scope 2"
+                />
+                <Bar 
+                  dataKey="scope3" 
+                  stackId="a" 
+                  fill="hsl(var(--destructive))" 
+                  name="Scope 3"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="target" 
+                  stroke="hsl(var(--success))" 
+                  strokeWidth={3}
+                  strokeDasharray="5 5"
+                  dot={false}
+                  name="Objectif 2026"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="prediction" 
+                  stroke="hsl(var(--warning))" 
+                  strokeWidth={2}
+                  strokeDasharray="3 3"
+                  dot={{ fill: 'hsl(var(--warning))', strokeWidth: 2, r: 4 }}
+                  name="Prédiction IA"
+                />
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
         </Card>
@@ -291,7 +536,7 @@ export const Dashboard = () => {
           <div className="space-y-4">
             <div>
               <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted-foreground">Réduction 2024</span>
+                <span className="text-muted-foreground">Réduction 2026</span>
                 <span className="font-medium text-foreground">88% atteint</span>
               </div>
               <Progress value={88} className="h-2" />

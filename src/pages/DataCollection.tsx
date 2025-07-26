@@ -345,14 +345,14 @@ export const DataCollection = () => {
     }
     
     // Déchets
-    if (scope3Data.wasteType && scope3Data.wasteQuantity) {
-      const wasteQuantity = parseFloat(scope3Data.wasteQuantity);
-      const wasteFactor = emissionFactors.scope3.waste[scope3Data.wasteType];
+    if (currentData.wasteType && currentData.wasteQuantity) {
+      const wasteQuantity = parseFloat(currentData.wasteQuantity);
+      const wasteFactor = emissionFactors.scope3.waste[currentData.wasteType];
       
       if (wasteFactor) {
         let treatmentMultiplier = 1;
-        if (scope3Data.treatment === 'recycling') treatmentMultiplier = 0.3;
-        else if (scope3Data.treatment === 'composting') treatmentMultiplier = 0.1;
+        if (currentData.treatment === 'recycling') treatmentMultiplier = 0.3;
+        else if (currentData.treatment === 'composting') treatmentMultiplier = 0.1;
         
         const emissions = wasteQuantity * wasteFactor * treatmentMultiplier;
         totalEmissions += emissions;
@@ -361,9 +361,9 @@ export const DataCollection = () => {
     }
     
     // Achats de biens et services
-    if (scope3Data.materialType && scope3Data.materialQuantity) {
-      const materialQuantity = parseFloat(scope3Data.materialQuantity);
-      const materialFactor = emissionFactors.scope3.materials[scope3Data.materialType];
+    if (currentData.materialType && currentData.materialQuantity) {
+      const materialQuantity = parseFloat(currentData.materialQuantity);
+      const materialFactor = emissionFactors.scope3.materials[currentData.materialType];
       
       if (materialFactor) {
         const emissions = materialQuantity * materialFactor;
@@ -373,13 +373,13 @@ export const DataCollection = () => {
     }
     
     // Voyages d'affaires
-    if (scope3Data.businessTripType && scope3Data.businessDistance) {
-      const businessDistance = parseFloat(scope3Data.businessDistance);
-      const businessFactor = emissionFactors.scope3.businessTravel[scope3Data.businessTripType];
+    if (currentData.businessTripType && currentData.businessDistance) {
+      const businessDistance = parseFloat(currentData.businessDistance);
+      const businessFactor = emissionFactors.scope3.businessTravel[currentData.businessTripType];
       
       if (businessFactor) {
         let multiplier = 1;
-        switch (scope3Data.businessFrequency) {
+        switch (currentData.businessFrequency) {
           case 'daily': multiplier = 365; break;
           case 'weekly': multiplier = 52; break;
           case 'monthly': multiplier = 12; break;
@@ -392,10 +392,10 @@ export const DataCollection = () => {
     }
     
     // Fret et distribution
-    if (scope3Data.freightType && scope3Data.freightDistance && scope3Data.freightWeight) {
-      const freightDistance = parseFloat(scope3Data.freightDistance);
-      const freightWeight = parseFloat(scope3Data.freightWeight);
-      const freightFactor = emissionFactors.scope3.freight[scope3Data.freightType];
+    if (currentData.freightType && currentData.freightDistance && currentData.freightWeight) {
+      const freightDistance = parseFloat(currentData.freightDistance);
+      const freightWeight = parseFloat(currentData.freightWeight);
+      const freightFactor = emissionFactors.scope3.freight[currentData.freightType];
       
       if (freightFactor) {
         const emissions = freightDistance * freightWeight * freightFactor;
@@ -405,10 +405,10 @@ export const DataCollection = () => {
     }
     
     // Immobilisations
-    if (scope3Data.assetType && scope3Data.assetQuantity && scope3Data.assetLifespan) {
-      const assetQuantity = parseFloat(scope3Data.assetQuantity);
-      const assetLifespan = parseFloat(scope3Data.assetLifespan);
-      const assetFactor = emissionFactors.scope3.assets[scope3Data.assetType];
+    if (currentData.assetType && currentData.assetQuantity && currentData.assetLifespan) {
+      const assetQuantity = parseFloat(currentData.assetQuantity);
+      const assetLifespan = parseFloat(currentData.assetLifespan);
+      const assetFactor = emissionFactors.scope3.assets[currentData.assetType];
       
       if (assetFactor) {
         const emissions = (assetQuantity * assetFactor) / assetLifespan;

@@ -1082,7 +1082,7 @@ export const DataCollection = () => {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="freight-type">Mode de transport</Label>
-                  <Select value={scope3Data.freightType} onValueChange={(value) => setScope3Data({...scope3Data, freightType: value})}>
+                  <Select value={scope3Form.data.freightType} onValueChange={(value) => scope3Form.updateData({ freightType: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Mode de transport" />
                     </SelectTrigger>
@@ -1100,8 +1100,8 @@ export const DataCollection = () => {
                     id="freight-distance" 
                     placeholder="0" 
                     type="number" 
-                    value={scope3Data.freightDistance}
-                    onChange={(e) => setScope3Data({...scope3Data, freightDistance: e.target.value})}
+                    value={scope3Form.data.freightDistance}
+                    onChange={(e) => scope3Form.updateData({ freightDistance: e.target.value })}
                   />
                 </div>
                 <div>
@@ -1111,8 +1111,8 @@ export const DataCollection = () => {
                     placeholder="0" 
                     type="number" 
                     step="0.1"
-                    value={scope3Data.freightWeight}
-                    onChange={(e) => setScope3Data({...scope3Data, freightWeight: e.target.value})}
+                    value={scope3Form.data.freightWeight}
+                    onChange={(e) => scope3Form.updateData({ freightWeight: e.target.value })}
                   />
                 </div>
               </div>
@@ -1127,7 +1127,7 @@ export const DataCollection = () => {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="asset-type">Type d'actif</Label>
-                  <Select value={scope3Data.assetType} onValueChange={(value) => setScope3Data({...scope3Data, assetType: value})}>
+                  <Select value={scope3Form.data.assetType} onValueChange={(value) => scope3Form.updateData({ assetType: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Type d'actif" />
                     </SelectTrigger>
@@ -1146,8 +1146,8 @@ export const DataCollection = () => {
                     id="asset-quantity" 
                     placeholder="0" 
                     type="number" 
-                    value={scope3Data.assetQuantity}
-                    onChange={(e) => setScope3Data({...scope3Data, assetQuantity: e.target.value})}
+                    value={scope3Form.data.assetQuantity}
+                    onChange={(e) => scope3Form.updateData({ assetQuantity: e.target.value })}
                   />
                 </div>
                 <div>
@@ -1156,8 +1156,8 @@ export const DataCollection = () => {
                     id="asset-lifespan" 
                     placeholder="0" 
                     type="number" 
-                    value={scope3Data.assetLifespan}
-                    onChange={(e) => setScope3Data({...scope3Data, assetLifespan: e.target.value})}
+                    value={scope3Form.data.assetLifespan}
+                    onChange={(e) => scope3Form.updateData({ assetLifespan: e.target.value })}
                   />
                 </div>
               </div>

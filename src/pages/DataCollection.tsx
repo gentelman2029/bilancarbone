@@ -321,9 +321,8 @@ export const DataCollection = () => {
     let totalEmissions = 0;
     let details = [];
     
-    // Synchroniser avec les formulaires persistants
+    // Utiliser directement les données persistantes du formulaire
     const currentData = scope3Form.data;
-    setScope3Data(currentData);
     
     // Transport des employés
     if (currentData.transportType && currentData.distance) {

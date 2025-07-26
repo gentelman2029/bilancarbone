@@ -8,13 +8,14 @@ import { Upload, Calculator, FileSpreadsheet, Zap, Car, Trash2, Building, Factor
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useEmissions } from "@/contexts/EmissionsContext";
+import { usePersistentForm } from "@/hooks/usePersistentForm";
 
 export const DataCollection = () => {
   const { toast } = useToast();
   const { emissions, updateEmissions, resetEmissions, hasEmissions, saveToSupabase } = useEmissions();
 
-  // Scope 1 states - élargi pour plus de sources
-  const [scope1Data, setScope1Data] = useState({
+  // Formulaires persistants avec localStorage
+  const scope1Form = usePersistentForm("emissions-scope1", {
     fuelType: "",
     quantity: "",
     unit: "",
@@ -29,8 +30,7 @@ export const DataCollection = () => {
     refrigerantQuantity: ""
   });
   
-  // Scope 2 states
-  const [scope2Data, setScope2Data] = useState({
+  const scope2Form = usePersistentForm("emissions-scope2", {
     electricity: "",
     provider: "",
     renewable: "",
@@ -40,8 +40,7 @@ export const DataCollection = () => {
     steam: ""
   });
   
-  // Scope 3 states - élargi pour plus de catégories
-  const [scope3Data, setScope3Data] = useState({
+  const scope3Form = usePersistentForm("emissions-scope3", {
     // Transport
     transportType: "",
     distance: "",
@@ -66,6 +65,11 @@ export const DataCollection = () => {
     assetQuantity: "",
     assetLifespan: ""
   });
+
+  // États pour compatibilité avec le code existant
+  const [scope1Data, setScope1Data] = useState(scope1Form.data);
+  const [scope2Data, setScope2Data] = useState(scope2Form.data);
+  const [scope3Data, setScope3Data] = useState(scope3Form.data);
   
   // Emission factors (kg CO2e per unit) - facteurs étendus
   const emissionFactors = {
@@ -176,10 +180,14 @@ export const DataCollection = () => {
     let totalEmissions = 0;
     let details = [];
     
+    // Synchroniser avec les formulaires persistants
+    const currentData = scope1Form.data;
+    setScope1Data(currentData);
+    
     // Combustibles fixes
-    if (scope1Data.fuelType && scope1Data.quantity && scope1Data.unit) {
-      const quantity = parseFloat(scope1Data.quantity);
-      const factor = emissionFactors.scope1[scope1Data.fuelType]?.[scope1Data.unit];
+    if (currentData.fuelType && currentData.quantity && currentData.unit) {
+      const quantity = parseFloat(currentData.quantity);
+      const factor = emissionFactors.scope1[currentData.fuelType]?.[currentData.unit];
       
       if (factor) {
         const emissions = quantity * factor;
@@ -189,9 +197,9 @@ export const DataCollection = () => {
     }
     
     // Véhicules de l'entreprise
-    if (scope1Data.vehicleType && scope1Data.vehicleFuel && scope1Data.fuelQuantity) {
-      const fuelQuantity = parseFloat(scope1Data.fuelQuantity);
-      const factor = emissionFactors.scope1.vehicles[scope1Data.vehicleFuel];
+    if (currentData.vehicleType && currentData.vehicleFuel && currentData.fuelQuantity) {
+      const fuelQuantity = parseFloat(currentData.fuelQuantity);
+      const factor = emissionFactors.scope1.vehicles[currentData.vehicleFuel];
       
       if (factor) {
         const emissions = fuelQuantity * factor;
@@ -201,9 +209,9 @@ export const DataCollection = () => {
     }
     
     // Équipements mobiles
-    if (scope1Data.equipmentType && scope1Data.equipmentFuel && scope1Data.equipmentQuantity) {
-      const equipmentQuantity = parseFloat(scope1Data.equipmentQuantity);
-      const factor = emissionFactors.scope1.equipment[scope1Data.equipmentFuel];
+    if (currentData.equipmentType && currentData.equipmentFuel && currentData.equipmentQuantity) {
+      const equipmentQuantity = parseFloat(currentData.equipmentQuantity);
+      const factor = emissionFactors.scope1.equipment[currentData.equipmentFuel];
       
       if (factor) {
         const emissions = equipmentQuantity * factor;
@@ -213,9 +221,9 @@ export const DataCollection = () => {
     }
     
     // Fuites de réfrigérants
-    if (scope1Data.refrigerantType && scope1Data.refrigerantQuantity) {
-      const refrigerantQuantity = parseFloat(scope1Data.refrigerantQuantity);
-      const factor = emissionFactors.scope1.refrigerants[scope1Data.refrigerantType];
+    if (currentData.refrigerantType && currentData.refrigerantQuantity) {
+      const refrigerantQuantity = parseFloat(currentData.refrigerantQuantity);
+      const factor = emissionFactors.scope1.refrigerants[currentData.refrigerantType];
       
       if (factor) {
         const emissions = refrigerantQuantity * factor;
@@ -246,11 +254,15 @@ export const DataCollection = () => {
     let totalEmissions = 0;
     let details = [];
     
+    // Synchroniser avec les formulaires persistants
+    const currentData = scope2Form.data;
+    setScope2Data(currentData);
+    
     // Électricité
-    if (scope2Data.electricity && scope2Data.location) {
-      const electricity = parseFloat(scope2Data.electricity);
-      const renewablePercent = parseFloat(scope2Data.renewable) || 0;
-      const baseFactor = emissionFactors.scope2[scope2Data.location];
+    if (currentData.electricity && currentData.location) {
+      const electricity = parseFloat(currentData.electricity);
+      const renewablePercent = parseFloat(currentData.renewable) || 0;
+      const baseFactor = emissionFactors.scope2[currentData.location];
       
       if (baseFactor) {
         const adjustedFactor = baseFactor * (1 - renewablePercent / 100);
@@ -261,8 +273,8 @@ export const DataCollection = () => {
     }
     
     // Chauffage
-    if (scope2Data.heating) {
-      const heating = parseFloat(scope2Data.heating);
+    if (currentData.heating) {
+      const heating = parseFloat(currentData.heating);
       const factor = emissionFactors.scope2.heating;
       const emissions = heating * factor;
       totalEmissions += emissions;
@@ -270,8 +282,8 @@ export const DataCollection = () => {
     }
     
     // Refroidissement
-    if (scope2Data.cooling) {
-      const cooling = parseFloat(scope2Data.cooling);
+    if (currentData.cooling) {
+      const cooling = parseFloat(currentData.cooling);
       const factor = emissionFactors.scope2.cooling;
       const emissions = cooling * factor;
       totalEmissions += emissions;
@@ -279,8 +291,8 @@ export const DataCollection = () => {
     }
     
     // Vapeur
-    if (scope2Data.steam) {
-      const steam = parseFloat(scope2Data.steam);
+    if (currentData.steam) {
+      const steam = parseFloat(currentData.steam);
       const factor = emissionFactors.scope2.steam;
       const emissions = steam * factor;
       totalEmissions += emissions;
@@ -309,14 +321,18 @@ export const DataCollection = () => {
     let totalEmissions = 0;
     let details = [];
     
+    // Synchroniser avec les formulaires persistants
+    const currentData = scope3Form.data;
+    setScope3Data(currentData);
+    
     // Transport des employés
-    if (scope3Data.transportType && scope3Data.distance) {
-      const distance = parseFloat(scope3Data.distance);
-      const transportFactor = emissionFactors.scope3.transport[scope3Data.transportType];
+    if (currentData.transportType && currentData.distance) {
+      const distance = parseFloat(currentData.distance);
+      const transportFactor = emissionFactors.scope3.transport[currentData.transportType];
       
       if (transportFactor) {
         let multiplier = 1;
-        switch (scope3Data.frequency) {
+        switch (currentData.frequency) {
           case 'daily': multiplier = 365; break;
           case 'weekly': multiplier = 52; break;
           case 'monthly': multiplier = 12; break;

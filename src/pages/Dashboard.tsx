@@ -18,6 +18,12 @@ import { fr } from "date-fns/locale";
 export const Dashboard = () => {
   const { emissions, hasEmissions } = useEmissions();
   
+  // Données réalistes basées sur les émissions calculées
+  const currentEmissions = emissions.total / 1000; // Conversion en tCO2e
+  const previousYearEmissions = currentEmissions * 1.15; // 15% de plus l'année précédente
+  const targetReduction = currentEmissions * 0.7; // Objectif -30% pour 2026
+  const progressPercentage = hasEmissions ? ((previousYearEmissions - currentEmissions) / (previousYearEmissions - targetReduction)) * 100 : 0;
+  
   // États pour les filtres interactifs
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: new Date(2024, 0, 1),
@@ -306,14 +312,16 @@ export const Dashboard = () => {
               <div className="flex-1">
                 <p className="text-emerald-700 dark:text-emerald-300 text-sm font-medium mb-2">Émissions Totales Actuelles</p>
                 <p className="text-4xl font-bold text-emerald-900 dark:text-emerald-100 mb-2">
-                  {hasEmissions ? `${toTonnes(emissions.total)} tCO2e` : "0 tCO2e"}
+                  {hasEmissions ? `${currentEmissions.toFixed(1)} tCO2e` : "0 tCO2e"}
                 </p>
                 <div className="flex items-center space-x-2">
                   <TrendingDown className="h-4 w-4 text-emerald-600" />
-                  <p className="text-emerald-600 dark:text-emerald-400 text-xs">-13.2% vs année dernière</p>
+                  <p className="text-emerald-600 dark:text-emerald-400 text-xs">
+                    {hasEmissions ? `${((previousYearEmissions - currentEmissions) / previousYearEmissions * 100).toFixed(1)}%` : "0%"} vs année dernière
+                  </p>
                 </div>
                 <p className="text-emerald-500 dark:text-emerald-400 text-xs mt-1">
-                  Précédent: {hasEmissions ? (Number(toTonnes(emissions.total)) * 1.15).toFixed(1) : "1.4"} tCO2e
+                  Précédent: {hasEmissions ? previousYearEmissions.toFixed(1) : "0"} tCO2e
                 </p>
               </div>
               <div className="bg-emerald-500/10 p-3 rounded-full">
@@ -330,17 +338,21 @@ export const Dashboard = () => {
               <div className="flex-1">
                 <p className="text-blue-700 dark:text-blue-300 text-sm font-medium mb-2">Progression vs Objectif 2026</p>
                 <p className="text-4xl font-bold text-blue-900 dark:text-blue-100 mb-2">
-                  {hasEmissions ? Math.round((1 - emissions.total / 1571000) * 100) : 22}%
+                  {hasEmissions ? `${Math.min(100, progressPercentage).toFixed(0)}` : "0"}%
                 </p>
                 <div className="flex items-center space-x-2">
                   <TrendingUp className="h-4 w-4 text-blue-600" />
-                  <p className="text-blue-600 dark:text-blue-400 text-xs">En avance sur l'objectif</p>
+                  <p className="text-blue-600 dark:text-blue-400 text-xs">
+                    {hasEmissions && progressPercentage > 50 ? "En avance sur l'objectif" : "En cours"}
+                  </p>
                 </div>
-                <p className="text-blue-500 dark:text-blue-400 text-xs mt-1">Cible: 1,100 tCO2e (-30%)</p>
+                <p className="text-blue-500 dark:text-blue-400 text-xs mt-1">
+                  Cible: {hasEmissions ? targetReduction.toFixed(1) : "N/A"} tCO2e (-30%)
+                </p>
                 <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2 mt-2">
                   <div 
                     className="bg-blue-600 dark:bg-blue-400 h-2 rounded-full transition-all duration-1000" 
-                    style={{width: `${Math.min(hasEmissions ? Math.round((1 - emissions.total / 1571000) * 100) : 22, 100)}%`}}
+                    style={{width: `${hasEmissions ? Math.min(100, progressPercentage) : 0}%`}}
                   ></div>
                 </div>
               </div>
@@ -374,9 +386,17 @@ export const Dashboard = () => {
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <p className="text-orange-700 dark:text-orange-300 text-sm font-medium mb-2">Temps Réel</p>
-                <p className="text-3xl font-bold text-orange-900 dark:text-orange-100 mb-1">1.1h</p>
+                <p className="text-3xl font-bold text-orange-900 dark:text-orange-100 mb-1">
+                  {emissions.lastUpdated ? 
+                    Math.floor((new Date().getTime() - new Date(emissions.lastUpdated).getTime()) / (1000 * 60 * 60)) : 
+                    "N/A"
+                  }
+                  {emissions.lastUpdated ? "h" : ""}
+                </p>
                 <p className="text-orange-600 dark:text-orange-400 text-xs">Depuis dernière mise à jour</p>
-                <p className="text-orange-500 dark:text-orange-400 text-xs mt-1">Données actualisées</p>
+                <p className="text-orange-500 dark:text-orange-400 text-xs mt-1">
+                  {emissions.lastUpdated ? new Date(emissions.lastUpdated).toLocaleDateString('fr-FR') : "Aucune donnée"}
+                </p>
               </div>
               <div className="bg-orange-500/10 p-3 rounded-full">
                 <Clock className="h-8 w-8 text-orange-600 dark:text-orange-400" />

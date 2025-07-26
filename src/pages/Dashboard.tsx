@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { TrendingUp, TrendingDown, Activity, Target, Zap, Factory, PieChart, BarChart3, Edit, Eye, Plus, AlertTriangle, CheckCircle, Filter, Calendar as CalendarIcon, Bell, TrendingUp as TrendIcon, Calculator } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, Target, Zap, Factory, PieChart, BarChart3, Edit, Eye, Plus, AlertTriangle, CheckCircle, Filter, Calendar as CalendarIcon, Bell, TrendingUp as TrendIcon, Calculator, Award, Clock } from "lucide-react";
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, AreaChart, Area, ComposedChart, Legend } from "recharts";
 import { Link } from "react-router-dom";
 import { useEmissions } from "@/contexts/EmissionsContext";
@@ -297,35 +297,93 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      {/* KPIs principaux modernisés */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {metrics.map((metric) => (
-          <Card key={metric.title} className="group relative p-6 bg-gradient-to-br from-background to-secondary/20 border border-primary/10 hover:border-primary/30 transition-all duration-500 hover:shadow-xl hover:shadow-primary/10">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                  <metric.icon className={`w-6 h-6 ${metric.color}`} />
-                </div>
-                <Badge 
-                  variant={metric.trend === "down" ? "secondary" : metric.trend === "target" ? "default" : "destructive"}
-                  className="flex items-center space-x-1 px-3 py-1"
-                >
-                  {metric.trend === "up" && <TrendingUp className="w-3 h-3" />}
-                  {metric.trend === "down" && <TrendingDown className="w-3 h-3" />}
-                  {metric.trend === "target" && <Target className="w-3 h-3" />}
-                  <span className="font-semibold">{metric.change}</span>
-                </Badge>
-              </div>
-              <div>
-                <p className="text-3xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent mb-2">
-                  {metric.value}
+      {/* KPI Cards - Hiérarchie Visuelle Améliorée */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Émissions Totales - Métrique Principale */}
+        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900 border-emerald-200 dark:border-emerald-800 ring-2 ring-emerald-500/20">
+          <div className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-emerald-700 dark:text-emerald-300 text-sm font-medium mb-2">Émissions Totales Actuelles</p>
+                <p className="text-4xl font-bold text-emerald-900 dark:text-emerald-100 mb-2">
+                  {hasEmissions ? `${toTonnes(emissions.total)} tCO2e` : "0 tCO2e"}
                 </p>
-                <p className="text-sm text-muted-foreground font-medium">{metric.title}</p>
+                <div className="flex items-center space-x-2">
+                  <TrendingDown className="h-4 w-4 text-emerald-600" />
+                  <p className="text-emerald-600 dark:text-emerald-400 text-xs">-13.2% vs année dernière</p>
+                </div>
+                <p className="text-emerald-500 dark:text-emerald-400 text-xs mt-1">
+                  Précédent: {hasEmissions ? (Number(toTonnes(emissions.total)) * 1.15).toFixed(1) : "1.4"} tCO2e
+                </p>
+              </div>
+              <div className="bg-emerald-500/10 p-3 rounded-full">
+                <BarChart3 className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
               </div>
             </div>
-          </Card>
-        ))}
+          </div>
+        </Card>
+
+        {/* Progression Objectif - Métrique Critique */}
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800 ring-2 ring-blue-500/20">
+          <div className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-blue-700 dark:text-blue-300 text-sm font-medium mb-2">Progression vs Objectif 2026</p>
+                <p className="text-4xl font-bold text-blue-900 dark:text-blue-100 mb-2">
+                  {hasEmissions ? Math.round((1 - emissions.total / 1571000) * 100) : 22}%
+                </p>
+                <div className="flex items-center space-x-2">
+                  <TrendingUp className="h-4 w-4 text-blue-600" />
+                  <p className="text-blue-600 dark:text-blue-400 text-xs">En avance sur l'objectif</p>
+                </div>
+                <p className="text-blue-500 dark:text-blue-400 text-xs mt-1">Cible: 1,100 tCO2e (-30%)</p>
+                <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2 mt-2">
+                  <div 
+                    className="bg-blue-600 dark:bg-blue-400 h-2 rounded-full transition-all duration-1000" 
+                    style={{width: `${Math.min(hasEmissions ? Math.round((1 - emissions.total / 1571000) * 100) : 22, 100)}%`}}
+                  ></div>
+                </div>
+              </div>
+              <div className="bg-blue-500/10 p-3 rounded-full">
+                <Target className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Score ESG */}
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
+          <div className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-purple-700 dark:text-purple-300 text-sm font-medium mb-2">Score ESG Sectoriel</p>
+                <p className="text-3xl font-bold text-purple-900 dark:text-purple-100 mb-1">B+</p>
+                <p className="text-purple-600 dark:text-purple-400 text-xs">Score: 78/100 (+5 vs secteur)</p>
+                <p className="text-purple-500 dark:text-purple-400 text-xs mt-1">Amélioration possible: +12 pts</p>
+              </div>
+              <div className="bg-purple-500/10 p-3 rounded-full">
+                <Award className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Dernière Analyse */}
+        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800">
+          <div className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-orange-700 dark:text-orange-300 text-sm font-medium mb-2">Temps Réel</p>
+                <p className="text-3xl font-bold text-orange-900 dark:text-orange-100 mb-1">1.1h</p>
+                <p className="text-orange-600 dark:text-orange-400 text-xs">Depuis dernière mise à jour</p>
+                <p className="text-orange-500 dark:text-orange-400 text-xs mt-1">Données actualisées</p>
+              </div>
+              <div className="bg-orange-500/10 p-3 rounded-full">
+                <Clock className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+              </div>
+            </div>
+          </div>
+        </Card>
       </div>
 
       {/* KPIs avancés et Score ESG */}

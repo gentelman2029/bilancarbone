@@ -17,12 +17,10 @@ export const DataCollection = () => {
   // Formulaires persistants avec localStorage
   const scope1Form = usePersistentForm("emissions-scope1", {
     fuelType: "",
-    quantity: "",
-    unit: "",
-    period: "",
+    fuelQuantity: "",
     vehicleType: "",
     vehicleFuel: "",
-    fuelQuantity: "",
+    vehicleFuelQuantity: "",
     equipmentType: "",
     equipmentFuel: "",
     equipmentQuantity: "",
@@ -185,11 +183,13 @@ export const DataCollection = () => {
     setScope1Data(currentData);
     
     // Combustibles fixes
-    if (currentData.fuelType && currentData.quantity && currentData.unit) {
-      const quantity = parseFloat(currentData.quantity);
-      const factor = emissionFactors.scope1[currentData.fuelType]?.[currentData.unit];
+    if (currentData.fuelType && currentData.fuelQuantity) {
+      const quantity = parseFloat(currentData.fuelQuantity);
+      const fuelFactors = emissionFactors.scope1[currentData.fuelType];
       
-      if (factor) {
+      if (fuelFactors) {
+        // Utiliser par défaut le facteur en litres
+        const factor = fuelFactors.liters || Object.values(fuelFactors)[0];
         const emissions = quantity * factor;
         totalEmissions += emissions;
         details.push(`Combustible: ${emissions.toFixed(2)} kg CO2e`);
@@ -197,8 +197,8 @@ export const DataCollection = () => {
     }
     
     // Véhicules de l'entreprise
-    if (currentData.vehicleType && currentData.vehicleFuel && currentData.fuelQuantity) {
-      const fuelQuantity = parseFloat(currentData.fuelQuantity);
+    if (currentData.vehicleType && currentData.vehicleFuel && currentData.vehicleFuelQuantity) {
+      const fuelQuantity = parseFloat(currentData.vehicleFuelQuantity);
       const factor = emissionFactors.scope1.vehicles[currentData.vehicleFuel];
       
       if (factor) {
@@ -534,14 +534,15 @@ export const DataCollection = () => {
               </Button>
               <Button variant="outline" onClick={() => {
                 resetEmissions();
+                scope1Form.resetData();
+                scope2Form.resetData();
+                scope3Form.resetData();
                 setScope1Data({
                   fuelType: "",
-                  quantity: "",
-                  unit: "",
-                  period: "",
+                  fuelQuantity: "",
                   vehicleType: "",
                   vehicleFuel: "",
-                  fuelQuantity: "",
+                  vehicleFuelQuantity: "",
                   equipmentType: "",
                   equipmentFuel: "",
                   equipmentQuantity: "",
@@ -616,7 +617,7 @@ export const DataCollection = () => {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="fuel-type">Type de combustible</Label>
-                  <Select value={scope1Data.fuelType} onValueChange={(value) => setScope1Data({...scope1Data, fuelType: value})}>
+                  <Select value={scope1Form.data.fuelType} onValueChange={(value) => scope1Form.updateData({ fuelType: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner un combustible" />
                     </SelectTrigger>
@@ -631,27 +632,14 @@ export const DataCollection = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="quantity">Quantité consommée</Label>
-                  <div className="flex space-x-2">
-                    <Input 
-                      id="quantity" 
-                      placeholder="0" 
-                      type="number" 
-                      value={scope1Data.quantity}
-                      onChange={(e) => setScope1Data({...scope1Data, quantity: e.target.value})}
-                    />
-                    <Select value={scope1Data.unit} onValueChange={(value) => setScope1Data({...scope1Data, unit: value})}>
-                      <SelectTrigger className="w-32">
-                        <SelectValue placeholder="Unité" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="kwh">kWh</SelectItem>
-                        <SelectItem value="m3">m³</SelectItem>
-                        <SelectItem value="liters">Litres</SelectItem>
-                        <SelectItem value="kg">kg</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <Label htmlFor="fuelQuantity">Quantité consommée (L)</Label>
+                  <Input 
+                    id="fuelQuantity" 
+                    placeholder="0" 
+                    type="number" 
+                    value={scope1Form.data.fuelQuantity}
+                    onChange={(e) => scope1Form.updateData({ fuelQuantity: e.target.value })}
+                  />
                 </div>
               </div>
             </Card>
@@ -665,7 +653,7 @@ export const DataCollection = () => {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="vehicle-type">Type de véhicule</Label>
-                  <Select value={scope1Data.vehicleType} onValueChange={(value) => setScope1Data({...scope1Data, vehicleType: value})}>
+                  <Select value={scope1Form.data.vehicleType} onValueChange={(value) => scope1Form.updateData({ vehicleType: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Type de véhicule" />
                     </SelectTrigger>
@@ -679,7 +667,7 @@ export const DataCollection = () => {
                 </div>
                 <div>
                   <Label htmlFor="vehicle-fuel">Carburant</Label>
-                  <Select value={scope1Data.vehicleFuel} onValueChange={(value) => setScope1Data({...scope1Data, vehicleFuel: value})}>
+                  <Select value={scope1Form.data.vehicleFuel} onValueChange={(value) => scope1Form.updateData({ vehicleFuel: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Type de carburant" />
                     </SelectTrigger>
@@ -692,13 +680,13 @@ export const DataCollection = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="fuel-quantity">Quantité de carburant (L ou kWh)</Label>
+                  <Label htmlFor="vehicleFuelQuantity">Quantité de carburant (L ou kWh)</Label>
                   <Input 
-                    id="fuel-quantity" 
+                    id="vehicleFuelQuantity" 
                     placeholder="0" 
                     type="number" 
-                    value={scope1Data.fuelQuantity}
-                    onChange={(e) => setScope1Data({...scope1Data, fuelQuantity: e.target.value})}
+                    value={scope1Form.data.vehicleFuelQuantity}
+                    onChange={(e) => scope1Form.updateData({ vehicleFuelQuantity: e.target.value })}
                   />
                 </div>
               </div>
@@ -713,7 +701,7 @@ export const DataCollection = () => {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="equipment-type">Type d'équipement</Label>
-                  <Select value={scope1Data.equipmentType} onValueChange={(value) => setScope1Data({...scope1Data, equipmentType: value})}>
+                  <Select value={scope1Form.data.equipmentType} onValueChange={(value) => scope1Form.updateData({ equipmentType: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Type d'équipement" />
                     </SelectTrigger>
@@ -727,7 +715,7 @@ export const DataCollection = () => {
                 </div>
                 <div>
                   <Label htmlFor="equipment-fuel">Carburant</Label>
-                  <Select value={scope1Data.equipmentFuel} onValueChange={(value) => setScope1Data({...scope1Data, equipmentFuel: value})}>
+                  <Select value={scope1Form.data.equipmentFuel} onValueChange={(value) => scope1Form.updateData({ equipmentFuel: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Type de carburant" />
                     </SelectTrigger>
@@ -744,8 +732,8 @@ export const DataCollection = () => {
                     id="equipment-quantity" 
                     placeholder="0" 
                     type="number" 
-                    value={scope1Data.equipmentQuantity}
-                    onChange={(e) => setScope1Data({...scope1Data, equipmentQuantity: e.target.value})}
+                    value={scope1Form.data.equipmentQuantity}
+                    onChange={(e) => scope1Form.updateData({ equipmentQuantity: e.target.value })}
                   />
                 </div>
               </div>
@@ -760,7 +748,7 @@ export const DataCollection = () => {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="refrigerant-type">Type de réfrigérant</Label>
-                  <Select value={scope1Data.refrigerantType} onValueChange={(value) => setScope1Data({...scope1Data, refrigerantType: value})}>
+                  <Select value={scope1Form.data.refrigerantType} onValueChange={(value) => scope1Form.updateData({ refrigerantType: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Type de réfrigérant" />
                     </SelectTrigger>
@@ -780,8 +768,8 @@ export const DataCollection = () => {
                     placeholder="0" 
                     type="number" 
                     step="0.01"
-                    value={scope1Data.refrigerantQuantity}
-                    onChange={(e) => setScope1Data({...scope1Data, refrigerantQuantity: e.target.value})}
+                    value={scope1Form.data.refrigerantQuantity}
+                    onChange={(e) => scope1Form.updateData({ refrigerantQuantity: e.target.value })}
                   />
                 </div>
               </div>
@@ -811,8 +799,8 @@ export const DataCollection = () => {
                     id="electricity" 
                     placeholder="0" 
                     type="number" 
-                    value={scope2Data.electricity}
-                    onChange={(e) => setScope2Data({...scope2Data, electricity: e.target.value})}
+                    value={scope2Form.data.electricity}
+                    onChange={(e) => scope2Form.updateData({ electricity: e.target.value })}
                   />
                 </div>
                 <div>
@@ -822,13 +810,13 @@ export const DataCollection = () => {
                     placeholder="0" 
                     type="number" 
                     max="100"
-                    value={scope2Data.renewable}
-                    onChange={(e) => setScope2Data({...scope2Data, renewable: e.target.value})}
+                    value={scope2Form.data.renewable}
+                    onChange={(e) => scope2Form.updateData({ renewable: e.target.value })}
                   />
                 </div>
                 <div>
                   <Label htmlFor="location">Localisation</Label>
-                  <Select value={scope2Data.location} onValueChange={(value) => setScope2Data({...scope2Data, location: value})}>
+                  <Select value={scope2Form.data.location} onValueChange={(value) => scope2Form.updateData({ location: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Pays/Région" />
                     </SelectTrigger>
@@ -859,8 +847,8 @@ export const DataCollection = () => {
                     id="heating" 
                     placeholder="0" 
                     type="number" 
-                    value={scope2Data.heating}
-                    onChange={(e) => setScope2Data({...scope2Data, heating: e.target.value})}
+                    value={scope2Form.data.heating}
+                    onChange={(e) => scope2Form.updateData({ heating: e.target.value })}
                   />
                 </div>
                 <div>
@@ -869,8 +857,8 @@ export const DataCollection = () => {
                     id="cooling" 
                     placeholder="0" 
                     type="number" 
-                    value={scope2Data.cooling}
-                    onChange={(e) => setScope2Data({...scope2Data, cooling: e.target.value})}
+                    value={scope2Form.data.cooling}
+                    onChange={(e) => scope2Form.updateData({ cooling: e.target.value })}
                   />
                 </div>
                 <div>
@@ -879,8 +867,8 @@ export const DataCollection = () => {
                     id="steam" 
                     placeholder="0" 
                     type="number" 
-                    value={scope2Data.steam}
-                    onChange={(e) => setScope2Data({...scope2Data, steam: e.target.value})}
+                    value={scope2Form.data.steam}
+                    onChange={(e) => scope2Form.updateData({ steam: e.target.value })}
                   />
                 </div>
               </div>
@@ -906,7 +894,7 @@ export const DataCollection = () => {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="transport-type">Type de transport</Label>
-                  <Select value={scope3Data.transportType} onValueChange={(value) => setScope3Data({...scope3Data, transportType: value})}>
+                  <Select value={scope3Form.data.transportType} onValueChange={(value) => scope3Form.updateData({ transportType: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Mode de transport" />
                     </SelectTrigger>
@@ -926,13 +914,13 @@ export const DataCollection = () => {
                     id="distance" 
                     placeholder="0" 
                     type="number"
-                    value={scope3Data.distance}
-                    onChange={(e) => setScope3Data({...scope3Data, distance: e.target.value})}
+                    value={scope3Form.data.distance}
+                    onChange={(e) => scope3Form.updateData({ distance: e.target.value })}
                   />
                 </div>
                 <div>
                   <Label htmlFor="frequency">Fréquence</Label>
-                  <Select value={scope3Data.frequency} onValueChange={(value) => setScope3Data({...scope3Data, frequency: value})}>
+                  <Select value={scope3Form.data.frequency} onValueChange={(value) => scope3Form.updateData({ frequency: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Fréquence" />
                     </SelectTrigger>
@@ -956,7 +944,7 @@ export const DataCollection = () => {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="waste-type">Type de déchet</Label>
-                  <Select value={scope3Data.wasteType} onValueChange={(value) => setScope3Data({...scope3Data, wasteType: value})}>
+                  <Select value={scope3Form.data.wasteType} onValueChange={(value) => scope3Form.updateData({ wasteType: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Type de déchet" />
                     </SelectTrigger>
@@ -978,13 +966,13 @@ export const DataCollection = () => {
                     id="waste-quantity" 
                     placeholder="0" 
                     type="number" 
-                    value={scope3Data.wasteQuantity}
-                    onChange={(e) => setScope3Data({...scope3Data, wasteQuantity: e.target.value})}
+                    value={scope3Form.data.wasteQuantity}
+                    onChange={(e) => scope3Form.updateData({ wasteQuantity: e.target.value })}
                   />
                 </div>
                 <div>
                   <Label htmlFor="treatment">Traitement</Label>
-                  <Select value={scope3Data.treatment} onValueChange={(value) => setScope3Data({...scope3Data, treatment: value})}>
+                  <Select value={scope3Form.data.treatment} onValueChange={(value) => scope3Form.updateData({ treatment: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Mode de traitement" />
                     </SelectTrigger>
@@ -1008,7 +996,7 @@ export const DataCollection = () => {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="material-type">Type de matériau</Label>
-                  <Select value={scope3Data.materialType} onValueChange={(value) => setScope3Data({...scope3Data, materialType: value})}>
+                  <Select value={scope3Form.data.materialType} onValueChange={(value) => scope3Form.updateData({ materialType: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Type de matériau" />
                     </SelectTrigger>
@@ -1029,8 +1017,8 @@ export const DataCollection = () => {
                     id="material-quantity" 
                     placeholder="0" 
                     type="number" 
-                    value={scope3Data.materialQuantity}
-                    onChange={(e) => setScope3Data({...scope3Data, materialQuantity: e.target.value})}
+                    value={scope3Form.data.materialQuantity}
+                    onChange={(e) => scope3Form.updateData({ materialQuantity: e.target.value })}
                   />
                 </div>
               </div>
@@ -1045,7 +1033,7 @@ export const DataCollection = () => {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="business-trip-type">Type de voyage</Label>
-                  <Select value={scope3Data.businessTripType} onValueChange={(value) => setScope3Data({...scope3Data, businessTripType: value})}>
+                  <Select value={scope3Form.data.businessTripType} onValueChange={(value) => scope3Form.updateData({ businessTripType: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Mode de transport" />
                     </SelectTrigger>
@@ -1064,13 +1052,13 @@ export const DataCollection = () => {
                     id="business-distance" 
                     placeholder="0" 
                     type="number" 
-                    value={scope3Data.businessDistance}
-                    onChange={(e) => setScope3Data({...scope3Data, businessDistance: e.target.value})}
+                    value={scope3Form.data.businessDistance}
+                    onChange={(e) => scope3Form.updateData({ businessDistance: e.target.value })}
                   />
                 </div>
                 <div>
                   <Label htmlFor="business-frequency">Fréquence</Label>
-                  <Select value={scope3Data.businessFrequency} onValueChange={(value) => setScope3Data({...scope3Data, businessFrequency: value})}>
+                  <Select value={scope3Form.data.businessFrequency} onValueChange={(value) => scope3Form.updateData({ businessFrequency: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Fréquence" />
                     </SelectTrigger>

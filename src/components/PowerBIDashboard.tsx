@@ -1,7 +1,12 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import { BarChart3, TrendingUp, Zap, ExternalLink } from "lucide-react";
 
 interface PowerBIDashboardProps {
@@ -17,7 +22,8 @@ export const PowerBIDashboard: React.FC<PowerBIDashboardProps> = ({
   scope2,
   scope3
 }) => {
-  const dashboardRef = useRef<HTMLDivElement>(null);
+  const [accessRequest, setAccessRequest] = useState({ name: "", email: "", company: "", message: "" });
+  const { toast } = useToast();
 
   // Données pour les graphiques Power BI
   const emissionsData = [
@@ -28,8 +34,50 @@ export const PowerBIDashboard: React.FC<PowerBIDashboardProps> = ({
 
   const totalTonnes = Math.round(totalEmissions / 1000);
 
-  // Mock Power BI embedUrl - dans un vrai projet, ce serait une URL réelle
-  const mockPowerBIUrl = `https://app.powerbi.com/embed?emissions=${totalTonnes}&scope1=${Math.round(scope1/1000)}&scope2=${Math.round(scope2/1000)}&scope3=${Math.round(scope3/1000)}`;
+  // Fonction pour demander l'accès au dashboard avancé
+  const requestDashboardAccess = async () => {
+    if (!accessRequest.name || !accessRequest.email) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs obligatoires",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Envoyer la demande d'accès par email
+      const subject = encodeURIComponent("Demande d'accès - Dashboard Avancé Carbontrack");
+      const body = encodeURIComponent(`
+Nouvelle demande d'accès au dashboard avancé:
+
+Nom: ${accessRequest.name}
+Email: ${accessRequest.email}
+Entreprise: ${accessRequest.company}
+Message: ${accessRequest.message}
+
+Données utilisateur:
+- Émissions totales: ${(totalEmissions / 1000).toFixed(1)} tCO2e
+- Date de demande: ${new Date().toLocaleDateString('fr-FR')}
+      `);
+      
+      window.open(`mailto:Carbontrack2025@protonmail.com?subject=${subject}&body=${body}`);
+      
+      toast({
+        title: "Demande envoyée",
+        description: "Votre demande d'accès a été transmise à notre équipe",
+      });
+      
+      // Réinitialiser le formulaire
+      setAccessRequest({ name: "", email: "", company: "", message: "" });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'envoyer la demande. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -205,9 +253,61 @@ export const PowerBIDashboard: React.FC<PowerBIDashboardProps> = ({
               des analyses prédictives et des recommandations automatisées basées sur vos données.
             </p>
             <div className="flex items-center space-x-4">
-              <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
-                Demander l'accès
-              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+                    Demander l'accès
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Demander l'accès au Dashboard Avancé</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="access-name">Nom complet *</Label>
+                      <Input
+                        id="access-name"
+                        value={accessRequest.name}
+                        onChange={(e) => setAccessRequest({...accessRequest, name: e.target.value})}
+                        placeholder="Votre nom complet"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="access-email">Email *</Label>
+                      <Input
+                        id="access-email"
+                        type="email"
+                        value={accessRequest.email}
+                        onChange={(e) => setAccessRequest({...accessRequest, email: e.target.value})}
+                        placeholder="votre.email@entreprise.com"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="access-company">Entreprise</Label>
+                      <Input
+                        id="access-company"
+                        value={accessRequest.company}
+                        onChange={(e) => setAccessRequest({...accessRequest, company: e.target.value})}
+                        placeholder="Nom de votre entreprise"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="access-message">Message</Label>
+                      <Textarea
+                        id="access-message"
+                        value={accessRequest.message}
+                        onChange={(e) => setAccessRequest({...accessRequest, message: e.target.value})}
+                        placeholder="Décrivez vos besoins spécifiques..."
+                        rows={3}
+                      />
+                    </div>
+                    <Button onClick={requestDashboardAccess} className="w-full">
+                      Envoyer la demande
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
               <Badge variant="outline" className="border-purple-200 text-purple-700">
                 Inclus dans votre abonnement
               </Badge>

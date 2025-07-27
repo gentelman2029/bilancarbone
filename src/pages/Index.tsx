@@ -696,19 +696,19 @@ const Index = () => {
 
               <AccordionItem value="item-3" className="bg-gradient-card border shadow-card rounded-lg px-6">
                 <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
-                  Comment la plateforme de développement durable de CarbonTrack aide-t-elle les entreprises à mesurer leurs émissions ?
+                  Comment la plateforme de développement durable de Carbontrack aide-t-elle les entreprises à mesurer leurs émissions ?
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pt-4">
-                  Notre plateforme CarbonTrack simplifie la mesure des émissions grâce à une interface intuitive, des facteurs d'émission actualisés automatiquement, l'intégration avec vos systèmes existants, des tableaux de bord personnalisables, et un accompagnement expert pour interpréter les résultats et définir un plan d'action.
+                  Notre plateforme Carbontrack simplifie la mesure des émissions grâce à une interface intuitive, des facteurs d'émission actualisés automatiquement, l'intégration avec vos systèmes existants, des tableaux de bord personnalisables, et un accompagnement expert pour interpréter les résultats et définir un plan d'action.
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-4" className="bg-gradient-card border shadow-card rounded-lg px-6">
                 <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
-                  CarbonTrack permet-elle de calculer les émissions de scopes 1, 2 et 3 ?
+                  Carbontrack permet-elle de calculer les émissions de scopes 1, 2 et 3 ?
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pt-4">
-                  Oui, CarbonTrack couvre l'intégralité des émissions selon la méthodologie GHG Protocol : Scope 1 (émissions directes), Scope 2 (électricité, chauffage, refroidissement), et Scope 3 (chaîne de valeur complète). Notre plateforme inclut plus de 15 catégories du Scope 3 pour une mesure exhaustive.
+                  Oui, Carbontrack couvre l'intégralité des émissions selon la méthodologie GHG Protocol : Scope 1 (émissions directes), Scope 2 (électricité, chauffage, refroidissement), et Scope 3 (chaîne de valeur complète). Notre plateforme inclut plus de 15 catégories du Scope 3 pour une mesure exhaustive.
                 </AccordionContent>
               </AccordionItem>
 
@@ -744,7 +744,7 @@ const Index = () => {
                 Commencez votre transition carbone aujourd'hui
               </h2>
               <p className="text-xl opacity-90 max-w-2xl mx-auto">
-                Rejoignez plus de 1000 entreprises qui font confiance à CarbonTrack pour leur Bilan Carbone®
+                Rejoignez plus de 1000 entreprises qui font confiance à Carbontrack pour leur Bilan Carbone®
               </p>
             </div>
 

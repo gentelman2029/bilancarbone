@@ -4,11 +4,16 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import { 
   FileText, Download, Mail, Share2, CheckCircle, AlertTriangle, 
   TrendingDown, Building, Target, Clock, Users, Zap, 
   Truck, Factory, Lightbulb, Award, BarChart3, PieChart,
-  Calendar, MapPin, Leaf, DollarSign, Recycle, Calculator, RotateCcw
+  Calendar, MapPin, Leaf, DollarSign, Recycle, Calculator, RotateCcw, Copy
 } from "lucide-react";
 import { useEmissions } from "@/contexts/EmissionsContext";
 import { 
@@ -51,6 +56,10 @@ export const EnhancedReportGenerator = () => {
   const { emissions, hasEmissions, resetEmissions } = useEmissions();
   const [actionPlans, setActionPlans] = useState<ActionPlan[]>([]);
   const [activeTab, setActiveTab] = useState("overview");
+  const [shareUrl, setShareUrl] = useState("");
+  const [emailData, setEmailData] = useState({ to: "", subject: "", message: "" });
+  const [accessRequest, setAccessRequest] = useState({ name: "", email: "", company: "", message: "" });
+  const { toast } = useToast();
   
   const toTonnes = (kg: number) => (kg / 1000).toFixed(3);
 
@@ -269,7 +278,11 @@ export const EnhancedReportGenerator = () => {
       month: 'long', 
       year: 'numeric'
     })}`, 20, 95);
-    pdf.text('🌱 CarbonTrack Pro - Solution d\'analyse environnementale', 20, 105);
+    
+    // Informations Carbontrack
+    pdf.text('🌱 Carbontrack - Solution d\'analyse environnementale', 20, 105);
+    pdf.text('📧 Carbontrack2025@protonmail.com', 20, 115);
+    pdf.text('📞 +216 93 460 745', 20, 125);
 
     // Sommaire interactif (nouvelle page)
     pdf.addPage();
@@ -534,6 +547,95 @@ export const EnhancedReportGenerator = () => {
     const currentDate = new Date().toISOString().split('T')[0];
     const companyName = 'MonEntreprise'; // Peut être dynamique
     pdf.save(`${companyName}-Rapport-Carbone-Dashboard-${currentDate}.pdf`);
+  };
+
+  // Fonction pour générer un lien de partage
+  const generateShareLink = () => {
+    if (!hasEmissions) return;
+    
+    // Générer un ID unique pour le rapport
+    const reportId = `report-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Construire l'URL de partage
+    const baseUrl = window.location.origin;
+    const shareLink = `${baseUrl}/shared-report/${reportId}`;
+    
+    setShareUrl(shareLink);
+    
+    // Copier dans le presse-papier
+    navigator.clipboard.writeText(shareLink).then(() => {
+      toast({
+        title: "Lien de partage généré",
+        description: "Le lien a été copié dans votre presse-papier",
+      });
+    });
+  };
+
+  // Fonction pour partager par email
+  const shareByEmail = () => {
+    if (!emailData.to || !emailData.subject) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs obligatoires",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const subject = encodeURIComponent(emailData.subject);
+    const body = encodeURIComponent(`${emailData.message}\n\nConsultez le rapport détaillé via ce lien: ${shareUrl || window.location.href}`);
+    
+    window.open(`mailto:${emailData.to}?subject=${subject}&body=${body}`);
+    
+    toast({
+      title: "Email préparé",
+      description: "Votre client email s'ouvre avec le rapport prêt à envoyer",
+    });
+  };
+
+  // Fonction pour demander l'accès au dashboard avancé
+  const requestDashboardAccess = async () => {
+    if (!accessRequest.name || !accessRequest.email) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs obligatoires",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Envoyer la demande d'accès par email
+      const subject = encodeURIComponent("Demande d'accès - Dashboard Avancé Carbontrack");
+      const body = encodeURIComponent(`
+Nouvelle demande d'accès au dashboard avancé:
+
+Nom: ${accessRequest.name}
+Email: ${accessRequest.email}
+Entreprise: ${accessRequest.company}
+Message: ${accessRequest.message}
+
+Données utilisateur:
+- Émissions totales: ${(emissions.total / 1000).toFixed(1)} tCO2e
+- Date de demande: ${new Date().toLocaleDateString('fr-FR')}
+      `);
+      
+      window.open(`mailto:Carbontrack2025@protonmail.com?subject=${subject}&body=${body}`);
+      
+      toast({
+        title: "Demande envoyée",
+        description: "Votre demande d'accès a été transmise à notre équipe",
+      });
+      
+      // Réinitialiser le formulaire
+      setAccessRequest({ name: "", email: "", company: "", message: "" });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'envoyer la demande. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    }
   };
 
   const benchmark = getBenchmarkStatus();
@@ -914,15 +1016,99 @@ export const EnhancedReportGenerator = () => {
             </Button>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <Button variant="outline" size="sm" className="w-full">
-                <Mail className="w-4 h-4 mr-2" />
-                Partager par email
-              </Button>
-              <Button variant="outline" size="sm" className="w-full">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full">
+                    <Mail className="w-4 h-4 mr-2" />
+                    Partager par email
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Partager le rapport par email</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="email-to">Destinataire *</Label>
+                      <Input
+                        id="email-to"
+                        type="email"
+                        value={emailData.to}
+                        onChange={(e) => setEmailData({...emailData, to: e.target.value})}
+                        placeholder="destinataire@exemple.com"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="email-subject">Objet *</Label>
+                      <Input
+                        id="email-subject"
+                        value={emailData.subject}
+                        onChange={(e) => setEmailData({...emailData, subject: e.target.value})}
+                        placeholder="Rapport carbone détaillé"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="email-message">Message</Label>
+                      <Textarea
+                        id="email-message"
+                        value={emailData.message}
+                        onChange={(e) => setEmailData({...emailData, message: e.target.value})}
+                        placeholder="Voici notre rapport carbone détaillé..."
+                        rows={4}
+                      />
+                    </div>
+                    <Button onClick={shareByEmail} className="w-full">
+                      Préparer l'email
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full"
+                onClick={generateShareLink}
+              >
                 <Share2 className="w-4 h-4 mr-2" />
                 Lien de partage
               </Button>
             </div>
+            
+            {shareUrl && (
+              <div className="mt-2">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Copy className="w-4 h-4 mr-2" />
+                      Voir le lien généré
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Lien de partage généré</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Lien partageable</Label>
+                        <div className="flex gap-2">
+                          <Input value={shareUrl} readOnly className="flex-1" />
+                          <Button 
+                            size="sm" 
+                            onClick={() => navigator.clipboard.writeText(shareUrl)}
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Ce lien permet d'accéder à une version web de votre rapport carbone.
+                      </p>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )}
           </div>
 
           <Separator className="my-4" />

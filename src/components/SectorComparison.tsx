@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building, TrendingUp, TrendingDown, Minus, Award } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Building, TrendingUp, TrendingDown, Minus, Award, Edit3 } from "lucide-react";
 
 const SECTOR_BENCHMARKS = {
   manufacturing: {
@@ -105,8 +107,16 @@ export const SectorComparison: React.FC<SectorComparisonProps> = ({
   totalEmissions,
   annualRevenue = 1000 // Valeur par défaut si non fournie
 }) => {
+  const [editableRevenue, setEditableRevenue] = useState<number>(annualRevenue);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  
   const emissionsTonnes = totalEmissions / 1000;
-  const emissionsIntensity = emissionsTonnes / annualRevenue; // tCO2e/k€ CA
+  const emissionsIntensity = emissionsTonnes / editableRevenue; // tCO2e/k€ CA
+
+  const handleRevenueChange = (value: string) => {
+    const numValue = parseFloat(value) || 0;
+    setEditableRevenue(numValue);
+  };
 
   const getPerformanceVsSector = (sectorKey: string) => {
     const sector = SECTOR_BENCHMARKS[sectorKey as keyof typeof SECTOR_BENCHMARKS];
@@ -162,9 +172,37 @@ export const SectorComparison: React.FC<SectorComparisonProps> = ({
             <div className="text-2xl font-bold text-primary">{emissionsIntensity.toFixed(2)}</div>
             <div className="text-sm text-muted-foreground">tCO2e/k€ CA</div>
           </Card>
-          <Card className="p-4 text-center bg-background">
-            <div className="text-2xl font-bold text-primary">{annualRevenue.toLocaleString()}k€</div>
-            <div className="text-sm text-muted-foreground">Chiffre d'affaires</div>
+          <Card className="p-4 bg-background">
+            <div className="flex items-center justify-between mb-2">
+              <Label htmlFor="revenue-input" className="text-sm text-muted-foreground">
+                Chiffre d'affaires
+              </Label>
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className="p-1 hover:bg-accent rounded transition-colors"
+              >
+                <Edit3 className="w-3 h-3 text-muted-foreground" />
+              </button>
+            </div>
+            {isEditing ? (
+              <div className="flex items-center space-x-2">
+                <Input
+                  id="revenue-input"
+                  type="number"
+                  value={editableRevenue}
+                  onChange={(e) => handleRevenueChange(e.target.value)}
+                  onBlur={() => setIsEditing(false)}
+                  onKeyDown={(e) => e.key === 'Enter' && setIsEditing(false)}
+                  className="text-center font-bold text-primary"
+                  autoFocus
+                />
+                <span className="text-sm text-muted-foreground">k€</span>
+              </div>
+            ) : (
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">{editableRevenue.toLocaleString()}k€</div>
+              </div>
+            )}
           </Card>
         </div>
 

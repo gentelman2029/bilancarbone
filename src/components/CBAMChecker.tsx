@@ -197,12 +197,62 @@ export const CBAMChecker = () => {
             
             <div>
               <Label htmlFor="productType">Type de produit</Label>
-              <Input
-                id="productType"
-                placeholder="ex: Acier inoxydable"
-                value={formData.productType}
-                onChange={(e) => setFormData({...formData, productType: e.target.value})}
-              />
+              <Select value={formData.productType} onValueChange={(value) => setFormData({...formData, productType: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionnez le type de produit" />
+                </SelectTrigger>
+                <SelectContent>
+                  {formData.sector && (
+                    <>
+                      {formData.sector === 'cement' && (
+                        <>
+                          <SelectItem value="portland">Ciment Portland</SelectItem>
+                          <SelectItem value="composite">Ciment composite</SelectItem>
+                          <SelectItem value="white">Ciment blanc</SelectItem>
+                        </>
+                      )}
+                      {formData.sector === 'iron_steel' && (
+                        <>
+                          <SelectItem value="hot_rolled">Acier laminé à chaud</SelectItem>
+                          <SelectItem value="cold_rolled">Acier laminé à froid</SelectItem>
+                          <SelectItem value="stainless">Acier inoxydable</SelectItem>
+                          <SelectItem value="carbon_steel">Acier au carbone</SelectItem>
+                        </>
+                      )}
+                      {formData.sector === 'aluminum' && (
+                        <>
+                          <SelectItem value="primary">Aluminium primaire</SelectItem>
+                          <SelectItem value="secondary">Aluminium secondaire</SelectItem>
+                          <SelectItem value="alloy">Alliages d'aluminium</SelectItem>
+                        </>
+                      )}
+                      {formData.sector === 'fertilizers' && (
+                        <>
+                          <SelectItem value="ammonia">Ammoniaque</SelectItem>
+                          <SelectItem value="urea">Urée</SelectItem>
+                          <SelectItem value="phosphate">Engrais phosphatés</SelectItem>
+                          <SelectItem value="nitrate">Nitrates</SelectItem>
+                        </>
+                      )}
+                      {formData.sector === 'electricity' && (
+                        <>
+                          <SelectItem value="renewable">Électricité renouvelable</SelectItem>
+                          <SelectItem value="fossil">Électricité fossile</SelectItem>
+                          <SelectItem value="nuclear">Électricité nucléaire</SelectItem>
+                          <SelectItem value="mixed">Mix énergétique</SelectItem>
+                        </>
+                      )}
+                      {formData.sector === 'hydrogen' && (
+                        <>
+                          <SelectItem value="green">Hydrogène vert</SelectItem>
+                          <SelectItem value="blue">Hydrogène bleu</SelectItem>
+                          <SelectItem value="grey">Hydrogène gris</SelectItem>
+                        </>
+                      )}
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

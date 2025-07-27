@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useEmissions } from "@/contexts/EmissionsContext";
 import { usePersistentForm } from "@/hooks/usePersistentForm";
+import { SectorComparison } from "@/components/SectorComparison";
 
 export const DataCollection = () => {
   const { toast } = useToast();
@@ -1171,6 +1172,13 @@ export const DataCollection = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Section de comparaison sectorielle */}
+      {hasEmissions && (
+        <div className="mt-8">
+          <SectorComparison totalEmissions={emissions.total} />
+        </div>
+      )}
     </div>
   );
 };

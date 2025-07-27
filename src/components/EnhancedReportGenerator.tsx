@@ -32,6 +32,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { PowerBIDashboard } from "@/components/PowerBIDashboard";
 
 interface ActionPlan {
   id: string;
@@ -481,22 +482,22 @@ export const EnhancedReportGenerator = () => {
       benefitY += 6;
     });
 
-    // Dernière page - Dashboard Power BI
+    // Dernière page - Dashboard Interactif
     pdf.addPage();
     pdf.setFillColor(...colors.primary);
     pdf.rect(15, 20, 180, 8, 'F');
     pdf.setTextColor(255, 255, 255);
     pdf.setFontSize(16);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('6. DASHBOARD INTERACTIF POWER BI', 20, 26);
+    pdf.text('6. DASHBOARD INTERACTIF', 20, 26);
     
     pdf.setTextColor(...colors.secondary);
     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'normal');
     yPos = 45;
     
-    const powerBIInfo = [
-      '🎯 Votre dashboard Power BI personnalisé sera disponible sous 48h',
+    const dashboardInfo = [
+      '🎯 Votre dashboard interactif personnalisé sera disponible sous 48h',
       '',
       '📊 FONCTIONNALITÉS INCLUSES :',
       '• Visualisations interactives en temps réel',
@@ -518,7 +519,7 @@ export const EnhancedReportGenerator = () => {
       '• Reporting automatisé pour vos parties prenantes'
     ];
     
-    powerBIInfo.forEach(line => {
+    dashboardInfo.forEach(line => {
       if (line.startsWith('📊') || line.startsWith('🔗') || line.startsWith('💡')) {
         pdf.setFont('helvetica', 'bold');
         pdf.text(line, 20, yPos);
@@ -532,7 +533,7 @@ export const EnhancedReportGenerator = () => {
     // Sauvegarde avec nom amélioré
     const currentDate = new Date().toISOString().split('T')[0];
     const companyName = 'MonEntreprise'; // Peut être dynamique
-    pdf.save(`${companyName}-Rapport-Carbone-PowerBI-${currentDate}.pdf`);
+    pdf.save(`${companyName}-Rapport-Carbone-Dashboard-${currentDate}.pdf`);
   };
 
   const benchmark = getBenchmarkStatus();
@@ -591,6 +592,15 @@ export const EnhancedReportGenerator = () => {
             >
               <TrendingDown className="w-4 h-4 mr-2" />
               Projections
+            </Button>
+            <Button
+              variant={activeTab === "dashboard" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveTab("dashboard")}
+              className="flex items-center"
+            >
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Dashboard
             </Button>
           </div>
           
@@ -862,6 +872,17 @@ export const EnhancedReportGenerator = () => {
                   <Progress value={85} className="h-2" />
                 </div>
               </Card>
+              </div>
+            )}
+
+            {activeTab === "dashboard" && (
+              <div className="mt-6">
+                <PowerBIDashboard
+                  totalEmissions={emissions.total}
+                  scope1={emissions.scope1}
+                  scope2={emissions.scope2}
+                  scope3={emissions.scope3}
+                />
               </div>
             )}
           </div>

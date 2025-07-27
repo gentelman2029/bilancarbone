@@ -69,9 +69,11 @@ const Index = () => {
                     Essai gratuit 14 jours
                   </Link>
                 </Button>
-                <Button variant="outline" size="lg">
-                  <Target className="w-5 h-5 mr-2" />
-                  Voir la démo
+                <Button variant="outline" size="lg" asChild>
+                  <Link to="/contact">
+                    <Target className="w-5 h-5 mr-2" />
+                    Voir la démo
+                  </Link>
                 </Button>
               </div>
             </div>
@@ -694,7 +696,7 @@ const Index = () => {
 
               <AccordionItem value="item-3" className="bg-gradient-card border shadow-card rounded-lg px-6">
                 <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
-                  Comment la plateforme de développement durable de Plan A aide-t-elle les entreprises à mesurer leurs émissions ?
+                  Comment la plateforme de développement durable de CarbonTrack aide-t-elle les entreprises à mesurer leurs émissions ?
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pt-4">
                   Notre plateforme CarbonTrack simplifie la mesure des émissions grâce à une interface intuitive, des facteurs d'émission actualisés automatiquement, l'intégration avec vos systèmes existants, des tableaux de bord personnalisables, et un accompagnement expert pour interpréter les résultats et définir un plan d'action.
@@ -703,7 +705,7 @@ const Index = () => {
 
               <AccordionItem value="item-4" className="bg-gradient-card border shadow-card rounded-lg px-6">
                 <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
-                  Plan A permet-elle de calculer les émissions de scopes 1, 2 et 3 ?
+                  CarbonTrack permet-elle de calculer les émissions de scopes 1, 2 et 3 ?
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pt-4">
                   Oui, CarbonTrack couvre l'intégralité des émissions selon la méthodologie GHG Protocol : Scope 1 (émissions directes), Scope 2 (électricité, chauffage, refroidissement), et Scope 3 (chaîne de valeur complète). Notre plateforme inclut plus de 15 catégories du Scope 3 pour une mesure exhaustive.
@@ -757,14 +759,11 @@ const Index = () => {
                 variant="outline" 
                 size="lg" 
                 className="bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
-                onClick={() => {
-                  const email = "demo@carbontrack.fr";
-                  const subject = "Demande de démonstration CarbonTrack";
-                  const body = "Bonjour,\n\nJe souhaiterais planifier une démonstration de CarbonTrack pour mon entreprise.\n\nCordialement";
-                  window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-                }}
+                asChild
               >
-                Demander une démo
+                <Link to="/contact">
+                  Demander une démo
+                </Link>
               </Button>
             </div>
 

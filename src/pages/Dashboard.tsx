@@ -53,6 +53,33 @@ export const Dashboard = () => {
     setFilteredData(filtered);
   };
 
+  const exportCSV = () => {
+    const csvData = [
+      ['Période', 'Scope 1 (tCO2e)', 'Scope 2 (tCO2e)', 'Scope 3 (tCO2e)', 'Total (tCO2e)', 'Objectif (tCO2e)', 'Benchmark (tCO2e)', 'Prédiction (tCO2e)'],
+      ...filteredData.map(item => [
+        item.month,
+        item.scope1,
+        item.scope2,
+        item.scope3,
+        item.scope1 + item.scope2 + item.scope3,
+        item.target,
+        item.benchmark,
+        item.prediction
+      ])
+    ];
+
+    const csvContent = csvData.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `emissions_dashboard_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const analyzeData = () => {
     const totalEmissions = hasEmissions ? emissions.total : 1247000;
     const analysis = {
@@ -228,6 +255,10 @@ export const Dashboard = () => {
             )}
             <Button variant="outline" asChild>
               <Link to="/contact">Voir la démo</Link>
+            </Button>
+            <Button variant="outline" onClick={exportCSV}>
+              <Calculator className="w-4 h-4 mr-2" />
+              Exporter CSV
             </Button>
             <Button variant="eco" onClick={analyzeData}>
               <BarChart3 className="w-4 h-4 mr-2" />

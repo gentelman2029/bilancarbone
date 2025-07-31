@@ -11,7 +11,6 @@ import { Link } from "react-router-dom";
 import { useEmissions } from "@/contexts/EmissionsContext";
 import { EnhancedReportGenerator } from "@/components/EnhancedReportGenerator";
 import { SectorBasedScoring } from "@/components/SectorBasedScoring";
-import { SectorComparison } from "@/components/SectorComparison";
 import { useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -921,14 +920,6 @@ export const Dashboard = () => {
             </div>
           </div>
         </Card>
-
-        {/* Comparaison sectorielle simplifiée */}
-        {hasEmissions && (
-          <SectorComparison 
-            totalEmissions={emissions.total} 
-            annualRevenue={1000} 
-          />
-        )}
 
         {/* Nouveau composant pour les rapports intelligents */}
         <EnhancedReportGenerator />

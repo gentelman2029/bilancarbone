@@ -397,8 +397,9 @@ export const AdvancedGHGCalculator = () => {
           
           <Card className="p-6 bg-gradient-to-br from-secondary/5 to-accent/5 border border-secondary/20">
             <div className="text-center space-y-2">
+              <div className="text-lg text-muted-foreground mb-2">Intensité carbone</div>
               <div className="text-3xl font-bold text-secondary">
-                {((getTotalEmissions() / 1000) / chiffreAffaires * 1000).toFixed(2)}
+                {(getTotalEmissions() / 1000 / chiffreAffaires).toFixed(3)}
               </div>
               <div className="text-sm text-muted-foreground">tCO2e/k€ CA</div>
             </div>

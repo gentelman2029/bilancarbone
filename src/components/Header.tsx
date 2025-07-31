@@ -1,4 +1,4 @@
-import { Leaf, BarChart3, Users, Settings, LogOut, Menu, X } from "lucide-react";
+import { Leaf, BarChart3, Users, Settings, LogOut, Menu, X, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -28,6 +28,7 @@ export const Header = () => {
   
   const navItems = [
     { path: "/", label: "Accueil", icon: Leaf },
+    { path: "/calculator", label: "Calculateur", icon: Calculator },
     { path: "/data", label: "Collecte", icon: Users },
     { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
     { path: "/actions", label: "Actions", icon: Settings },

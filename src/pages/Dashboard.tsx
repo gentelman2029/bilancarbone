@@ -495,47 +495,6 @@ export const Dashboard = () => {
           </div>
         </Card>
 
-        {/* Score ESG */}
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
-          <div className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-purple-700 dark:text-purple-300 text-sm font-medium mb-2">Score ESG Sectoriel</p>
-                <p className="text-3xl font-bold text-purple-900 dark:text-purple-100 mb-1">B+</p>
-                <p className="text-purple-600 dark:text-purple-400 text-xs">Score: 78/100 (+5 vs secteur)</p>
-                <p className="text-purple-500 dark:text-purple-400 text-xs mt-1">Amélioration possible: +12 pts</p>
-              </div>
-              <div className="bg-purple-500/10 p-3 rounded-full">
-                <Award className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Dernière Analyse */}
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800">
-          <div className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-orange-700 dark:text-orange-300 text-sm font-medium mb-2">Temps Réel</p>
-                <p className="text-3xl font-bold text-orange-900 dark:text-orange-100 mb-1">
-                  {emissions.lastUpdated ? 
-                    Math.floor((new Date().getTime() - new Date(emissions.lastUpdated).getTime()) / (1000 * 60 * 60)) : 
-                    "N/A"
-                  }
-                  {emissions.lastUpdated ? "h" : ""}
-                </p>
-                <p className="text-orange-600 dark:text-orange-400 text-xs">Depuis dernière mise à jour</p>
-                <p className="text-orange-500 dark:text-orange-400 text-xs mt-1">
-                  {emissions.lastUpdated ? new Date(emissions.lastUpdated).toLocaleDateString('fr-FR') : "Aucune donnée"}
-                </p>
-              </div>
-              <div className="bg-orange-500/10 p-3 rounded-full">
-                <Clock className="h-8 w-8 text-orange-600 dark:text-orange-400" />
-              </div>
-            </div>
-          </div>
-        </Card>
       </div>
 
       {/* KPIs avancés et Score ESG */}
@@ -558,12 +517,6 @@ export const Dashboard = () => {
           </Card>
         ))}
         
-        {/* Score ESG sectoriel */}
-        <div className="md:col-span-2 lg:col-span-4">
-          <SectorBasedScoring 
-            totalEmissions={hasEmissions ? emissions.total : 1247000}
-          />
-        </div>
       </div>
 
       {/* Interprétation des émissions */}
@@ -771,15 +724,6 @@ export const Dashboard = () => {
                   strokeDasharray="5 5"
                   dot={false}
                   name="Objectif 2026"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="prediction" 
-                  stroke="hsl(var(--warning))" 
-                  strokeWidth={2}
-                  strokeDasharray="3 3"
-                  dot={{ fill: 'hsl(var(--warning))', strokeWidth: 2, r: 4 }}
-                  name="Prédiction IA"
                 />
               </ComposedChart>
             </ResponsiveContainer>

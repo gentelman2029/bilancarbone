@@ -188,6 +188,16 @@ export const Dashboard = () => {
   const [viewType, setViewType] = useState<string>("monthly");
   const [showNotifications, setShowNotifications] = useState(true);
   
+  // États pour les filtres de progression vs objectifs
+  const [progressYear, setProgressYear] = useState<string>("2024");
+  const [progressDepartment, setProgressDepartment] = useState<string>("all");
+  const [reductionType, setReductionType] = useState<string>("all");
+  
+  // États pour les filtres du plan d'action
+  const [actionPriority, setActionPriority] = useState<string>("all");
+  const [actionStatus, setActionStatus] = useState<string>("all");
+  const [actionDateFilter, setActionDateFilter] = useState<string>("all");
+  
   // Données historiques enrichies basées sur les calculs réels
   const monthlyEmissions = [
     { month: "Jan", scope1: Math.round(emissions.scope1 / 1000 * 0.8), scope2: Math.round(emissions.scope2 / 1000 * 0.85), scope3: Math.round(emissions.scope3 / 1000 * 0.9), target: 110, benchmark: 120, prediction: Math.round(emissions.scope1 / 1000 * 0.75) },
@@ -779,7 +789,44 @@ export const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="p-6 bg-gradient-card border shadow-card">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Progression vs Objectifs</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-foreground">Progression vs Objectifs</h3>
+            <div className="flex items-center space-x-2">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <Select value={progressYear} onValueChange={setProgressYear}>
+                <SelectTrigger className="w-20 h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2022">2022</SelectItem>
+                  <SelectItem value="2023">2023</SelectItem>
+                  <SelectItem value="2024">2024</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={progressDepartment} onValueChange={setProgressDepartment}>
+                <SelectTrigger className="w-24 h-8 text-xs">
+                  <SelectValue placeholder="Dépt" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous</SelectItem>
+                  <SelectItem value="production">Production</SelectItem>
+                  <SelectItem value="logistique">Logistique</SelectItem>
+                  <SelectItem value="bureaux">Bureaux</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={reductionType} onValueChange={setReductionType}>
+                <SelectTrigger className="w-24 h-8 text-xs">
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous</SelectItem>
+                  <SelectItem value="energie">Énergie</SelectItem>
+                  <SelectItem value="transport">Transport</SelectItem>
+                  <SelectItem value="dechets">Déchets</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <div className="space-y-4">
             <div>
               <div className="flex justify-between text-sm mb-2">
@@ -807,15 +854,51 @@ export const Dashboard = () => {
 
         <Card className="p-6 bg-gradient-card border shadow-card">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-foreground">Actions en cours</h3>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => alert("Création d'une nouvelle action de réduction carbone")}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Nouvelle action
-            </Button>
+            <h3 className="text-lg font-semibold text-foreground">Plan d'action chiffré</h3>
+            <div className="flex items-center space-x-2">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <Select value={actionPriority} onValueChange={setActionPriority}>
+                <SelectTrigger className="w-20 h-8 text-xs">
+                  <SelectValue placeholder="Prior." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={actionStatus} onValueChange={setActionStatus}>
+                <SelectTrigger className="w-24 h-8 text-xs">
+                  <SelectValue placeholder="État" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous</SelectItem>
+                  <SelectItem value="en_cours">En cours</SelectItem>
+                  <SelectItem value="termine">Terminé</SelectItem>
+                  <SelectItem value="planifie">Planifié</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={actionDateFilter} onValueChange={setActionDateFilter}>
+                <SelectTrigger className="w-20 h-8 text-xs">
+                  <SelectValue placeholder="Date" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes</SelectItem>
+                  <SelectItem value="2024">2024</SelectItem>
+                  <SelectItem value="q1">Q1</SelectItem>
+                  <SelectItem value="q2">Q2</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => alert("Création d'une nouvelle action de réduction carbone")}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Nouvelle action
+              </Button>
+            </div>
           </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">

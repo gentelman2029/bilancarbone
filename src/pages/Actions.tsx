@@ -8,57 +8,22 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Target, Calendar, TrendingDown, CheckCircle, Clock, AlertCircle, Edit, Eye } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useActions } from "@/contexts/ActionsContext";
+import { useEmissions } from "@/contexts/EmissionsContext";
 
 export const Actions = () => {
   const { toast } = useToast();
-  const [actions, setActions] = useState([
-    {
-      id: 1,
-      title: "Installation panneaux solaires",
-      description: "Mise en place de 50 kW de panneaux photovoltaïques sur le toit principal",
-      impact: 120,
-      status: "completed",
-      progress: 100,
-      deadline: "2024-03-15",
-      scope: "Scope 2",
-      cost: "45,000 €"
-    },
-    {
-      id: 2,
-      title: "Optimisation éclairage LED",
-      description: "Remplacement de 200 points lumineux par des LED haute efficacité",
-      impact: 45,
-      status: "in-progress",
-      progress: 75,
-      deadline: "2024-04-30",
-      scope: "Scope 2",
-      cost: "12,000 €"
-    },
-    {
-      id: 3,
-      title: "Formation éco-conduite",
-      description: "Formation de 50 collaborateurs aux techniques d'éco-conduite",
-      impact: 23,
-      status: "planned",
-      progress: 0,
-      deadline: "2024-06-15",
-      scope: "Scope 3",
-      cost: "3,500 €"
-    },
-    {
-      id: 4,
-      title: "Isolation thermique des bureaux",
-      description: "Amélioration de l'isolation pour réduire les besoins de chauffage",
-      impact: 67,
-      status: "delayed",
-      progress: 25,
-      deadline: "2024-05-20",
-      scope: "Scope 1",
-      cost: "28,000 €"
-    }
-  ]);
+  const { emissions } = useEmissions();
+  const { 
+    actions, 
+    addAction, 
+    updateAction, 
+    deleteAction,
+    getTotalImpact,
+    getCompletedImpact 
+  } = useActions();
 
   const [newAction, setNewAction] = useState({
     title: "",
@@ -66,13 +31,16 @@ export const Actions = () => {
     impact: "",
     cost: "",
     deadline: "",
-    scope: "Scope 1"
+    scope: "Scope 1",
+    priority: "medium" as const,
+    implementationTime: "",
+    category: ""
   });
 
   const [editingAction, setEditingAction] = useState<any>(null);
   const [viewingAction, setViewingAction] = useState<any>(null);
 
-  const handleCreateAction = () => {
+  const handleCreateAction = async () => {
     if (!newAction.title || !newAction.description || !newAction.impact || !newAction.cost || !newAction.deadline) {
       toast({
         title: "Erreur",
@@ -83,25 +51,32 @@ export const Actions = () => {
     }
 
     const action = {
-      id: actions.length + 1,
       title: newAction.title,
       description: newAction.description,
-      impact: parseInt(newAction.impact),
-      status: "planned",
-      progress: 0,
+      impact: parseFloat(newAction.impact),
+      cost: parseFloat(newAction.cost.replace(/[€,\s]/g, '')),
       deadline: newAction.deadline,
       scope: newAction.scope,
-      cost: newAction.cost
+      priority: newAction.priority,
+      implementationTime: newAction.implementationTime,
+      category: newAction.category,
+      status: "planned" as const,
+      progress: 0,
+      estimatedReduction: 0,
+      calculationId: emissions.calculationId
     };
 
-    setActions([...actions, action]);
+    await addAction(action);
     setNewAction({
       title: "",
       description: "",
       impact: "",
       cost: "",
       deadline: "",
-      scope: "Scope 1"
+      scope: "Scope 1",
+      priority: "medium" as const,
+      implementationTime: "",
+      category: ""
     });
 
     toast({
@@ -114,7 +89,7 @@ export const Actions = () => {
     setEditingAction({...action});
   };
 
-  const handleUpdateAction = () => {
+  const handleUpdateAction = async () => {
     if (!editingAction.title || !editingAction.description) {
       toast({
         title: "Erreur",
@@ -124,9 +99,7 @@ export const Actions = () => {
       return;
     }
 
-    setActions(actions.map(action => 
-      action.id === editingAction.id ? editingAction : action
-    ));
+    await updateAction(editingAction.id, editingAction);
     setEditingAction(null);
 
     toast({
@@ -169,10 +142,8 @@ export const Actions = () => {
     }
   };
 
-  const totalImpact = actions.reduce((sum, action) => sum + action.impact, 0);
-  const completedImpact = actions
-    .filter(action => action.status === "completed")
-    .reduce((sum, action) => sum + action.impact, 0);
+  const totalImpact = getTotalImpact();
+  const completedImpact = getCompletedImpact();
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -223,12 +194,13 @@ export const Actions = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="cost">Coût*</Label>
+                  <Label htmlFor="cost">Coût (€)*</Label>
                   <Input
                     id="cost"
+                    type="number"
                     value={newAction.cost}
                     onChange={(e) => setNewAction({...newAction, cost: e.target.value})}
-                    placeholder="Ex: 10,000 €"
+                    placeholder="Ex: 10000"
                   />
                 </div>
               </div>
@@ -258,6 +230,42 @@ export const Actions = () => {
                     onChange={(e) => setNewAction({...newAction, deadline: e.target.value})}
                   />
                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="priority">Priorité</Label>
+                  <Select
+                    value={newAction.priority}
+                    onValueChange={(value: any) => setNewAction({...newAction, priority: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Faible</SelectItem>
+                      <SelectItem value="medium">Moyenne</SelectItem>
+                      <SelectItem value="high">Haute</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="implementationTime">Durée mise en œuvre</Label>
+                  <Input
+                    id="implementationTime"
+                    value={newAction.implementationTime}
+                    onChange={(e) => setNewAction({...newAction, implementationTime: e.target.value})}
+                    placeholder="Ex: 3 mois"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="category">Catégorie</Label>
+                <Input
+                  id="category"
+                  value={newAction.category}
+                  onChange={(e) => setNewAction({...newAction, category: e.target.value})}
+                  placeholder="Ex: Énergie, Transport, etc."
+                />
               </div>
               <Button onClick={handleCreateAction} className="w-full">
                 Créer l'action
@@ -333,7 +341,7 @@ export const Actions = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <span className="text-sm">
-                  <span className="font-medium text-foreground">{action.cost}</span>
+                  <span className="font-medium text-foreground">{action.cost.toLocaleString()} €</span>
                 </span>
               </div>
             </div>

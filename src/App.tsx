@@ -15,33 +15,36 @@ import { Auth } from "./pages/Auth";
 import Trial from "./pages/Trial";
 import Pricing from "./pages/Pricing";
 import { EmissionsProvider } from "./contexts/EmissionsContext";
+import { ActionsProvider } from "./contexts/ActionsContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <EmissionsProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/trial" element={<Trial />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Index />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="data" element={<DataCollection />} />
-              <Route path="calculator" element={<AdvancedGHGCalculator />} />
-              <Route path="actions" element={<Actions />} />
-              <Route path="contact" element={<Contact />} />
-            </Route>
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <ActionsProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/trial" element={<Trial />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/" element={<Layout />}>
+                <Route index element={<Index />} />
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="data" element={<DataCollection />} />
+                <Route path="calculator" element={<AdvancedGHGCalculator />} />
+                <Route path="actions" element={<Actions />} />
+                <Route path="contact" element={<Contact />} />
+              </Route>
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ActionsProvider>
     </EmissionsProvider>
   </QueryClientProvider>
 );

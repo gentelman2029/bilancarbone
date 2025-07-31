@@ -12,6 +12,7 @@ import { useEmissions } from "@/contexts/EmissionsContext";
 import { EnhancedReportGenerator } from "@/components/EnhancedReportGenerator";
 import { SectorBasedScoring } from "@/components/SectorBasedScoring";
 import { SectorAnalysis } from "@/components/SectorAnalysis";
+import { ActionsSummary } from "@/components/ActionsSummary";
 
 import { useState } from "react";
 import { format } from "date-fns";
@@ -860,6 +861,9 @@ export const Dashboard = () => {
             annualRevenue={1000} 
           />
         )}
+
+        {/* Résumé du plan d'actions */}
+        <ActionsSummary />
 
         {/* Nouveau composant pour les rapports intelligents */}
         <EnhancedReportGenerator />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Calculator, Download, RotateCcw, Factory, Car, Zap, Trash2, Building, Plane, Ship, TreePine, Flame } from "lucide-react";
+import { useEmissions } from '@/contexts/EmissionsContext';
 
 // Base Carbone® ADEME - Facteurs d'émissions complets (kg CO2e par unité)
 const baseCarbone = {
@@ -166,38 +167,80 @@ interface CalculationResult {
 
 export const AdvancedGHGCalculator = () => {
   const { toast } = useToast();
+  const { updateEmissions, emissions: emissionsContext } = useEmissions();
   const [calculations, setCalculations] = useState<CalculationResult[]>([]);
   const [activeTab, setActiveTab] = useState("scope1");
 
-  // États pour les formulaires
-  const [scope1Data, setScope1Data] = useState({
-    combustibleType: "",
-    combustibleQuantity: "",
-    refrigerantType: "",
-    refrigerantQuantity: "",
-    vehiculeType: "",
-    vehiculeQuantity: ""
+  // États pour les formulaires avec persistance
+  const [scope1Data, setScope1Data] = useState(() => {
+    const saved = localStorage.getItem('calculator-scope1');
+    return saved ? JSON.parse(saved) : {
+      combustibleType: "",
+      combustibleQuantity: "",
+      refrigerantType: "",
+      refrigerantQuantity: "",
+      vehiculeType: "",
+      vehiculeQuantity: ""
+    };
   });
 
-  const [scope2Data, setScope2Data] = useState({
-    electriciteType: "",
-    electriciteQuantity: "",
-    vapeurType: "",
-    vapeurQuantity: ""
+  const [scope2Data, setScope2Data] = useState(() => {
+    const saved = localStorage.getItem('calculator-scope2');
+    return saved ? JSON.parse(saved) : {
+      electriciteType: "",
+      electriciteQuantity: "",
+      vapeurType: "",
+      vapeurQuantity: ""
+    };
   });
 
-  const [scope3Data, setScope3Data] = useState({
-    transportType: "",
-    transportQuantity: "",
-    materiauType: "",
-    materiauQuantity: "",
-    dechetType: "",
-    dechetQuantity: "",
-    alimentationType: "",
-    alimentationQuantity: "",
-    numeriqueType: "",
-    numeriqueQuantity: ""
+  const [scope3Data, setScope3Data] = useState(() => {
+    const saved = localStorage.getItem('calculator-scope3');
+    return saved ? JSON.parse(saved) : {
+      transportType: "",
+      transportQuantity: "",
+      materiauType: "",
+      materiauQuantity: "",
+      dechetType: "",
+      dechetQuantity: "",
+      alimentationType: "",
+      alimentationQuantity: "",
+      numeriqueType: "",
+      numeriqueQuantity: ""
+    };
   });
+
+  // Charger les calculs sauvegardés
+  useEffect(() => {
+    const savedCalculations = localStorage.getItem('calculator-calculations');
+    if (savedCalculations) {
+      setCalculations(JSON.parse(savedCalculations));
+    }
+  }, []);
+
+  // Sauvegarder les formulaires
+  useEffect(() => {
+    localStorage.setItem('calculator-scope1', JSON.stringify(scope1Data));
+  }, [scope1Data]);
+
+  useEffect(() => {
+    localStorage.setItem('calculator-scope2', JSON.stringify(scope2Data));
+  }, [scope2Data]);
+
+  useEffect(() => {
+    localStorage.setItem('calculator-scope3', JSON.stringify(scope3Data));
+  }, [scope3Data]);
+
+  // Sauvegarder les calculs et mettre à jour le contexte
+  useEffect(() => {
+    localStorage.setItem('calculator-calculations', JSON.stringify(calculations));
+    const emissionsByScope = getEmissionsByScope();
+    updateEmissions({
+      scope1: emissionsByScope.scope1,
+      scope2: emissionsByScope.scope2,
+      scope3: emissionsByScope.scope3
+    });
+  }, [calculations]);
 
   const addCalculation = (scope: string, category: string, subcategory: string, quantity: number) => {
     const scopeData = baseCarbone[scope as keyof typeof baseCarbone] as any;
@@ -242,21 +285,28 @@ export const AdvancedGHGCalculator = () => {
 
   const resetCalculations = () => {
     setCalculations([]);
-    setScope1Data({
+    localStorage.removeItem('calculator-calculations');
+    localStorage.removeItem('calculator-scope1');
+    localStorage.removeItem('calculator-scope2');
+    localStorage.removeItem('calculator-scope3');
+    
+    const initialScope1 = {
       combustibleType: "",
       combustibleQuantity: "",
       refrigerantType: "",
       refrigerantQuantity: "",
       vehiculeType: "",
       vehiculeQuantity: ""
-    });
-    setScope2Data({
+    };
+    
+    const initialScope2 = {
       electriciteType: "",
       electriciteQuantity: "",
       vapeurType: "",
       vapeurQuantity: ""
-    });
-    setScope3Data({
+    };
+    
+    const initialScope3 = {
       transportType: "",
       transportQuantity: "",
       materiauType: "",
@@ -267,7 +317,13 @@ export const AdvancedGHGCalculator = () => {
       alimentationQuantity: "",
       numeriqueType: "",
       numeriqueQuantity: ""
-    });
+    };
+    
+    setScope1Data(initialScope1);
+    setScope2Data(initialScope2);
+    setScope3Data(initialScope3);
+    
+    updateEmissions({ scope1: 0, scope2: 0, scope3: 0 });
     
     toast({
       title: "Calculs réinitialisés",

@@ -7,6 +7,7 @@ import { Layout } from "@/components/Layout";
 import Index from "./pages/Index";
 import { Dashboard } from "./pages/Dashboard";
 import { DataCollection } from "./pages/DataCollection";
+import { AdvancedGHGCalculator } from "./components/AdvancedGHGCalculator";
 import { Actions } from "./pages/Actions";
 import { Contact } from "./pages/Contact";
 import NotFound from "./pages/NotFound";
@@ -32,6 +33,7 @@ const App = () => (
               <Route index element={<Index />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="data" element={<DataCollection />} />
+              <Route path="calculator" element={<AdvancedGHGCalculator />} />
               <Route path="actions" element={<Actions />} />
               <Route path="contact" element={<Contact />} />
             </Route>

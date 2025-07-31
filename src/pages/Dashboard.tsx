@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import { useEmissions } from "@/contexts/EmissionsContext";
 import { EnhancedReportGenerator } from "@/components/EnhancedReportGenerator";
 import { SectorBasedScoring } from "@/components/SectorBasedScoring";
+import { SectorAnalysis } from "@/components/SectorAnalysis";
 
 import { useState } from "react";
 import { format } from "date-fns";
@@ -851,6 +852,14 @@ export const Dashboard = () => {
             </div>
           </div>
         </Card>
+
+        {/* Analyse sectorielle avec graphiques interactifs */}
+        {hasEmissions && (
+          <SectorAnalysis 
+            totalEmissions={emissions.total} 
+            annualRevenue={1000} 
+          />
+        )}
 
         {/* Nouveau composant pour les rapports intelligents */}
         <EnhancedReportGenerator />

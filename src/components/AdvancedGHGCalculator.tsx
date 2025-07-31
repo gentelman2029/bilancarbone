@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Calculator, Download, RotateCcw, Factory, Car, Zap, Trash2, Building, Plane, Ship, TreePine, Flame } from "lucide-react";
 import { useEmissions } from '@/contexts/EmissionsContext';
+import { SectorComparison } from '@/components/SectorComparison';
 
 // Base Carbone® ADEME - Facteurs d'émissions complets (kg CO2e par unité)
 const baseCarbone = {
@@ -468,6 +469,14 @@ export const AdvancedGHGCalculator = () => {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Comparaison sectorielle améliorée */}
+      {calculations.length > 0 && (
+        <SectorComparison 
+          totalEmissions={getTotalEmissions()} 
+          annualRevenue={chiffreAffaires} 
+        />
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>

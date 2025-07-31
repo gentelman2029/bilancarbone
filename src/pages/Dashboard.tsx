@@ -267,31 +267,34 @@ export const Dashboard = () => {
   ];
 
 
-  // KPIs avancés
-  const kpis = [
+  // Comparaison sectorielle fiable
+  const sectorBenchmarks = [
     {
-      title: "Intensité carbone",
-      value: hasEmissions ? `${(emissions.total / 1000).toFixed(2)} tCO2e/M€` : "1.25 tCO2e/M€",
-      change: "-8.5%",
-      trend: "down",
-      icon: TrendIcon,
-      target: "0.95 tCO2e/M€"
+      title: "vs Moyenne Industrie",
+      value: hasEmissions ? `${((emissions.total / 1000) / 1.8 * 100).toFixed(0)}%` : "69%",
+      change: hasEmissions && (emissions.total / 1000) < 1.8 ? "Meilleur" : "À améliorer",
+      trend: hasEmissions && (emissions.total / 1000) < 1.8 ? "down" : "up",
+      icon: Factory,
+      benchmark: "1.8 tCO2e/M€",
+      status: hasEmissions && (emissions.total / 1000) < 1.8 ? "Supérieur à la moyenne" : "Inférieur à la moyenne"
     },
     {
-      title: "Réduction YTD",
-      value: "12.3%",
-      change: "+2.1%",
-      trend: "up",
-      icon: TrendingDown,
-      target: "15%"
+      title: "vs Top 25% Secteur",
+      value: hasEmissions ? `${((emissions.total / 1000) / 1.2 * 100).toFixed(0)}%` : "104%",
+      change: hasEmissions && (emissions.total / 1000) < 1.2 ? "Atteint" : "Non atteint",
+      trend: hasEmissions && (emissions.total / 1000) < 1.2 ? "down" : "up",
+      icon: TrendingUp,
+      benchmark: "1.2 tCO2e/M€",
+      status: hasEmissions && (emissions.total / 1000) < 1.2 ? "Top quartile" : "Effort requis"
     },
     {
-      title: "Score ESG",
-      value: "B+",
-      change: "↑ 1 niveau",
-      trend: "up",
-      icon: CheckCircle,
-      target: "A-"
+      title: "vs Meilleurs 10%",
+      value: hasEmissions ? `${((emissions.total / 1000) / 0.9 * 100).toFixed(0)}%` : "139%",
+      change: hasEmissions && (emissions.total / 1000) < 0.9 ? "Excellence" : "Objectif long terme",
+      trend: hasEmissions && (emissions.total / 1000) < 0.9 ? "down" : "up",
+      icon: Award,
+      benchmark: "0.9 tCO2e/M€",
+      status: hasEmissions && (emissions.total / 1000) < 0.9 ? "Performance d'excellence" : "Potentiel d'amélioration"
     }
   ];
 
@@ -497,22 +500,23 @@ export const Dashboard = () => {
 
       </div>
 
-      {/* KPIs avancés et Score ESG */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {kpis.map((kpi, index) => (
-          <Card key={kpi.title} className="p-6 bg-gradient-to-br from-accent/5 to-secondary/10 border border-accent/20">
+      {/* Comparaison sectorielle fiable */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {sectorBenchmarks.map((benchmark, index) => (
+          <Card key={benchmark.title} className="p-6 bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/20">
             <div className="flex items-center justify-between mb-3">
-              <kpi.icon className={`w-5 h-5 ${kpi.trend === "down" ? "text-primary" : "text-accent"}`} />
-              <Badge variant={kpi.trend === "down" ? "default" : "secondary"} className="text-xs">
-                {kpi.change}
+              <benchmark.icon className={`w-5 h-5 ${benchmark.trend === "down" ? "text-primary" : "text-warning"}`} />
+              <Badge variant={benchmark.trend === "down" ? "default" : "secondary"} className="text-xs">
+                {benchmark.change}
               </Badge>
             </div>
             <div className="space-y-2">
               <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-bold text-foreground">{kpi.value}</span>
-                <span className="text-xs text-muted-foreground">vs {kpi.target}</span>
+                <span className="text-2xl font-bold text-foreground">{benchmark.value}</span>
+                <span className="text-xs text-muted-foreground">vs {benchmark.benchmark}</span>
               </div>
-              <p className="text-sm font-medium text-muted-foreground">{kpi.title}</p>
+              <p className="text-sm font-medium text-muted-foreground">{benchmark.title}</p>
+              <p className="text-xs text-muted-foreground">{benchmark.status}</p>
             </div>
           </Card>
         ))}

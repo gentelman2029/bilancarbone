@@ -210,6 +210,12 @@ export const AdvancedGHGCalculator = () => {
     };
   });
 
+  // État pour le chiffre d'affaires
+  const [chiffreAffaires, setChiffreAffaires] = useState(() => {
+    const saved = localStorage.getItem('calculator-chiffre-affaires');
+    return saved ? JSON.parse(saved) : 1000;
+  });
+
   // Charger les calculs sauvegardés
   useEffect(() => {
     const savedCalculations = localStorage.getItem('calculator-calculations');
@@ -230,6 +236,11 @@ export const AdvancedGHGCalculator = () => {
   useEffect(() => {
     localStorage.setItem('calculator-scope3', JSON.stringify(scope3Data));
   }, [scope3Data]);
+
+  // Sauvegarder le chiffre d'affaires
+  useEffect(() => {
+    localStorage.setItem('calculator-chiffre-affaires', JSON.stringify(chiffreAffaires));
+  }, [chiffreAffaires]);
 
   // Sauvegarder les calculs et mettre à jour le contexte
   useEffect(() => {
@@ -371,13 +382,51 @@ export const AdvancedGHGCalculator = () => {
         </p>
       </div>
 
-      {/* Résumé des émissions */}
+      {/* Métriques principales */}
+      {calculations.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <Card className="p-6 bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/20">
+            <div className="text-center space-y-2">
+              <div className="text-3xl font-bold text-primary">
+                {(getTotalEmissions() / 1000).toFixed(1)}
+              </div>
+              <div className="text-sm text-muted-foreground">Total tCO2e</div>
+            </div>
+          </Card>
+          
+          <Card className="p-6 bg-gradient-to-br from-secondary/5 to-accent/5 border border-secondary/20">
+            <div className="text-center space-y-2">
+              <div className="text-3xl font-bold text-secondary">
+                {((getTotalEmissions() / 1000) / chiffreAffaires * 1000).toFixed(2)}
+              </div>
+              <div className="text-sm text-muted-foreground">tCO2e/k€ CA</div>
+            </div>
+          </Card>
+          
+          <Card className="p-6 bg-gradient-to-br from-accent/5 to-primary/5 border border-accent/20">
+            <div className="text-center space-y-2">
+              <div className="text-lg text-muted-foreground mb-2">Chiffre d'affaires</div>
+              <div className="flex items-center justify-center gap-2">
+                <Input
+                  type="number"
+                  value={chiffreAffaires}
+                  onChange={(e) => setChiffreAffaires(Number(e.target.value) || 1000)}
+                  className="w-24 text-center text-2xl font-bold border-accent/30"
+                />
+                <span className="text-2xl font-bold text-accent">k€</span>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Résumé des émissions par scope */}
       {calculations.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calculator className="h-5 w-5" />
-              Bilan Carbone Total
+              Bilan Carbone par Scope
             </CardTitle>
           </CardHeader>
           <CardContent>

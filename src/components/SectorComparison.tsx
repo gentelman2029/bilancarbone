@@ -114,9 +114,6 @@ export const SectorComparison: React.FC<SectorComparisonProps> = ({
   const [isEditing, setIsEditing] = useState<boolean>(false);
   
   // États pour les filtres
-  const [selectedYear, setSelectedYear] = useState<string>("2024");
-  const [selectedScope, setSelectedScope] = useState<string>("total");
-  const [selectedSize, setSelectedSize] = useState<string>("toutes");
   const [selectedSector, setSelectedSector] = useState<string>("all");
   const [showChart, setShowChart] = useState<boolean>(true);
   
@@ -280,69 +277,25 @@ export const SectorComparison: React.FC<SectorComparisonProps> = ({
           </Card>
         </div>
 
-        {/* Filtres de comparaison */}
+        {/* Filtre secteur uniquement */}
         <Card className="p-4 bg-background border border-muted">
           <div className="flex items-center gap-2 mb-4">
             <Filter className="w-4 h-4 text-primary" />
-            <h4 className="font-semibold text-foreground">Filtres d'analyse</h4>
+            <h4 className="font-semibold text-foreground">Sélection du secteur</h4>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <Label className="text-xs text-muted-foreground">Année</Label>
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2024">2024</SelectItem>
-                  <SelectItem value="2023">2023</SelectItem>
-                  <SelectItem value="2022">2022</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Périmètre</Label>
-              <Select value={selectedScope} onValueChange={setSelectedScope}>
-                <SelectTrigger className="h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="total">Scopes 1+2+3</SelectItem>
-                  <SelectItem value="scope1">Scope 1 uniquement</SelectItem>
-                  <SelectItem value="scope2">Scope 2 uniquement</SelectItem>
-                  <SelectItem value="scope3">Scope 3 uniquement</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Taille entreprise</Label>
-              <Select value={selectedSize} onValueChange={setSelectedSize}>
-                <SelectTrigger className="h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="toutes">Toutes tailles</SelectItem>
-                  <SelectItem value="tpe">TPE (&lt;10 sal.)</SelectItem>
-                  <SelectItem value="pme">PME (10-250 sal.)</SelectItem>
-                  <SelectItem value="eti">ETI (250-5000 sal.)</SelectItem>
-                  <SelectItem value="ge">GE (&gt;5000 sal.)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Secteur</Label>
-              <Select value={selectedSector} onValueChange={setSelectedSector}>
-                <SelectTrigger className="h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous secteurs</SelectItem>
-                  {Object.entries(SECTOR_BENCHMARKS).map(([key, sector]) => (
-                    <SelectItem key={key} value={key}>{sector.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="max-w-xs">
+            <Label className="text-xs text-muted-foreground">Secteur d'activité</Label>
+            <Select value={selectedSector} onValueChange={setSelectedSector}>
+              <SelectTrigger className="h-10 bg-background border-muted">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-background border-muted shadow-lg z-50">
+                <SelectItem value="all">Tous secteurs</SelectItem>
+                {Object.entries(SECTOR_BENCHMARKS).map(([key, sector]) => (
+                  <SelectItem key={key} value={key}>{sector.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </Card>
 

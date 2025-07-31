@@ -268,36 +268,6 @@ export const Dashboard = () => {
   ];
 
 
-  // Comparaison sectorielle fiable
-  const sectorBenchmarks = [
-    {
-      title: "vs Moyenne Industrie",
-      value: hasEmissions ? `${((emissions.total / 1000) / 1.8 * 100).toFixed(0)}%` : "69%",
-      change: hasEmissions && (emissions.total / 1000) < 1.8 ? "Meilleur" : "À améliorer",
-      trend: hasEmissions && (emissions.total / 1000) < 1.8 ? "down" : "up",
-      icon: Factory,
-      benchmark: "1.8 tCO2e/M€",
-      status: hasEmissions && (emissions.total / 1000) < 1.8 ? "Supérieur à la moyenne" : "Inférieur à la moyenne"
-    },
-    {
-      title: "vs Top 25% Secteur",
-      value: hasEmissions ? `${((emissions.total / 1000) / 1.2 * 100).toFixed(0)}%` : "104%",
-      change: hasEmissions && (emissions.total / 1000) < 1.2 ? "Atteint" : "Non atteint",
-      trend: hasEmissions && (emissions.total / 1000) < 1.2 ? "down" : "up",
-      icon: TrendingUp,
-      benchmark: "1.2 tCO2e/M€",
-      status: hasEmissions && (emissions.total / 1000) < 1.2 ? "Top quartile" : "Effort requis"
-    },
-    {
-      title: "vs Meilleurs 10%",
-      value: hasEmissions ? `${((emissions.total / 1000) / 0.9 * 100).toFixed(0)}%` : "139%",
-      change: hasEmissions && (emissions.total / 1000) < 0.9 ? "Excellence" : "Objectif long terme",
-      trend: hasEmissions && (emissions.total / 1000) < 0.9 ? "down" : "up",
-      icon: Award,
-      benchmark: "0.9 tCO2e/M€",
-      status: hasEmissions && (emissions.total / 1000) < 0.9 ? "Performance d'excellence" : "Potentiel d'amélioration"
-    }
-  ];
 
   const interpretEmissions = (total: number) => {
     if (total > 1000) {
@@ -501,28 +471,6 @@ export const Dashboard = () => {
 
       </div>
 
-      {/* Comparaison sectorielle fiable */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {sectorBenchmarks.map((benchmark, index) => (
-          <Card key={benchmark.title} className="p-6 bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/20">
-            <div className="flex items-center justify-between mb-3">
-              <benchmark.icon className={`w-5 h-5 ${benchmark.trend === "down" ? "text-primary" : "text-warning"}`} />
-              <Badge variant={benchmark.trend === "down" ? "default" : "secondary"} className="text-xs">
-                {benchmark.change}
-              </Badge>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-bold text-foreground">{benchmark.value}</span>
-                <span className="text-xs text-muted-foreground">vs {benchmark.benchmark}</span>
-              </div>
-              <p className="text-sm font-medium text-muted-foreground">{benchmark.title}</p>
-              <p className="text-xs text-muted-foreground">{benchmark.status}</p>
-            </div>
-          </Card>
-        ))}
-        
-      </div>
 
       {/* Interprétation des émissions */}
       <Card className="p-6 bg-gradient-card border shadow-card mb-6">
@@ -537,24 +485,6 @@ export const Dashboard = () => {
         </div>
         <p className="text-muted-foreground mb-4">{interpretation.message}</p>
         
-        {/* Benchmarking sectoriel */}
-        <div className="bg-secondary/20 rounded-lg p-4 mb-4">
-          <h4 className="font-semibold text-foreground mb-2">📊 Comparaison sectorielle</h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div className="text-center">
-              <div className="text-lg font-bold text-foreground">{hasEmissions ? toTonnes(emissions.total) : "1.25"}</div>
-              <div className="text-muted-foreground">Vos émissions (tCO2e)</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-bold text-warning">1.8</div>
-              <div className="text-muted-foreground">Moyenne sectorielle</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-bold text-primary">0.9</div>
-              <div className="text-muted-foreground">Top 10% du secteur</div>
-            </div>
-          </div>
-        </div>
 
         {/* Recommandations prioritaires */}
         <div className="mb-4">

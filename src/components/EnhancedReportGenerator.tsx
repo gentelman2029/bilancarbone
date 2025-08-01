@@ -678,24 +678,6 @@ Données utilisateur:
               Analyse
             </Button>
             <Button
-              variant={activeTab === "actions" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveTab("actions")}
-              className="flex items-center"
-            >
-              <Target className="w-4 h-4 mr-2" />
-              Actions
-            </Button>
-            <Button
-              variant={activeTab === "projections" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveTab("projections")}
-              className="flex items-center"
-            >
-              <TrendingDown className="w-4 h-4 mr-2" />
-              Projections
-            </Button>
-            <Button
               variant={activeTab === "dashboard" ? "default" : "outline"}
               size="sm"
               onClick={() => setActiveTab("dashboard")}
@@ -723,47 +705,47 @@ Données utilisateur:
             {activeTab === "overview" && (
               <div className="mt-6 space-y-4">
               {/* KPIs clés */}
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                <Card className="p-4 bg-primary/5 border-primary/20">
-                  <div className="flex items-center space-x-3">
-                    <Leaf className="w-8 h-8 text-primary" />
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <Card className="p-3 bg-primary/5 border-primary/20">
+                  <div className="flex flex-col items-center text-center space-y-2">
+                    <Leaf className="w-6 h-6 text-primary" />
                     <div>
-                      <div className="text-2xl font-bold text-primary">{toTonnes(emissions.total)}</div>
-                      <div className="text-sm text-muted-foreground">tonnes CO2e</div>
+                      <div className="text-lg font-bold text-primary">{toTonnes(emissions.total)}</div>
+                      <div className="text-xs text-muted-foreground">tonnes CO2e</div>
                     </div>
                   </div>
                 </Card>
                 
-                <Card className="p-4 bg-green-50 dark:bg-green-950/20">
-                  <div className="flex items-center space-x-3">
-                    <Award className="w-8 h-8 text-green-600" />
+                <Card className="p-3 bg-green-50 dark:bg-green-950/20">
+                  <div className="flex flex-col items-center text-center space-y-2">
+                    <Award className="w-6 h-6 text-green-600" />
                     <div>
-                      <div className="text-2xl font-bold text-green-600">{benchmark?.score}</div>
-                      <div className="text-sm text-muted-foreground">Score éco</div>
+                      <div className="text-lg font-bold text-green-600">{benchmark?.score}</div>
+                      <div className="text-xs text-muted-foreground">Score éco</div>
                     </div>
                   </div>
                 </Card>
                 
-                <Card className="p-4 bg-blue-50 dark:bg-blue-950/20">
-                  <div className="flex items-center space-x-3">
-                    <DollarSign className="w-8 h-8 text-blue-600" />
+                <Card className="p-3 bg-blue-50 dark:bg-blue-950/20">
+                  <div className="flex flex-col items-center text-center space-y-2">
+                    <DollarSign className="w-6 h-6 text-blue-600" />
                     <div>
-                      <div className="text-2xl font-bold text-blue-600">
-                        {actionPlans.reduce((sum, action) => sum + action.estimatedCost, 0).toLocaleString()}€
+                      <div className="text-lg font-bold text-blue-600">
+                        {Math.round(actionPlans.reduce((sum, action) => sum + action.estimatedCost, 0) / 1000)}k€
                       </div>
-                      <div className="text-sm text-muted-foreground">Investissement</div>
+                      <div className="text-xs text-muted-foreground">Investissement</div>
                     </div>
                   </div>
                 </Card>
                 
-                <Card className="p-4 bg-orange-50 dark:bg-orange-950/20">
-                  <div className="flex items-center space-x-3">
-                    <Recycle className="w-8 h-8 text-orange-600" />
+                <Card className="p-3 bg-orange-50 dark:bg-orange-950/20">
+                  <div className="flex flex-col items-center text-center space-y-2">
+                    <Recycle className="w-6 h-6 text-orange-600" />
                     <div>
-                      <div className="text-2xl font-bold text-orange-600">
+                      <div className="text-lg font-bold text-orange-600">
                         {Math.round(actionPlans.reduce((sum, action) => sum + action.estimatedReduction, 0) / 1000)}
                       </div>
-                      <div className="text-sm text-muted-foreground">tCO2e réduction</div>
+                      <div className="text-xs text-muted-foreground">tCO2e réduction</div>
                     </div>
                   </div>
                 </Card>

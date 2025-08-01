@@ -339,27 +339,57 @@ export const SectorComparison: React.FC<SectorComparisonProps> = ({
           </button>
         </div>
 
+        {/* Légende des couleurs */}
+        <Card className="p-4 bg-background mb-4">
+          <h4 className="font-semibold text-foreground mb-3">📊 Légende du graphique</h4>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-orange-500 rounded opacity-70"></div>
+              <span>🟠 Seuil critique - Limite à ne pas dépasser</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-blue-500 rounded opacity-80"></div>
+              <span>🔵 Moyenne sectorielle - Performance standard</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-green-500 rounded opacity-80"></div>
+              <span>🟢 Top 10% - Meilleurs performers</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-red-500 rounded opacity-90 border-2 border-red-600"></div>
+              <span>🔴 Votre performance - Position actuelle</span>
+            </div>
+          </div>
+          <div className="mt-4 p-3 bg-accent/10 rounded-lg">
+            <p className="text-xs text-muted-foreground">
+              <strong>Unités:</strong> tCO2e/k€ CA = tonnes CO2 équivalent par millier d'euros de chiffre d'affaires (intensité carbone annuelle)
+            </p>
+          </div>
+        </Card>
+
         {/* Graphique interactif */}
         {showChart ? (
           <Card className="p-6 bg-background">
-            <div className="h-80 w-full">
+            <div className="h-96 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={getChartData()} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <BarChart data={getChartData()} margin={{ top: 20, right: 30, left: 40, bottom: 80 }}>
                   <XAxis 
                     dataKey="name" 
                     angle={-45}
                     textAnchor="end"
-                    height={60}
-                    fontSize={12}
+                    height={80}
+                    fontSize={11}
+                    interval={0}
+                    tick={{ fontSize: 11 }}
                   />
                   <YAxis 
-                    label={{ value: 'tCO2e/k€ CA', angle: -90, position: 'insideLeft' }}
-                    fontSize={12}
+                    label={{ value: 'tCO2e/k€ CA (Intensité carbone)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle' } }}
+                    fontSize={11}
+                    tick={{ fontSize: 11 }}
                   />
                   <Tooltip 
                     content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
-                        const sectorData = payload[0];
                         const yourPerformance = payload.find(p => p.dataKey === 'votre_performance')?.value || 0;
                         const average = payload.find(p => p.dataKey === 'moyenne_sectorielle')?.value || 0;
                         const top10 = payload.find(p => p.dataKey === 'top_10_percent')?.value || 0;
@@ -374,31 +404,43 @@ export const SectorComparison: React.FC<SectorComparisonProps> = ({
                                                yourPerformance <= threshold ? 'text-orange-600' : 'text-red-600';
                         
                         return (
-                          <div className="bg-background border border-border rounded-lg p-4 shadow-xl min-w-[280px]">
+                          <div className="bg-background border border-border rounded-lg p-4 shadow-xl min-w-[320px]">
                             <p className="font-semibold text-foreground mb-3 text-center border-b pb-2">
                               {label?.replace('\n', ' ')}
                             </p>
                             <div className="space-y-2">
                               <div className="flex justify-between items-center">
-                                <span className="text-sm">🎯 Votre performance:</span>
+                                <span className="text-sm flex items-center gap-1">
+                                  <div className="w-3 h-3 bg-red-500 rounded border border-red-600"></div>
+                                  Votre performance:
+                                </span>
                                 <span className={`font-bold ${performanceColor}`}>
                                   {typeof yourPerformance === 'number' ? yourPerformance.toFixed(2) : yourPerformance} tCO2e/k€
                                 </span>
                               </div>
                               <div className="flex justify-between items-center">
-                                <span className="text-sm">📊 Moyenne sectorielle:</span>
+                                <span className="text-sm flex items-center gap-1">
+                                  <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                                  Moyenne sectorielle:
+                                </span>
                                 <span className="font-semibold text-blue-600">
                                   {typeof average === 'number' ? average.toFixed(2) : average} tCO2e/k€
                                 </span>
                               </div>
                               <div className="flex justify-between items-center">
-                                <span className="text-sm">🏆 Top 10%:</span>
+                                <span className="text-sm flex items-center gap-1">
+                                  <div className="w-3 h-3 bg-green-500 rounded"></div>
+                                  Top 10%:
+                                </span>
                                 <span className="font-semibold text-green-600">
                                   {typeof top10 === 'number' ? top10.toFixed(2) : top10} tCO2e/k€
                                 </span>
                               </div>
                               <div className="flex justify-between items-center">
-                                <span className="text-sm">⚠️ Seuil critique:</span>
+                                <span className="text-sm flex items-center gap-1">
+                                  <div className="w-3 h-3 bg-orange-500 rounded"></div>
+                                  Seuil critique:
+                                </span>
                                 <span className="font-semibold text-orange-600">
                                   {typeof threshold === 'number' ? threshold.toFixed(2) : threshold} tCO2e/k€
                                 </span>
@@ -418,10 +460,10 @@ export const SectorComparison: React.FC<SectorComparisonProps> = ({
                       return null;
                     }}
                   />
-                  <Bar dataKey="seuil_critique" fill="#f59e0b" name="Seuil critique" opacity={0.7} />
-                  <Bar dataKey="moyenne_sectorielle" fill="#3b82f6" name="Moyenne sectorielle" opacity={0.8} />
-                  <Bar dataKey="top_10_percent" fill="#10b981" name="Top 10%" opacity={0.8} />
-                  <Bar dataKey="votre_performance" fill="#ef4444" name="Votre performance" opacity={0.9} strokeWidth={2} stroke="#dc2626" />
+                  <Bar dataKey="seuil_critique" fill="#f59e0b" name="🟠 Seuil critique" opacity={0.7} />
+                  <Bar dataKey="moyenne_sectorielle" fill="#3b82f6" name="🔵 Moyenne sectorielle" opacity={0.8} />
+                  <Bar dataKey="top_10_percent" fill="#10b981" name="🟢 Top 10%" opacity={0.8} />
+                  <Bar dataKey="votre_performance" fill="#ef4444" name="🔴 Votre performance" opacity={0.9} strokeWidth={2} stroke="#dc2626" />
                 </BarChart>
               </ResponsiveContainer>
             </div>

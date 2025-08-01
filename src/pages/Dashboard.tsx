@@ -10,7 +10,7 @@ import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, BarChart 
 import { Link } from "react-router-dom";
 import { useEmissions } from "@/contexts/EmissionsContext";
 import { EnhancedReportGenerator } from "@/components/EnhancedReportGenerator";
-import { SectorBasedScoring } from "@/components/SectorBasedScoring";
+import { SectorComparison } from "@/components/SectorComparison";
 
 import { ActionsSummary } from "@/components/ActionsSummary";
 
@@ -854,6 +854,15 @@ export const Dashboard = () => {
             </div>
           </div>
         </Card>
+        
+        {/* Comparaison sectorielle avec graphiques interactifs */}
+        {hasEmissions && (
+          <SectorComparison 
+            totalEmissions={emissions.total} 
+            annualRevenue={1000} 
+          />
+        )}
+
 
 
         {/* Résumé du plan d'actions */}

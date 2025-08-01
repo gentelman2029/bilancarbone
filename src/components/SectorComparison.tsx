@@ -277,25 +277,40 @@ export const SectorComparison: React.FC<SectorComparisonProps> = ({
           </Card>
         </div>
 
-        {/* Filtre secteur uniquement */}
+        {/* Filtre secteur amélioré */}
         <Card className="p-4 bg-background border border-muted">
           <div className="flex items-center gap-2 mb-4">
             <Filter className="w-4 h-4 text-primary" />
-            <h4 className="font-semibold text-foreground">Sélection du secteur</h4>
+            <h4 className="font-semibold text-foreground">Filtrer par secteur d'activité</h4>
           </div>
-          <div className="max-w-xs">
-            <Label className="text-xs text-muted-foreground">Secteur d'activité</Label>
-            <Select value={selectedSector} onValueChange={setSelectedSector}>
-              <SelectTrigger className="h-10 bg-background border-muted">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-background border-muted shadow-lg z-50">
-                <SelectItem value="all">Tous secteurs</SelectItem>
-                {Object.entries(SECTOR_BENCHMARKS).map(([key, sector]) => (
-                  <SelectItem key={key} value={key}>{sector.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-xs text-muted-foreground mb-2 block">Secteur d'activité</Label>
+              <Select value={selectedSector} onValueChange={setSelectedSector}>
+                <SelectTrigger className="h-10 bg-background border-muted">
+                  <SelectValue placeholder="Sélectionnez un secteur" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border-muted shadow-lg z-50 max-h-60">
+                  <SelectItem value="all">📊 Tous les secteurs</SelectItem>
+                  {Object.entries(SECTOR_BENCHMARKS).map(([key, sector]) => (
+                    <SelectItem key={key} value={key} className="py-2">
+                      <div className="flex items-center justify-between w-full">
+                        <span>{sector.name}</span>
+                        <Badge variant="outline" className="ml-2 text-xs">
+                          {sector.average.toFixed(1)} tCO2e/k€
+                        </Badge>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-end">
+              <div className="text-sm text-muted-foreground">
+                <p className="font-medium">Filtres actifs:</p>
+                <p>{selectedSector === "all" ? "Tous secteurs" : SECTOR_BENCHMARKS[selectedSector as keyof typeof SECTOR_BENCHMARKS]?.name}</p>
+              </div>
+            </div>
           </div>
         </Card>
 
@@ -344,26 +359,69 @@ export const SectorComparison: React.FC<SectorComparisonProps> = ({
                   <Tooltip 
                     content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
+                        const sectorData = payload[0];
+                        const yourPerformance = payload.find(p => p.dataKey === 'votre_performance')?.value || 0;
+                        const average = payload.find(p => p.dataKey === 'moyenne_sectorielle')?.value || 0;
+                        const top10 = payload.find(p => p.dataKey === 'top_10_percent')?.value || 0;
+                        const threshold = payload.find(p => p.dataKey === 'seuil_critique')?.value || 0;
+                        
+                        const performanceLevel = yourPerformance <= top10 ? 'Excellent' : 
+                                               yourPerformance <= average ? 'Bon' :
+                                               yourPerformance <= threshold ? 'Moyen' : 'À améliorer';
+                        
+                        const performanceColor = yourPerformance <= top10 ? 'text-green-600' : 
+                                               yourPerformance <= average ? 'text-blue-600' :
+                                               yourPerformance <= threshold ? 'text-orange-600' : 'text-red-600';
+                        
                         return (
-                          <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
-                            <p className="font-semibold text-foreground mb-2">{label?.replace('\n', ' ')}</p>
-                            {payload.map((entry, index) => (
-                              <p key={index} className="text-sm" style={{ color: entry.color }}>
-                                {entry.name === 'votre_performance' ? 'Votre performance' :
-                                 entry.name === 'moyenne_sectorielle' ? 'Moyenne sectorielle' :
-                                 entry.name === 'top_10_percent' ? 'Top 10%' : 'Seuil critique'}: {typeof entry.value === 'number' ? entry.value.toFixed(2) : entry.value} tCO2e/k€
-                              </p>
-                            ))}
+                          <div className="bg-background border border-border rounded-lg p-4 shadow-xl min-w-[280px]">
+                            <p className="font-semibold text-foreground mb-3 text-center border-b pb-2">
+                              {label?.replace('\n', ' ')}
+                            </p>
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm">🎯 Votre performance:</span>
+                                <span className={`font-bold ${performanceColor}`}>
+                                  {typeof yourPerformance === 'number' ? yourPerformance.toFixed(2) : yourPerformance} tCO2e/k€
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm">📊 Moyenne sectorielle:</span>
+                                <span className="font-semibold text-blue-600">
+                                  {typeof average === 'number' ? average.toFixed(2) : average} tCO2e/k€
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm">🏆 Top 10%:</span>
+                                <span className="font-semibold text-green-600">
+                                  {typeof top10 === 'number' ? top10.toFixed(2) : top10} tCO2e/k€
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm">⚠️ Seuil critique:</span>
+                                <span className="font-semibold text-orange-600">
+                                  {typeof threshold === 'number' ? threshold.toFixed(2) : threshold} tCO2e/k€
+                                </span>
+                              </div>
+                              <div className="mt-3 pt-2 border-t">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm font-medium">Niveau de performance:</span>
+                                  <span className={`font-bold text-sm px-2 py-1 rounded ${performanceColor} bg-opacity-10`}>
+                                    {performanceLevel}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         );
                       }
                       return null;
                     }}
                   />
-                  <Bar dataKey="votre_performance" fill="#ef4444" name="Votre performance" />
-                  <Bar dataKey="moyenne_sectorielle" fill="#3b82f6" name="Moyenne sectorielle" />
-                  <Bar dataKey="top_10_percent" fill="#10b981" name="Top 10%" />
-                  <Bar dataKey="seuil_critique" fill="#f59e0b" name="Seuil critique" />
+                  <Bar dataKey="seuil_critique" fill="#f59e0b" name="Seuil critique" opacity={0.7} />
+                  <Bar dataKey="moyenne_sectorielle" fill="#3b82f6" name="Moyenne sectorielle" opacity={0.8} />
+                  <Bar dataKey="top_10_percent" fill="#10b981" name="Top 10%" opacity={0.8} />
+                  <Bar dataKey="votre_performance" fill="#ef4444" name="Votre performance" opacity={0.9} strokeWidth={2} stroke="#dc2626" />
                 </BarChart>
               </ResponsiveContainer>
             </div>

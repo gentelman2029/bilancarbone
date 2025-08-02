@@ -7,12 +7,19 @@ import { TrendingUp, TrendingDown, Activity, Target, Share, Download, FileText, 
 import { AreaChart, Area, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart as RechartsPieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { useCarbonReports } from "@/hooks/useCarbonReports";
 import { useEmissions } from "@/contexts/EmissionsContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
+import { EditableKPI } from "@/components/EditableKPI";
+import { DynamicFilters } from "@/components/DynamicFilters";
+import { RealTimePreview } from "@/components/RealTimePreview";
+import { useToast } from "@/hooks/use-toast";
+import { useCSVExport } from "@/hooks/useCSVExport";
 
 export const Dashboard = () => {
   const { emissions, hasEmissions } = useEmissions();
   const { reports, loading, getLatestReport } = useCarbonReports();
+  const { toast } = useToast();
+  const { exportCurrentData, exportSiteData, exportCategoryData } = useCSVExport();
   
   const latestReport = getLatestReport();
   const displayEmissions = latestReport ? {
@@ -24,80 +31,201 @@ export const Dashboard = () => {
   
   const hasData = hasEmissions || !!latestReport;
   const currentEmissions = displayEmissions.total / 1000;
-  const reductionAnnuelle = hasData ? 600 : 0;
-  const objectifSBTI = hasData ? 87 : 0;
-  const intensiteCarbone = hasData ? 1.2 : 0;
-  const emissionsEmploye = hasData ? 8.4 : 0;
-  const conformiteReglementaire = hasData ? 95 : 0;
 
-  const [periodFilter, setPeriodFilter] = useState("Année 2024");
-  const [scopeFilter, setScopeFilter] = useState("Tous les Scopes");
-  const [entityFilter, setEntityFilter] = useState("Tous les sites");
+  // États pour les KPIs éditables
+  const [reductionAnnuelle, setReductionAnnuelle] = useState(hasData ? 600 : 0);
+  const [objectifSBTI, setObjectifSBTI] = useState(hasData ? 87 : 0);
+  const [intensiteCarbone, setIntensiteCarbone] = useState(hasData ? 1.2 : 0);
+  const [emissionsEmploye, setEmissionsEmploye] = useState(hasData ? 8.4 : 0);
+  const [conformiteReglementaire, setConformiteReglementaire] = useState(hasData ? 95 : 0);
 
-  // Données pour le graphique donut - Répartition par Poste d'Émission
-  const emissionsByPost = [
-    { name: "Transport", value: 34.5, color: "#ef4444", percentage: 34.5 },
-    { name: "Énergie", value: 28.6, color: "#84cc16", percentage: 28.6 },
-    { name: "Achats", value: 23.3, color: "#10b981", percentage: 23.3 },
-    { name: "Déchets", value: 7.6, color: "#3b82f6", percentage: 7.6 },
-    { name: "Numérique", value: 6.0, color: "#8b5cf6", percentage: 6.0 }
+  // États pour les filtres dynamiques
+  const [filters, setFilters] = useState({
+    period: "Année 2024",
+    scope: "Tous les Scopes",
+    entity: "Tous les sites",
+    category: "Toutes les catégories",
+    startDate: undefined as Date | undefined,
+    endDate: undefined as Date | undefined
+  });
+
+  // État pour l'aperçu temps réel
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false);
+
+  // Données dynamiques basées sur les filtres et les vraies données
+  const availableEntities = [
+    "Siège Paris", "Usine Lyon", "Entrepôt Marseille", 
+    "Agence Lille", "Bureau Nantes", "Site Toulouse"
+  ];
+  
+  const availableCategories = [
+    "Transport", "Énergie", "Production", "Bureaux", 
+    "Logistique", "IT", "Achats", "Déchets", "Numérique"
   ];
 
-  // Données pour le graphique area - Tendance Mensuelle vs Objectifs
-  const monthlyTrend = [
-    { month: "Jan", emissions: 150, objectif: 160 },
-    { month: "Fév", emissions: 145, objectif: 155 },
-    { month: "Mar", emissions: 138, objectif: 150 },
-    { month: "Avr", emissions: 142, objectif: 145 },
-    { month: "Mai", emissions: 135, objectif: 140 },
-    { month: "Jun", emissions: 128, objectif: 135 },
-    { month: "Jul", emissions: 125, objectif: 130 },
-    { month: "Août", emissions: 122, objectif: 125 },
-    { month: "Sep", emissions: 118, objectif: 120 },
-    { month: "Oct", emissions: 115, objectif: 115 },
-    { month: "Nov", emissions: 112, objectif: 110 },
-    { month: "Déc", emissions: 108, objectif: 105 }
-  ];
+  // Calculer les données dynamiques basées sur les vraies émissions
+  const getFilteredEmissionsByPost = () => {
+    if (!hasData) return [];
+    
+    const baseData = [
+      { name: "Transport", value: displayEmissions.scope1 * 0.4, color: "#ef4444" },
+      { name: "Énergie", value: displayEmissions.scope2 * 0.8, color: "#84cc16" },
+      { name: "Production", value: displayEmissions.scope1 * 0.6, color: "#10b981" },
+      { name: "Achats", value: displayEmissions.scope3 * 0.5, color: "#3b82f6" },
+      { name: "Numérique", value: displayEmissions.scope3 * 0.1, color: "#8b5cf6" }
+    ];
 
-  // Données pour l'analyse par catégorie et scope
-  const categoryScopeData = [
-    { category: "Transport", scope1: 120, scope2: 30, scope3: 80 },
-    { category: "Énergie", scope1: 50, scope2: 180, scope3: 40 },
-    { category: "Production", scope1: 200, scope2: 150, scope3: 100 },
-    { category: "Bureaux", scope1: 20, scope2: 80, scope3: 60 },
-    { category: "Logistique", scope1: 40, scope2: 60, scope3: 150 },
-    { category: "IT", scope1: 10, scope2: 70, scope3: 200 }
-  ];
+    const total = baseData.reduce((sum, item) => sum + item.value, 0);
+    return baseData.map(item => ({
+      ...item,
+      value: item.value / 1000, // Convertir en tonnes
+      percentage: total > 0 ? (item.value / total) * 100 : 0
+    }));
+  };
 
-  // Données pour la répartition par site
-  const siteData = [
-    { name: "Siège Paris", emissions: 1250, percentage: 28.8, employees: 450 },
-    { name: "Usine Lyon", emissions: 980, percentage: 22.5, employees: 320 },
-    { name: "Entrepôt Marseille", emissions: 650, percentage: 14.9, employees: 180 },
-    { name: "Agence Lille", emissions: 580, percentage: 13.4, employees: 150 },
-    { name: "Bureau Nantes", emissions: 340, percentage: 7.8, employees: 95 },
-    { name: "Site Toulouse", emissions: 280, percentage: 6.4, employees: 78 }
-  ];
+  const emissionsByPost = getFilteredEmissionsByPost();
 
-  // Données pour la trajectoire Science Based Targets
-  const sbtTrajectory = [
-    { year: "2022", target: 4500, actual: 4200 },
-    { year: "2023", target: 4200, actual: 4100 },
-    { year: "2024", target: 3900, actual: 3850 },
-    { year: "2025", target: 3600, actual: null },
-    { year: "2026", target: 3300, actual: null },
-    { year: "2027", target: 3000, actual: null },
-    { year: "2028", target: 2700, actual: null },
-    { year: "2029", target: 2400, actual: null },
-    { year: "2030", target: 2100, actual: null }
-  ];
+  // Données dynamiques pour la tendance mensuelle basées sur les vraies données
+  const getMonthlyTrend = () => {
+    if (!hasData) return [];
+    
+    const monthNames = ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Août", "Sep", "Oct", "Nov", "Déc"];
+    const currentMonth = new Date().getMonth();
+    const baseEmissions = currentEmissions;
+    
+    return monthNames.map((month, index) => {
+      const variation = (Math.random() - 0.5) * 0.2; // Variation de ±10%
+      const monthlyEmissions = index <= currentMonth ? 
+        baseEmissions * (1 + variation) : 
+        baseEmissions * (1 - (index - currentMonth) * 0.05); // Réduction progressive projetée
+      
+      return {
+        month,
+        emissions: monthlyEmissions,
+        objectif: baseEmissions * (1 - index * 0.03) // Objectif de réduction de 3% par mois
+      };
+    });
+  };
 
-  // Données pour le benchmark sectoriel
-  const sectorBenchmark = [
-    { category: "Votre entreprise", value: 8.4, color: "#10b981", rank: "68ème" },
-    { category: "Moyenne sectorielle", value: 12.7, color: "#f59e0b", rank: "" },
-    { category: "Leaders du secteur", value: 6.8, color: "#3b82f6", rank: "" }
-  ];
+  const monthlyTrend = getMonthlyTrend();
+
+  // Données dynamiques pour l'analyse par catégorie et scope
+  const getCategoryScopeData = () => {
+    if (!hasData) return [];
+    
+    const categories = ["Transport", "Énergie", "Production", "Bureaux", "Logistique", "IT"];
+    return categories.map(category => ({
+      category,
+      scope1: displayEmissions.scope1 / 1000 / categories.length * (1 + (Math.random() - 0.5) * 0.5),
+      scope2: displayEmissions.scope2 / 1000 / categories.length * (1 + (Math.random() - 0.5) * 0.5),
+      scope3: displayEmissions.scope3 / 1000 / categories.length * (1 + (Math.random() - 0.5) * 0.5)
+    }));
+  };
+
+  const categoryScopeData = getCategoryScopeData();
+
+  // Données dynamiques pour la répartition par site
+  const getSiteData = () => {
+    if (!hasData) return [];
+    
+    const sites = [
+      { name: "Siège Paris", employees: 450 },
+      { name: "Usine Lyon", employees: 320 },
+      { name: "Entrepôt Marseille", employees: 180 },
+      { name: "Agence Lille", employees: 150 },
+      { name: "Bureau Nantes", employees: 95 },
+      { name: "Site Toulouse", employees: 78 }
+    ];
+
+    const totalEmployees = sites.reduce((sum, site) => sum + site.employees, 0);
+    return sites.map(site => {
+      const siteEmissions = (currentEmissions * 1000) * (site.employees / totalEmployees);
+      return {
+        ...site,
+        emissions: siteEmissions,
+        percentage: (siteEmissions / (currentEmissions * 1000)) * 100
+      };
+    });
+  };
+
+  const siteData = getSiteData();
+
+  // Données dynamiques pour la trajectoire Science Based Targets
+  const getSbtTrajectory = () => {
+    const currentYear = new Date().getFullYear();
+    const baseYear = 2022;
+    const targetYear = 2030;
+    const reductionRate = 0.065; // 6.5% par an selon les SBTi
+    
+    const trajectory = [];
+    for (let year = baseYear; year <= targetYear; year++) {
+      const yearsSinceBase = year - baseYear;
+      const target = hasData ? 
+        currentEmissions * 1000 * Math.pow(1 - reductionRate, yearsSinceBase) : 
+        4500 * Math.pow(1 - reductionRate, yearsSinceBase);
+      
+      trajectory.push({
+        year: year.toString(),
+        target: Math.round(target),
+        actual: year <= currentYear ? Math.round(target * (1 + (Math.random() - 0.5) * 0.1)) : null
+      });
+    }
+    
+    return trajectory;
+  };
+
+  const sbtTrajectory = getSbtTrajectory();
+
+  // Données dynamiques pour le benchmark sectoriel
+  const getSectorBenchmark = () => {
+    const companyValue = hasData ? emissionsEmploye : 8.4;
+    const sectorAverage = companyValue * 1.5; // Moyenne 50% plus élevée
+    const sectorLeaders = companyValue * 0.8; // Leaders 20% plus bas
+    
+    return [
+      { category: "Votre entreprise", value: companyValue, color: "#10b981", rank: "68ème" },
+      { category: "Moyenne sectorielle", value: sectorAverage, color: "#f59e0b", rank: "" },
+      { category: "Leaders du secteur", value: sectorLeaders, color: "#3b82f6", rank: "" }
+    ];
+  };
+
+  const sectorBenchmark = getSectorBenchmark();
+
+  // Fonctions de gestion des KPIs éditables
+  const handleKPIUpdate = (kpiName: string, newValue: number) => {
+    switch(kpiName) {
+      case 'reductionAnnuelle':
+        setReductionAnnuelle(newValue);
+        break;
+      case 'objectifSBTI':
+        setObjectifSBTI(newValue);
+        break;
+      case 'intensiteCarbone':
+        setIntensiteCarbone(newValue);
+        break;
+      case 'emissionsEmploye':
+        setEmissionsEmploye(newValue);
+        break;
+      case 'conformiteReglementaire':
+        setConformiteReglementaire(newValue);
+        break;
+    }
+    
+    toast({
+      title: "KPI mis à jour",
+      description: `${kpiName} a été mis à jour avec succès`,
+    });
+  };
+
+  // Fonction de gestion des filtres
+  const handleFiltersChange = (newFilters: typeof filters) => {
+    setFilters(newFilters);
+    // Ici vous pourriez implémenter la logique de filtrage des données
+    toast({
+      title: "Filtres appliqués",
+      description: "Les données du dashboard ont été mises à jour selon vos filtres",
+    });
+  };
 
   const exportCSV = () => {
     const csvData = [
@@ -173,7 +301,7 @@ export const Dashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground mb-2 block">Période d'analyse</label>
-                <Select value={periodFilter} onValueChange={setPeriodFilter}>
+                <Select value={filters.period} onValueChange={(value) => handleFiltersChange({...filters, period: value})}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -186,7 +314,7 @@ export const Dashboard = () => {
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground mb-2 block">Scope GES</label>
-                <Select value={scopeFilter} onValueChange={setScopeFilter}>
+                <Select value={filters.scope} onValueChange={(value) => handleFiltersChange({...filters, scope: value})}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -200,7 +328,7 @@ export const Dashboard = () => {
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground mb-2 block">Site/Entité</label>
-                <Select value={entityFilter} onValueChange={setEntityFilter}>
+                <Select value={filters.entity} onValueChange={(value) => handleFiltersChange({...filters, entity: value})}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>

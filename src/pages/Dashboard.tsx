@@ -13,8 +13,9 @@ import { EnhancedReportGenerator } from "@/components/EnhancedReportGenerator";
 import { SectorComparison } from "@/components/SectorComparison";
 import { ActionsSummary } from "@/components/ActionsSummary";
 import { useCarbonReports } from "@/hooks/useCarbonReports";
-
-
+import { InteractiveEmissionsChart } from "@/components/InteractiveEmissionsChart";
+import { AdvancedFilters, DashboardFilters } from "@/components/AdvancedFilters";
+import { PDFExport } from "@/components/PDFExport";
 import { useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -214,6 +215,18 @@ export const Dashboard = () => {
   const [actionStatus, setActionStatus] = useState<string>("all");
   const [actionDateFilter, setActionDateFilter] = useState<string>("all");
   
+  // État pour les filtres avancés
+  const [filters, setFilters] = useState<DashboardFilters>({
+    dateRange: { from: new Date(2024, 0, 1), to: new Date() },
+    entity: 'all',
+    scope: ['scope1', 'scope2', 'scope3'],
+    period: 'year',
+    department: 'all'
+  });
+  
+  // État pour le poste sélectionné dans le graphique interactif
+  const [selectedPost, setSelectedPost] = useState<string | null>(null);
+  
   // Données historiques enrichies basées sur les calculs réels
   const monthlyEmissions = [
     { month: "Jan", scope1: Math.round(emissions.scope1 / 1000 * 0.8), scope2: Math.round(emissions.scope2 / 1000 * 0.85), scope3: Math.round(emissions.scope3 / 1000 * 0.9), target: 110, benchmark: 120, prediction: Math.round(emissions.scope1 / 1000 * 0.75) },
@@ -281,6 +294,71 @@ export const Dashboard = () => {
     { name: "Scope 2", value: 445, color: "#3B82F6" },
     { name: "Scope 3", value: 460, color: "#EF4444" }
   ];
+
+  // Données détaillées par poste pour le graphique interactif
+  const emissionsByPost = hasData ? [
+    { 
+      name: "Transport", 
+      value: Math.round((displayEmissions.scope1 + displayEmissions.scope3 * 0.3) / 1000), 
+      percentage: ((displayEmissions.scope1 + displayEmissions.scope3 * 0.3) / displayEmissions.total) * 100,
+      scope: "Scope 1 & 3", 
+      color: "#059669", 
+      category: "Mobilité" 
+    },
+    { 
+      name: "Énergie", 
+      value: Math.round(displayEmissions.scope2 / 1000), 
+      percentage: (displayEmissions.scope2 / displayEmissions.total) * 100,
+      scope: "Scope 2", 
+      color: "#3B82F6", 
+      category: "Électricité" 
+    },
+    { 
+      name: "Achats", 
+      value: Math.round(displayEmissions.scope3 * 0.4 / 1000), 
+      percentage: (displayEmissions.scope3 * 0.4 / displayEmissions.total) * 100,
+      scope: "Scope 3", 
+      color: "#EF4444", 
+      category: "Matières premières" 
+    },
+    { 
+      name: "Numérique", 
+      value: Math.round(displayEmissions.scope3 * 0.15 / 1000), 
+      percentage: (displayEmissions.scope3 * 0.15 / displayEmissions.total) * 100,
+      scope: "Scope 3", 
+      color: "#F59E0B", 
+      category: "IT" 
+    },
+    { 
+      name: "Déchets", 
+      value: Math.round(displayEmissions.scope3 * 0.15 / 1000), 
+      percentage: (displayEmissions.scope3 * 0.15 / displayEmissions.total) * 100,
+      scope: "Scope 3", 
+      color: "#8B5CF6", 
+      category: "Traitement" 
+    }
+  ].filter(item => item.value > 0) : [
+    { name: "Transport", value: 250, percentage: 35, scope: "Scope 1 & 3", color: "#059669", category: "Mobilité" },
+    { name: "Énergie", value: 180, percentage: 25, scope: "Scope 2", color: "#3B82F6", category: "Électricité" },
+    { name: "Achats", value: 150, percentage: 21, scope: "Scope 3", color: "#EF4444", category: "Matières premières" },
+    { name: "Numérique", value: 80, percentage: 11, scope: "Scope 3", color: "#F59E0B", category: "IT" },
+    { name: "Déchets", value: 55, percentage: 8, scope: "Scope 3", color: "#8B5CF6", category: "Traitement" }
+  ];
+
+  // Données pour l'export PDF
+  const pdfExportData = {
+    totalEmissions: displayEmissions.total,
+    scope1: displayEmissions.scope1,
+    scope2: displayEmissions.scope2,
+    scope3: displayEmissions.scope3,
+    carbonIntensity: displayEmissions.total / 1000 / 1000, // Exemple d'intensité
+    companyInfo: {
+      name: latestReport?.company_info?.name || "Votre Entreprise",
+      period: latestReport?.period || "2024",
+      entity: filters.entity !== 'all' ? filters.entity : "Toutes entités"
+    },
+    postsBreakdown: emissionsByPost
+  };
 
 
 
@@ -606,6 +684,40 @@ export const Dashboard = () => {
             </ResponsiveContainer>
           </div>
         </Card>
+      </div>
+
+      {/* Filtres Avancés selon le Cahier des Charges */}
+      <AdvancedFilters 
+        filters={filters} 
+        onFiltersChange={setFilters}
+        availableEntities={['Siège social', 'Site Paris', 'Site Lyon', 'Site Marseille']}
+        availableDepartments={['Tous', 'Production', 'Administration', 'Commercial', 'R&D']}
+      />
+
+      {/* Nouveau Header avec Actions */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">Analyse Détaillée des Émissions</h2>
+          <p className="text-muted-foreground">
+            {selectedPost ? `Zoom sur: ${selectedPost}` : 'Vue d\'ensemble de vos émissions par poste'}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <PDFExport data={pdfExportData} filters={filters} />
+          <Button variant="outline" onClick={exportCSV}>
+            <Calculator className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
+        </div>
+      </div>
+
+      {/* Graphique Interactif Principal - Répartition par Poste */}
+      <div className="mb-8">
+        <InteractiveEmissionsChart 
+          data={emissionsByPost}
+          onPostClick={setSelectedPost}
+          selectedPost={selectedPost}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Calculator, Download, RotateCcw, Factory, Car, Zap, Trash2, Building, Plane, Ship, TreePine, Flame, Save } from "lucide-react";
+import { Calculator, Download, RotateCcw, Factory, Car, Zap, Trash2, Building, Plane, Ship, TreePine, Flame, Save, X } from "lucide-react";
 import { useEmissions } from '@/contexts/EmissionsContext';
 import { useCarbonReports } from '@/hooks/useCarbonReports';
 import { supabase } from '@/integrations/supabase/client';
@@ -1176,30 +1176,44 @@ export const AdvancedGHGCalculator = () => {
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-2">Scope</th>
-                    <th className="text-left p-2">Description</th>
-                    <th className="text-right p-2">Quantité</th>
-                    <th className="text-right p-2">Facteur</th>
-                    <th className="text-right p-2">Émissions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {calculations.map((calc, index) => (
-                    <tr key={index} className="border-b">
-                      <td className="p-2">
-                        <Badge variant={calc.category === 'scope1' ? 'destructive' : calc.category === 'scope2' ? 'default' : 'secondary'}>
-                          {calc.category.toUpperCase()}
-                        </Badge>
-                      </td>
-                      <td className="p-2">{calc.description}</td>
-                      <td className="text-right p-2">{calc.quantity} {calc.unit}</td>
-                      <td className="text-right p-2">{calc.emissionFactor} kg CO2e/{calc.unit}</td>
-                      <td className="text-right p-2 font-semibold">{calc.emissions.toFixed(2)} kg CO2e</td>
-                    </tr>
-                  ))}
-                </tbody>
+                 <thead>
+                   <tr className="border-b">
+                     <th className="text-left p-2">Scope</th>
+                     <th className="text-left p-2">Description</th>
+                     <th className="text-right p-2">Quantité</th>
+                     <th className="text-right p-2">Facteur</th>
+                     <th className="text-right p-2">Émissions</th>
+                     <th className="text-center p-2">Actions</th>
+                   </tr>
+                 </thead>
+                 <tbody>
+                   {calculations.map((calc, index) => (
+                     <tr key={index} className="border-b">
+                       <td className="p-2">
+                         <Badge variant={calc.category === 'scope1' ? 'destructive' : calc.category === 'scope2' ? 'default' : 'secondary'}>
+                           {calc.category.toUpperCase()}
+                         </Badge>
+                       </td>
+                       <td className="p-2">{calc.description}</td>
+                       <td className="text-right p-2">{calc.quantity} {calc.unit}</td>
+                       <td className="text-right p-2">{calc.emissionFactor} kg CO2e/{calc.unit}</td>
+                       <td className="text-right p-2 font-semibold">{calc.emissions.toFixed(2)} kg CO2e</td>
+                       <td className="text-center p-2">
+                         <Button
+                           variant="ghost"
+                           size="sm"
+                           onClick={() => {
+                             const newCalculations = calculations.filter((_, i) => i !== index);
+                             setCalculations(newCalculations);
+                           }}
+                           className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                         >
+                           <X className="h-4 w-4" />
+                         </Button>
+                       </td>
+                     </tr>
+                   ))}
+                 </tbody>
               </table>
             </div>
           </CardContent>

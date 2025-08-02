@@ -215,10 +215,25 @@ export const AdvancedGHGCalculator = () => {
     };
   });
 
-  // État pour le chiffre d'affaires
+  // États pour les données d'entreprise avec persistance
   const [chiffreAffaires, setChiffreAffaires] = useState(() => {
     const saved = localStorage.getItem('calculator-chiffre-affaires');
     return saved ? JSON.parse(saved) : 1000;
+  });
+
+  const [nombrePersonnels, setNombrePersonnels] = useState(() => {
+    const saved = localStorage.getItem('calculator-nombre-personnels');
+    return saved ? JSON.parse(saved) : 50;
+  });
+
+  const [emissionsAnneePrecedente, setEmissionsAnneePrecedente] = useState(() => {
+    const saved = localStorage.getItem('calculator-emissions-annee-precedente');
+    return saved ? JSON.parse(saved) : 0;
+  });
+
+  const [objectifSBTI, setObjectifSBTI] = useState(() => {
+    const saved = localStorage.getItem('calculator-objectif-sbti');
+    return saved ? JSON.parse(saved) : 0;
   });
 
   // Vérifier l'authentification et charger les calculs sauvegardés
@@ -249,10 +264,22 @@ export const AdvancedGHGCalculator = () => {
     localStorage.setItem('calculator-scope3', JSON.stringify(scope3Data));
   }, [scope3Data]);
 
-  // Sauvegarder le chiffre d'affaires
+  // Sauvegarder les données d'entreprise
   useEffect(() => {
     localStorage.setItem('calculator-chiffre-affaires', JSON.stringify(chiffreAffaires));
   }, [chiffreAffaires]);
+
+  useEffect(() => {
+    localStorage.setItem('calculator-nombre-personnels', JSON.stringify(nombrePersonnels));
+  }, [nombrePersonnels]);
+
+  useEffect(() => {
+    localStorage.setItem('calculator-emissions-annee-precedente', JSON.stringify(emissionsAnneePrecedente));
+  }, [emissionsAnneePrecedente]);
+
+  useEffect(() => {
+    localStorage.setItem('calculator-objectif-sbti', JSON.stringify(objectifSBTI));
+  }, [objectifSBTI]);
 
   // Sauvegarder les calculs et mettre à jour le contexte
   useEffect(() => {
@@ -390,6 +417,9 @@ export const AdvancedGHGCalculator = () => {
           carbon_intensity: getTotalEmissions() / 1000 / chiffreAffaires,
           calculation_data: JSON.stringify({
             chiffre_affaires: chiffreAffaires,
+            nombre_personnels: nombrePersonnels,
+            emissions_annee_precedente: emissionsAnneePrecedente,
+            objectif_sbti: objectifSBTI,
             calculations: calculations
           }) as any
         })
@@ -427,6 +457,9 @@ export const AdvancedGHGCalculator = () => {
         carbon_intensity: getTotalEmissions() / 1000 / chiffreAffaires,
         company_info: {
           chiffre_affaires: chiffreAffaires,
+          nombre_personnels: nombrePersonnels,
+          emissions_annee_precedente: emissionsAnneePrecedente,
+          objectif_sbti: objectifSBTI,
           date_calcul: new Date().toISOString()
         },
         calculation_id: calculationData.id
@@ -489,6 +522,8 @@ export const AdvancedGHGCalculator = () => {
 
       {/* Métriques principales */}
       {calculations.length > 0 && (
+        <div>
+          {/* Métriques principales */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <Card className="p-6 bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/20">
             <div className="text-center space-y-2">
@@ -523,6 +558,57 @@ export const AdvancedGHGCalculator = () => {
               </div>
             </div>
           </Card>
+        </div>
+
+        {/* Nouveaux champs d'entreprise */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <Card className="p-6">
+            <div className="text-center space-y-2">
+              <div className="text-lg text-muted-foreground mb-2">Nombre de personnels</div>
+              <div className="flex items-center justify-center gap-2">
+                <Input
+                  type="number"
+                  value={nombrePersonnels}
+                  onChange={(e) => setNombrePersonnels(Number(e.target.value) || 50)}
+                  className="w-24 text-center text-2xl font-bold"
+                />
+                <span className="text-lg font-medium">pers.</span>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="text-center space-y-2">
+              <div className="text-lg text-muted-foreground mb-2">Émissions année précédente</div>
+              <div className="flex items-center justify-center gap-2">
+                <Input
+                  type="number"
+                  value={emissionsAnneePrecedente}
+                  onChange={(e) => setEmissionsAnneePrecedente(Number(e.target.value) || 0)}
+                  className="w-24 text-center text-2xl font-bold"
+                  step="0.1"
+                />
+                <span className="text-lg font-medium">tCO2e</span>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="text-center space-y-2">
+              <div className="text-lg text-muted-foreground mb-2">Objectif SBTi</div>
+              <div className="flex items-center justify-center gap-2">
+                <Input
+                  type="number"
+                  value={objectifSBTI}
+                  onChange={(e) => setObjectifSBTI(Number(e.target.value) || 0)}
+                  className="w-24 text-center text-2xl font-bold"
+                  step="0.1"
+                />
+                <span className="text-lg font-medium">tCO2e</span>
+              </div>
+            </div>
+          </Card>
+        </div>
         </div>
       )}
 

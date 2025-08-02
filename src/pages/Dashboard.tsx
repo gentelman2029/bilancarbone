@@ -32,12 +32,21 @@ export const Dashboard = () => {
   const hasData = hasEmissions || !!latestReport;
   const currentEmissions = displayEmissions.total / 1000;
 
-  // États pour les KPIs éditables
-  const [reductionAnnuelle, setReductionAnnuelle] = useState(hasData ? 600 : 0);
-  const [objectifSBTI, setObjectifSBTI] = useState(hasData ? 87 : 0);
-  const [intensiteCarbone, setIntensiteCarbone] = useState(hasData ? 1.2 : 0);
-  const [emissionsEmploye, setEmissionsEmploye] = useState(hasData ? 8.4 : 0);
-  const [conformiteReglementaire, setConformiteReglementaire] = useState(hasData ? 95 : 0);
+  // Récupérer les données réelles du calculateur depuis le rapport
+  const companyInfo = latestReport?.company_info || {};
+  const nombrePersonnels = companyInfo.nombre_personnels || 50;
+  const emissionsAnneePrecedente = companyInfo.emissions_annee_precedente || 0;
+  const objectifSBTI = companyInfo.objectif_sbti || 0;
+  const chiffreAffaires = companyInfo.chiffre_affaires || 1000;
+
+  // Calculs dynamiques basés sur les vraies données
+  const intensiteCarbone = hasData ? currentEmissions / chiffreAffaires : 0;
+  const emissionsEmploye = hasData ? currentEmissions / nombrePersonnels : 0;
+  const reductionAnnuelle = hasData && emissionsAnneePrecedente > 0 ? 
+    emissionsAnneePrecedente - currentEmissions : 0;
+  const pourcentageReduction = hasData && emissionsAnneePrecedente > 0 ? 
+    ((emissionsAnneePrecedente - currentEmissions) / emissionsAnneePrecedente) * 100 : 0;
+  const conformiteReglementaire = hasData ? 95 : 0;
 
   // États pour les filtres dynamiques
   const [filters, setFilters] = useState({
@@ -124,31 +133,7 @@ export const Dashboard = () => {
 
   const categoryScopeData = getCategoryScopeData();
 
-  // Données dynamiques pour la répartition par site
-  const getSiteData = () => {
-    if (!hasData) return [];
-    
-    const sites = [
-      { name: "Siège Paris", employees: 450 },
-      { name: "Usine Lyon", employees: 320 },
-      { name: "Entrepôt Marseille", employees: 180 },
-      { name: "Agence Lille", employees: 150 },
-      { name: "Bureau Nantes", employees: 95 },
-      { name: "Site Toulouse", employees: 78 }
-    ];
-
-    const totalEmployees = sites.reduce((sum, site) => sum + site.employees, 0);
-    return sites.map(site => {
-      const siteEmissions = (currentEmissions * 1000) * (site.employees / totalEmployees);
-      return {
-        ...site,
-        emissions: siteEmissions,
-        percentage: (siteEmissions / (currentEmissions * 1000)) * 100
-      };
-    });
-  };
-
-  const siteData = getSiteData();
+  // Suppression de la répartition par site comme demandé
 
   // Données dynamiques pour la trajectoire Science Based Targets
   const getSbtTrajectory = () => {
@@ -191,31 +176,7 @@ export const Dashboard = () => {
 
   const sectorBenchmark = getSectorBenchmark();
 
-  // Fonctions de gestion des KPIs éditables
-  const handleKPIUpdate = (kpiName: string, newValue: number) => {
-    switch(kpiName) {
-      case 'reductionAnnuelle':
-        setReductionAnnuelle(newValue);
-        break;
-      case 'objectifSBTI':
-        setObjectifSBTI(newValue);
-        break;
-      case 'intensiteCarbone':
-        setIntensiteCarbone(newValue);
-        break;
-      case 'emissionsEmploye':
-        setEmissionsEmploye(newValue);
-        break;
-      case 'conformiteReglementaire':
-        setConformiteReglementaire(newValue);
-        break;
-    }
-    
-    toast({
-      title: "KPI mis à jour",
-      description: `${kpiName} a été mis à jour avec succès`,
-    });
-  };
+  // Suppression des fonctions KPI car les valeurs sont maintenant calculées automatiquement
 
   // Fonction de gestion des filtres
   const handleFiltersChange = (newFilters: typeof filters) => {
@@ -243,9 +204,11 @@ export const Dashboard = () => {
       ['Poste', 'Pourcentage', 'Valeur'],
       ...emissionsByPost.map(item => [item.name, `${item.percentage}%`, `${item.value}`]),
       [''],
-      ['=== RÉPARTITION PAR SITE ==='],
-      ['Site', 'Émissions (tCO2e)', 'Pourcentage', 'Employés'],
-      ...siteData.map(site => [site.name, site.emissions, `${site.percentage}%`, site.employees])
+      ['=== DONNÉES CALCULATEUR ==='],
+      ['Nombre de personnels', nombrePersonnels, 'pers.'],
+      ['Émissions année précédente', emissionsAnneePrecedente, 'tCO2e'],
+      ['Objectif SBTi', objectifSBTI, 'tCO2e'],
+      ['Chiffre d\'affaires', chiffreAffaires, 'k€']
     ];
 
     const csvContent = csvData.map(row => row.join(';')).join('\n');
@@ -394,13 +357,13 @@ export const Dashboard = () => {
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span className="text-sm font-medium text-muted-foreground">Réduction annuelle</span>
                   </div>
-                  <div className="text-3xl font-bold text-foreground mb-1">
-                    600 <span className="text-lg">tCO2e</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-sm">
-                    <TrendingDown className="w-4 h-4 text-green-500" />
-                    <span className="text-green-500 font-medium">16.3%</span>
-                  </div>
+                   <div className="text-3xl font-bold text-foreground mb-1">
+                     {hasData ? reductionAnnuelle.toFixed(0) : "600"} <span className="text-lg">tCO2e</span>
+                   </div>
+                   <div className="flex items-center gap-1 text-sm">
+                     <TrendingDown className="w-4 h-4 text-green-500" />
+                     <span className="text-green-500 font-medium">{hasData ? pourcentageReduction.toFixed(1) : "16.3"}%</span>
+                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
                     Réduction par rapport à l'année précédente
                   </div>
@@ -421,9 +384,9 @@ export const Dashboard = () => {
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span className="text-sm font-medium text-muted-foreground">Objectif SBTi</span>
                   </div>
-                  <div className="text-3xl font-bold text-foreground mb-1">
-                    87% <span className="text-lg">atteint</span>
-                  </div>
+                   <div className="text-3xl font-bold text-foreground mb-1">
+                     {hasData ? objectifSBTI.toFixed(0) : "87"} <span className="text-lg">tCO2e</span>
+                   </div>
                   <div className="flex items-center gap-1 text-sm">
                     <TrendingUp className="w-4 h-4 text-green-500" />
                     <span className="text-green-500 font-medium">8.7%</span>
@@ -448,9 +411,9 @@ export const Dashboard = () => {
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span className="text-sm font-medium text-muted-foreground">Intensité carbone</span>
                   </div>
-                  <div className="text-3xl font-bold text-foreground mb-1">
-                    1.2 <span className="text-lg">tCO2e/k€</span>
-                  </div>
+                   <div className="text-3xl font-bold text-foreground mb-1">
+                     {hasData ? intensiteCarbone.toFixed(1) : "1.2"} <span className="text-lg">tCO2e/k€</span>
+                   </div>
                   <div className="flex items-center gap-1 text-sm">
                     <TrendingDown className="w-4 h-4 text-green-500" />
                     <span className="text-green-500 font-medium">18.2%</span>
@@ -475,9 +438,9 @@ export const Dashboard = () => {
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span className="text-sm font-medium text-muted-foreground">Émissions/employé</span>
                   </div>
-                  <div className="text-3xl font-bold text-foreground mb-1">
-                    8.4 <span className="text-lg">tCO2e/pers</span>
-                  </div>
+                   <div className="text-3xl font-bold text-foreground mb-1">
+                     {hasData ? emissionsEmploye.toFixed(1) : "8.4"} <span className="text-lg">tCO2e/pers</span>
+                   </div>
                   <div className="flex items-center gap-1 text-sm">
                     <TrendingDown className="w-4 h-4 text-green-500" />
                     <span className="text-green-500 font-medium">15.2%</span>
@@ -661,35 +624,78 @@ export const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Répartition par Site */}
+          {/* Répartition par Scope GES */}
           <Card className="border-0 shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Building2 className="w-5 h-5" />
-                Répartition par Site
+                <Globe className="w-5 h-5" />
+                Répartition par Scope GES
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {siteData.map((site, index) => (
-                  <div key={index} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="font-medium text-sm">{site.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {site.emissions.toLocaleString()} tCO2e • {site.employees} employés
-                        </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="font-medium text-sm flex items-center gap-2">
+                        <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                        Scope 1 - Émissions directes
                       </div>
-                      <div className="text-right">
-                        <div className="font-medium text-sm">{site.percentage}%</div>
-                        <div className="text-xs text-muted-foreground">
-                          {(site.emissions / site.employees).toFixed(1)} tCO2e/pers
-                        </div>
+                      <div className="text-xs text-muted-foreground">
+                        Combustibles, véhicules, réfrigérants
                       </div>
                     </div>
-                    <Progress value={site.percentage} className="h-2" />
+                    <div className="text-right">
+                      <div className="font-medium text-sm">{hasData ? (displayEmissions.scope1 / 1000).toFixed(1) : '1,200'} tCO2e</div>
+                      <div className="text-xs text-muted-foreground">
+                        {hasData ? ((displayEmissions.scope1 / displayEmissions.total) * 100).toFixed(1) : '28.6'}%
+                      </div>
+                    </div>
                   </div>
-                ))}
+                  <Progress value={hasData ? (displayEmissions.scope1 / displayEmissions.total) * 100 : 28.6} className="h-2" />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="font-medium text-sm flex items-center gap-2">
+                        <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                        Scope 2 - Énergie indirecte
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Électricité, vapeur, chauffage
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-medium text-sm">{hasData ? (displayEmissions.scope2 / 1000).toFixed(1) : '800'} tCO2e</div>
+                      <div className="text-xs text-muted-foreground">
+                        {hasData ? ((displayEmissions.scope2 / displayEmissions.total) * 100).toFixed(1) : '19.0'}%
+                      </div>
+                    </div>
+                  </div>
+                  <Progress value={hasData ? (displayEmissions.scope2 / displayEmissions.total) * 100 : 19.0} className="h-2" />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="font-medium text-sm flex items-center gap-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        Scope 3 - Autres indirectes
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Transport, achats, déchets, numérique
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-medium text-sm">{hasData ? (displayEmissions.scope3 / 1000).toFixed(1) : '2,200'} tCO2e</div>
+                      <div className="text-xs text-muted-foreground">
+                        {hasData ? ((displayEmissions.scope3 / displayEmissions.total) * 100).toFixed(1) : '52.4'}%
+                      </div>
+                    </div>
+                  </div>
+                  <Progress value={hasData ? (displayEmissions.scope3 / displayEmissions.total) * 100 : 52.4} className="h-2" />
+                </div>
               </div>
             </CardContent>
           </Card>

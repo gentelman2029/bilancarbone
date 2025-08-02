@@ -8,6 +8,10 @@ interface EmissionsData {
   total: number;
   lastUpdated?: string;
   calculationId?: string;
+  nombrePersonnels?: number;
+  emissionsAnneePrecedente?: number;
+  objectifSBTI?: number;
+  chiffreAffaires?: number;
 }
 
 interface EmissionsContextType {
@@ -55,13 +59,18 @@ export const EmissionsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       if (calculations && calculations.length > 0) {
         const calc = calculations[0];
+        const calculationData = calc.calculation_data as any || {};
         setEmissions({
           scope1: Number(calc.scope1),
           scope2: Number(calc.scope2),
           scope3: Number(calc.scope3),
           total: Number(calc.total),
           lastUpdated: calc.updated_at,
-          calculationId: calc.id
+          calculationId: calc.id,
+          nombrePersonnels: calculationData.nombre_personnels || 50,
+          emissionsAnneePrecedente: calculationData.emissions_annee_precedente || 0,
+          objectifSBTI: calculationData.objectif_sbti || 0,
+          chiffreAffaires: calculationData.chiffre_affaires || 1000
         });
       }
     } catch (error) {

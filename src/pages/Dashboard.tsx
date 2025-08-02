@@ -11,8 +11,8 @@ import { Link } from "react-router-dom";
 import { useEmissions } from "@/contexts/EmissionsContext";
 import { EnhancedReportGenerator } from "@/components/EnhancedReportGenerator";
 import { SectorComparison } from "@/components/SectorComparison";
-
 import { ActionsSummary } from "@/components/ActionsSummary";
+import { useCarbonReports } from "@/hooks/useCarbonReports";
 
 
 import { useState } from "react";
@@ -21,12 +21,24 @@ import { fr } from "date-fns/locale";
 
 export const Dashboard = () => {
   const { emissions, hasEmissions } = useEmissions();
+  const { reports, loading, getLatestReport } = useCarbonReports();
   
-  // Données réalistes basées sur les émissions calculées
-  const currentEmissions = emissions.total / 1000; // Conversion en tCO2e
+  // Utiliser les données du rapport le plus récent si disponible
+  const latestReport = getLatestReport();
+  const displayEmissions = latestReport ? {
+    total: latestReport.total_co2e * 1000, // Conversion en kg
+    scope1: latestReport.scope1_total * 1000,
+    scope2: latestReport.scope2_total * 1000,
+    scope3: latestReport.scope3_total * 1000
+  } : emissions;
+  
+  const hasData = hasEmissions || !!latestReport;
+  
+  // Données réalistes basées sur les émissions calculées ou du rapport
+  const currentEmissions = displayEmissions.total / 1000; // Conversion en tCO2e
   const previousYearEmissions = currentEmissions * 1.15; // 15% de plus l'année précédente
   const targetReduction = currentEmissions * 0.7; // Objectif -30% pour 2026
-  const progressPercentage = hasEmissions ? ((previousYearEmissions - currentEmissions) / (previousYearEmissions - targetReduction)) * 100 : 0;
+  const progressPercentage = hasData ? ((previousYearEmissions - currentEmissions) / (previousYearEmissions - targetReduction)) * 100 : 0;
   
   // États pour les filtres interactifs
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({

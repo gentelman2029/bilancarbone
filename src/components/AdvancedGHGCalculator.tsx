@@ -8,8 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Calculator, Download, RotateCcw, Factory, Car, Zap, Trash2, Building, Plane, Ship, TreePine, Flame } from "lucide-react";
+import { Calculator, Download, RotateCcw, Factory, Car, Zap, Trash2, Building, Plane, Ship, TreePine, Flame, Save } from "lucide-react";
 import { useEmissions } from '@/contexts/EmissionsContext';
+import { useCarbonReports } from '@/hooks/useCarbonReports';
+import { supabase } from '@/integrations/supabase/client';
 
 
 // Base Carbone® ADEME - Facteurs d'émissions complets (kg CO2e par unité)
@@ -169,8 +171,10 @@ interface CalculationResult {
 export const AdvancedGHGCalculator = () => {
   const { toast } = useToast();
   const { updateEmissions, emissions: emissionsContext } = useEmissions();
+  const { createReport } = useCarbonReports();
   const [calculations, setCalculations] = useState<CalculationResult[]>([]);
   const [activeTab, setActiveTab] = useState("scope1");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // États pour les formulaires avec persistance
   const [scope1Data, setScope1Data] = useState(() => {
@@ -217,8 +221,15 @@ export const AdvancedGHGCalculator = () => {
     return saved ? JSON.parse(saved) : 1000;
   });
 
-  // Charger les calculs sauvegardés
+  // Vérifier l'authentification et charger les calculs sauvegardés
   useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+    };
+    
+    checkAuth();
+    
     const savedCalculations = localStorage.getItem('calculator-calculations');
     if (savedCalculations) {
       setCalculations(JSON.parse(savedCalculations));
@@ -343,6 +354,99 @@ export const AdvancedGHGCalculator = () => {
     });
   };
 
+  // Sauvegarder les calculs dans la base de données
+  const saveToDatabase = async () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentification requise",
+        description: "Connectez-vous pour sauvegarder vos calculs dans le dashboard",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (calculations.length === 0) {
+      toast({
+        title: "Aucun calcul",
+        description: "Ajoutez au moins un calcul avant de sauvegarder",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Utilisateur non authentifié');
+
+      // Créer un calcul d'émissions d'abord
+      const { data: calculationData, error: calcError } = await supabase
+        .from('emissions_calculations')
+        .insert({
+          user_id: user.id,
+          scope1: emissions.scope1,
+          scope2: emissions.scope2,
+          scope3: emissions.scope3,
+          total: getTotalEmissions(),
+          carbon_intensity: getTotalEmissions() / 1000 / chiffreAffaires,
+          calculation_data: JSON.stringify({
+            chiffre_affaires: chiffreAffaires,
+            calculations: calculations
+          }) as any
+        })
+        .select()
+        .single();
+
+      if (calcError) throw calcError;
+
+      // Sauvegarder les données détaillées d'émissions
+      const emissionsData = calculations.map(calc => ({
+        calculation_id: calculationData.id,
+        category: calc.subcategory,
+        subcategory: calc.description,
+        scope_type: calc.category,
+        value: calc.quantity,
+        unit: calc.unit,
+        emission_factor: calc.emissionFactor,
+        co2_equivalent: calc.emissions
+      }));
+
+      const { error: emissionsError } = await supabase
+        .from('emissions_data')
+        .insert(emissionsData);
+
+      if (emissionsError) throw emissionsError;
+
+      // Créer un rapport carbone
+      await createReport({
+        report_name: `Bilan Carbone ${new Date().toLocaleDateString('fr-FR')}`,
+        period: `Année ${new Date().getFullYear()}`,
+        total_co2e: getTotalEmissions() / 1000, // Conversion en tonnes
+        scope1_total: emissions.scope1 / 1000,
+        scope2_total: emissions.scope2 / 1000,
+        scope3_total: emissions.scope3 / 1000,
+        carbon_intensity: getTotalEmissions() / 1000 / chiffreAffaires,
+        company_info: {
+          chiffre_affaires: chiffreAffaires,
+          date_calcul: new Date().toISOString()
+        },
+        calculation_id: calculationData.id
+      });
+
+      toast({
+        title: "Données sauvegardées",
+        description: "Vos calculs ont été sauvegardés et sont maintenant visibles sur le dashboard",
+      });
+
+    } catch (error: any) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      toast({
+        title: "Erreur de sauvegarde",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const exportToCSV = () => {
     const headers = ['Scope', 'Catégorie', 'Description', 'Quantité', 'Unité', 'Facteur d\'émission', 'Émissions (kg CO2e)'];
     const csvContent = [
@@ -459,6 +563,10 @@ export const AdvancedGHGCalculator = () => {
               </div>
             </div>
             <div className="flex gap-2 mt-4">
+              <Button onClick={saveToDatabase} variant="default" size="sm">
+                <Save className="h-4 w-4 mr-2" />
+                {isAuthenticated ? "Sauvegarder au Dashboard" : "Connexion requise"}
+              </Button>
               <Button onClick={exportToCSV} variant="outline" size="sm">
                 <Download className="h-4 w-4 mr-2" />
                 Exporter CSV

@@ -82,36 +82,107 @@ export type Database = {
           },
         ]
       }
+      carbon_reports: {
+        Row: {
+          calculation_id: string | null
+          carbon_intensity: number | null
+          company_info: Json | null
+          created_at: string
+          id: string
+          period: string
+          report_name: string
+          scope1_total: number
+          scope2_total: number
+          scope3_total: number
+          total_co2e: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calculation_id?: string | null
+          carbon_intensity?: number | null
+          company_info?: Json | null
+          created_at?: string
+          id?: string
+          period: string
+          report_name: string
+          scope1_total?: number
+          scope2_total?: number
+          scope3_total?: number
+          total_co2e?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calculation_id?: string | null
+          carbon_intensity?: number | null
+          company_info?: Json | null
+          created_at?: string
+          id?: string
+          period?: string
+          report_name?: string
+          scope1_total?: number
+          scope2_total?: number
+          scope3_total?: number
+          total_co2e?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carbon_reports_calculation_id_fkey"
+            columns: ["calculation_id"]
+            isOneToOne: false
+            referencedRelation: "emissions_calculations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emissions_calculations: {
         Row: {
           calculation_data: Json | null
+          carbon_intensity: number | null
+          company_size: string | null
           created_at: string
           id: string
+          period_end: string | null
+          period_start: string | null
           scope1: number
           scope2: number
           scope3: number
+          status: string | null
           total: number
           updated_at: string
           user_id: string
         }
         Insert: {
           calculation_data?: Json | null
+          carbon_intensity?: number | null
+          company_size?: string | null
           created_at?: string
           id?: string
+          period_end?: string | null
+          period_start?: string | null
           scope1?: number
           scope2?: number
           scope3?: number
+          status?: string | null
           total?: number
           updated_at?: string
           user_id: string
         }
         Update: {
           calculation_data?: Json | null
+          carbon_intensity?: number | null
+          company_size?: string | null
           created_at?: string
           id?: string
+          period_end?: string | null
+          period_start?: string | null
           scope1?: number
           scope2?: number
           scope3?: number
+          status?: string | null
           total?: number
           updated_at?: string
           user_id?: string
@@ -197,7 +268,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      dashboard_data: {
+        Row: {
+          carbon_intensity: number | null
+          company_info: Json | null
+          created_at: string | null
+          emissions_breakdown: Json | null
+          period: string | null
+          report_id: string | null
+          report_name: string | null
+          scope1_total: number | null
+          scope2_total: number | null
+          scope3_total: number | null
+          total_co2e: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never

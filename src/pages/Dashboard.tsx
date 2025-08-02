@@ -32,12 +32,11 @@ export const Dashboard = () => {
   const hasData = hasEmissions || !!latestReport;
   const currentEmissions = displayEmissions.total / 1000;
 
-  // Récupérer les données réelles du calculateur depuis le rapport
-  const companyInfo = latestReport?.company_info || {};
-  const nombrePersonnels = companyInfo.nombre_personnels || 50;
-  const emissionsAnneePrecedente = companyInfo.emissions_annee_precedente || 0;
-  const objectifSBTI = companyInfo.objectif_sbti || 0;
-  const chiffreAffaires = companyInfo.chiffre_affaires || 1000;
+  // Récupérer les données réelles du calculateur depuis EmissionsContext
+  const nombrePersonnels = emissions.nombrePersonnels || 50;
+  const emissionsAnneePrecedente = emissions.emissionsAnneePrecedente || 0;
+  const objectifSBTI = emissions.objectifSBTI || 0;
+  const chiffreAffaires = emissions.chiffreAffaires || 1000;
 
   // Calculs dynamiques basés sur les vraies données
   const intensiteCarbone = hasData ? currentEmissions / chiffreAffaires : 0;

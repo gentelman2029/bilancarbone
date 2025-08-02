@@ -264,22 +264,26 @@ export const AdvancedGHGCalculator = () => {
     localStorage.setItem('calculator-scope3', JSON.stringify(scope3Data));
   }, [scope3Data]);
 
-  // Sauvegarder les données d'entreprise
+  // Sauvegarder les données d'entreprise ET mettre à jour le contexte
   useEffect(() => {
     localStorage.setItem('calculator-chiffre-affaires', JSON.stringify(chiffreAffaires));
-  }, [chiffreAffaires]);
+    updateEmissions({ chiffreAffaires });
+  }, [chiffreAffaires, updateEmissions]);
 
   useEffect(() => {
     localStorage.setItem('calculator-nombre-personnels', JSON.stringify(nombrePersonnels));
-  }, [nombrePersonnels]);
+    updateEmissions({ nombrePersonnels });
+  }, [nombrePersonnels, updateEmissions]);
 
   useEffect(() => {
     localStorage.setItem('calculator-emissions-annee-precedente', JSON.stringify(emissionsAnneePrecedente));
-  }, [emissionsAnneePrecedente]);
+    updateEmissions({ emissionsAnneePrecedente });
+  }, [emissionsAnneePrecedente, updateEmissions]);
 
   useEffect(() => {
     localStorage.setItem('calculator-objectif-sbti', JSON.stringify(objectifSBTI));
-  }, [objectifSBTI]);
+    updateEmissions({ objectifSBTI });
+  }, [objectifSBTI, updateEmissions]);
 
   // Sauvegarder les calculs et mettre à jour le contexte
   useEffect(() => {

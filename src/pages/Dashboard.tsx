@@ -1,926 +1,737 @@
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { TrendingUp, TrendingDown, Activity, Target, Zap, Factory, PieChart, BarChart3, Edit, Eye, Plus, AlertTriangle, CheckCircle, Filter, Calendar as CalendarIcon, Bell, TrendingUp as TrendIcon, Calculator, Award, Clock } from "lucide-react";
-import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, AreaChart, Area, ComposedChart, Legend } from "recharts";
-import { Link } from "react-router-dom";
-import { useEmissions } from "@/contexts/EmissionsContext";
-import { EnhancedReportGenerator } from "@/components/EnhancedReportGenerator";
-import { SectorComparison } from "@/components/SectorComparison";
-import { ActionsSummary } from "@/components/ActionsSummary";
+import { Progress } from "@/components/ui/progress";
+import { TrendingUp, TrendingDown, Activity, Target, Share, Download, FileText, Filter, BarChart3, Eye, RotateCcw, Leaf, TreePine, Users, Zap, Building2, Globe, AlertTriangle, CheckCircle, Award } from "lucide-react";
+import { AreaChart, Area, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart as RechartsPieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { useCarbonReports } from "@/hooks/useCarbonReports";
-import { InteractiveEmissionsChart } from "@/components/InteractiveEmissionsChart";
-import { AdvancedFilters, DashboardFilters } from "@/components/AdvancedFilters";
-import { PDFExport } from "@/components/PDFExport";
+import { useEmissions } from "@/contexts/EmissionsContext";
 import { useState } from "react";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 
 export const Dashboard = () => {
   const { emissions, hasEmissions } = useEmissions();
   const { reports, loading, getLatestReport } = useCarbonReports();
   
-  // Utiliser les données du rapport le plus récent si disponible
   const latestReport = getLatestReport();
   const displayEmissions = latestReport ? {
-    total: latestReport.total_co2e * 1000, // Conversion en kg
+    total: latestReport.total_co2e * 1000,
     scope1: latestReport.scope1_total * 1000,
     scope2: latestReport.scope2_total * 1000,
     scope3: latestReport.scope3_total * 1000
   } : emissions;
   
   const hasData = hasEmissions || !!latestReport;
-  
-  // Données réalistes basées sur les émissions calculées ou du rapport
-  const currentEmissions = displayEmissions.total / 1000; // Conversion en tCO2e
-  const previousYearEmissions = currentEmissions * 1.15; // 15% de plus l'année précédente
-  const targetReduction = currentEmissions * 0.7; // Objectif -30% pour 2026
-  const progressPercentage = hasData ? ((previousYearEmissions - currentEmissions) / (previousYearEmissions - targetReduction)) * 100 : 0;
-  
-  // États pour les filtres interactifs
-  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
-    from: new Date(2024, 0, 1),
-    to: new Date()
-  });
-  
-  const handleDateRangeChange = (range: { from: Date | undefined; to: Date | undefined } | undefined) => {
-    if (range) {
-      setDateRange(range);
-      applyFilters(range, selectedScope, viewType);
-    }
-  };
+  const currentEmissions = displayEmissions.total / 1000;
+  const reductionAnnuelle = hasData ? 600 : 0;
+  const objectifSBTI = hasData ? 87 : 0;
+  const intensiteCarbone = hasData ? 1.2 : 0;
+  const emissionsEmploye = hasData ? 8.4 : 0;
+  const conformiteReglementaire = hasData ? 95 : 0;
 
-  const applyFilters = (dateRange: any, scope: string, view: string) => {
-    let filtered = [...monthlyEmissions];
-    
-    if (scope !== "all") {
-      // Filtrer par scope - augmenter les valeurs du scope sélectionné pour l'effet visuel
-      filtered = filtered.map(item => ({
-        ...item,
-        scope1: scope === "scope1" ? item.scope1 * 1.2 : item.scope1 * 0.8,
-        scope2: scope === "scope2" ? item.scope2 * 1.2 : item.scope2 * 0.8,
-        scope3: scope === "scope3" ? item.scope3 * 1.2 : item.scope3 * 0.8,
-      }));
-    }
-    
-    setFilteredData(filtered);
-  };
+  const [periodFilter, setPeriodFilter] = useState("Année 2024");
+  const [scopeFilter, setScopeFilter] = useState("Tous les Scopes");
+  const [entityFilter, setEntityFilter] = useState("Tous les sites");
+
+  // Données pour le graphique donut - Répartition par Poste d'Émission
+  const emissionsByPost = [
+    { name: "Transport", value: 34.5, color: "#ef4444", percentage: 34.5 },
+    { name: "Énergie", value: 28.6, color: "#84cc16", percentage: 28.6 },
+    { name: "Achats", value: 23.3, color: "#10b981", percentage: 23.3 },
+    { name: "Déchets", value: 7.6, color: "#3b82f6", percentage: 7.6 },
+    { name: "Numérique", value: 6.0, color: "#8b5cf6", percentage: 6.0 }
+  ];
+
+  // Données pour le graphique area - Tendance Mensuelle vs Objectifs
+  const monthlyTrend = [
+    { month: "Jan", emissions: 150, objectif: 160 },
+    { month: "Fév", emissions: 145, objectif: 155 },
+    { month: "Mar", emissions: 138, objectif: 150 },
+    { month: "Avr", emissions: 142, objectif: 145 },
+    { month: "Mai", emissions: 135, objectif: 140 },
+    { month: "Jun", emissions: 128, objectif: 135 },
+    { month: "Jul", emissions: 125, objectif: 130 },
+    { month: "Août", emissions: 122, objectif: 125 },
+    { month: "Sep", emissions: 118, objectif: 120 },
+    { month: "Oct", emissions: 115, objectif: 115 },
+    { month: "Nov", emissions: 112, objectif: 110 },
+    { month: "Déc", emissions: 108, objectif: 105 }
+  ];
+
+  // Données pour l'analyse par catégorie et scope
+  const categoryScopeData = [
+    { category: "Transport", scope1: 120, scope2: 30, scope3: 80 },
+    { category: "Énergie", scope1: 50, scope2: 180, scope3: 40 },
+    { category: "Production", scope1: 200, scope2: 150, scope3: 100 },
+    { category: "Bureaux", scope1: 20, scope2: 80, scope3: 60 },
+    { category: "Logistique", scope1: 40, scope2: 60, scope3: 150 },
+    { category: "IT", scope1: 10, scope2: 70, scope3: 200 }
+  ];
+
+  // Données pour la répartition par site
+  const siteData = [
+    { name: "Siège Paris", emissions: 1250, percentage: 28.8, employees: 450 },
+    { name: "Usine Lyon", emissions: 980, percentage: 22.5, employees: 320 },
+    { name: "Entrepôt Marseille", emissions: 650, percentage: 14.9, employees: 180 },
+    { name: "Agence Lille", emissions: 580, percentage: 13.4, employees: 150 },
+    { name: "Bureau Nantes", emissions: 340, percentage: 7.8, employees: 95 },
+    { name: "Site Toulouse", emissions: 280, percentage: 6.4, employees: 78 }
+  ];
+
+  // Données pour la trajectoire Science Based Targets
+  const sbtTrajectory = [
+    { year: "2022", target: 4500, actual: 4200 },
+    { year: "2023", target: 4200, actual: 4100 },
+    { year: "2024", target: 3900, actual: 3850 },
+    { year: "2025", target: 3600, actual: null },
+    { year: "2026", target: 3300, actual: null },
+    { year: "2027", target: 3000, actual: null },
+    { year: "2028", target: 2700, actual: null },
+    { year: "2029", target: 2400, actual: null },
+    { year: "2030", target: 2100, actual: null }
+  ];
+
+  // Données pour le benchmark sectoriel
+  const sectorBenchmark = [
+    { category: "Votre entreprise", value: 8.4, color: "#10b981", rank: "68ème" },
+    { category: "Moyenne sectorielle", value: 12.7, color: "#f59e0b", rank: "" },
+    { category: "Leaders du secteur", value: 6.8, color: "#3b82f6", rank: "" }
+  ];
 
   const exportCSV = () => {
-    const toTonnes = (kg: number) => Number((kg / 1000).toFixed(2));
-    
-    // Données réelles des émissions
-    const realEmissions = {
-      scope1: toTonnes(emissions.scope1),
-      scope2: toTonnes(emissions.scope2),
-      scope3: toTonnes(emissions.scope3),
-      total: toTonnes(emissions.total)
-    };
-
-    // Sources détaillées d'émissions (exemples basés sur les scopes)
-    const detailedSources = [
-      // Scope 1 - Sources directes
-      { categorie: 'Scope 1', source: 'Combustion stationnaire', type: 'Chauffage bureaux', emissions: toTonnes(emissions.scope1 * 0.4), unite: 'tCO2e' },
-      { categorie: 'Scope 1', source: 'Transport', type: 'Véhicules de fonction', emissions: toTonnes(emissions.scope1 * 0.6), unite: 'tCO2e' },
-      
-      // Scope 2 - Sources indirectes énergétiques
-      { categorie: 'Scope 2', source: 'Électricité', type: 'Consommation bureaux', emissions: toTonnes(emissions.scope2 * 0.7), unite: 'tCO2e' },
-      { categorie: 'Scope 2', source: 'Chauffage urbain', type: 'Réseau de chaleur', emissions: toTonnes(emissions.scope2 * 0.3), unite: 'tCO2e' },
-      
-      // Scope 3 - Autres sources indirectes
-      { categorie: 'Scope 3', source: 'Achats', type: 'Matières premières', emissions: toTonnes(emissions.scope3 * 0.3), unite: 'tCO2e' },
-      { categorie: 'Scope 3', source: 'Transport', type: 'Fret et distribution', emissions: toTonnes(emissions.scope3 * 0.25), unite: 'tCO2e' },
-      { categorie: 'Scope 3', source: 'Déplacements', type: 'Voyages d\'affaires', emissions: toTonnes(emissions.scope3 * 0.2), unite: 'tCO2e' },
-      { categorie: 'Scope 3', source: 'Numérique', type: 'Équipements IT', emissions: toTonnes(emissions.scope3 * 0.15), unite: 'tCO2e' },
-      { categorie: 'Scope 3', source: 'Déchets', type: 'Traitement déchets', emissions: toTonnes(emissions.scope3 * 0.1), unite: 'tCO2e' }
-    ];
-
-    // Données consolidées
     const csvData = [
-      ['=== BILAN CARBONE CONSOLIDÉ CARBONTRACK ==='],
+      ['Dashboard Carbone - Export', format(new Date(), 'dd/MM/yyyy')],
       [''],
-      ['Date d\'export:', format(new Date(), 'dd/MM/yyyy HH:mm')],
-      ['Dernière mise à jour:', emissions.lastUpdated ? format(new Date(emissions.lastUpdated), 'dd/MM/yyyy HH:mm') : 'N/A'],
+      ['=== INDICATEURS CLÉS ==='],
+      ['Émissions totales', hasData ? currentEmissions.toFixed(1) : '0', 'tCO2e'],
+      ['Réduction annuelle', reductionAnnuelle, 'tCO2e'],
+      ['Objectif SBTi', objectifSBTI, '%'],
+      ['Intensité carbone', intensiteCarbone, 'tCO2e/k€'],
+      ['Émissions/employé', emissionsEmploye, 'tCO2e/pers'],
+      ['Conformité réglementaire', conformiteReglementaire, '%'],
       [''],
-      ['=== RÉSUMÉ EXÉCUTIF ==='],
-      ['Scope', 'Émissions (tCO2e)', 'Pourcentage du total', 'Statut vs Objectif'],
-      ['Scope 1 - Émissions directes', realEmissions.scope1, `${((realEmissions.scope1 / realEmissions.total) * 100).toFixed(1)}%`, realEmissions.scope1 < 200 ? 'Objectif atteint' : 'À améliorer'],
-      ['Scope 2 - Énergies indirectes', realEmissions.scope2, `${((realEmissions.scope2 / realEmissions.total) * 100).toFixed(1)}%`, realEmissions.scope2 < 150 ? 'Objectif atteint' : 'À améliorer'],
-      ['Scope 3 - Autres indirectes', realEmissions.scope3, `${((realEmissions.scope3 / realEmissions.total) * 100).toFixed(1)}%`, realEmissions.scope3 < 300 ? 'Objectif atteint' : 'À améliorer'],
-      ['TOTAL', realEmissions.total, '100%', realEmissions.total < 650 ? 'Objectif global atteint' : 'Effort requis'],
+      ['=== RÉPARTITION PAR POSTE ==='],
+      ['Poste', 'Pourcentage', 'Valeur'],
+      ...emissionsByPost.map(item => [item.name, `${item.percentage}%`, `${item.value}`]),
       [''],
-      ['=== ANALYSE DÉTAILLÉE PAR SOURCE ==='],
-      ['Catégorie', 'Source d\'émission', 'Type/Description', 'Émissions (tCO2e)', 'Impact relatif', 'Priorité d\'action'],
-      ...detailedSources.map(item => [
-        item.categorie,
-        item.source,
-        item.type,
-        item.emissions,
-        `${((item.emissions / realEmissions.total) * 100).toFixed(1)}%`,
-        item.emissions > realEmissions.total * 0.15 ? 'HAUTE' : item.emissions > realEmissions.total * 0.08 ? 'MOYENNE' : 'FAIBLE'
-      ]),
-      [''],
-      ['=== BENCHMARKS ET OBJECTIFS ==='],
-      ['Métrique', 'Valeur actuelle', 'Objectif 2024', 'Benchmark sectoriel', 'Écart à l\'objectif'],
-      ['Émissions totales (tCO2e)', realEmissions.total, '650', '700', `${(realEmissions.total - 650).toFixed(1)}`],
-      ['Intensité carbone (tCO2e/k€)', (realEmissions.total / 1000).toFixed(2), '0.60', '0.65', `${((realEmissions.total / 1000) - 0.60).toFixed(2)}`],
-      ['Scope 1 (tCO2e)', realEmissions.scope1, '200', '220', `${(realEmissions.scope1 - 200).toFixed(1)}`],
-      ['Scope 2 (tCO2e)', realEmissions.scope2, '150', '180', `${(realEmissions.scope2 - 150).toFixed(1)}`],
-      ['Scope 3 (tCO2e)', realEmissions.scope3, '300', '300', `${(realEmissions.scope3 - 300).toFixed(1)}`],
-      [''],
-      ['=== ÉVOLUTION TEMPORELLE ==='],
-      ['Période', 'Scope 1', 'Scope 2', 'Scope 3', 'Total', 'Objectif', 'Benchmark', 'Tendance'],
-      ...filteredData.map(item => [
-        item.month,
-        item.scope1,
-        item.scope2,
-        item.scope3,
-        item.scope1 + item.scope2 + item.scope3,
-        item.target,
-        item.benchmark,
-        (item.scope1 + item.scope2 + item.scope3) < item.target ? 'Amélioration' : 'Dégradation'
-      ]),
-      [''],
-      ['=== PRINCIPALES SOURCES D\'ÉMISSIONS ==='],
-      ['Rang', 'Source', 'Émissions (tCO2e)', '% du total', 'Actions recommandées'],
-      ...detailedSources
-        .sort((a, b) => b.emissions - a.emissions)
-        .slice(0, 5)
-        .map((item, index) => [
-          index + 1,
-          `${item.source} - ${item.type}`,
-          item.emissions,
-          `${((item.emissions / realEmissions.total) * 100).toFixed(1)}%`,
-          index === 0 ? 'Action prioritaire immédiate' : index < 3 ? 'Planifier réduction sous 6 mois' : 'Surveiller et optimiser'
-        ]),
-      [''],
-      ['=== RECOMMANDATIONS D\'ACTION ==='],
-      ['Priorité', 'Action', 'Impact estimé (tCO2e)', 'Coût estimé (k€)', 'ROI (mois)'],
-      ['1 - HAUTE', 'Optimisation énergétique bureaux', (realEmissions.scope2 * 0.3).toFixed(1), '50', '18'],
-      ['2 - HAUTE', 'Électrification flotte véhicules', (realEmissions.scope1 * 0.6).toFixed(1), '120', '36'],
-      ['3 - MOYENNE', 'Réduction voyages d\'affaires', (realEmissions.scope3 * 0.2).toFixed(1), '10', '6'],
-      ['4 - MOYENNE', 'Eco-conception produits', (realEmissions.scope3 * 0.15).toFixed(1), '80', '24'],
-      ['5 - FAIBLE', 'Sensibilisation équipes', (realEmissions.total * 0.05).toFixed(1), '5', '12'],
-      [''],
-      ['=== CONTACT CARBONTRACK ==='],
-      ['Société:', 'Carbontrack'],
-      ['Email:', 'carbontrack2025@protonmail.com'],
-      ['Téléphone:', '+216 93 460 745'],
-      ['Site web:', 'www.carbontrack.tn']
+      ['=== RÉPARTITION PAR SITE ==='],
+      ['Site', 'Émissions (tCO2e)', 'Pourcentage', 'Employés'],
+      ...siteData.map(site => [site.name, site.emissions, `${site.percentage}%`, site.employees])
     ];
 
-    const csvContent = csvData.map(row => 
-      Array.isArray(row) ? row.join(';') : row
-    ).join('\n');
-    
+    const csvContent = csvData.map(row => row.join(';')).join('\n');
     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `bilan_carbone_detaille_carbontrack_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.setAttribute('download', `dashboard_carbone_${format(new Date(), 'yyyy-MM-dd')}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const analyzeData = () => {
-    const totalEmissions = hasEmissions ? emissions.total : 1247000;
-    const analysis = {
-      mainHotspot: emissions.scope1 > emissions.scope2 && emissions.scope1 > emissions.scope3 ? "Scope 1" : 
-                   emissions.scope2 > emissions.scope3 ? "Scope 2" : "Scope 3",
-      reductionPotential: Math.round(totalEmissions * 0.35),
-      estimatedCost: Math.round(totalEmissions * 0.08),
-      paybackPeriod: "18-24 mois",
-      priority: emissions.scope1 > 500000 ? "Très haute" : emissions.scope2 > 300000 ? "Haute" : "Moyenne"
-    };
-    
-    setAnalysisData(analysis);
-  };
-  const [selectedScope, setSelectedScope] = useState<string>("all");
-  const [viewType, setViewType] = useState<string>("monthly");
-  const [showNotifications, setShowNotifications] = useState(true);
-  
-  // États pour les filtres de progression vs objectifs
-  const [progressYear, setProgressYear] = useState<string>("2024");
-  const [progressDepartment, setProgressDepartment] = useState<string>("all");
-  const [reductionType, setReductionType] = useState<string>("all");
-  
-  // États pour les filtres du plan d'action
-  const [actionPriority, setActionPriority] = useState<string>("all");
-  const [actionStatus, setActionStatus] = useState<string>("all");
-  const [actionDateFilter, setActionDateFilter] = useState<string>("all");
-  
-  // État pour les filtres avancés
-  const [filters, setFilters] = useState<DashboardFilters>({
-    dateRange: { from: new Date(2024, 0, 1), to: new Date() },
-    entity: 'all',
-    scope: ['scope1', 'scope2', 'scope3'],
-    period: 'year',
-    department: 'all'
-  });
-  
-  // État pour le poste sélectionné dans le graphique interactif
-  const [selectedPost, setSelectedPost] = useState<string | null>(null);
-  
-  // Données historiques enrichies basées sur les calculs réels
-  const monthlyEmissions = [
-    { month: "Jan", scope1: Math.round(emissions.scope1 / 1000 * 0.8), scope2: Math.round(emissions.scope2 / 1000 * 0.85), scope3: Math.round(emissions.scope3 / 1000 * 0.9), target: 110, benchmark: 120, prediction: Math.round(emissions.scope1 / 1000 * 0.75) },
-    { month: "Fév", scope1: Math.round(emissions.scope1 / 1000 * 0.85), scope2: Math.round(emissions.scope2 / 1000 * 0.9), scope3: Math.round(emissions.scope3 / 1000 * 0.95), target: 108, benchmark: 118, prediction: Math.round(emissions.scope1 / 1000 * 0.8) },
-    { month: "Mar", scope1: Math.round(emissions.scope1 / 1000 * 0.9), scope2: Math.round(emissions.scope2 / 1000 * 0.95), scope3: Math.round(emissions.scope3 / 1000 * 1.0), target: 106, benchmark: 116, prediction: Math.round(emissions.scope1 / 1000 * 0.85) },
-    { month: "Avr", scope1: Math.round(emissions.scope1 / 1000 * 0.95), scope2: Math.round(emissions.scope2 / 1000 * 1.0), scope3: Math.round(emissions.scope3 / 1000 * 1.05), target: 104, benchmark: 114, prediction: Math.round(emissions.scope1 / 1000 * 0.9) },
-    { month: "Mai", scope1: Math.round(emissions.scope1 / 1000 * 1.0), scope2: Math.round(emissions.scope2 / 1000 * 1.05), scope3: Math.round(emissions.scope3 / 1000 * 1.1), target: 102, benchmark: 112, prediction: Math.round(emissions.scope1 / 1000 * 0.95) },
-    { month: "Jun", scope1: Math.round(emissions.scope1 / 1000), scope2: Math.round(emissions.scope2 / 1000), scope3: Math.round(emissions.scope3 / 1000), target: 100, benchmark: 110, prediction: Math.round(emissions.scope1 / 1000) },
-    { month: "Jul", scope1: 0, scope2: 0, scope3: 0, target: 98, benchmark: 108, prediction: Math.round(emissions.scope1 / 1000 * 0.9) },
-    { month: "Août", scope1: 0, scope2: 0, scope3: 0, target: 96, benchmark: 106, prediction: Math.round(emissions.scope1 / 1000 * 0.85) },
-    { month: "Sep", scope1: 0, scope2: 0, scope3: 0, target: 94, benchmark: 104, prediction: Math.round(emissions.scope1 / 1000 * 0.8) },
-    { month: "Oct", scope1: 0, scope2: 0, scope3: 0, target: 92, benchmark: 102, prediction: Math.round(emissions.scope1 / 1000 * 0.75) },
-    { month: "Nov", scope1: 0, scope2: 0, scope3: 0, target: 90, benchmark: 100, prediction: Math.round(emissions.scope1 / 1000 * 0.7) },
-    { month: "Déc", scope1: 0, scope2: 0, scope3: 0, target: 88, benchmark: 98, prediction: Math.round(emissions.scope1 / 1000 * 0.65) }
-  ];
-  
-  const [filteredData, setFilteredData] = useState(monthlyEmissions);
-  const [analysisData, setAnalysisData] = useState<any>(null);
-  
-  // Convertir en tonnes pour l'affichage
-  const toTonnes = (kg: number) => (kg / 1000).toFixed(3);
-  
-  const metrics = [
-    {
-      title: "Émissions totales",
-      value: hasEmissions ? `${toTonnes(emissions.total)} tCO2e` : "0 tCO2e",
-      change: hasEmissions ? "+12%" : "0%",
-      trend: hasEmissions ? "up" : "neutral",
-      icon: Activity,
-      color: "text-destructive"
-    },
-    {
-      title: "Scope 1",
-      value: hasEmissions ? `${toTonnes(emissions.scope1)} tCO2e` : "0 tCO2e",
-      change: hasEmissions ? "-5%" : "0%", 
-      trend: hasEmissions ? "down" : "neutral",
-      icon: Factory,
-      color: "text-primary"
-    },
-    {
-      title: "Scope 2",
-      value: hasEmissions ? `${toTonnes(emissions.scope2)} tCO2e` : "0 tCO2e",
-      change: hasEmissions ? "+8%" : "0%",
-      trend: hasEmissions ? "up" : "neutral", 
-      icon: Zap,
-      color: "text-accent"
-    },
-    {
-      title: "Objectif 2026",
-      value: "1,100 tCO2e",
-      change: hasEmissions ? `${Math.round((emissions.total / 1100000) * 100)}%` : "0%",
-      trend: "target",
-      icon: Target,
-      color: "text-primary"
-    }
-  ];
-
-  // Données pour les graphiques basées sur les vraies données
-  const emissionsByScope = hasEmissions ? [
-    { name: "Scope 1", value: Math.round(emissions.scope1 / 1000), color: "#059669" },
-    { name: "Scope 2", value: Math.round(emissions.scope2 / 1000), color: "#3B82F6" },
-    { name: "Scope 3", value: Math.round(emissions.scope3 / 1000), color: "#EF4444" }
-  ].filter(item => item.value > 0) : [
-    { name: "Scope 1", value: 342, color: "#059669" },
-    { name: "Scope 2", value: 445, color: "#3B82F6" },
-    { name: "Scope 3", value: 460, color: "#EF4444" }
-  ];
-
-  // Données détaillées par poste pour le graphique interactif
-  const emissionsByPost = hasData ? [
-    { 
-      name: "Transport", 
-      value: Math.round((displayEmissions.scope1 + displayEmissions.scope3 * 0.3) / 1000), 
-      percentage: ((displayEmissions.scope1 + displayEmissions.scope3 * 0.3) / displayEmissions.total) * 100,
-      scope: "Scope 1 & 3", 
-      color: "#059669", 
-      category: "Mobilité" 
-    },
-    { 
-      name: "Énergie", 
-      value: Math.round(displayEmissions.scope2 / 1000), 
-      percentage: (displayEmissions.scope2 / displayEmissions.total) * 100,
-      scope: "Scope 2", 
-      color: "#3B82F6", 
-      category: "Électricité" 
-    },
-    { 
-      name: "Achats", 
-      value: Math.round(displayEmissions.scope3 * 0.4 / 1000), 
-      percentage: (displayEmissions.scope3 * 0.4 / displayEmissions.total) * 100,
-      scope: "Scope 3", 
-      color: "#EF4444", 
-      category: "Matières premières" 
-    },
-    { 
-      name: "Numérique", 
-      value: Math.round(displayEmissions.scope3 * 0.15 / 1000), 
-      percentage: (displayEmissions.scope3 * 0.15 / displayEmissions.total) * 100,
-      scope: "Scope 3", 
-      color: "#F59E0B", 
-      category: "IT" 
-    },
-    { 
-      name: "Déchets", 
-      value: Math.round(displayEmissions.scope3 * 0.15 / 1000), 
-      percentage: (displayEmissions.scope3 * 0.15 / displayEmissions.total) * 100,
-      scope: "Scope 3", 
-      color: "#8B5CF6", 
-      category: "Traitement" 
-    }
-  ].filter(item => item.value > 0) : [
-    { name: "Transport", value: 250, percentage: 35, scope: "Scope 1 & 3", color: "#059669", category: "Mobilité" },
-    { name: "Énergie", value: 180, percentage: 25, scope: "Scope 2", color: "#3B82F6", category: "Électricité" },
-    { name: "Achats", value: 150, percentage: 21, scope: "Scope 3", color: "#EF4444", category: "Matières premières" },
-    { name: "Numérique", value: 80, percentage: 11, scope: "Scope 3", color: "#F59E0B", category: "IT" },
-    { name: "Déchets", value: 55, percentage: 8, scope: "Scope 3", color: "#8B5CF6", category: "Traitement" }
-  ];
-
-  // Données pour l'export PDF
-  const pdfExportData = {
-    totalEmissions: displayEmissions.total,
-    scope1: displayEmissions.scope1,
-    scope2: displayEmissions.scope2,
-    scope3: displayEmissions.scope3,
-    carbonIntensity: displayEmissions.total / 1000 / 1000, // Exemple d'intensité
-    companyInfo: {
-      name: latestReport?.company_info?.name || "Votre Entreprise",
-      period: latestReport?.period || "2024",
-      entity: filters.entity !== 'all' ? filters.entity : "Toutes entités"
-    },
-    postsBreakdown: emissionsByPost
-  };
-
-
-
-  const interpretEmissions = (total: number) => {
-    if (total > 1000) {
-      return {
-        level: "Élevé",
-        color: "text-destructive",
-        icon: AlertTriangle,
-        message: "Vos émissions sont importantes. Il est urgent de mettre en place un plan de réduction ambitieux.",
-        actions: ["Audit énergétique approfondi", "Plan de mobilité durable", "Transition énergétique"]
-      };
-    } else if (total > 500) {
-      return {
-        level: "Modéré",
-        color: "text-warning",
-        icon: Activity,
-        message: "Vos émissions sont dans la moyenne. Des actions ciblées peuvent améliorer votre performance.",
-        actions: ["Optimisation énergétique", "Sensibilisation équipes", "Mobilité douce"]
-      };
-    } else {
-      return {
-        level: "Faible",
-        color: "text-success",
-        icon: CheckCircle,
-        message: "Félicitations ! Vos émissions sont relativement faibles. Maintenez vos efforts.",
-        actions: ["Maintenir les bonnes pratiques", "Amélioration continue", "Certification environnementale"]
-      };
-    }
-  };
-
-  const interpretation = interpretEmissions(hasEmissions ? emissions.total : 1247);
-
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      {/* Header modernisé avec notifications */}
-      <div className="bg-gradient-to-r from-primary/5 via-accent/5 to-secondary/5 rounded-2xl p-6 border border-primary/10">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-4">
-            <div className="p-3 bg-primary/10 rounded-xl">
-              <Activity className="w-8 h-8 text-primary" />
-            </div>
+    <div className="min-h-screen bg-muted/20">
+      {/* Header */}
+      <div className="bg-background border-b border-border/40">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Dashboard Carbone Intelligent
-              </h1>
-              <p className="text-muted-foreground text-lg">Analyse prédictive et pilotage ESG en temps réel</p>
+              <h1 className="text-2xl font-bold text-foreground">Dashboard Carbone Interactif</h1>
+              <p className="text-sm text-muted-foreground">Visualisation Power BI des émissions GES - Conforme Base Carbone® ADEME</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" size="sm" onClick={exportCSV}>
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
+              <Button variant="outline" size="sm">
+                <FileText className="w-4 h-4 mr-2" />
+                Rapport PDF
+              </Button>
+              <Button variant="outline" size="sm">
+                <Share className="w-4 h-4 mr-2" />
+                Partager
+              </Button>
             </div>
           </div>
-          <div className="flex items-center space-x-3">
-            {showNotifications && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="relative"
-                onClick={() => setShowNotifications(false)}
-              >
-                <Bell className="w-4 h-4 mr-2" />
-                Alertes
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full animate-pulse"></span>
-              </Button>
-            )}
-            <Button variant="outline" asChild>
-              <Link to="/contact">Voir la démo</Link>
-            </Button>
-            <Button variant="outline" onClick={exportCSV}>
-              <Calculator className="w-4 h-4 mr-2" />
-              Exporter CSV
-            </Button>
-            <Button variant="eco" onClick={analyzeData}>
-              <BarChart3 className="w-4 h-4 mr-2" />
-              Analyser les données
-            </Button>
-          </div>
-        </div>
-
-        {/* Filtres interactifs */}
-        <div className="flex flex-wrap items-center gap-4 p-4 bg-background/50 rounded-xl border">
-          <div className="flex items-center space-x-2">
-            <Filter className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Filtres :</span>
-          </div>
-          
-          <Select value={selectedScope} onValueChange={(value) => {
-            setSelectedScope(value);
-            applyFilters(dateRange, value, viewType);
-          }}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Scope" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous scopes</SelectItem>
-              <SelectItem value="scope1">Scope 1</SelectItem>
-              <SelectItem value="scope2">Scope 2</SelectItem>
-              <SelectItem value="scope3">Scope 3</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={viewType} onValueChange={(value) => {
-            setViewType(value);
-            applyFilters(dateRange, selectedScope, value);
-          }}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Période" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="daily">Journalier</SelectItem>
-              <SelectItem value="weekly">Hebdomadaire</SelectItem>
-              <SelectItem value="monthly">Mensuel</SelectItem>
-              <SelectItem value="yearly">Annuel</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-64">
-                <CalendarIcon className="w-4 h-4 mr-2" />
-                {dateRange?.from ? (
-                  dateRange.to ? (
-                    `${format(dateRange.from, "dd/MM/yyyy", { locale: fr })} - ${format(dateRange.to, "dd/MM/yyyy", { locale: fr })}`
-                  ) : (
-                    format(dateRange.from, "dd/MM/yyyy", { locale: fr })
-                  )
-                ) : (
-                  "Sélectionner période"
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                initialFocus
-                mode="range"
-                defaultMonth={dateRange?.from}
-                selected={dateRange}
-                onSelect={handleDateRangeChange}
-                numberOfMonths={2}
-                locale={fr}
-              />
-            </PopoverContent>
-          </Popover>
         </div>
       </div>
 
-      {/* KPI Cards - Hiérarchie Visuelle Améliorée */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Émissions Totales - Métrique Principale */}
-        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900 border-emerald-200 dark:border-emerald-800 ring-2 ring-emerald-500/20">
-          <div className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-emerald-700 dark:text-emerald-300 text-sm font-medium mb-2">Émissions Totales Actuelles</p>
-                <p className="text-4xl font-bold text-emerald-900 dark:text-emerald-100 mb-2">
-                  {hasEmissions ? `${currentEmissions.toFixed(1)} tCO2e` : "0 tCO2e"}
-                </p>
-                <div className="flex items-center space-x-2">
-                  <TrendingDown className="h-4 w-4 text-emerald-600" />
-                  <p className="text-emerald-600 dark:text-emerald-400 text-xs">
-                    {hasEmissions ? `${((previousYearEmissions - currentEmissions) / previousYearEmissions * 100).toFixed(1)}%` : "0%"} vs année dernière
-                  </p>
-                </div>
-                <p className="text-emerald-500 dark:text-emerald-400 text-xs mt-1">
-                  Précédent: {hasEmissions ? previousYearEmissions.toFixed(1) : "0"} tCO2e
-                </p>
+      <div className="container mx-auto px-6 py-6 space-y-6">
+        {/* Filtres de Données */}
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Filter className="w-5 h-5" />
+              Filtres de Données
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-2 block">Période d'analyse</label>
+                <Select value={periodFilter} onValueChange={setPeriodFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Année 2024">Année 2024</SelectItem>
+                    <SelectItem value="Année 2023">Année 2023</SelectItem>
+                    <SelectItem value="Q4 2024">Q4 2024</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="bg-emerald-500/10 p-3 rounded-full">
-                <BarChart3 className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-2 block">Scope GES</label>
+                <Select value={scopeFilter} onValueChange={setScopeFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Tous les Scopes">Tous les Scopes</SelectItem>
+                    <SelectItem value="Scope 1">Scope 1</SelectItem>
+                    <SelectItem value="Scope 2">Scope 2</SelectItem>
+                    <SelectItem value="Scope 3">Scope 3</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-2 block">Site/Entité</label>
+                <Select value={entityFilter} onValueChange={setEntityFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Tous les sites">Tous les sites</SelectItem>
+                    <SelectItem value="Siège Paris">Siège Paris</SelectItem>
+                    <SelectItem value="Usine Lyon">Usine Lyon</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-2 block">Actions</label>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm">
+                    <RotateCcw className="w-4 h-4 mr-1" />
+                    Reset
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Eye className="w-4 h-4 mr-1" />
+                    Vue
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          </CardContent>
         </Card>
 
-        {/* Progression Objectif - Métrique Critique */}
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800 ring-2 ring-blue-500/20">
-          <div className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-blue-700 dark:text-blue-300 text-sm font-medium mb-2">Progression vs Objectif 2026</p>
-                <p className="text-4xl font-bold text-blue-900 dark:text-blue-100 mb-2">
-                  {hasEmissions ? `${Math.min(100, progressPercentage).toFixed(0)}` : "0"}%
-                </p>
-                <div className="flex items-center space-x-2">
-                  <TrendingUp className="h-4 w-4 text-blue-600" />
-                  <p className="text-blue-600 dark:text-blue-400 text-xs">
-                    {hasEmissions && progressPercentage > 50 ? "En avance sur l'objectif" : "En cours"}
-                  </p>
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Émissions totales */}
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm font-medium text-muted-foreground">Émissions totales</span>
+                  </div>
+                  <div className="text-3xl font-bold text-foreground mb-1">
+                    {hasData ? currentEmissions.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "4,200"} <span className="text-lg">tCO2e</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-sm">
+                    <TrendingDown className="w-4 h-4 text-red-500" />
+                    <span className="text-red-500 font-medium">12.5%</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Total des émissions GES sur la période
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Objectif: 3,800 tCO2e
+                  </div>
                 </div>
-                <p className="text-blue-500 dark:text-blue-400 text-xs mt-1">
-                  Cible: {hasEmissions ? targetReduction.toFixed(1) : "N/A"} tCO2e (-30%)
-                </p>
-                <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2 mt-2">
-                  <div 
-                    className="bg-blue-600 dark:bg-blue-400 h-2 rounded-full transition-all duration-1000" 
-                    style={{width: `${hasEmissions ? Math.min(100, progressPercentage) : 0}%`}}
-                  ></div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Réduction annuelle */}
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm font-medium text-muted-foreground">Réduction annuelle</span>
+                  </div>
+                  <div className="text-3xl font-bold text-foreground mb-1">
+                    600 <span className="text-lg">tCO2e</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-sm">
+                    <TrendingDown className="w-4 h-4 text-green-500" />
+                    <span className="text-green-500 font-medium">16.3%</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Réduction par rapport à l'année précédente
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Objectif: 550 tCO2e
+                  </div>
                 </div>
               </div>
-              <div className="bg-blue-500/10 p-3 rounded-full">
-                <Target className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+            </CardContent>
+          </Card>
+
+          {/* Objectif SBTi */}
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm font-medium text-muted-foreground">Objectif SBTi</span>
+                  </div>
+                  <div className="text-3xl font-bold text-foreground mb-1">
+                    87% <span className="text-lg">atteint</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-sm">
+                    <TrendingUp className="w-4 h-4 text-green-500" />
+                    <span className="text-green-500 font-medium">8.7%</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Progression vers l'objectif Science Based Targets
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Objectif: 100%
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </Card>
+            </CardContent>
+          </Card>
 
-      </div>
-
-
-
-      {/* Graphiques interactifs avancés */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Graphique en camembert interactif */}
-        <Card className="p-6 bg-gradient-to-br from-background to-primary/5 border border-primary/10">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold text-foreground flex items-center space-x-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <PieChart className="w-5 h-5 text-primary" />
+          {/* Intensité carbone */}
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm font-medium text-muted-foreground">Intensité carbone</span>
+                  </div>
+                  <div className="text-3xl font-bold text-foreground mb-1">
+                    1.2 <span className="text-lg">tCO2e/k€</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-sm">
+                    <TrendingDown className="w-4 h-4 text-green-500" />
+                    <span className="text-green-500 font-medium">18.2%</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Émissions par unité de chiffre d'affaires
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Objectif: 0.9 tCO2e/k€
+                  </div>
+                </div>
               </div>
-              <span>Répartition par Scope</span>
-            </h3>
-            <Badge variant="outline" className="text-xs">
-              Filtré: {selectedScope === "all" ? "Tous" : selectedScope.toUpperCase()}
-            </Badge>
-          </div>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <RechartsPieChart>
-                <Pie
-                  data={emissionsByScope}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={120}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {emissionsByScope.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={entry.color}
-                      stroke={entry.color}
-                      strokeWidth={2}
+            </CardContent>
+          </Card>
+
+          {/* Émissions/employé */}
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm font-medium text-muted-foreground">Émissions/employé</span>
+                  </div>
+                  <div className="text-3xl font-bold text-foreground mb-1">
+                    8.4 <span className="text-lg">tCO2e/pers</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-sm">
+                    <TrendingDown className="w-4 h-4 text-green-500" />
+                    <span className="text-green-500 font-medium">15.2%</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Intensité carbone par collaborateur
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Objectif: 7.0 tCO2e/pers
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Conformité réglementaire */}
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm font-medium text-muted-foreground">Conformité réglementaire</span>
+                  </div>
+                  <div className="text-3xl font-bold text-foreground mb-1">
+                    95% <span className="text-lg">complète</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-sm">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span className="text-green-500 font-medium">5.2%</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Avancement conformité CSRD/BEGES
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Objectif: 100%
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Graphiques principaux */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Répartition par Poste d'Émission */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <BarChart3 className="w-5 h-5" />
+                Répartition par Poste d'Émission
+                <Badge variant="secondary" className="ml-auto text-xs">Cliquable</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsPieChart>
+                    <Pie
+                      data={emissionsByPost}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={120}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {emissionsByPost.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value: any, name: any) => [`${value}%`, name]}
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
                     />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-4">
+                {emissionsByPost.map((item, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                    <span className="text-sm font-medium">{item.name}: {item.percentage}%</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tendance Mensuelle vs Objectifs */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Tendance Mensuelle vs Objectifs
+                <Badge variant="secondary" className="ml-auto text-xs">Temps réel</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={monthlyTrend}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="emissions" 
+                      stroke="#10b981" 
+                      fill="#10b981" 
+                      fillOpacity={0.3}
+                      name="Émissions réelles"
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="objectif" 
+                      stroke="#3b82f6" 
+                      strokeDasharray="5 5"
+                      strokeWidth={2}
+                      name="Objectifs"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Section inférieure - Vue d'ensemble */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Analyse par Catégorie et Scope */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <BarChart3 className="w-5 h-5" />
+                Analyse par Catégorie et Scope
+                <div className="flex gap-1 ml-auto">
+                  <Badge variant="destructive" className="text-xs">Scope 1</Badge>
+                  <Badge variant="secondary" className="text-xs">Scope 2</Badge>
+                  <Badge variant="outline" className="text-xs">Scope 3</Badge>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={categoryScopeData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis 
+                      dataKey="category" 
+                      tick={{ fontSize: 10 }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={60}
+                    />
+                    <YAxis tick={{ fontSize: 12 }} />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Bar dataKey="scope1" stackId="a" fill="#ef4444" name="Scope 1 - Émissions directes" />
+                    <Bar dataKey="scope2" stackId="a" fill="#f97316" name="Scope 2 - Énergie indirecte" />
+                    <Bar dataKey="scope3" stackId="a" fill="#3b82f6" name="Scope 3 - Autres indirectes" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Répartition par Site */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Building2 className="w-5 h-5" />
+                Répartition par Site
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {siteData.map((site, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="font-medium text-sm">{site.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {site.emissions.toLocaleString()} tCO2e • {site.employees} employés
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-medium text-sm">{site.percentage}%</div>
+                        <div className="text-xs text-muted-foreground">
+                          {(site.emissions / site.employees).toFixed(1)} tCO2e/pers
+                        </div>
+                      </div>
+                    </div>
+                    <Progress value={site.percentage} className="h-2" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Section finale - Trajectoire et Benchmark */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Trajectoire Science Based Targets */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Target className="w-5 h-5" />
+                Trajectoire Science Based Targets
+                <div className="flex gap-1 ml-auto">
+                  <Badge variant="secondary" className="text-xs">En avance</Badge>
+                  <Badge variant="outline" className="text-xs">4.2% vs objectif</Badge>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={sbtTrajectory}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="year" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="target" 
+                      stroke="#3b82f6" 
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      name="Objectifs SBT"
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="actual" 
+                      stroke="#10b981" 
+                      strokeWidth={3}
+                      name="Émissions réelles"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Benchmark Sectoriel */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Award className="w-5 h-5" />
+                Benchmark Sectoriel
+                <Badge variant="default" className="ml-auto text-lg font-bold">68ème</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-green-600 mb-2">68ème</div>
+                  <div className="text-sm text-muted-foreground">position sur 500 entreprises</div>
+                  <div className="text-sm font-medium text-green-600">Performance above average</div>
+                </div>
+                
+                <div className="space-y-4">
+                  {sectorBenchmark.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: `${item.color}10` }}>
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                        <span className="font-medium text-sm">{item.category}</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold">{item.value} tCO2e/pers</div>
+                        {item.rank && <div className="text-xs text-muted-foreground">{item.rank}</div>}
+                      </div>
+                    </div>
                   ))}
-                </Pie>
-                <Tooltip 
-                  formatter={(value: any, name: any) => [`${value} tCO2e`, name]}
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--background))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
-                  }}
-                />
-                <Legend />
-              </RechartsPieChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
+                </div>
 
-        {/* Graphique combiné avec prédictions */}
-        <Card className="p-6 bg-gradient-to-br from-background to-accent/5 border border-accent/10">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold text-foreground flex items-center space-x-3">
-              <div className="p-2 bg-accent/10 rounded-lg">
-                <BarChart3 className="w-5 h-5 text-accent" />
+                <div className="p-4 bg-muted/30 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500 mt-0.5" />
+                    <div className="text-sm">
+                      <div className="font-medium text-green-600">Insights Automatiques:</div>
+                      <ul className="text-muted-foreground mt-1 space-y-1">
+                        <li>• Émissions 30% inférieures au secteur</li>
+                        <li>• Énergie: +42% via énergies vertes</li>
+                        <li>• Scope 1: Optimisation flotte (-15%)</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <Button variant="outline" className="w-full">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Rapport détaillé sectoriel
+                </Button>
               </div>
-              <span>Analyse Prédictive</span>
-            </h3>
-            <Badge variant="outline" className="text-xs">
-              Vue: {viewType}
-            </Badge>
-          </div>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={monthlyEmissions} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--background))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
-                  }}
-                />
-                <Legend />
-                <Area 
-                  type="monotone" 
-                  dataKey="benchmark" 
-                  fill="hsl(var(--muted))" 
-                  stroke="hsl(var(--muted-foreground))"
-                  fillOpacity={0.3}
-                  name="Benchmark sectoriel"
-                />
-                <Bar 
-                  dataKey="scope1" 
-                  stackId="a" 
-                  fill="hsl(var(--primary))" 
-                  name="Scope 1"
-                  radius={[0, 0, 4, 4]}
-                />
-                <Bar 
-                  dataKey="scope2" 
-                  stackId="a" 
-                  fill="hsl(var(--accent))" 
-                  name="Scope 2"
-                />
-                <Bar 
-                  dataKey="scope3" 
-                  stackId="a" 
-                  fill="hsl(var(--destructive))" 
-                  name="Scope 3"
-                  radius={[4, 4, 0, 0]}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="target" 
-                  stroke="hsl(var(--success))" 
-                  strokeWidth={3}
-                  strokeDasharray="5 5"
-                  dot={false}
-                  name="Objectif 2026"
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-      </div>
-
-      {/* Filtres Avancés selon le Cahier des Charges */}
-      <AdvancedFilters 
-        filters={filters} 
-        onFiltersChange={setFilters}
-        availableEntities={['Siège social', 'Site Paris', 'Site Lyon', 'Site Marseille']}
-        availableDepartments={['Tous', 'Production', 'Administration', 'Commercial', 'R&D']}
-      />
-
-      {/* Nouveau Header avec Actions */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Analyse Détaillée des Émissions</h2>
-          <p className="text-muted-foreground">
-            {selectedPost ? `Zoom sur: ${selectedPost}` : 'Vue d\'ensemble de vos émissions par poste'}
-          </p>
+            </CardContent>
+          </Card>
         </div>
-        <div className="flex gap-2">
-          <PDFExport data={pdfExportData} filters={filters} />
-          <Button variant="outline" onClick={exportCSV}>
-            <Calculator className="w-4 h-4 mr-2" />
-            Export CSV
-          </Button>
-        </div>
-      </div>
 
-      {/* Graphique Interactif Principal - Répartition par Poste */}
-      <div className="mb-8">
-        <InteractiveEmissionsChart 
-          data={emissionsByPost}
-          onPostClick={setSelectedPost}
-          selectedPost={selectedPost}
-        />
-      </div>
+        {/* Alertes et Recommandations Intelligentes */}
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5" />
+              Alertes et Recommandations Intelligentes
+              <Badge variant="destructive" className="ml-auto">3 alertes</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Dépassement détecté */}
+              <div className="p-4 border border-red-200 bg-red-50 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="font-medium text-red-900 mb-1">Dépassement détecté</div>
+                    <div className="text-sm text-red-700 mb-2">
+                      Transport: +30% vs budget carbone Q4
+                    </div>
+                    <Button variant="outline" size="sm" className="text-xs">
+                      Analyser
+                    </Button>
+                  </div>
+                </div>
+              </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="p-6 bg-gradient-card border shadow-card">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-foreground">Progression vs Objectifs</h3>
-            <div className="flex items-center space-x-2">
-              <Filter className="w-4 h-4 text-muted-foreground" />
-              <Select value={progressYear} onValueChange={setProgressYear}>
-                <SelectTrigger className="w-20 h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2022">2022</SelectItem>
-                  <SelectItem value="2023">2023</SelectItem>
-                  <SelectItem value="2024">2024</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={progressDepartment} onValueChange={setProgressDepartment}>
-                <SelectTrigger className="w-24 h-8 text-xs">
-                  <SelectValue placeholder="Dépt" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous</SelectItem>
-                  <SelectItem value="production">Production</SelectItem>
-                  <SelectItem value="logistique">Logistique</SelectItem>
-                  <SelectItem value="bureaux">Bureaux</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={reductionType} onValueChange={setReductionType}>
-                <SelectTrigger className="w-24 h-8 text-xs">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous</SelectItem>
-                  <SelectItem value="energie">Énergie</SelectItem>
-                  <SelectItem value="transport">Transport</SelectItem>
-                  <SelectItem value="dechets">Déchets</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted-foreground">Réduction 2026</span>
-                <span className="font-medium text-foreground">88% atteint</span>
+              {/* Objectif à risque */}
+              <div className="p-4 border border-orange-200 bg-orange-50 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-orange-500 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="font-medium text-orange-900 mb-1">Objectif à risque</div>
+                    <div className="text-sm text-orange-700 mb-2">
+                      SBT 2025: retard de -8% sur trajectoire
+                    </div>
+                    <Button variant="outline" size="sm" className="text-xs">
+                      Plan d'actions
+                    </Button>
+                  </div>
+                </div>
               </div>
-              <Progress value={88} className="h-2" />
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted-foreground">Scope 1 - Combustion</span>
-                <span className="font-medium text-foreground">75% atteint</span>
+
+              {/* Opportunité */}
+              <div className="p-4 border border-green-200 bg-green-50 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="font-medium text-green-900 mb-1">Opportunité</div>
+                    <div className="text-sm text-green-700 mb-2">
+                      Économies potentielles: voir le détail
+                    </div>
+                    <Button variant="outline" size="sm" className="text-xs">
+                      Voir offre
+                    </Button>
+                  </div>
+                </div>
               </div>
-              <Progress value={75} className="h-2" />
             </div>
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted-foreground">Scope 2 - Électricité</span>
-                <span className="font-medium text-foreground">92% atteint</span>
-              </div>
-              <Progress value={92} className="h-2" />
-            </div>
-          </div>
+          </CardContent>
         </Card>
-
-        <Card className="p-6 bg-gradient-card border shadow-card">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-foreground">Plan d'action chiffré</h3>
-            <div className="flex items-center space-x-2">
-              <Filter className="w-4 h-4 text-muted-foreground" />
-              <Select value={actionPriority} onValueChange={setActionPriority}>
-                <SelectTrigger className="w-20 h-8 text-xs">
-                  <SelectValue placeholder="Prior." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toutes</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={actionStatus} onValueChange={setActionStatus}>
-                <SelectTrigger className="w-24 h-8 text-xs">
-                  <SelectValue placeholder="État" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous</SelectItem>
-                  <SelectItem value="en_cours">En cours</SelectItem>
-                  <SelectItem value="termine">Terminé</SelectItem>
-                  <SelectItem value="planifie">Planifié</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={actionDateFilter} onValueChange={setActionDateFilter}>
-                <SelectTrigger className="w-20 h-8 text-xs">
-                  <SelectValue placeholder="Date" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toutes</SelectItem>
-                  <SelectItem value="2024">2024</SelectItem>
-                  <SelectItem value="q1">Q1</SelectItem>
-                  <SelectItem value="q2">Q2</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => alert("Création d'une nouvelle action de réduction carbone")}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Nouvelle action
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
-              <div className="flex-1">
-                <p className="font-medium text-foreground">Optimisation éclairage LED</p>
-                <p className="text-sm text-muted-foreground">Impact: -45 tCO2e/an</p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Badge>En cours</Badge>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => alert("Modification de l'action 'Optimisation éclairage LED'")}
-                >
-                  <Edit className="w-3 h-3" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => alert("Détails de l'action: Remplacement de 200 spots par des LED. Investissement: 15 000€. ROI: 2.5 ans")}
-                >
-                  <Eye className="w-3 h-3" />
-                </Button>
-              </div>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
-              <div className="flex-1">
-                <p className="font-medium text-foreground">Formation éco-conduite</p>
-                <p className="text-sm text-muted-foreground">Impact: -23 tCO2e/an</p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Badge variant="secondary">Planifié</Badge>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => alert("Modification de l'action 'Formation éco-conduite'")}
-                >
-                  <Edit className="w-3 h-3" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => alert("Détails de l'action: Formation de 25 chauffeurs. Coût: 3 500€. Économies carburant: 15%")}
-                >
-                  <Eye className="w-3 h-3" />
-                </Button>
-              </div>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
-              <div className="flex-1">
-                <p className="font-medium text-foreground">Panneaux solaires</p>
-                <p className="text-sm text-muted-foreground">Impact: -120 tCO2e/an</p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Badge>Terminé</Badge>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => alert("Modification de l'action 'Panneaux solaires'")}
-                >
-                  <Edit className="w-3 h-3" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => alert("Détails de l'action: Installation 50kW. Investissement: 45 000€. Production: 65 MWh/an")}
-                >
-                  <Eye className="w-3 h-3" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Card>
-        
-        {/* Comparaison sectorielle avec graphiques interactifs */}
-        {hasEmissions && (
-          <SectorComparison 
-            totalEmissions={emissions.total} 
-            annualRevenue={1000} 
-          />
-        )}
-
-
-
-        {/* Résumé du plan d'actions */}
-        <ActionsSummary />
-
-        {/* Nouveau composant pour les rapports intelligents */}
-        <EnhancedReportGenerator />
       </div>
     </div>
   );

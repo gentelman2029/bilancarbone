@@ -83,18 +83,46 @@ export const Dashboard = () => {
     if (!hasData) return [];
     
     const baseData = [
-      { name: "Transport", value: displayEmissions.scope1 * 0.4, color: "#ef4444" },
-      { name: "Énergie", value: displayEmissions.scope2 * 0.8, color: "#84cc16" },
-      { name: "Production", value: displayEmissions.scope1 * 0.6, color: "#10b981" },
-      { name: "Achats", value: displayEmissions.scope3 * 0.5, color: "#3b82f6" },
-      { name: "Numérique", value: displayEmissions.scope3 * 0.1, color: "#8b5cf6" }
+      { name: "Transport", value: displayEmissions.scope1 * 0.6 + displayEmissions.scope3 * 0.4, color: "#ef4444" },
+      { name: "Énergie", value: displayEmissions.scope2 * 0.8 + displayEmissions.scope1 * 0.2, color: "#10b981" },
+      { name: "Production", value: displayEmissions.scope1 * 0.2 + displayEmissions.scope3 * 0.3, color: "#3b82f6" },
+      { name: "Achats", value: displayEmissions.scope3 * 0.2, color: "#f59e0b" },
+      { name: "Numérique", value: displayEmissions.scope3 * 0.1, color: "#8b5cf6" },
+      { name: "Bureaux", value: displayEmissions.scope2 * 0.15, color: "#06b6d4" },
+      { name: "Logistique", value: displayEmissions.scope3 * 0.15, color: "#84cc16" },
+      { name: "Déchets", value: displayEmissions.scope3 * 0.05, color: "#f97316" }
     ];
 
     const total = baseData.reduce((sum, item) => sum + item.value, 0);
-    return baseData.map(item => ({
+    const dataWithPercentages = baseData.map(item => ({
       ...item,
       value: item.value / 1000, // Convertir en tonnes
       percentage: total > 0 ? (item.value / total) * 100 : 0
+    }));
+
+    // Trier par valeur décroissante
+    dataWithPercentages.sort((a, b) => b.value - a.value);
+
+    // Garder les 5 premiers et regrouper les autres
+    const top5 = dataWithPercentages.slice(0, 5);
+    const others = dataWithPercentages.slice(5);
+
+    if (others.length > 0) {
+      const othersSum = others.reduce((sum, item) => sum + item.value, 0);
+      const othersPercentage = others.reduce((sum, item) => sum + item.percentage, 0);
+      
+      top5.push({
+        name: "Autres",
+        value: othersSum,
+        percentage: othersPercentage,
+        color: "#94a3b8"
+      });
+    }
+
+    // Arrondir les pourcentages à 2 décimales
+    return top5.map(item => ({
+      ...item,
+      percentage: Math.round(item.percentage * 100) / 100
     }));
   };
 
@@ -509,7 +537,6 @@ export const Dashboard = () => {
                       data={emissionsByPost}
                       cx="50%"
                       cy="50%"
-                      innerRadius={60}
                       outerRadius={120}
                       paddingAngle={2}
                       dataKey="value"
@@ -519,7 +546,7 @@ export const Dashboard = () => {
                       ))}
                     </Pie>
                     <Tooltip 
-                      formatter={(value: any, name: any) => [`${value}%`, name]}
+                      formatter={(value: any, name: any) => [`${value.toFixed(2)}%`, name]}
                       contentStyle={{
                         backgroundColor: 'hsl(var(--background))',
                         border: '1px solid hsl(var(--border))',
@@ -533,7 +560,7 @@ export const Dashboard = () => {
                 {emissionsByPost.map((item, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-                    <span className="text-sm font-medium">{item.name}: {item.percentage}%</span>
+                    <span className="text-sm font-medium">{item.name}: {item.percentage.toFixed(2)}%</span>
                   </div>
                 ))}
               </div>

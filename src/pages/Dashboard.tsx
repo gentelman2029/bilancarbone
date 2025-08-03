@@ -95,18 +95,28 @@ export const Dashboard = () => {
       calculations.forEach((calc: any) => {
         const sourceName = calc.description;
         if (!groupedData[sourceName]) {
-          // Assigner des couleurs différentes selon le type
+          // Assigner des couleurs distinctes et variées selon le type
           let color = "#94a3b8"; // couleur par défaut
-          if (sourceName.includes("Gaz naturel")) color = "#ef4444";
-          else if (sourceName.includes("diesel") || sourceName.includes("Diesel")) color = "#f59e0b";
-          else if (sourceName.includes("électr") || sourceName.includes("Électr")) color = "#10b981";
-          else if (sourceName.includes("R-22") || sourceName.includes("réfrigér")) color = "#8b5cf6";
-          else if (sourceName.includes("chaleur") || sourceName.includes("eau chaude")) color = "#06b6d4";
-          else if (sourceName.includes("recyclage") || sourceName.includes("Recyclage")) color = "#84cc16";
-          else if (sourceName.includes("transport") || sourceName.includes("Transport")) color = "#3b82f6";
-          else if (sourceName.includes("essence") || sourceName.includes("Essence")) color = "#f97316";
-          else if (sourceName.includes("fioul") || sourceName.includes("Fioul")) color = "#e11d48";
-          else if (sourceName.includes("charbon") || sourceName.includes("Charbon")) color = "#374151";
+          if (sourceName.includes("Gaz naturel")) color = "#ef4444"; // Rouge
+          else if (sourceName.includes("diesel") || sourceName.includes("Diesel")) color = "#f59e0b"; // Orange
+          else if (sourceName.includes("électr") || sourceName.includes("Électr")) color = "#22c55e"; // Vert
+          else if (sourceName.includes("R-22") || sourceName.includes("réfrigér")) color = "#8b5cf6"; // Violet
+          else if (sourceName.includes("chaleur") || sourceName.includes("eau chaude")) color = "#06b6d4"; // Cyan
+          else if (sourceName.includes("recyclage") || sourceName.includes("Recyclage")) color = "#84cc16"; // Vert lime
+          else if (sourceName.includes("transport") || sourceName.includes("Transport")) color = "#3b82f6"; // Bleu
+          else if (sourceName.includes("essence") || sourceName.includes("Essence")) color = "#f97316"; // Orange foncé
+          else if (sourceName.includes("fioul") || sourceName.includes("Fioul")) color = "#e11d48"; // Rose
+          else if (sourceName.includes("charbon") || sourceName.includes("Charbon")) color = "#374151"; // Gris foncé
+          else if (sourceName.includes("acier") || sourceName.includes("Acier")) color = "#64748b"; // Gris ardoise
+          else if (sourceName.includes("aluminium") || sourceName.includes("Aluminium")) color = "#0ea5e9"; // Bleu clair
+          else if (sourceName.includes("béton") || sourceName.includes("Béton")) color = "#71717a"; // Gris neutre
+          else if (sourceName.includes("bois") || sourceName.includes("Bois")) color = "#a3a3a3"; // Brun
+          else if (sourceName.includes("verre") || sourceName.includes("Verre")) color = "#14b8a6"; // Teal
+          else if (sourceName.includes("plastique") || sourceName.includes("Plastique")) color = "#f43f5e"; // Rose vif
+          else if (sourceName.includes("papier") || sourceName.includes("Papier")) color = "#eab308"; // Jaune
+          else if (sourceName.includes("cuivre") || sourceName.includes("Cuivre")) color = "#dc2626"; // Rouge foncé
+          else if (sourceName.includes("avion") || sourceName.includes("Avion")) color = "#7c3aed"; // Violet foncé
+          else if (sourceName.includes("train") || sourceName.includes("TGV") || sourceName.includes("TER")) color = "#059669"; // Vert émeraude
           
           groupedData[sourceName] = { emissions: 0, color };
         }
@@ -131,7 +141,7 @@ export const Dashboard = () => {
         { name: "R-22 (HCFC-22)", value: total * 0.18, emissions: total * 0.18 * 1000, color: "#8b5cf6" },
         { name: "Eau chaude (réseau de chaleur)", value: total * 0.15, emissions: total * 0.15 * 1000, color: "#06b6d4" },
         { name: "Recyclage", value: total * 0.12, emissions: total * 0.12 * 1000, color: "#84cc16" },
-        { name: "Électricité France", value: total * 0.10, emissions: total * 0.10 * 1000, color: "#10b981" }
+        { name: "Électricité France", value: total * 0.10, emissions: total * 0.10 * 1000, color: "#22c55e" }
       ];
     }
 

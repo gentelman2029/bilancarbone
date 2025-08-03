@@ -37,6 +37,7 @@ export const Dashboard = () => {
   const nombrePersonnels = emissions.nombrePersonnels || 50;
   const emissionsAnneePrecedente = emissions.emissionsAnneePrecedente || 0;
   const objectifSBTI = emissions.objectifSBTI || 0;
+  const emissionsReelles = emissions.emissionsReelles || 0;
   const chiffreAffaires = emissions.chiffreAffaires || 1000;
 
   // Calculs dynamiques basés sur les vraies données

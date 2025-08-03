@@ -11,6 +11,7 @@ interface EmissionsData {
   nombrePersonnels?: number;
   emissionsAnneePrecedente?: number;
   objectifSBTI?: number;
+  objectifsSBTParAnnee?: { [key: string]: number }; // Objectifs SBT par année (2023-2030)
   emissionsReelles?: number;
   chiffreAffaires?: number;
   moyenneSectorielle?: number;
@@ -74,6 +75,7 @@ export const EmissionsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           nombrePersonnels: calculationData.nombre_personnels || 50,
           emissionsAnneePrecedente: calculationData.emissions_annee_precedente || 0,
           objectifSBTI: calculationData.objectif_sbti || 0,
+          objectifsSBTParAnnee: calculationData.objectifs_sbt_par_annee || {},
           emissionsReelles: calculationData.emissions_reelles || 0,
           chiffreAffaires: calculationData.chiffre_affaires || 1000
         });

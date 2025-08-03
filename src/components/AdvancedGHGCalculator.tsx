@@ -236,6 +236,11 @@ export const AdvancedGHGCalculator = () => {
     return saved ? JSON.parse(saved) : 0;
   });
 
+  const [objectifsSBTParAnnee, setObjectifsSBTParAnnee] = useState(() => {
+    const saved = localStorage.getItem('calculator-objectifs-sbt-par-annee');
+    return saved ? JSON.parse(saved) : {};
+  });
+
   const [emissionsReelles, setEmissionsReelles] = useState(() => {
     const saved = localStorage.getItem('calculator-emissions-reelles');
     return saved ? JSON.parse(saved) : 0;
@@ -305,6 +310,11 @@ export const AdvancedGHGCalculator = () => {
     localStorage.setItem('calculator-objectif-sbti', JSON.stringify(objectifSBTI));
     updateEmissions({ objectifSBTI });
   }, [objectifSBTI, updateEmissions]);
+
+  useEffect(() => {
+    localStorage.setItem('calculator-objectifs-sbt-par-annee', JSON.stringify(objectifsSBTParAnnee));
+    updateEmissions({ objectifsSBTParAnnee });
+  }, [objectifsSBTParAnnee, updateEmissions]);
 
   useEffect(() => {
     localStorage.setItem('calculator-emissions-reelles', JSON.stringify(emissionsReelles));
@@ -607,7 +617,7 @@ export const AdvancedGHGCalculator = () => {
         </div>
 
         {/* Nouveaux champs d'entreprise */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <Card className="p-6">
             <div className="text-center space-y-2">
               <div className="text-lg text-muted-foreground mb-2">Nombre de personnels</div>
@@ -625,7 +635,7 @@ export const AdvancedGHGCalculator = () => {
 
           <Card className="p-6">
             <div className="text-center space-y-2">
-              <div className="text-lg text-muted-foreground mb-2">Émissions année précédente</div>
+              <div className="text-lg text-muted-foreground mb-2">Émissions année précédente (2023)</div>
               <div className="flex items-center justify-center gap-2">
                 <Input
                   type="number"
@@ -641,23 +651,7 @@ export const AdvancedGHGCalculator = () => {
 
           <Card className="p-6">
             <div className="text-center space-y-2">
-              <div className="text-lg text-muted-foreground mb-2">Objectifs SBT</div>
-              <div className="flex items-center justify-center gap-2">
-                <Input
-                  type="number"
-                  value={objectifSBTI}
-                  onChange={(e) => setObjectifSBTI(Number(e.target.value) || 0)}
-                  className="w-24 text-center text-2xl font-bold"
-                  step="0.1"
-                />
-                <span className="text-lg font-medium">tCO2e</span>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6">
-            <div className="text-center space-y-2">
-              <div className="text-lg text-muted-foreground mb-2">Émissions Réelles</div>
+              <div className="text-lg text-muted-foreground mb-2">Émissions Réelles (2024)</div>
               <div className="flex items-center justify-center gap-2">
                 <Input
                   type="number"
@@ -671,6 +665,44 @@ export const AdvancedGHGCalculator = () => {
             </div>
           </Card>
         </div>
+
+        {/* Objectifs SBT par année */}
+        <Card className="p-6 mb-6">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl">Objectifs Science Based Targets (SBT) par année</CardTitle>
+            <CardDescription>
+              Saisissez vos objectifs de réduction d'émissions pour chaque année de 2023 à 2030 (en tCO2e)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map(year => (
+                <div key={year} className="space-y-2">
+                  <Label className="text-sm font-medium">{year}</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      value={objectifsSBTParAnnee[year] || ''}
+                      onChange={(e) => {
+                        const newObjectifs = { ...objectifsSBTParAnnee };
+                        if (e.target.value === '') {
+                          delete newObjectifs[year];
+                        } else {
+                          newObjectifs[year] = Number(e.target.value) || 0;
+                        }
+                        setObjectifsSBTParAnnee(newObjectifs);
+                      }}
+                      className="text-center"
+                      step="0.1"
+                      placeholder="0"
+                    />
+                    <span className="text-sm text-muted-foreground">tCO2e</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Champs de benchmarks sectoriels */}
         <Card className="p-6 mb-6">

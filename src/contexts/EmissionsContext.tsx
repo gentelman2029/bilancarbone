@@ -11,6 +11,7 @@ interface EmissionsData {
   nombrePersonnels?: number;
   emissionsAnneePrecedente?: number;
   objectifSBTI?: number;
+  emissionsReelles?: number;
   chiffreAffaires?: number;
   moyenneSectorielle?: number;
   leadersSecteur?: number;
@@ -73,6 +74,7 @@ export const EmissionsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           nombrePersonnels: calculationData.nombre_personnels || 50,
           emissionsAnneePrecedente: calculationData.emissions_annee_precedente || 0,
           objectifSBTI: calculationData.objectif_sbti || 0,
+          emissionsReelles: calculationData.emissions_reelles || 0,
           chiffreAffaires: calculationData.chiffre_affaires || 1000
         });
       }

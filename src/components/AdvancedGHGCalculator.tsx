@@ -236,6 +236,11 @@ export const AdvancedGHGCalculator = () => {
     return saved ? JSON.parse(saved) : 0;
   });
 
+  const [emissionsReelles, setEmissionsReelles] = useState(() => {
+    const saved = localStorage.getItem('calculator-emissions-reelles');
+    return saved ? JSON.parse(saved) : 0;
+  });
+
   // États pour les benchmarks sectoriels avec persistance
   const [moyenneSectorielle, setMoyenneSectorielle] = useState(() => {
     const saved = localStorage.getItem('calculator-moyenne-sectorielle');
@@ -300,6 +305,11 @@ export const AdvancedGHGCalculator = () => {
     localStorage.setItem('calculator-objectif-sbti', JSON.stringify(objectifSBTI));
     updateEmissions({ objectifSBTI });
   }, [objectifSBTI, updateEmissions]);
+
+  useEffect(() => {
+    localStorage.setItem('calculator-emissions-reelles', JSON.stringify(emissionsReelles));
+    updateEmissions({ emissionsReelles });
+  }, [emissionsReelles, updateEmissions]);
 
   // Sauvegarder les benchmarks sectoriels
   useEffect(() => {

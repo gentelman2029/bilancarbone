@@ -288,21 +288,25 @@ export const Dashboard = () => {
   // Données dynamiques pour la trajectoire Science Based Targets
   const getSbtTrajectory = () => {
     const currentYear = new Date().getFullYear();
-    const baseYear = 2022;
+    const baseYear = 2023; // Commencer à partir de 2023
     const targetYear = 2030;
     const reductionRate = 0.065; // 6.5% par an selon les SBTi
+    
+    // Récupérer les émissions réelles et objectifs SBT du calculateur
+    const emissionsReellesValue = emissions.emissionsReelles || currentEmissions;
+    const objectifSBTValue = emissions.objectifSBTI || currentEmissions * 0.8;
     
     const trajectory = [];
     for (let year = baseYear; year <= targetYear; year++) {
       const yearsSinceBase = year - baseYear;
       const target = hasData ? 
-        currentEmissions * 1000 * Math.pow(1 - reductionRate, yearsSinceBase) : 
+        objectifSBTValue * Math.pow(1 - reductionRate, yearsSinceBase) : 
         4500 * Math.pow(1 - reductionRate, yearsSinceBase);
       
       trajectory.push({
         year: year.toString(),
         target: Math.round(target),
-        actual: year <= currentYear ? Math.round(target * (1 + (Math.random() - 0.5) * 0.1)) : null
+        actual: year <= currentYear ? Math.round(emissionsReellesValue * Math.pow(1 - reductionRate, yearsSinceBase)) : null
       });
     }
     

@@ -313,73 +313,34 @@ export const Dashboard = () => {
 
   // Données dynamiques pour le benchmark sectoriel connectées au calculateur
   const getSectorBenchmark = () => {
-    // Récupérer les calculs du localStorage
-    const savedCalculations = localStorage.getItem('calculator-calculations');
-    const companyData = localStorage.getItem('calculator-company-data');
-    let calculationsData = {};
-    let companyInfo = {};
+    // Récupérer les valeurs saisies dans le calculateur
+    const moyenneSectorielle = localStorage.getItem('calculator-moyenne-sectorielle');
+    const leadersSecteur = localStorage.getItem('calculator-leaders-secteur');
+    const positionClassement = localStorage.getItem('calculator-position-classement');
     
-    if (savedCalculations) {
-      try {
-        calculationsData = JSON.parse(savedCalculations);
-      } catch (e) {
-        console.error('Erreur parsing calculations:', e);
-      }
-    }
+    // Parser les valeurs ou utiliser des valeurs par défaut
+    const moyenneValue = moyenneSectorielle ? JSON.parse(moyenneSectorielle) : 0;
+    const leadersValue = leadersSecteur ? JSON.parse(leadersSecteur) : 0;
+    const positionValue = positionClassement ? JSON.parse(positionClassement) : 0;
 
-    if (companyData) {
-      try {
-        companyInfo = JSON.parse(companyData);
-      } catch (e) {
-        console.error('Erreur parsing company data:', e);
-      }
-    }
-
-    const companyValue = hasData ? emissionsEmploye : 8.4;
-    
-    // Récupérer le secteur depuis les données de l'entreprise ou utiliser une valeur par défaut
-    const companySector = (companyInfo as any)?.secteur || 'services';
-    
-    // Benchmarks sectoriels basés sur les données réelles
-    const sectorBenchmarks = {
-      'energie': { average: 42.5, leaders: 18.3, totalCompanies: 450 },
-      'industrie': { average: 38.7, leaders: 22.1, totalCompanies: 380 },
-      'transport': { average: 45.2, leaders: 25.4, totalCompanies: 280 },
-      'batiment': { average: 28.9, leaders: 15.7, totalCompanies: 320 },
-      'services': { average: 25.3, leaders: 12.8, totalCompanies: 500 },
-      'agriculture': { average: 52.1, leaders: 28.9, totalCompanies: 220 },
-      'finance': { average: 18.4, leaders: 8.2, totalCompanies: 340 },
-      'sante': { average: 22.7, leaders: 11.5, totalCompanies: 290 }
-    };
-
-    const benchmark = sectorBenchmarks[companySector as keyof typeof sectorBenchmarks] || sectorBenchmarks.services;
-    
-    // Calculer la position automatiquement
-    let position = Math.round(benchmark.totalCompanies * 0.5); // Position médiane par défaut
-    if (companyValue <= benchmark.leaders) {
-      position = Math.round(Math.random() * (benchmark.totalCompanies * 0.1)); // Top 10%
-    } else if (companyValue <= benchmark.average) {
-      position = Math.round(benchmark.totalCompanies * 0.1 + Math.random() * (benchmark.totalCompanies * 0.4)); // 10-50%
-    } else {
-      position = Math.round(benchmark.totalCompanies * 0.5 + Math.random() * (benchmark.totalCompanies * 0.5)); // 50-100%
-    }
+    const companyValue = hasData ? emissionsEmploye : 0;
 
     return [
       { 
         category: "Votre entreprise", 
         value: parseFloat(companyValue.toFixed(2)), 
         color: "#10b981", 
-        rank: `${position}ème` 
+        rank: positionValue > 0 ? `${positionValue}ème` : "" 
       },
       { 
         category: "Moyenne sectorielle", 
-        value: parseFloat(benchmark.average.toFixed(2)), 
+        value: parseFloat(moyenneValue.toFixed(2)), 
         color: "#f59e0b", 
         rank: "" 
       },
       { 
         category: "Leaders du secteur", 
-        value: parseFloat(benchmark.leaders.toFixed(2)), 
+        value: parseFloat(leadersValue.toFixed(2)), 
         color: "#3b82f6", 
         rank: "" 
       }

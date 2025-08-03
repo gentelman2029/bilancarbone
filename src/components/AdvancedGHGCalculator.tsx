@@ -236,6 +236,22 @@ export const AdvancedGHGCalculator = () => {
     return saved ? JSON.parse(saved) : 0;
   });
 
+  // États pour les benchmarks sectoriels avec persistance
+  const [moyenneSectorielle, setMoyenneSectorielle] = useState(() => {
+    const saved = localStorage.getItem('calculator-moyenne-sectorielle');
+    return saved ? JSON.parse(saved) : 0;
+  });
+
+  const [leadersSecteur, setLeadersSecteur] = useState(() => {
+    const saved = localStorage.getItem('calculator-leaders-secteur');
+    return saved ? JSON.parse(saved) : 0;
+  });
+
+  const [positionClassement, setPositionClassement] = useState(() => {
+    const saved = localStorage.getItem('calculator-position-classement');
+    return saved ? JSON.parse(saved) : 0;
+  });
+
   // Vérifier l'authentification et charger les calculs sauvegardés
   useEffect(() => {
     const checkAuth = async () => {
@@ -284,6 +300,22 @@ export const AdvancedGHGCalculator = () => {
     localStorage.setItem('calculator-objectif-sbti', JSON.stringify(objectifSBTI));
     updateEmissions({ objectifSBTI });
   }, [objectifSBTI, updateEmissions]);
+
+  // Sauvegarder les benchmarks sectoriels
+  useEffect(() => {
+    localStorage.setItem('calculator-moyenne-sectorielle', JSON.stringify(moyenneSectorielle));
+    updateEmissions({ moyenneSectorielle });
+  }, [moyenneSectorielle, updateEmissions]);
+
+  useEffect(() => {
+    localStorage.setItem('calculator-leaders-secteur', JSON.stringify(leadersSecteur));
+    updateEmissions({ leadersSecteur });
+  }, [leadersSecteur, updateEmissions]);
+
+  useEffect(() => {
+    localStorage.setItem('calculator-position-classement', JSON.stringify(positionClassement));
+    updateEmissions({ positionClassement });
+  }, [positionClassement, updateEmissions]);
 
   // Sauvegarder les calculs et mettre à jour le contexte
   useEffect(() => {
@@ -613,6 +645,63 @@ export const AdvancedGHGCalculator = () => {
             </div>
           </Card>
         </div>
+
+        {/* Champs de benchmarks sectoriels */}
+        <Card className="p-6 mb-6">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl">Benchmarks Sectoriels</CardTitle>
+            <CardDescription>
+              Saisissez les valeurs de référence de votre secteur d'activité (en tCO2e/employé)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center space-y-2">
+                <div className="text-lg text-muted-foreground mb-2">Moyenne sectorielle</div>
+                <div className="flex items-center justify-center gap-2">
+                  <Input
+                    type="number"
+                    value={moyenneSectorielle}
+                    onChange={(e) => setMoyenneSectorielle(Number(e.target.value) || 0)}
+                    className="w-24 text-center text-xl font-bold"
+                    step="0.1"
+                    placeholder="0.0"
+                  />
+                  <span className="text-lg font-medium">tCO2e/employé</span>
+                </div>
+              </div>
+
+              <div className="text-center space-y-2">
+                <div className="text-lg text-muted-foreground mb-2">Leaders du secteur</div>
+                <div className="flex items-center justify-center gap-2">
+                  <Input
+                    type="number"
+                    value={leadersSecteur}
+                    onChange={(e) => setLeadersSecteur(Number(e.target.value) || 0)}
+                    className="w-24 text-center text-xl font-bold"
+                    step="0.1"
+                    placeholder="0.0"
+                  />
+                  <span className="text-lg font-medium">tCO2e/employé</span>
+                </div>
+              </div>
+
+              <div className="text-center space-y-2">
+                <div className="text-lg text-muted-foreground mb-2">Position (classement)</div>
+                <div className="flex items-center justify-center gap-2">
+                  <Input
+                    type="number"
+                    value={positionClassement}
+                    onChange={(e) => setPositionClassement(Number(e.target.value) || 0)}
+                    className="w-24 text-center text-xl font-bold"
+                    placeholder="0"
+                  />
+                  <span className="text-lg font-medium">ème</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         </div>
       )}
 

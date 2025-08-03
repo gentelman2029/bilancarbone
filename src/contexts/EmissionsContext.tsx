@@ -12,6 +12,9 @@ interface EmissionsData {
   emissionsAnneePrecedente?: number;
   objectifSBTI?: number;
   chiffreAffaires?: number;
+  moyenneSectorielle?: number;
+  leadersSecteur?: number;
+  positionClassement?: number;
 }
 
 interface EmissionsContextType {

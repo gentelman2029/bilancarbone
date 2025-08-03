@@ -208,13 +208,77 @@ export const Dashboard = () => {
   const getCategoryScopeData = () => {
     if (!hasData) return [];
     
+    // Récupérer les calculs réels du localStorage
+    const savedCalculations = localStorage.getItem('calculator-calculations');
+    let calculationsData = {};
+    
+    if (savedCalculations) {
+      try {
+        calculationsData = JSON.parse(savedCalculations);
+      } catch (e) {
+        console.error('Erreur parsing calculations:', e);
+      }
+    }
+
+    // Mapping des catégories avec leurs sources d'émission correspondantes
+    const categoryMapping = {
+      "Transport": ["diesel", "essence", "vehicule_utilitaire_diesel", "vehicule_utilitaire_essence", "poids_lourd", "transport_maritime", "transport_aerien"],
+      "Énergie": ["electricite", "gaz_naturel", "fioul_domestique", "charbon", "propane", "butane", "eau_chaude_reseau"],
+      "Production": ["acier", "aluminium", "ciment", "beton", "verre", "plastiques", "papier", "bois"],
+      "Bureaux": ["electricite_bureau", "chauffage_bureau", "climatisation", "materiels_informatiques"],
+      "Logistique": ["transport_marchandises", "stockage", "emballage"],
+      "IT": ["serveurs", "cloud", "equipements_it", "numerique"]
+    };
+
     const categories = ["Transport", "Énergie", "Production", "Bureaux", "Logistique", "IT"];
-    return categories.map(category => ({
-      category,
-      scope1: displayEmissions.scope1 / 1000 / categories.length * (1 + (Math.random() - 0.5) * 0.5),
-      scope2: displayEmissions.scope2 / 1000 / categories.length * (1 + (Math.random() - 0.5) * 0.5),
-      scope3: displayEmissions.scope3 / 1000 / categories.length * (1 + (Math.random() - 0.5) * 0.5)
-    }));
+    
+    return categories.map(category => {
+      let scope1 = 0, scope2 = 0, scope3 = 0;
+      
+      const categorySources = categoryMapping[category] || [];
+      
+      // Calculer les émissions réelles pour cette catégorie
+      Object.entries(calculationsData).forEach(([source, data]: [string, any]) => {
+        if (categorySources.some(catSource => source.includes(catSource) || catSource.includes(source))) {
+          if (data && typeof data === 'object' && data.co2) {
+            const emissions = data.co2 / 1000; // Convertir en tonnes
+            
+            // Répartition selon le type de source
+            if (source.includes('electricite')) {
+              scope2 += emissions;
+            } else if (source.includes('transport') || source.includes('vehicule') || source.includes('diesel') || source.includes('essence')) {
+              scope1 += emissions;
+            } else {
+              scope3 += emissions;
+            }
+          }
+        }
+      });
+      
+      // Si pas de données calculées, utiliser une répartition basée sur les totaux
+      if (scope1 === 0 && scope2 === 0 && scope3 === 0) {
+        const totalEmissionsKg = displayEmissions.scope1 + displayEmissions.scope2 + displayEmissions.scope3;
+        const categoryWeight = {
+          "Transport": 0.25,
+          "Énergie": 0.30,
+          "Production": 0.20,
+          "Bureaux": 0.10,
+          "Logistique": 0.10,
+          "IT": 0.05
+        }[category] || 0.1;
+        
+        scope1 = (displayEmissions.scope1 / 1000) * categoryWeight;
+        scope2 = (displayEmissions.scope2 / 1000) * categoryWeight;
+        scope3 = (displayEmissions.scope3 / 1000) * categoryWeight;
+      }
+
+      return {
+        category,
+        scope1: parseFloat(scope1.toFixed(2)),
+        scope2: parseFloat(scope2.toFixed(2)),
+        scope3: parseFloat(scope3.toFixed(2))
+      };
+    });
   };
 
   const categoryScopeData = getCategoryScopeData();

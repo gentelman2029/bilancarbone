@@ -607,7 +607,7 @@ export const AdvancedGHGCalculator = () => {
         </div>
 
         {/* Nouveaux champs d'entreprise */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <Card className="p-6">
             <div className="text-center space-y-2">
               <div className="text-lg text-muted-foreground mb-2">Nombre de personnels</div>
@@ -641,12 +641,28 @@ export const AdvancedGHGCalculator = () => {
 
           <Card className="p-6">
             <div className="text-center space-y-2">
-              <div className="text-lg text-muted-foreground mb-2">Objectif SBTi</div>
+              <div className="text-lg text-muted-foreground mb-2">Objectifs SBT</div>
               <div className="flex items-center justify-center gap-2">
                 <Input
                   type="number"
                   value={objectifSBTI}
                   onChange={(e) => setObjectifSBTI(Number(e.target.value) || 0)}
+                  className="w-24 text-center text-2xl font-bold"
+                  step="0.1"
+                />
+                <span className="text-lg font-medium">tCO2e</span>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="text-center space-y-2">
+              <div className="text-lg text-muted-foreground mb-2">Émissions Réelles</div>
+              <div className="flex items-center justify-center gap-2">
+                <Input
+                  type="number"
+                  value={emissionsReelles}
+                  onChange={(e) => setEmissionsReelles(Number(e.target.value) || 0)}
                   className="w-24 text-center text-2xl font-bold"
                   step="0.1"
                 />

@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import { EditableKPI } from "@/components/EditableKPI";
 import { DynamicFilters } from "@/components/DynamicFilters";
 import { RealTimePreview } from "@/components/RealTimePreview";
+import { SectorComparativeAnalysis } from "@/components/SectorComparativeAnalysis";
 import { useToast } from "@/hooks/use-toast";
 import { useCSVExport } from "@/hooks/useCSVExport";
 
@@ -618,50 +619,11 @@ export const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Tendance Mensuelle vs Objectifs */}
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <TrendingUp className="w-5 h-5" />
-                Tendance Mensuelle vs Objectifs
-                <Badge variant="secondary" className="ml-auto text-xs">Temps réel</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={monthlyTrend}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} />
-                    <Tooltip 
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--background))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="emissions" 
-                      stroke="#10b981" 
-                      fill="#10b981" 
-                      fillOpacity={0.3}
-                      name="Émissions réelles"
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="objectif" 
-                      stroke="#3b82f6" 
-                      strokeDasharray="5 5"
-                      strokeWidth={2}
-                      name="Objectifs"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Analyse Comparative Sectorielle */}
+          <SectorComparativeAnalysis 
+            totalEmissions={displayEmissions.total}
+            annualRevenue={chiffreAffaires}
+          />
         </div>
 
         {/* Section inférieure - Vue d'ensemble */}

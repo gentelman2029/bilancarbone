@@ -78,26 +78,67 @@ export const Dashboard = () => {
     "Logistique", "IT", "Achats", "Déchets", "Numérique"
   ];
 
-  // Calculer les données dynamiques basées sur les vraies émissions
+  // Calculer les données dynamiques basées sur les vraies émissions du calculateur
   const getFilteredEmissionsByPost = () => {
     if (!hasData) return [];
     
-    const baseData = [
-      { name: "Transport", value: displayEmissions.scope1 * 0.6 + displayEmissions.scope3 * 0.4, color: "#ef4444" },
-      { name: "Énergie", value: displayEmissions.scope2 * 0.8 + displayEmissions.scope1 * 0.2, color: "#10b981" },
-      { name: "Production", value: displayEmissions.scope1 * 0.2 + displayEmissions.scope3 * 0.3, color: "#3b82f6" },
-      { name: "Achats", value: displayEmissions.scope3 * 0.2, color: "#f59e0b" },
-      { name: "Numérique", value: displayEmissions.scope3 * 0.1, color: "#8b5cf6" },
-      { name: "Bureaux", value: displayEmissions.scope2 * 0.15, color: "#06b6d4" },
-      { name: "Logistique", value: displayEmissions.scope3 * 0.15, color: "#84cc16" },
-      { name: "Déchets", value: displayEmissions.scope3 * 0.05, color: "#f97316" }
-    ];
+    // Récupérer les calculs du localStorage pour obtenir les vraies sources d'émission
+    const savedCalculations = localStorage.getItem('calculator-calculations');
+    let realData = [];
+    
+    if (savedCalculations) {
+      const calculations = JSON.parse(savedCalculations);
+      
+      // Grouper par description (source d'émission réelle)
+      const groupedData: { [key: string]: { emissions: number, color: string } } = {};
+      
+      calculations.forEach((calc: any) => {
+        const sourceName = calc.description;
+        if (!groupedData[sourceName]) {
+          // Assigner des couleurs différentes selon le type
+          let color = "#94a3b8"; // couleur par défaut
+          if (sourceName.includes("Gaz naturel")) color = "#ef4444";
+          else if (sourceName.includes("diesel") || sourceName.includes("Diesel")) color = "#f59e0b";
+          else if (sourceName.includes("électr") || sourceName.includes("Électr")) color = "#10b981";
+          else if (sourceName.includes("R-22") || sourceName.includes("réfrigér")) color = "#8b5cf6";
+          else if (sourceName.includes("chaleur") || sourceName.includes("eau chaude")) color = "#06b6d4";
+          else if (sourceName.includes("recyclage") || sourceName.includes("Recyclage")) color = "#84cc16";
+          else if (sourceName.includes("transport") || sourceName.includes("Transport")) color = "#3b82f6";
+          else if (sourceName.includes("essence") || sourceName.includes("Essence")) color = "#f97316";
+          else if (sourceName.includes("fioul") || sourceName.includes("Fioul")) color = "#e11d48";
+          else if (sourceName.includes("charbon") || sourceName.includes("Charbon")) color = "#374151";
+          
+          groupedData[sourceName] = { emissions: 0, color };
+        }
+        groupedData[sourceName].emissions += calc.emissions;
+      });
+      
+      // Convertir en tableau
+      realData = Object.entries(groupedData).map(([name, data]) => ({
+        name,
+        value: data.emissions / 1000, // Convertir en tonnes
+        emissions: data.emissions,
+        color: data.color
+      }));
+    }
+    
+    // Si pas de données réelles, utiliser des données d'exemple avec des vraies sources
+    if (realData.length === 0) {
+      const total = displayEmissions.scope1 + displayEmissions.scope2 + displayEmissions.scope3;
+      realData = [
+        { name: "Gaz naturel", value: total * 0.25, emissions: total * 0.25 * 1000, color: "#ef4444" },
+        { name: "Véhicule utilitaire diesel", value: total * 0.20, emissions: total * 0.20 * 1000, color: "#f59e0b" },
+        { name: "R-22 (HCFC-22)", value: total * 0.18, emissions: total * 0.18 * 1000, color: "#8b5cf6" },
+        { name: "Eau chaude (réseau de chaleur)", value: total * 0.15, emissions: total * 0.15 * 1000, color: "#06b6d4" },
+        { name: "Recyclage", value: total * 0.12, emissions: total * 0.12 * 1000, color: "#84cc16" },
+        { name: "Électricité France", value: total * 0.10, emissions: total * 0.10 * 1000, color: "#10b981" }
+      ];
+    }
 
-    const total = baseData.reduce((sum, item) => sum + item.value, 0);
-    const dataWithPercentages = baseData.map(item => ({
+    const total = realData.reduce((sum, item) => sum + item.emissions, 0);
+    const dataWithPercentages = realData.map(item => ({
       ...item,
-      value: item.value / 1000, // Convertir en tonnes
-      percentage: total > 0 ? (item.value / total) * 100 : 0
+      percentage: total > 0 ? (item.emissions / total) * 100 : 0
     }));
 
     // Trier par valeur décroissante

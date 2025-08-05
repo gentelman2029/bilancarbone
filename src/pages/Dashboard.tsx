@@ -16,6 +16,7 @@ import { SectorComparativeAnalysis } from "@/components/SectorComparativeAnalysi
 import { useToast } from "@/hooks/use-toast";
 import { useCSVExport } from "@/hooks/useCSVExport";
 import { CarbonActionsTracking } from "@/components/CarbonActionsTracking";
+import { CompletePDFReport } from "@/components/CompletePDFReport";
 
 export const Dashboard = () => {
   const { emissions, hasEmissions } = useEmissions();
@@ -378,6 +379,90 @@ export const Dashboard = () => {
     });
   };
 
+  // Export CSV complet avec toutes les données du dashboard
+  const exportCompleteCSV = () => {
+    const emissionsByCategory = getFilteredEmissionsByPost();
+    const monthlyTrend = getMonthlyTrend();
+    const categoryScopeData = getCategoryScopeData();
+    const sbtTrajectory = getSbtTrajectory();
+    const sectorBenchmark = getSectorBenchmark();
+
+    // Données principales
+    const mainData = [
+      ['=== INDICATEURS PRINCIPAUX ==='],
+      ['Indicateur', 'Valeur', 'Unité'],
+      ['Émissions Scope 1', (displayEmissions.scope1 / 1000).toFixed(2), 'tCO2e'],
+      ['Émissions Scope 2', (displayEmissions.scope2 / 1000).toFixed(2), 'tCO2e'],
+      ['Émissions Scope 3', (displayEmissions.scope3 / 1000).toFixed(2), 'tCO2e'],
+      ['Total Émissions', (displayEmissions.total / 1000).toFixed(2), 'tCO2e'],
+      ['Réduction Annuelle', reductionAnnuelle.toFixed(1), '%'],
+      ['Intensité Carbone', intensiteCarbone.toFixed(2), 'kgCO2e/k€'],
+      ['Objectif SBTi', objectifSBTI, 'tCO2e'],
+      ['Chiffre d\'affaires', chiffreAffaires, 'k€'],
+      [''],
+      
+      // Émissions par catégorie
+      ['=== ÉMISSIONS PAR CATÉGORIE ==='],
+      ['Catégorie', 'Émissions (tCO2e)', 'Pourcentage (%)'],
+      ...emissionsByCategory.map(item => [
+        item.name,
+        (item.value).toFixed(2),
+        item.percentage.toFixed(1)
+      ]),
+      [''],
+      
+      // Tendance mensuelle
+      ['=== TENDANCE MENSUELLE ==='],
+      ['Mois', 'Émissions (tCO2e)'],
+      ...monthlyTrend.map(item => [item.month, (item.emissions).toFixed(2)]),
+      [''],
+      
+      // Analyse par scope et catégorie
+      ['=== ANALYSE PAR SCOPE ET CATÉGORIE ==='],
+      ['Catégorie', 'Scope 1', 'Scope 2', 'Scope 3', 'Total'],
+      ...categoryScopeData.map(item => [
+        item.category,
+        item.scope1.toFixed(2),
+        item.scope2.toFixed(2),
+        item.scope3.toFixed(2),
+        (item.scope1 + item.scope2 + item.scope3).toFixed(2)
+      ]),
+      [''],
+      
+      // Trajectoire SBTi
+      ['=== TRAJECTOIRE SBTI ==='],
+      ['Année', 'Objectif (tCO2e)', 'Réalisé (tCO2e)', 'Écart (%)'],
+      ...sbtTrajectory.map(item => [
+        item.year,
+        item.target.toFixed(2),
+        item.actual ? item.actual.toFixed(2) : 'N/A',
+        'N/A'
+      ]),
+      [''],
+      
+      // Benchmark sectoriel
+      ['=== BENCHMARK SECTORIEL ==='],
+      ['Indicateur', 'Valeur'],
+      ...sectorBenchmark.map(item => [item.category, item.value.toFixed(2) + ' tCO2e'])
+    ];
+
+    const csvContent = mainData.map(row => row.join(';')).join('\n');
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `dashboard_carbone_complet_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Export CSV réussi",
+      description: "Toutes les données du dashboard ont été exportées.",
+    });
+  };
+
   const exportCSV = () => {
     const csvData = [
       ['Dashboard Carbone - Export', format(new Date(), 'dd/MM/yyyy')],
@@ -424,14 +509,29 @@ export const Dashboard = () => {
               <p className="text-sm text-muted-foreground">Visualisation Power BI des émissions GES - Conforme Base Carbone® ADEME</p>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm" onClick={exportCSV}>
+              <Button variant="outline" size="sm" onClick={exportCompleteCSV}>
                 <Download className="w-4 h-4 mr-2" />
-                Export CSV
+                Export CSV Complet
               </Button>
-              <Button variant="outline" size="sm">
-                <FileText className="w-4 h-4 mr-2" />
-                Rapport PDF
-              </Button>
+              <CompletePDFReport 
+                emissionsData={{
+                  scope1: displayEmissions.scope1,
+                  scope2: displayEmissions.scope2,
+                  scope3: displayEmissions.scope3,
+                  total: displayEmissions.total,
+                  reductionAnnuelle,
+                  intensiteCarbone
+                }}
+                emissionsByCategory={getFilteredEmissionsByPost()}
+                monthlyTrend={getMonthlyTrend()}
+                categoryScopeData={getCategoryScopeData()}
+                sbtTrajectory={getSbtTrajectory()}
+                sectorBenchmark={{
+                  average: sectorBenchmark[1]?.value || 0,
+                  leaders: sectorBenchmark[2]?.value || 0,
+                  company: sectorBenchmark[0]?.value || 0
+                }}
+              />
               <Button variant="outline" size="sm">
                 <Share className="w-4 h-4 mr-2" />
                 Partager

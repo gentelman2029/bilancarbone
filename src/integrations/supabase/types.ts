@@ -27,6 +27,7 @@ export type Database = {
           implementation_time: string | null
           is_custom: boolean | null
           priority: string
+          progress: number | null
           scope_type: string
           status: string
           target_date: string | null
@@ -46,6 +47,7 @@ export type Database = {
           implementation_time?: string | null
           is_custom?: boolean | null
           priority: string
+          progress?: number | null
           scope_type: string
           status?: string
           target_date?: string | null
@@ -65,6 +67,7 @@ export type Database = {
           implementation_time?: string | null
           is_custom?: boolean | null
           priority?: string
+          progress?: number | null
           scope_type?: string
           status?: string
           target_date?: string | null

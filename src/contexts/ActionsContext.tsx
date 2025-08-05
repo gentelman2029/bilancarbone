@@ -64,7 +64,7 @@ export const ActionsProvider: React.FC<{ children: React.ReactNode }> = ({ child
           description: action.description,
           impact: Number(action.estimated_reduction_kg || 0) / 1000, // Conversion kg -> tonnes
           status: action.status as Action['status'],
-          progress: 0, // Sera calculé selon le statut
+          progress: Number(action.progress || 0),
           deadline: action.target_date || '',
           scope: action.scope_type,
           cost: Number(action.estimated_cost || 0),
@@ -151,6 +151,7 @@ export const ActionsProvider: React.FC<{ children: React.ReactNode }> = ({ child
           implementation_time: actionData.implementationTime,
           category: actionData.category,
           estimated_reduction_percent: actionData.estimatedReduction,
+          progress: actionData.progress || 0,
           calculation_id: actionData.calculationId
         })
         .select()
@@ -191,6 +192,7 @@ export const ActionsProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (updates.implementationTime) updateData.implementation_time = updates.implementationTime;
       if (updates.category) updateData.category = updates.category;
       if (updates.estimatedReduction !== undefined) updateData.estimated_reduction_percent = updates.estimatedReduction;
+      if (updates.progress !== undefined) updateData.progress = updates.progress;
 
       await supabase
         .from('carbon_actions')

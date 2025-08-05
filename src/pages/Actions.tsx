@@ -433,7 +433,7 @@ export const Actions = () => {
               
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="eco" size="sm" onClick={() => handleViewAction(action)}>
+                  <Button variant="eco" size="sm">
                     <Eye className="w-4 h-4 mr-1" />
                     Voir détails
                   </Button>
@@ -442,59 +442,59 @@ export const Actions = () => {
                   <DialogHeader>
                     <DialogTitle>Détails de l'action</DialogTitle>
                   </DialogHeader>
-                  {viewingAction && (
+                  <div className="space-y-4">
                     <div className="space-y-4">
-                      <div>
-                        <h3 className="font-semibold text-lg">{viewingAction.title}</h3>
-                        <p className="text-muted-foreground mt-1">{viewingAction.description}</p>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <p className="text-sm font-medium">Impact carbone</p>
-                          <p className="text-2xl font-bold text-primary">-{viewingAction.impact} tCO2e/an</p>
-                        </div>
-                        <div className="space-y-2">
-                          <p className="text-sm font-medium">Coût</p>
-                          <p className="text-xl font-semibold">{viewingAction.cost}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <p className="text-sm font-medium">Scope</p>
-                          <Badge variant="secondary">{viewingAction.scope}</Badge>
-                        </div>
-                        <div className="space-y-2">
-                          <p className="text-sm font-medium">Échéance</p>
-                          <p className="text-sm">{viewingAction.deadline}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <p className="text-sm font-medium">Statut</p>
-                          {getStatusBadge(viewingAction.status)}
-                        </div>
-                        <div className="space-y-1">
-                          <div className="flex justify-between text-sm">
-                            <span>Progression</span>
-                            <span>{viewingAction.progress}%</span>
-                          </div>
-                          <Progress value={viewingAction.progress} className="h-2" />
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">Ratio coût/impact</p>
-                        <p className="text-sm text-muted-foreground">
-                          {Math.round(parseInt(viewingAction.cost.replace(/[^0-9]/g, '')) / viewingAction.impact)} €/tCO2e économisée
-                        </p>
+                     <div>
+                       <h3 className="font-semibold text-lg">{action.title}</h3>
+                       <p className="text-muted-foreground mt-1">{action.description}</p>
+                     </div>
+                     
+                     <div className="grid grid-cols-2 gap-4">
+                       <div className="space-y-2">
+                         <p className="text-sm font-medium">Impact carbone</p>
+                         <p className="text-2xl font-bold text-primary">-{action.impact} tCO2e/an</p>
+                       </div>
+                       <div className="space-y-2">
+                         <p className="text-sm font-medium">Coût</p>
+                         <p className="text-xl font-semibold">{action.cost?.toLocaleString()} €</p>
+                       </div>
+                     </div>
+                     
+                     <div className="grid grid-cols-2 gap-4">
+                       <div className="space-y-2">
+                         <p className="text-sm font-medium">Scope</p>
+                         <Badge variant="secondary">{action.scope}</Badge>
+                       </div>
+                       <div className="space-y-2">
+                         <p className="text-sm font-medium">Échéance</p>
+                         <p className="text-sm">{action.deadline}</p>
+                       </div>
+                     </div>
+                     
+                     <div className="space-y-2">
+                       <div className="flex justify-between">
+                         <p className="text-sm font-medium">Statut</p>
+                         {getStatusBadge(action.status)}
+                       </div>
+                       <div className="space-y-1">
+                         <div className="flex justify-between text-sm">
+                           <span>Progression</span>
+                           <span>{action.progress}%</span>
+                         </div>
+                         <Progress value={action.progress} className="h-2" />
+                       </div>
+                     </div>
+                     
+                     <div className="space-y-2">
+                       <p className="text-sm font-medium">Ratio coût/impact</p>
+                       <p className="text-sm text-muted-foreground">
+                         {Math.round(action.cost / action.impact)} €/tCO2e économisée
+                       </p>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </DialogContent>
-              </Dialog>
+               </Dialog>
             </div>
           </Card>
         ))}

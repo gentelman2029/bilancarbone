@@ -15,6 +15,7 @@ import { RealTimePreview } from "@/components/RealTimePreview";
 import { SectorComparativeAnalysis } from "@/components/SectorComparativeAnalysis";
 import { useToast } from "@/hooks/use-toast";
 import { useCSVExport } from "@/hooks/useCSVExport";
+import { CarbonActionsTracking } from "@/components/CarbonActionsTracking";
 
 export const Dashboard = () => {
   const { emissions, hasEmissions } = useEmissions();
@@ -940,67 +941,8 @@ export const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Alertes et Recommandations Intelligentes */}
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5" />
-              Alertes et Recommandations Intelligentes
-              <Badge variant="destructive" className="ml-auto">3 alertes</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Dépassement détecté */}
-              <div className="p-4 border border-red-200 bg-red-50 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
-                  <div className="flex-1">
-                    <div className="font-medium text-red-900 mb-1">Dépassement détecté</div>
-                    <div className="text-sm text-red-700 mb-2">
-                      Transport: +30% vs budget carbone Q4
-                    </div>
-                    <Button variant="outline" size="sm" className="text-xs">
-                      Analyser
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Objectif à risque */}
-              <div className="p-4 border border-orange-200 bg-orange-50 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-orange-500 mt-0.5" />
-                  <div className="flex-1">
-                    <div className="font-medium text-orange-900 mb-1">Objectif à risque</div>
-                    <div className="text-sm text-orange-700 mb-2">
-                      SBT 2025: retard de -8% sur trajectoire
-                    </div>
-                    <Button variant="outline" size="sm" className="text-xs">
-                      Plan d'actions
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Opportunité */}
-              <div className="p-4 border border-green-200 bg-green-50 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
-                  <div className="flex-1">
-                    <div className="font-medium text-green-900 mb-1">Opportunité</div>
-                    <div className="text-sm text-green-700 mb-2">
-                      Économies potentielles: voir le détail
-                    </div>
-                    <Button variant="outline" size="sm" className="text-xs">
-                      Voir offre
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Plan d'Actions Carbone */}
+        <CarbonActionsTracking />
       </div>
     </div>
   );

@@ -160,6 +160,7 @@ export const CarbonActionsTracking = () => {
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span>{action.impact.toFixed(1)} tCO2e</span>
                         <span>{action.scope}</span>
+                        {action.cost > 0 && <span>{action.cost.toLocaleString('fr-FR')} €</span>}
                         {action.deadline && <span>Échéance: {new Date(action.deadline).toLocaleDateString()}</span>}
                       </div>
                       {getStatusBadge(action.status)}

@@ -5,6 +5,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Leaf, BarChart3, Target, Shield, Users, Zap, TrendingDown, CheckCircle, Building, Eye, Search, FileText, Calculator, DollarSign, ClipboardCheck, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-carbon.jpg";
+import teamSustainabilityImage from "@/assets/team-sustainability.jpg";
 import { QuickCarbonCalculator } from "@/components/QuickCarbonCalculator";
 import { CBAMChecker } from "@/components/CBAMChecker";
 import { CSRDChecker } from "@/components/CSRDChecker";
@@ -192,7 +193,7 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="rounded-2xl overflow-hidden shadow-xl">
             <img 
-              src="/src/assets/team-sustainability.jpg" 
+              src={teamSustainabilityImage} 
               alt="Équipe professionnelle travaillant sur l'analyse de l'empreinte carbone et le développement durable"
               className="w-full h-[400px] object-cover"
             />

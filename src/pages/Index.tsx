@@ -187,84 +187,15 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Témoignages clients */}
+      {/* Image équipe durabilité */}
       <section className="py-20 bg-card">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
-              Témoignages
-            </Badge>
-            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Nos clients témoignent
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              Découvrez comment CarbonTrack a transformé leur approche carbone
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold">MT</span>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-foreground">Marie Toulon</h4>
-                  <p className="text-sm text-muted-foreground">Directrice RSE, TechnoVert</p>
-                </div>
-              </div>
-              <p className="text-muted-foreground italic mb-4">
-                "CarbonTrack nous a permis d'identifier que 60% de nos émissions venaient de nos déplacements. 
-                Grâce aux recommandations précises, nous avons réduit notre empreinte de 35% en 6 mois."
-              </p>
-              <div className="flex items-center space-x-1">
-                {[...Array(5)].map((_, i) => (
-                  <span key={i} className="text-primary">★</span>
-                ))}
-              </div>
-            </Card>
-
-            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold">PD</span>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-foreground">Pierre Durand</h4>
-                  <p className="text-sm text-muted-foreground">CEO, LogistiqueEco</p>
-                </div>
-              </div>
-              <p className="text-muted-foreground italic mb-4">
-                "Interface intuitive, calculs précis et accompagnement excellent. Nous avons économisé 45 000€ 
-                en énergie la première année grâce aux analyses de CarbonTrack."
-              </p>
-              <div className="flex items-center space-x-1">
-                {[...Array(5)].map((_, i) => (
-                  <span key={i} className="text-primary">★</span>
-                ))}
-              </div>
-            </Card>
-
-            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold">SL</span>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-foreground">Sophie Laurent</h4>
-                  <p className="text-sm text-muted-foreground">Responsable Environnement, ManufactPlus</p>
-                </div>
-              </div>
-              <p className="text-muted-foreground italic mb-4">
-                "La conformité CSRD était notre priorité. CarbonTrack nous a guidés pas à pas et nos rapports 
-                sont maintenant approuvés par nos auditeurs. Un vrai gain de temps !"
-              </p>
-              <div className="flex items-center space-x-1">
-                {[...Array(5)].map((_, i) => (
-                  <span key={i} className="text-primary">★</span>
-                ))}
-              </div>
-            </Card>
+          <div className="rounded-2xl overflow-hidden shadow-xl">
+            <img 
+              src="/src/assets/team-sustainability.jpg" 
+              alt="Équipe professionnelle travaillant sur l'analyse de l'empreinte carbone et le développement durable"
+              className="w-full h-[400px] object-cover"
+            />
           </div>
         </div>
       </section>

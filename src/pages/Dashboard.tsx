@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, TrendingDown, Activity, Target, Share, Download, FileText, Filter, BarChart3, Eye, RotateCcw, Leaf, TreePine, Users, Zap, Building2, Globe, AlertTriangle, CheckCircle, Award } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, Target, Share, Download, FileText, Filter, BarChart3, Eye, RotateCcw, Leaf, TreePine, Users, Zap, Building2, Globe, AlertTriangle, CheckCircle, Award, ArrowUp, ArrowDown } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart as RechartsPieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { useCarbonReports } from "@/hooks/useCarbonReports";
 import { useEmissions } from "@/contexts/EmissionsContext";
@@ -58,6 +58,21 @@ export const Dashboard = () => {
   // Calcul de la conformité réglementaire basé sur les données réelles
   const conformiteReglementaire = hasData ? 
     Math.min(100, Math.max(0, 100 - (currentEmissions / 1000) * 2)) : 0; // Exemple de calcul
+
+  // Variations en pourcentage pour les KPIs
+  const emissionsChangePercent = hasData && emissionsAnneePrecedente > 0 
+    ? ((currentEmissions - emissionsAnneePrecedente) / emissionsAnneePrecedente) * 100 
+    : 0;
+
+  const intensitePrev = hasData && chiffreAffaires > 0 ? emissionsAnneePrecedente / chiffreAffaires : 0;
+  const intensiteChangePercent = intensitePrev > 0 
+    ? ((intensiteCarbone - intensitePrev) / intensitePrev) * 100 
+    : 0;
+
+  const emissionsEmployePrev = hasData && nombrePersonnels > 0 ? emissionsAnneePrecedente / nombrePersonnels : 0;
+  const emissionsEmployeChangePercent = emissionsEmployePrev > 0 
+    ? ((emissionsEmploye - emissionsEmployePrev) / emissionsEmployePrev) * 100 
+    : 0;
 
   // États pour les filtres dynamiques
   const [filters, setFilters] = useState({
@@ -624,8 +639,14 @@ export const Dashboard = () => {
                     {hasData ? currentEmissions.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "4,200"} <span className="text-lg">tCO2e</span>
                   </div>
                   <div className="flex items-center gap-1 text-sm">
-                    <TrendingDown className="w-4 h-4 text-red-500" />
-                    <span className="text-red-500 font-medium">12.5%</span>
+                    {emissionsChangePercent > 0 ? (
+                      <ArrowUp className="w-4 h-4 text-red-600" />
+                    ) : (
+                      <ArrowDown className="w-4 h-4 text-green-600" />
+                    )}
+                    <span className={(emissionsChangePercent > 0 ? "text-red-600" : "text-green-600") + " font-medium"}>
+                      {Math.abs(emissionsChangePercent).toFixed(1)}%
+                    </span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
                     Total des émissions GES sur la période
@@ -651,8 +672,8 @@ export const Dashboard = () => {
                      {hasData ? reductionAnnuelle.toFixed(0) : "600"} <span className="text-lg">tCO2e</span>
                    </div>
                    <div className="flex items-center gap-1 text-sm">
-                     <TrendingDown className="w-4 h-4 text-green-500" />
-                     <span className="text-green-500 font-medium">{hasData ? pourcentageReduction.toFixed(1) : "16.3"}%</span>
+                     <ArrowUp className="w-4 h-4 text-green-600" />
+                     <span className="text-green-600 font-medium">{hasData ? pourcentageReduction.toFixed(1) : "16.3"}%</span>
                    </div>
                   <div className="text-xs text-muted-foreground mt-1">
                     Réduction par rapport à l'année précédente
@@ -678,8 +699,14 @@ export const Dashboard = () => {
                       {hasData && objectifsSBTParAnnee[2024] ? objectifsSBTParAnnee[2024].toFixed(0) : "87"} <span className="text-lg">tCO2e</span>
                     </div>
                     <div className="flex items-center gap-1 text-sm">
-                      <TrendingUp className="w-4 h-4 text-green-500" />
-                      <span className="text-green-500 font-medium">{hasData ? progressionSBTi.toFixed(1) : "8.7"}%</span>
+                      {(hasData ? progressionSBTi : 8.7) >= 0 ? (
+                        <ArrowUp className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <ArrowDown className="w-4 h-4 text-red-600" />
+                      )}
+                      <span className={((hasData ? progressionSBTi : 8.7) >= 0 ? "text-green-600" : "text-red-600") + " font-medium"}>
+                        {(hasData ? Math.abs(progressionSBTi).toFixed(1) : "8.7")}%
+                      </span>
                     </div>
                    <div className="text-xs text-muted-foreground mt-1">
                      Objectif Science Based Targets pour 2024
@@ -705,8 +732,14 @@ export const Dashboard = () => {
                      {hasData ? intensiteCarbone.toFixed(1) : "1.2"} <span className="text-lg">tCO2e/k€</span>
                    </div>
                   <div className="flex items-center gap-1 text-sm">
-                    <TrendingDown className="w-4 h-4 text-green-500" />
-                    <span className="text-green-500 font-medium">18.2%</span>
+                    {intensiteChangePercent > 0 ? (
+                      <ArrowUp className="w-4 h-4 text-red-600" />
+                    ) : (
+                      <ArrowDown className="w-4 h-4 text-green-600" />
+                    )}
+                    <span className={(intensiteChangePercent > 0 ? "text-red-600" : "text-green-600") + " font-medium"}>
+                      {Math.abs(intensiteChangePercent).toFixed(1)}%
+                    </span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
                     Émissions par unité de chiffre d'affaires
@@ -732,8 +765,14 @@ export const Dashboard = () => {
                      {hasData ? emissionsEmploye.toFixed(1) : "8.4"} <span className="text-lg">tCO2e/pers</span>
                    </div>
                   <div className="flex items-center gap-1 text-sm">
-                    <TrendingDown className="w-4 h-4 text-green-500" />
-                    <span className="text-green-500 font-medium">15.2%</span>
+                    {emissionsEmployeChangePercent > 0 ? (
+                      <ArrowUp className="w-4 h-4 text-red-600" />
+                    ) : (
+                      <ArrowDown className="w-4 h-4 text-green-600" />
+                    )}
+                    <span className={(emissionsEmployeChangePercent > 0 ? "text-red-600" : "text-green-600") + " font-medium"}>
+                      {Math.abs(emissionsEmployeChangePercent).toFixed(1)}%
+                    </span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
                     Intensité carbone par collaborateur

@@ -60,6 +60,7 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
 
   const generateCompletePDF = async () => {
     setIsGenerating(true);
+    toast({ title: 'Génération du PDF…', description: 'Préparation du rapport complet' });
     
     try {
       const pdf = new jsPDF('p', 'mm', 'a4');
@@ -268,7 +269,13 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
       });
 
       // Sauvegarde
-      pdf.save(`rapport_carbone_complet_${new Date().toISOString().split('T')[0]}.pdf`);
+      try {
+        pdf.save(`rapport_carbone_complet_${new Date().toISOString().split('T')[0]}.pdf`);
+      } catch (e) {
+        // Fallback ouverture dans un nouvel onglet si le téléchargement est bloqué
+        const blobUrl = (pdf as any).output('bloburl');
+        window.open(blobUrl, '_blank');
+      }
       
       toast({
         title: "Rapport PDF généré",
@@ -366,17 +373,30 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
                       data={scopeData}
                       cx="50%"
                       cy="50%"
-                      outerRadius={80}
+                      innerRadius={50}
+                      outerRadius={90}
+                      labelLine={false}
                       dataKey="value"
-                      label={({ name, value }) => `${name}: ${value.toFixed(1)} tCO₂e`}
+                      label={({ name, percent }) => `${name}: ${(Number(percent) * 100).toFixed(1)}%`}
                     >
                       {scopeData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip formatter={(value: number) => [`${Number(value).toFixed(1)} tCO₂e`, 'Émissions']} />
                   </PieChart>
                 </ResponsiveContainer>
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+                  {scopeData.map((s) => (
+                    <div key={s.name} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block w-3 h-3 rounded-sm" style={{ backgroundColor: s.color }} />
+                        <span>{s.name}</span>
+                      </div>
+                      <span className="text-muted-foreground">{s.value.toFixed(1)} tCO₂e</span>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
 

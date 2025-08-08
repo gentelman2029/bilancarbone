@@ -640,11 +640,11 @@ export const Dashboard = () => {
                   </div>
                   <div className="flex items-center gap-1 text-sm">
                     {emissionsChangePercent > 0 ? (
-                      <ArrowUp className="w-4 h-4 text-red-600" />
+                      <ArrowUp className="w-4 h-4 text-primary" />
                     ) : (
-                      <ArrowDown className="w-4 h-4 text-green-600" />
+                      <ArrowDown className="w-4 h-4 text-destructive" />
                     )}
-                    <span className={(emissionsChangePercent > 0 ? "text-red-600" : "text-green-600") + " font-medium"}>
+                    <span className={(emissionsChangePercent > 0 ? "text-primary" : "text-destructive") + " font-medium"}>
                       {Math.abs(emissionsChangePercent).toFixed(1)}%
                     </span>
                   </div>
@@ -672,8 +672,14 @@ export const Dashboard = () => {
                      {hasData ? reductionAnnuelle.toFixed(0) : "600"} <span className="text-lg">tCO2e</span>
                    </div>
                    <div className="flex items-center gap-1 text-sm">
-                     <ArrowUp className="w-4 h-4 text-green-600" />
-                     <span className="text-green-600 font-medium">{hasData ? pourcentageReduction.toFixed(1) : "16.3"}%</span>
+                     {(hasData ? pourcentageReduction : 16.3) >= 0 ? (
+                       <ArrowUp className="w-4 h-4 text-primary" />
+                     ) : (
+                       <ArrowDown className="w-4 h-4 text-destructive" />
+                     )}
+                     <span className={((hasData ? pourcentageReduction : 16.3) >= 0 ? "text-primary" : "text-destructive") + " font-medium"}>
+                       {(hasData ? Math.abs(pourcentageReduction).toFixed(1) : "16.3")}%
+                     </span>
                    </div>
                   <div className="text-xs text-muted-foreground mt-1">
                     Réduction par rapport à l'année précédente
@@ -700,11 +706,11 @@ export const Dashboard = () => {
                     </div>
                     <div className="flex items-center gap-1 text-sm">
                       {(hasData ? progressionSBTi : 8.7) >= 0 ? (
-                        <ArrowUp className="w-4 h-4 text-green-600" />
+                        <ArrowUp className="w-4 h-4 text-primary" />
                       ) : (
-                        <ArrowDown className="w-4 h-4 text-red-600" />
+                        <ArrowDown className="w-4 h-4 text-destructive" />
                       )}
-                      <span className={((hasData ? progressionSBTi : 8.7) >= 0 ? "text-green-600" : "text-red-600") + " font-medium"}>
+                      <span className={((hasData ? progressionSBTi : 8.7) >= 0 ? "text-primary" : "text-destructive") + " font-medium"}>
                         {(hasData ? Math.abs(progressionSBTi).toFixed(1) : "8.7")}%
                       </span>
                     </div>
@@ -733,11 +739,11 @@ export const Dashboard = () => {
                    </div>
                   <div className="flex items-center gap-1 text-sm">
                     {intensiteChangePercent > 0 ? (
-                      <ArrowUp className="w-4 h-4 text-red-600" />
+                      <ArrowUp className="w-4 h-4 text-primary" />
                     ) : (
-                      <ArrowDown className="w-4 h-4 text-green-600" />
+                      <ArrowDown className="w-4 h-4 text-destructive" />
                     )}
-                    <span className={(intensiteChangePercent > 0 ? "text-red-600" : "text-green-600") + " font-medium"}>
+                    <span className={(intensiteChangePercent > 0 ? "text-primary" : "text-destructive") + " font-medium"}>
                       {Math.abs(intensiteChangePercent).toFixed(1)}%
                     </span>
                   </div>
@@ -766,11 +772,11 @@ export const Dashboard = () => {
                    </div>
                   <div className="flex items-center gap-1 text-sm">
                     {emissionsEmployeChangePercent > 0 ? (
-                      <ArrowUp className="w-4 h-4 text-red-600" />
+                      <ArrowUp className="w-4 h-4 text-primary" />
                     ) : (
-                      <ArrowDown className="w-4 h-4 text-green-600" />
+                      <ArrowDown className="w-4 h-4 text-destructive" />
                     )}
-                    <span className={(emissionsEmployeChangePercent > 0 ? "text-red-600" : "text-green-600") + " font-medium"}>
+                    <span className={(emissionsEmployeChangePercent > 0 ? "text-primary" : "text-destructive") + " font-medium"}>
                       {Math.abs(emissionsEmployeChangePercent).toFixed(1)}%
                     </span>
                   </div>
@@ -798,8 +804,8 @@ export const Dashboard = () => {
                      {hasData ? conformiteReglementaire.toFixed(0) : "95"}% <span className="text-lg">complète</span>
                    </div>
                    <div className="flex items-center gap-1 text-sm">
-                     <CheckCircle className="w-4 h-4 text-green-500" />
-                     <span className="text-green-500 font-medium">{hasData ? "5.2" : "5.2"}%</span>
+                     <ArrowUp className="w-4 h-4 text-primary" />
+                     <span className="text-primary font-medium">{hasData ? "5.2" : "5.2"}%</span>
                    </div>
                   <div className="text-xs text-muted-foreground mt-1">
                     Avancement conformité CSRD/BEGES

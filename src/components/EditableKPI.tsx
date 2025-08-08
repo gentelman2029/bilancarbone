@@ -50,9 +50,9 @@ export const EditableKPI: React.FC<EditableKPIProps> = ({
   };
 
   const getTrendColor = () => {
-    if (trend === 'up') return 'text-green-600';
-    if (trend === 'down') return 'text-red-600';
-    return 'text-gray-600';
+    if (trend === 'up') return 'text-primary';
+    if (trend === 'down') return 'text-destructive';
+    return 'text-muted-foreground';
   };
 
   return (

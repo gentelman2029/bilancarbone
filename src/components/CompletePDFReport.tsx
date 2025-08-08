@@ -108,34 +108,46 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
         yPos += 8;
       });
 
-      // Capture des graphiques du DOM
+      // Capture des graphiques du DOM (avec fallback si l'extraction échoue)
       const reportElement = document.getElementById('complete-pdf-preview');
       if (reportElement) {
-        const canvas = await html2canvas(reportElement, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true
-        });
-        
-        const imgData = canvas.toDataURL('image/png');
-        const imgWidth = pageWidth - 40;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        
-        // Graphiques sur plusieurs pages si nécessaire
-        pdf.addPage();
-        pdf.setFontSize(18);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text('Analyse Graphique', 20, 30);
-        
-        let currentY = 40;
-        const maxY = pageHeight - 40;
-        
-        if (currentY + imgHeight > maxY) {
+        try {
+          const canvas = await html2canvas(reportElement, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff'
+          });
+          
+          const imgData = canvas.toDataURL('image/png');
+          const imgWidth = pageWidth - 40;
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+          
+          // Graphiques sur plusieurs pages si nécessaire
           pdf.addPage();
-          currentY = 20;
+          pdf.setFontSize(18);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text('Analyse Graphique', 20, 30);
+          
+          let currentY = 40;
+          const maxY = pageHeight - 40;
+          
+          if (currentY + imgHeight > maxY) {
+            pdf.addPage();
+            currentY = 20;
+          }
+          
+          pdf.addImage(imgData, 'PNG', 20, currentY, imgWidth, Math.min(imgHeight, maxY - currentY));
+        } catch (e) {
+          // Fallback: on continue sans les graphiques mais on laisse une note
+          pdf.addPage();
+          pdf.setFontSize(16);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text('Analyse Graphique', 20, 30);
+          pdf.setFontSize(12);
+          pdf.setFont('helvetica', 'normal');
+          pdf.text("Les graphiques n'ont pas pu être intégrés au PDF. Les analyses textuelles détaillées sont toutefois incluses.", 20, 50, { maxWidth: pageWidth - 40 });
         }
-        
-        pdf.addImage(imgData, 'PNG', 20, currentY, imgWidth, Math.min(imgHeight, maxY - currentY));
       }
 
       // Données détaillées
@@ -167,6 +179,68 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
         const gap = point.gap ? `(Écart: ${point.gap.toFixed(1)}%)` : '';
         pdf.text(`• ${point.year}: Objectif ${point.target.toFixed(2)} - Réalisé ${point.actual.toFixed(2)} ${gap}`, 25, yPos);
         yPos += 8;
+      });
+
+      // Analyses écrites
+      pdf.addPage();
+      pdf.setFontSize(18);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Analyses écrites', 20, 30);
+
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+
+      const s1p = (emissionsData.scope1 / emissionsData.total) * 100;
+      const s2p = (emissionsData.scope2 / emissionsData.total) * 100;
+      const s3p = (emissionsData.scope3 / emissionsData.total) * 100;
+      const dominantScope = (() => {
+        const pairs = [
+          { key: 'Scope 1', v: s1p },
+          { key: 'Scope 2', v: s2p },
+          { key: 'Scope 3', v: s3p },
+        ];
+        return pairs.sort((a, b) => b.v - a.v)[0];
+      })();
+
+      let trendLine = 'Tendance mensuelle: données insuffisantes';
+      if (monthlyTrend && monthlyTrend.length > 1) {
+        const first = monthlyTrend[0].emissions;
+        const last = monthlyTrend[monthlyTrend.length - 1].emissions;
+        const pct = first === 0 ? 0 : ((last - first) / first) * 100;
+        const arrow = pct >= 0 ? '↑' : '↓';
+        trendLine = `Tendance mensuelle: ${arrow} ${Math.abs(pct).toFixed(1)}% (${(first/1000).toFixed(1)} → ${(last/1000).toFixed(1)} tCO₂e)`;
+      }
+
+      const benchDiffPct = sectorBenchmark.average === 0
+        ? 0
+        : ((sectorBenchmark.company - sectorBenchmark.average) / sectorBenchmark.average) * 100;
+      const benchLine = `Benchmark: ${benchDiffPct >= 0 ? 'au-dessus' : 'en dessous'} de la moyenne sectorielle de ${Math.abs(benchDiffPct).toFixed(1)}%`;
+
+      const lastSbt = sbtTrajectory && sbtTrajectory.length > 0 ? sbtTrajectory[sbtTrajectory.length - 1] : undefined;
+      const sbtGapPct = lastSbt ? ((lastSbt.actual - lastSbt.target) / (lastSbt.target || 1)) * 100 : 0;
+      const sbtLine = lastSbt
+        ? `Trajectoire SBTi: écart ${sbtGapPct >= 0 ? 'défavorable' : 'favorable'} de ${Math.abs(sbtGapPct).toFixed(1)}% en ${lastSbt.year}`
+        : 'Trajectoire SBTi: données insuffisantes';
+
+      const recLine = (() => {
+        if (dominantScope.key === 'Scope 3') return 'Priorités: achats responsables, transport amont/aval, circularité, engagement fournisseurs.';
+        if (dominantScope.key === 'Scope 2') return 'Priorités: efficacité énergétique, contrats d’électricité verte (PPA/GO), pilotage des usages.';
+        return 'Priorités: carburants/combustibles, parc véhicules, fuites F-Gaz, maintenance et process.';
+      })();
+
+      const analysisLines = [
+        `Répartition par scope: S1 ${s1p.toFixed(1)}% • S2 ${s2p.toFixed(1)}% • S3 ${s3p.toFixed(1)}%`,
+        `Scope dominant: ${dominantScope.key} (${dominantScope.v.toFixed(1)}%)`,
+        recLine,
+        trendLine,
+        benchLine,
+        sbtLine,
+      ];
+
+      let yText = 50;
+      analysisLines.forEach(line => {
+        pdf.text(line, 20, yText, { maxWidth: pageWidth - 40 });
+        yText += 10;
       });
 
       // Recommandations
@@ -306,19 +380,21 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
               </CardContent>
             </Card>
 
-            {/* Émissions par catégorie */}
+            {/* Répartition par scope par catégorie */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Top Catégories</CardTitle>
+                <CardTitle className="text-lg">Répartition Scope par Catégorie (Top 6)</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={emissionsByCategory.slice(0, 6)}>
+                  <BarChart data={categoryScopeData.slice(0, 6)}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                    <XAxis dataKey="category" angle={-45} textAnchor="end" height={100} />
                     <YAxis />
-                    <Tooltip formatter={(value: number) => [`${(value / 1000).toFixed(1)} tCO₂e`, 'Émissions']} />
-                    <Bar dataKey="value" fill="#8884d8" />
+                    <Tooltip formatter={(value: number) => [`${(Number(value) / 1000).toFixed(1)} tCO₂e`, 'Émissions']} />
+                    <Bar dataKey="scope1" stackId="a" fill="#ff6b6b" name="Scope 1" />
+                    <Bar dataKey="scope2" stackId="a" fill="#4ecdc4" name="Scope 2" />
+                    <Bar dataKey="scope3" stackId="a" fill="#45b7d1" name="Scope 3" />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>

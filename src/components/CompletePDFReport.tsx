@@ -60,12 +60,23 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
 
   const generateCompletePDF = async () => {
     setIsGenerating(true);
+    console.log('[PDF] Start generation');
     toast({ title: 'Génération du PDF…', description: 'Préparation du rapport complet' });
     
     try {
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
+      console.log('[PDF] Document initialized', { pageWidth, pageHeight });
+      
+      // Helpers et variables sûres
+      const safeNum = (v: any) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+      const totalT = safeNum(emissionsData.total) / 1000;
+      const scope1T = safeNum(emissionsData.scope1) / 1000;
+      const scope2T = safeNum(emissionsData.scope2) / 1000;
+      const scope3T = safeNum(emissionsData.scope3) / 1000;
+      const redPct = safeNum(emissionsData.reductionAnnuelle);
+      const intensite = safeNum(emissionsData.intensiteCarbone);
       
       // Page de couverture
       pdf.setFontSize(24);
@@ -88,19 +99,19 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
       pdf.setFontSize(12);
       pdf.setFont('helvetica', 'normal');
       const executiveSummary = [
-        `Émissions totales: ${(emissionsData.total / 1000).toFixed(2)} tCO2e`,
-        `Réduction annuelle: ${emissionsData.reductionAnnuelle.toFixed(1)}%`,
-        `Intensité carbone: ${emissionsData.intensiteCarbone.toFixed(2)} kgCO2e/k€`,
+        `Émissions totales: ${totalT.toFixed(2)} tCO2e`,
+        `Réduction annuelle: ${redPct.toFixed(1)}%`,
+        `Intensité carbone: ${intensite.toFixed(2)} kgCO2e/k€`,
         '',
         'Répartition par scope:',
-        `• Scope 1 (émissions directes): ${(emissionsData.scope1 / 1000).toFixed(2)} tCO2e`,
-        `• Scope 2 (énergétique indirecte): ${(emissionsData.scope2 / 1000).toFixed(2)} tCO2e`,
-        `• Scope 3 (autres indirectes): ${(emissionsData.scope3 / 1000).toFixed(2)} tCO2e`,
+        `• Scope 1 (émissions directes): ${scope1T.toFixed(2)} tCO2e`,
+        `• Scope 2 (énergétique indirecte): ${scope2T.toFixed(2)} tCO2e`,
+        `• Scope 3 (autres indirectes): ${scope3T.toFixed(2)} tCO2e`,
         '',
         'Performance vs secteur:',
-        `• Moyenne sectorielle: ${sectorBenchmark.average.toFixed(2)} tCO2e`,
-        `• Leaders du secteur: ${sectorBenchmark.leaders.toFixed(2)} tCO2e`,
-        `• Position de l'entreprise: ${sectorBenchmark.company.toFixed(2)} tCO2e`
+        `• Moyenne sectorielle: ${safeNum(sectorBenchmark.average).toFixed(2)} tCO2e`,
+        `• Leaders du secteur: ${safeNum(sectorBenchmark.leaders).toFixed(2)} tCO2e`,
+        `• Position de l'entreprise: ${safeNum(sectorBenchmark.company).toFixed(2)} tCO2e`
       ];
       
       let yPos = 50;
@@ -182,7 +193,7 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
         yPos += 8;
       });
 
-      // Analyses écrites
+      // Analyses écrites (paragraphes)
       pdf.addPage();
       pdf.setFontSize(18);
       pdf.setFont('helvetica', 'bold');
@@ -191,9 +202,10 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
       pdf.setFontSize(12);
       pdf.setFont('helvetica', 'normal');
 
-      const s1p = (emissionsData.scope1 / emissionsData.total) * 100;
-      const s2p = (emissionsData.scope2 / emissionsData.total) * 100;
-      const s3p = (emissionsData.scope3 / emissionsData.total) * 100;
+      const s1p = totalT === 0 ? 0 : (safeNum(emissionsData.scope1) / safeNum(emissionsData.total)) * 100;
+      const s2p = totalT === 0 ? 0 : (safeNum(emissionsData.scope2) / safeNum(emissionsData.total)) * 100;
+      const s3p = totalT === 0 ? 0 : (safeNum(emissionsData.scope3) / safeNum(emissionsData.total)) * 100;
+
       const dominantScope = (() => {
         const pairs = [
           { key: 'Scope 1', v: s1p },
@@ -203,45 +215,53 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
         return pairs.sort((a, b) => b.v - a.v)[0];
       })();
 
-      let trendLine = 'Tendance mensuelle: données insuffisantes';
+      let trendText = 'La tendance mensuelle ne peut pas être déterminée faute de données suffisantes.';
       if (monthlyTrend && monthlyTrend.length > 1) {
-        const first = monthlyTrend[0].emissions;
-        const last = monthlyTrend[monthlyTrend.length - 1].emissions;
+        const first = safeNum(monthlyTrend[0].emissions);
+        const last = safeNum(monthlyTrend[monthlyTrend.length - 1].emissions);
         const pct = first === 0 ? 0 : ((last - first) / first) * 100;
-        const arrow = pct >= 0 ? '↑' : '↓';
-        trendLine = `Tendance mensuelle: ${arrow} ${Math.abs(pct).toFixed(1)}% (${(first/1000).toFixed(1)} → ${(last/1000).toFixed(1)} tCO₂e)`;
+        const sens = pct >= 0 ? 'une hausse' : 'une baisse';
+        trendText = `La tendance mensuelle indique ${sens} de ${Math.abs(pct).toFixed(1)}% (de ${(first/1000).toFixed(1)} à ${(last/1000).toFixed(1)} tCO₂e).`;
       }
 
-      const benchDiffPct = sectorBenchmark.average === 0
+      const benchDiffPct = safeNum(sectorBenchmark.average) === 0
         ? 0
-        : ((sectorBenchmark.company - sectorBenchmark.average) / sectorBenchmark.average) * 100;
-      const benchLine = `Benchmark: ${benchDiffPct >= 0 ? 'au-dessus' : 'en dessous'} de la moyenne sectorielle de ${Math.abs(benchDiffPct).toFixed(1)}%`;
+        : ((safeNum(sectorBenchmark.company) - safeNum(sectorBenchmark.average)) / safeNum(sectorBenchmark.average)) * 100;
+      const benchText = `Par rapport au secteur, l’entreprise se situe ${benchDiffPct >= 0 ? 'au-dessus' : 'en dessous'} de la moyenne de ${Math.abs(benchDiffPct).toFixed(1)}%.`;
 
       const lastSbt = sbtTrajectory && sbtTrajectory.length > 0 ? sbtTrajectory[sbtTrajectory.length - 1] : undefined;
-      const sbtGapPct = lastSbt ? ((lastSbt.actual - lastSbt.target) / (lastSbt.target || 1)) * 100 : 0;
-      const sbtLine = lastSbt
-        ? `Trajectoire SBTi: écart ${sbtGapPct >= 0 ? 'défavorable' : 'favorable'} de ${Math.abs(sbtGapPct).toFixed(1)}% en ${lastSbt.year}`
-        : 'Trajectoire SBTi: données insuffisantes';
+      const sbtGapPct = lastSbt ? ((safeNum(lastSbt.actual) - safeNum(lastSbt.target)) / (safeNum(lastSbt.target) || 1)) * 100 : 0;
+      const sbtText = lastSbt
+        ? `Concernant la trajectoire SBTi, l’écart est ${sbtGapPct >= 0 ? 'défavorable' : 'favorable'} de ${Math.abs(sbtGapPct).toFixed(1)}% en ${lastSbt.year}.`
+        : 'Les données de trajectoire SBTi sont insuffisantes pour une conclusion.';
 
-      const recLine = (() => {
-        if (dominantScope.key === 'Scope 3') return 'Priorités: achats responsables, transport amont/aval, circularité, engagement fournisseurs.';
-        if (dominantScope.key === 'Scope 2') return 'Priorités: efficacité énergétique, contrats d’électricité verte (PPA/GO), pilotage des usages.';
-        return 'Priorités: carburants/combustibles, parc véhicules, fuites F-Gaz, maintenance et process.';
+      const prioritiesText = (() => {
+        if (dominantScope.key === 'Scope 3') return "Les émissions sont principalement portées par le Scope 3. Les priorités portent sur les achats responsables, l’optimisation logistique (amont/aval), la circularité des matières et l’engagement des fournisseurs.";
+        if (dominantScope.key === 'Scope 2') return "Le Scope 2 domine. Il est recommandé d’accélérer l’efficacité énergétique, de sécuriser des contrats d’électricité bas-carbone (PPA/GO) et de piloter finement les usages.";
+        return "Le Scope 1 est prédominant. Les actions prioritaires concernent les combustibles/process, le parc véhicules (transition vers l’électrique/biocarburants) et la réduction des fuites de gaz frigorigènes.";
       })();
 
-      const analysisLines = [
-        `Répartition par scope: S1 ${s1p.toFixed(1)}% • S2 ${s2p.toFixed(1)}% • S3 ${s3p.toFixed(1)}%`,
-        `Scope dominant: ${dominantScope.key} (${dominantScope.v.toFixed(1)}%)`,
-        recLine,
-        trendLine,
-        benchLine,
-        sbtLine,
+      const paragraphs = [
+        `Vue d’ensemble: les émissions totales atteignent ${totalT.toFixed(2)} tCO₂e, avec une réduction annuelle de ${redPct.toFixed(1)}% et une intensité carbone de ${intensite.toFixed(2)} kgCO₂e/k€.`,
+        `Répartition par scope: Scope 1 ${s1p.toFixed(1)}%, Scope 2 ${s2p.toFixed(1)}%, Scope 3 ${s3p.toFixed(1)}%. Le scope dominant est ${dominantScope.key}.`,
+        trendText,
+        benchText,
+        sbtText,
+        prioritiesText,
       ];
 
-      let yText = 50;
-      analysisLines.forEach(line => {
-        pdf.text(line, 20, yText, { maxWidth: pageWidth - 40 });
-        yText += 10;
+      let yCursor = 50;
+      paragraphs.forEach(p => {
+        const lines = pdf.splitTextToSize(p, pageWidth - 40);
+        lines.forEach((line: string) => {
+          pdf.text(line, 20, yCursor);
+          yCursor += 7;
+        });
+        yCursor += 5;
+        if (yCursor > pageHeight - 30) {
+          pdf.addPage();
+          yCursor = 30;
+        }
       });
 
       // Recommandations

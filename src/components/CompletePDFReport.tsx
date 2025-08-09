@@ -288,13 +288,29 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
         yPos += 12;
       });
 
-      // Sauvegarde
+      // Téléchargement sécurisé avec multiples fallbacks
+      const fileName = `rapport_carbone_${new Date().toISOString().split('T')[0]}.pdf`;
+      
       try {
-        pdf.save(`rapport_carbone_complet_${new Date().toISOString().split('T')[0]}.pdf`);
-      } catch (e) {
-        // Fallback ouverture dans un nouvel onglet si le téléchargement est bloqué
-        const blobUrl = (pdf as any).output('bloburl');
-        window.open(blobUrl, '_blank');
+        // Méthode 1: Téléchargement direct
+        pdf.save(fileName);
+      } catch (saveError) {
+        try {
+          // Méthode 2: Blob + lien temporaire
+          const pdfBlob = pdf.output('blob');
+          const blobUrl = URL.createObjectURL(pdfBlob);
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = fileName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(blobUrl);
+        } catch (blobError) {
+          // Méthode 3: Nouvel onglet
+          const dataUrl = pdf.output('datauristring');
+          window.open(dataUrl, '_blank');
+        }
       }
       
       toast({

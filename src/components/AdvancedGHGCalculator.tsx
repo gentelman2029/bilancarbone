@@ -1318,7 +1318,18 @@ export const AdvancedGHGCalculator = () => {
       {calculations.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Détail des calculs</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Détail des calculs</CardTitle>
+              <Button 
+                onClick={resetCalculations} 
+                variant="outline" 
+                size="sm"
+                className="h-8"
+              >
+                <RotateCcw className="h-4 w-4 mr-1" />
+                Réinitialiser
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">

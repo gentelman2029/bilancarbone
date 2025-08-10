@@ -115,28 +115,44 @@ export const Dashboard = () => {
       calculations.forEach((calc: any) => {
         const sourceName = calc.description;
         if (!groupedData[sourceName]) {
-          // Assigner des couleurs distinctes et variées selon le type
+          // Palette de couleurs distinctes et vibrantes
           let color = "#94a3b8"; // couleur par défaut
-          if (sourceName.includes("Gaz naturel")) color = "#ef4444"; // Rouge
+          
+          // Couleurs pour les gaz réfrigérants (palette violet/magenta)
+          if (sourceName.includes("R-12") || sourceName.includes("CFC-12")) color = "#8b5cf6"; // Violet
+          else if (sourceName.includes("R-11") || sourceName.includes("CFC-11")) color = "#a855f7"; // Violet clair
+          else if (sourceName.includes("R-404A")) color = "#c084fc"; // Violet plus clair
+          else if (sourceName.includes("R-410A")) color = "#d946ef"; // Magenta
+          else if (sourceName.includes("R-22") || sourceName.includes("HCFC-22")) color = "#ec4899"; // Rose
+          
+          // Couleurs pour les énergies (palette rouge/orange)
+          else if (sourceName.includes("Gaz naturel")) color = "#ef4444"; // Rouge
           else if (sourceName.includes("diesel") || sourceName.includes("Diesel")) color = "#f59e0b"; // Orange
-          else if (sourceName.includes("électr") || sourceName.includes("Électr")) color = "#22c55e"; // Vert
-          else if (sourceName.includes("R-22") || sourceName.includes("réfrigér")) color = "#8b5cf6"; // Violet
-          else if (sourceName.includes("chaleur") || sourceName.includes("eau chaude")) color = "#06b6d4"; // Cyan
-          else if (sourceName.includes("recyclage") || sourceName.includes("Recyclage")) color = "#84cc16"; // Vert lime
-          else if (sourceName.includes("transport") || sourceName.includes("Transport")) color = "#3b82f6"; // Bleu
           else if (sourceName.includes("essence") || sourceName.includes("Essence")) color = "#f97316"; // Orange foncé
-          else if (sourceName.includes("fioul") || sourceName.includes("Fioul")) color = "#e11d48"; // Rose
-          else if (sourceName.includes("charbon") || sourceName.includes("Charbon")) color = "#374151"; // Gris foncé
+          else if (sourceName.includes("fioul") || sourceName.includes("Fioul")) color = "#ea580c"; // Orange rouge
+          else if (sourceName.includes("charbon") || sourceName.includes("Charbon")) color = "#dc2626"; // Rouge foncé
+          
+          // Couleurs pour l'électricité et chaleur (palette verte)
+          else if (sourceName.includes("électr") || sourceName.includes("Électr")) color = "#22c55e"; // Vert
+          else if (sourceName.includes("chaleur") || sourceName.includes("eau chaude")) color = "#16a34a"; // Vert foncé
+          
+          // Couleurs pour le transport (palette bleue)
+          else if (sourceName.includes("transport") || sourceName.includes("Transport")) color = "#3b82f6"; // Bleu
+          else if (sourceName.includes("avion") || sourceName.includes("Avion")) color = "#1d4ed8"; // Bleu foncé
+          else if (sourceName.includes("train") || sourceName.includes("TGV") || sourceName.includes("TER")) color = "#2563eb"; // Bleu royal
+          
+          // Couleurs pour les matériaux (palette diverse)
           else if (sourceName.includes("acier") || sourceName.includes("Acier")) color = "#64748b"; // Gris ardoise
-          else if (sourceName.includes("aluminium") || sourceName.includes("Aluminium")) color = "#0ea5e9"; // Bleu clair
+          else if (sourceName.includes("aluminium") || sourceName.includes("Aluminium")) color = "#06b6d4"; // Cyan
           else if (sourceName.includes("béton") || sourceName.includes("Béton")) color = "#71717a"; // Gris neutre
-          else if (sourceName.includes("bois") || sourceName.includes("Bois")) color = "#a3a3a3"; // Brun
+          else if (sourceName.includes("bois") || sourceName.includes("Bois")) color = "#84cc16"; // Vert lime
           else if (sourceName.includes("verre") || sourceName.includes("Verre")) color = "#14b8a6"; // Teal
           else if (sourceName.includes("plastique") || sourceName.includes("Plastique")) color = "#f43f5e"; // Rose vif
           else if (sourceName.includes("papier") || sourceName.includes("Papier")) color = "#eab308"; // Jaune
-          else if (sourceName.includes("cuivre") || sourceName.includes("Cuivre")) color = "#dc2626"; // Rouge foncé
-          else if (sourceName.includes("avion") || sourceName.includes("Avion")) color = "#7c3aed"; // Violet foncé
-          else if (sourceName.includes("train") || sourceName.includes("TGV") || sourceName.includes("TER")) color = "#059669"; // Vert émeraude
+          else if (sourceName.includes("cuivre") || sourceName.includes("Cuivre")) color = "#fb923c"; // Orange cuivre
+          
+          // Couleurs pour le recyclage et déchets (palette verte claire)
+          else if (sourceName.includes("recyclage") || sourceName.includes("Recyclage")) color = "#65a30d"; // Vert olive
           
           groupedData[sourceName] = { emissions: 0, color };
         }
@@ -152,16 +168,16 @@ export const Dashboard = () => {
       }));
     }
     
-    // Si pas de données réelles, utiliser des données d'exemple avec des vraies sources
+    // Si pas de données réelles, utiliser des données d'exemple avec des couleurs distinctes
     if (realData.length === 0) {
       const total = displayEmissions.scope1 + displayEmissions.scope2 + displayEmissions.scope3;
       realData = [
-        { name: "Gaz naturel", value: total * 0.25, emissions: total * 0.25 * 1000, color: "#ef4444" },
-        { name: "Véhicule utilitaire diesel", value: total * 0.20, emissions: total * 0.20 * 1000, color: "#f59e0b" },
-        { name: "R-22 (HCFC-22)", value: total * 0.18, emissions: total * 0.18 * 1000, color: "#8b5cf6" },
-        { name: "Eau chaude (réseau de chaleur)", value: total * 0.15, emissions: total * 0.15 * 1000, color: "#06b6d4" },
-        { name: "Recyclage", value: total * 0.12, emissions: total * 0.12 * 1000, color: "#84cc16" },
-        { name: "Électricité France", value: total * 0.10, emissions: total * 0.10 * 1000, color: "#22c55e" }
+        { name: "R-12 (CFC-12)", value: total * 0.394, emissions: total * 0.394 * 1000, color: "#8b5cf6" }, // Violet
+        { name: "R-11 (CFC-11)", value: total * 0.172, emissions: total * 0.172 * 1000, color: "#a855f7" }, // Violet clair
+        { name: "R-404A", value: total * 0.142, emissions: total * 0.142 * 1000, color: "#c084fc" }, // Violet plus clair
+        { name: "R-410A", value: total * 0.075, emissions: total * 0.075 * 1000, color: "#d946ef" }, // Magenta
+        { name: "R-22 (HCFC-22)", value: total * 0.065, emissions: total * 0.065 * 1000, color: "#ec4899" }, // Rose
+        { name: "Autres", value: total * 0.152, emissions: total * 0.152 * 1000, color: "#22c55e" } // Vert pour les autres
       ];
     }
 
@@ -178,17 +194,17 @@ export const Dashboard = () => {
     const top5 = dataWithPercentages.slice(0, 5);
     const others = dataWithPercentages.slice(5);
 
-    if (others.length > 0) {
-      const othersSum = others.reduce((sum, item) => sum + item.value, 0);
-      const othersPercentage = others.reduce((sum, item) => sum + item.percentage, 0);
-      
-      top5.push({
-        name: "Autres",
-        value: othersSum,
-        percentage: othersPercentage,
-        color: "#94a3b8"
-      });
-    }
+      if (others.length > 0) {
+        const othersSum = others.reduce((sum, item) => sum + item.value, 0);
+        const othersPercentage = others.reduce((sum, item) => sum + item.percentage, 0);
+        
+        top5.push({
+          name: "Autres",
+          value: othersSum,
+          percentage: othersPercentage,
+          color: "#78716c" // Couleur gris brun pour "Autres"
+        });
+      }
 
     // Arrondir les pourcentages à 2 décimales
     return top5.map(item => ({

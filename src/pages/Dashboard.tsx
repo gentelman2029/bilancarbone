@@ -529,6 +529,62 @@ export const Dashboard = () => {
     document.body.removeChild(link);
   };
 
+  // Fonction de partage du dashboard
+  const handleShare = async () => {
+    const shareData = {
+      title: "Dashboard Carbone - Rapport d'Émissions GES",
+      text: `Émissions totales: ${hasData ? currentEmissions.toFixed(0) : '4,200'} tCO2e | Réduction: ${hasData ? pourcentageReduction.toFixed(1) : '16.3'}% vs année précédente`,
+      url: window.location.href
+    };
+
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+        toast({
+          title: "Partage réussi",
+          description: "Le dashboard a été partagé avec succès.",
+        });
+      } catch (error) {
+        if (error instanceof Error && error.name !== 'AbortError') {
+          fallbackShare(shareData);
+        }
+      }
+    } else {
+      fallbackShare(shareData);
+    }
+  };
+
+  // Fallback pour les navigateurs qui ne supportent pas l'API Web Share
+  const fallbackShare = (shareData: any) => {
+    if (navigator.clipboard) {
+      const textToShare = `${shareData.title}\n${shareData.text}\n${shareData.url}`;
+      navigator.clipboard.writeText(textToShare).then(() => {
+        toast({
+          title: "Lien copié",
+          description: "Le lien du dashboard a été copié dans le presse-papiers.",
+        });
+      }).catch(() => {
+        showShareOptions(shareData);
+      });
+    } else {
+      showShareOptions(shareData);
+    }
+  };
+
+  // Afficher les options de partage manuel
+  const showShareOptions = (shareData: any) => {
+    const emailSubject = encodeURIComponent(shareData.title);
+    const emailBody = encodeURIComponent(`${shareData.text}\n\nConsultez le dashboard: ${shareData.url}`);
+    
+    // Ouvrir par email par défaut
+    window.open(`mailto:?subject=${emailSubject}&body=${emailBody}`, '_blank');
+    
+    toast({
+      title: "Options de partage",
+      description: "Le client email par défaut s'ouvre pour partager le rapport.",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-muted/20">
       {/* Header */}
@@ -563,7 +619,7 @@ export const Dashboard = () => {
                   company: sectorBenchmark[0]?.value || 0
                 }}
               />
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={handleShare}>
                 <Share className="w-4 h-4 mr-2" />
                 Partager
               </Button>

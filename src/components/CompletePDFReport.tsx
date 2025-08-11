@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Download, Loader2 } from 'lucide-react';
@@ -340,7 +340,7 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" onClick={() => setIsOpen(true)}>
+        <Button variant="outline" size="sm" type="button">
           <FileText className="w-4 h-4 mr-2" />
           Rapport PDF Complet
         </Button>
@@ -348,6 +348,9 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Aperçu du Rapport Carbone Complet</DialogTitle>
+          <DialogDescription>
+            Prévisualisez et téléchargez le rapport PDF complet du dashboard carbone.
+          </DialogDescription>
         </DialogHeader>
         
         <div id="complete-pdf-preview" className="space-y-6 p-4 bg-white">

@@ -657,9 +657,6 @@ export const Dashboard = () => {
                   <div className="text-xs text-muted-foreground mt-1">
                     Total des émissions GES sur la période
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    Objectif: 3,800 tCO2e
-                  </div>
                 </div>
               </div>
             </CardContent>
@@ -690,9 +687,6 @@ export const Dashboard = () => {
                   <div className="text-xs text-muted-foreground mt-1">
                     Réduction par rapport à l'année précédente
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    Objectif: 550 tCO2e
-                  </div>
                 </div>
               </div>
             </CardContent>
@@ -720,12 +714,6 @@ export const Dashboard = () => {
                         {(hasData ? Math.abs(progressionSBTi).toFixed(1) : "8.7")}%
                       </span>
                     </div>
-                   <div className="text-xs text-muted-foreground mt-1">
-                     Objectif Science Based Targets pour 2024
-                   </div>
-                   <div className="text-xs text-muted-foreground">
-                     Objectif 2030: {hasData && objectifsSBTParAnnee[2030] ? objectifsSBTParAnnee[2030].toFixed(0) : "--"} tCO2e
-                   </div>
                  </div>
                </div>
              </CardContent>
@@ -755,9 +743,6 @@ export const Dashboard = () => {
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
                     Émissions par unité de chiffre d'affaires
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Objectif: 0.9 tCO2e/k€
                   </div>
                 </div>
               </div>
@@ -789,9 +774,6 @@ export const Dashboard = () => {
                   <div className="text-xs text-muted-foreground mt-1">
                     Intensité carbone par collaborateur
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    Objectif: 7.0 tCO2e/pers
-                  </div>
                 </div>
               </div>
             </CardContent>
@@ -815,9 +797,6 @@ export const Dashboard = () => {
                    </div>
                   <div className="text-xs text-muted-foreground mt-1">
                     Avancement conformité CSRD/BEGES
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Objectif: 100%
                   </div>
                 </div>
               </div>

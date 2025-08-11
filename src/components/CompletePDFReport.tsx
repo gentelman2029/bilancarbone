@@ -340,7 +340,7 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" onClick={() => setIsOpen(true)}>
           <FileText className="w-4 h-4 mr-2" />
           Rapport PDF Complet
         </Button>

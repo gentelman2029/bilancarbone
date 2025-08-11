@@ -28,8 +28,8 @@ export const Header = () => {
   
   const navItems = [
     { path: "/", label: "Accueil", icon: Leaf },
-    { path: "/calculator", label: "Calculateur", icon: Calculator },
-    { path: "/data", label: "Collecte", icon: Users },
+    { path: "/data", label: "Calculateur simple", icon: Users },
+    { path: "/calculator", label: "Calculateur avancé", icon: Calculator },
     { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
     { path: "/actions", label: "Actions", icon: Settings },
   ];

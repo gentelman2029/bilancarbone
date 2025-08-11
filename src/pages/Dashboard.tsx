@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCSVExport } from "@/hooks/useCSVExport";
 import { CarbonActionsTracking } from "@/components/CarbonActionsTracking";
 import { CompletePDFReport } from "@/components/CompletePDFReport";
+import jsPDF from "jspdf";
 
 export const Dashboard = () => {
   const { emissions, hasEmissions } = useEmissions();
@@ -585,6 +586,48 @@ export const Dashboard = () => {
     });
   };
 
+  // Génération rapide du PDF sectoriel (bouton "Rapport détaillé sectoriel")
+  const handleSectorReport = () => {
+    try {
+      const pdf = new jsPDF();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Rapport détaillé sectoriel', pageWidth / 2, 20, { align: 'center' });
+
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Généré le ${new Date().toLocaleDateString('fr-FR')}`, pageWidth / 2, 28, { align: 'center' });
+
+      let y = 45;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Indicateurs clés', 20, y);
+      y += 10;
+
+      pdf.setFont('helvetica', 'normal');
+      sectorBenchmark.forEach((item) => {
+        const rankText = item.rank ? ` (${item.rank})` : '';
+        pdf.text(`• ${item.category}: ${item.value.toFixed(2)} tCO2e/pers${rankText}`, 25, y);
+        y += 8;
+      });
+
+      const filename = `rapport_sectoriel_${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(filename);
+
+      toast({
+        title: 'Rapport sectoriel généré',
+        description: 'Le téléchargement du PDF a été lancé.',
+      });
+    } catch (e) {
+      console.error('Erreur rapport sectoriel:', e);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de générer le rapport sectoriel.',
+        variant: 'destructive',
+      });
+    }
+  };
   return (
     <div className="min-h-screen bg-muted/20">
       {/* Header */}
@@ -1062,7 +1105,7 @@ export const Dashboard = () => {
                   ))}
                 </div>
 
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" onClick={handleSectorReport}>
                   <FileText className="w-4 h-4 mr-2" />
                   Rapport détaillé sectoriel
                 </Button>

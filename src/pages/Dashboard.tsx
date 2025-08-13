@@ -771,7 +771,7 @@ export const Dashboard = () => {
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span className="text-sm font-medium text-muted-foreground">Intensité carbone</span>
                   </div>
-                   <div className="text-3xl font-bold text-foreground mb-1">
+                   <div className="text-3xl font-bold text-destructive mb-1">
                      {hasData ? intensiteCarbone.toFixed(1) : "1.2"} <span className="text-lg">tCO2e/k€</span>
                    </div>
                   <div className="flex items-center gap-1 text-sm">

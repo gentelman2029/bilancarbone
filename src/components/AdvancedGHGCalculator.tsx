@@ -776,27 +776,27 @@ export const AdvancedGHGCalculator = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-destructive">
-                  {emissions.scope1.toFixed(1)}
+                  {(emissions.scope1 / 1000).toFixed(1)}
                 </div>
-                <div className="text-sm text-muted-foreground">Scope 1 (kg CO2e)</div>
+                <div className="text-sm text-muted-foreground">Scope 1 (tCO2e)</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-orange-500">
-                  {emissions.scope2.toFixed(1)}
+                  {(emissions.scope2 / 1000).toFixed(1)}
                 </div>
-                <div className="text-sm text-muted-foreground">Scope 2 (kg CO2e)</div>
+                <div className="text-sm text-muted-foreground">Scope 2 (tCO2e)</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-500">
-                  {emissions.scope3.toFixed(1)}
+                  {(emissions.scope3 / 1000).toFixed(1)}
                 </div>
-                <div className="text-sm text-muted-foreground">Scope 3 (kg CO2e)</div>
+                <div className="text-sm text-muted-foreground">Scope 3 (tCO2e)</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-primary">
-                  {getTotalEmissions().toFixed(1)}
+                  {(getTotalEmissions() / 1000).toFixed(1)}
                 </div>
-                <div className="text-sm text-muted-foreground">Total (kg CO2e)</div>
+                <div className="text-sm text-muted-foreground">Total (tCO2e)</div>
               </div>
             </div>
             <div className="flex gap-2 mt-4">

@@ -91,16 +91,56 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 bg-card border-y border-border">
+      {/* Message de sensibilisation */}
+      <section className="py-16 bg-gradient-to-r from-destructive/10 to-primary/10 border-y border-border">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                <div className="text-3xl lg:text-4xl font-bold text-primary mb-2">{stat.value}</div>
-                <div className="text-muted-foreground">{stat.label}</div>
+          <div className="max-w-4xl mx-auto text-center space-y-6">
+            <div className="inline-flex items-center space-x-2 bg-destructive/10 text-destructive px-4 py-2 rounded-full border border-destructive/20">
+              <span className="text-2xl">🌍</span>
+              <span className="font-semibold">Urgence climatique</span>
+            </div>
+            
+            <h2 className="text-2xl lg:text-3xl font-bold text-foreground">
+              +1,5°C en 2030 : Il est encore temps d'agir
+            </h2>
+            
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              Les entreprises représentent <strong className="text-primary">70% des émissions mondiales de CO2</strong>. 
+              Face à l'urgence climatique, mesurer et réduire son empreinte carbone n'est plus une option, 
+              c'est une <strong className="text-foreground">responsabilité essentielle</strong> pour l'avenir de notre planète.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+              <div className="bg-card p-6 rounded-lg border shadow-sm">
+                <div className="text-2xl mb-2">🔥</div>
+                <div className="text-sm font-semibold text-foreground">Réchauffement accéléré</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  2023 : année la plus chaude jamais enregistrée
+                </div>
               </div>
-            ))}
+              
+              <div className="bg-card p-6 rounded-lg border shadow-sm">
+                <div className="text-2xl mb-2">⚖️</div>
+                <div className="text-sm font-semibold text-foreground">Réglementation renforcée</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  CSRD obligatoire dès 2024-2026
+                </div>
+              </div>
+              
+              <div className="bg-card p-6 rounded-lg border shadow-sm">
+                <div className="text-2xl mb-2">💚</div>
+                <div className="text-sm font-semibold text-foreground">Opportunité business</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Économies et compétitivité durable
+                </div>
+              </div>
+            </div>
+            
+            <div className="pt-4">
+              <Badge className="bg-primary/10 text-primary border-primary/20">
+                Agissez maintenant pour votre entreprise et la planète
+              </Badge>
+            </div>
           </div>
         </div>
       </section>

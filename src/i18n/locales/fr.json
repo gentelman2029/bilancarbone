@@ -1,0 +1,84 @@
+{
+  "navigation": {
+    "home": "Accueil",
+    "dashboard": "Tableau de bord",
+    "data": "Collecte de données",
+    "calculator": "Calculateur",
+    "actions": "Actions",
+    "contact": "Contact"
+  },
+  "auth": {
+    "login": "Se connecter",
+    "signup": "S'inscrire",
+    "logout": "Se déconnecter",
+    "email": "Email",
+    "password": "Mot de passe",
+    "signin": "Connexion",
+    "register": "Créer un compte",
+    "loading": "Chargement...",
+    "signout_success": "Déconnexion réussie",
+    "signout_error": "Erreur lors de la déconnexion"
+  },
+  "dashboard": {
+    "title": "Tableau de Bord Carbone",
+    "carbon_footprint": "Empreinte Carbone",
+    "total_emissions": "Émissions Totales",
+    "carbon_intensity": "Intensité Carbone",
+    "scope_breakdown": "Répartition par Scope",
+    "scope1": "Scope 1",
+    "scope2": "Scope 2", 
+    "scope3": "Scope 3",
+    "emissions_chart": "Graphique des Émissions",
+    "monthly_evolution": "Évolution Mensuelle",
+    "co2_equivalent": "CO2 équivalent"
+  },
+  "calculator": {
+    "title": "Calculateur GES Avancé",
+    "company_info": "Informations de l'entreprise",
+    "company_name": "Nom de l'entreprise",
+    "sector": "Secteur d'activité",
+    "employees": "Nombre d'employés",
+    "revenue": "Chiffre d'affaires (€)",
+    "carbon_balance": "Bilan Carbone par Scope",
+    "total": "Total",
+    "carbon_intensity_calc": "Intensité Carbone",
+    "calculate": "Calculer"
+  },
+  "actions": {
+    "title": "Plan d'Actions Carbone",
+    "tracking": "Suivi des Actions",
+    "add_action": "Ajouter une action",
+    "status": "Statut",
+    "priority": "Priorité",
+    "category": "Catégorie",
+    "impact": "Impact",
+    "cost": "Coût",
+    "deadline": "Échéance"
+  },
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "add": "Ajouter",
+    "close": "Fermer",
+    "submit": "Valider",
+    "reset": "Réinitialiser",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "export": "Exporter",
+    "import": "Importer",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "warning": "Attention",
+    "info": "Information"
+  },
+  "language": {
+    "select": "Choisir la langue",
+    "french": "Français",
+    "english": "English",
+    "arabic": "العربية",
+    "german": "Deutsch"
+  }
+}

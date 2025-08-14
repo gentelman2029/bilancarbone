@@ -1,0 +1,84 @@
+{
+  "navigation": {
+    "home": "Startseite",
+    "dashboard": "Dashboard",
+    "data": "Datensammlung",
+    "calculator": "Rechner",
+    "actions": "Aktionen",
+    "contact": "Kontakt"
+  },
+  "auth": {
+    "login": "Anmelden",
+    "signup": "Registrieren",
+    "logout": "Abmelden",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "signin": "Anmelden",
+    "register": "Konto erstellen",
+    "loading": "Laden...",
+    "signout_success": "Erfolgreich abgemeldet",
+    "signout_error": "Fehler beim Abmelden"
+  },
+  "dashboard": {
+    "title": "Kohlenstoff-Dashboard",
+    "carbon_footprint": "CO2-Fußabdruck",
+    "total_emissions": "Gesamtemissionen",
+    "carbon_intensity": "Kohlenstoffintensität",
+    "scope_breakdown": "Scope-Aufschlüsselung",
+    "scope1": "Scope 1",
+    "scope2": "Scope 2",
+    "scope3": "Scope 3",
+    "emissions_chart": "Emissionsdiagramm",
+    "monthly_evolution": "Monatliche Entwicklung",
+    "co2_equivalent": "CO2-Äquivalent"
+  },
+  "calculator": {
+    "title": "Erweiterte THG-Rechner",
+    "company_info": "Unternehmensinformationen",
+    "company_name": "Firmenname",
+    "sector": "Geschäftsbereich",
+    "employees": "Anzahl Mitarbeiter",
+    "revenue": "Umsatz (€)",
+    "carbon_balance": "Kohlenstoffbilanz nach Scope",
+    "total": "Gesamt",
+    "carbon_intensity_calc": "Kohlenstoffintensität",
+    "calculate": "Berechnen"
+  },
+  "actions": {
+    "title": "Kohlenstoff-Aktionsplan",
+    "tracking": "Aktionsverfolgung",
+    "add_action": "Aktion hinzufügen",
+    "status": "Status",
+    "priority": "Priorität",
+    "category": "Kategorie",
+    "impact": "Auswirkung",
+    "cost": "Kosten",
+    "deadline": "Fristende"
+  },
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "add": "Hinzufügen",
+    "close": "Schließen",
+    "submit": "Einreichen",
+    "reset": "Zurücksetzen",
+    "search": "Suchen",
+    "filter": "Filter",
+    "export": "Exportieren",
+    "import": "Importieren",
+    "loading": "Laden...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "warning": "Warnung",
+    "info": "Information"
+  },
+  "language": {
+    "select": "Sprache wählen",
+    "french": "Français",
+    "english": "English",
+    "arabic": "العربية",
+    "german": "Deutsch"
+  }
+}

@@ -17,12 +17,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useCSVExport } from "@/hooks/useCSVExport";
 import { CarbonActionsTracking } from "@/components/CarbonActionsTracking";
 import { CompletePDFReport } from "@/components/CompletePDFReport";
+import { useTranslation } from "react-i18next";
 import jsPDF from "jspdf";
 
 export const Dashboard = () => {
   const { emissions, hasEmissions } = useEmissions();
   const { reports, loading, getLatestReport } = useCarbonReports();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const { exportCurrentData, exportSiteData, exportCategoryData } = useCSVExport();
   
   const latestReport = getLatestReport();
@@ -635,7 +637,7 @@ export const Dashboard = () => {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Dashboard Carbone Interactif</h1>
+              <h1 className="text-2xl font-bold text-foreground">{t("dashboard.title")}</h1>
               <p className="text-sm text-muted-foreground">Visualisation Power BI des émissions GES - Conforme Base Carbone® ADEME</p>
             </div>
             <div className="flex items-center gap-3">

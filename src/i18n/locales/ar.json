@@ -1,0 +1,84 @@
+{
+  "navigation": {
+    "home": "الرئيسية",
+    "dashboard": "لوحة القيادة",
+    "data": "جمع البيانات",
+    "calculator": "الحاسبة",
+    "actions": "الإجراءات",
+    "contact": "اتصل بنا"
+  },
+  "auth": {
+    "login": "تسجيل الدخول",
+    "signup": "إنشاء حساب",
+    "logout": "تسجيل الخروج",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "signin": "تسجيل الدخول",
+    "register": "إنشاء حساب",
+    "loading": "جاري التحميل...",
+    "signout_success": "تم تسجيل الخروج بنجاح",
+    "signout_error": "خطأ في تسجيل الخروج"
+  },
+  "dashboard": {
+    "title": "لوحة الكربون",
+    "carbon_footprint": "البصمة الكربونية",
+    "total_emissions": "إجمالي الانبعاثات",
+    "carbon_intensity": "كثافة الكربون",
+    "scope_breakdown": "تفصيل النطاق",
+    "scope1": "النطاق 1",
+    "scope2": "النطاق 2",
+    "scope3": "النطاق 3",
+    "emissions_chart": "مخطط الانبعاثات",
+    "monthly_evolution": "التطور الشهري",
+    "co2_equivalent": "مكافئ ثاني أكسيد الكربون"
+  },
+  "calculator": {
+    "title": "حاسبة غازات الدفيئة المتقدمة",
+    "company_info": "معلومات الشركة",
+    "company_name": "اسم الشركة",
+    "sector": "القطاع التجاري",
+    "employees": "عدد الموظفين",
+    "revenue": "الإيرادات (€)",
+    "carbon_balance": "رصيد الكربون حسب النطاق",
+    "total": "المجموع",
+    "carbon_intensity_calc": "كثافة الكربون",
+    "calculate": "احسب"
+  },
+  "actions": {
+    "title": "خطة العمل الكربونية",
+    "tracking": "تتبع الإجراءات",
+    "add_action": "إضافة إجراء",
+    "status": "الحالة",
+    "priority": "الأولوية",
+    "category": "الفئة",
+    "impact": "التأثير",
+    "cost": "التكلفة",
+    "deadline": "الموعد النهائي"
+  },
+  "common": {
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة",
+    "close": "إغلاق",
+    "submit": "إرسال",
+    "reset": "إعادة تعيين",
+    "search": "بحث",
+    "filter": "تصفية",
+    "export": "تصدير",
+    "import": "استيراد",
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "success": "نجح",
+    "warning": "تحذير",
+    "info": "معلومات"
+  },
+  "language": {
+    "select": "اختر اللغة",
+    "french": "Français",
+    "english": "English",
+    "arabic": "العربية",
+    "german": "Deutsch"
+  }
+}

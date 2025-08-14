@@ -4,12 +4,15 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
+import { LanguageSelector } from "./LanguageSelector";
 import type { User } from "@supabase/supabase-js";
 
 export const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -27,11 +30,11 @@ export const Header = () => {
   }, []);
   
   const navItems = [
-    { path: "/", label: "Accueil", icon: Leaf },
-    { path: "/data", label: "Calculateur simple", icon: Users },
-    { path: "/calculator", label: "Calculateur avancé", icon: Calculator },
-    { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
-    { path: "/actions", label: "Actions", icon: Settings },
+    { path: "/", label: t("navigation.home"), icon: Leaf },
+    { path: "/data", label: t("navigation.data"), icon: Users },
+    { path: "/calculator", label: t("navigation.calculator"), icon: Calculator },
+    { path: "/dashboard", label: t("navigation.dashboard"), icon: BarChart3 },
+    { path: "/actions", label: t("navigation.actions"), icon: Settings },
   ];
 
   const handleSignOut = async () => {
@@ -42,12 +45,12 @@ export const Header = () => {
       
       navigate("/");
       toast({
-        title: "Déconnexion réussie",
+        title: t("auth.signout_success"),
         description: "À bientôt sur CarbonTrack !",
       });
     } catch (error: any) {
       toast({
-        title: "Erreur de déconnexion",
+        title: t("auth.signout_error"),
         description: error.message,
         variant: "destructive",
       });
@@ -87,6 +90,7 @@ export const Header = () => {
 
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center space-x-3">
+            <LanguageSelector />
             {user ? (
               <>
                 <span className="text-sm text-muted-foreground hidden lg:block">
@@ -100,7 +104,7 @@ export const Header = () => {
                   className="flex items-center space-x-2"
                 >
                   <LogOut className="w-4 h-4" />
-                  <span>Déconnexion</span>
+                  <span>{t("auth.logout")}</span>
                 </Button>
               </>
             ) : (
@@ -110,7 +114,7 @@ export const Header = () => {
                   size="sm"
                   onClick={() => navigate("/auth")}
                 >
-                  Connexion
+                  {t("auth.login")}
                 </Button>
                 <Button 
                   variant="default" 
@@ -118,7 +122,7 @@ export const Header = () => {
                   onClick={() => navigate("/trial")}
                   className="bg-gradient-primary hover:scale-105 transition-transform shadow-eco"
                 >
-                  Essai gratuit
+                  {t("auth.signup")}
                 </Button>
               </>
             )}
@@ -158,6 +162,9 @@ export const Header = () => {
             
             {/* Mobile Auth */}
             <div className="mt-4 pt-4 border-t border-border space-y-2">
+              <div className="px-4 mb-2">
+                <LanguageSelector />
+              </div>
               {user ? (
                 <>
                   <div className="px-4 py-2 text-sm text-muted-foreground">
@@ -170,7 +177,7 @@ export const Header = () => {
                     className="w-full justify-start"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
-                    Déconnexion
+                    {t("auth.logout")}
                   </Button>
                 </>
               ) : (
@@ -183,7 +190,7 @@ export const Header = () => {
                     }}
                     className="w-full justify-start"
                   >
-                    Connexion
+                    {t("auth.login")}
                   </Button>
                   <Button 
                     variant="default" 
@@ -193,7 +200,7 @@ export const Header = () => {
                     }}
                     className="w-full bg-gradient-primary shadow-eco"
                   >
-                    Essai gratuit
+                    {t("auth.signup")}
                   </Button>
                 </>
               )}

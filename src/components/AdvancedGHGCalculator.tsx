@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Calculator, Download, RotateCcw, Factory, Car, Zap, Trash2, Building, Plane, Ship, TreePine, Flame, Save, X } from "lucide-react";
 import { useEmissions } from '@/contexts/EmissionsContext';
 import { useCarbonReports } from '@/hooks/useCarbonReports';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 
 

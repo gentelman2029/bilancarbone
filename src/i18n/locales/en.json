@@ -1,0 +1,84 @@
+{
+  "navigation": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "data": "Data Collection",
+    "calculator": "Calculator",
+    "actions": "Actions",
+    "contact": "Contact"
+  },
+  "auth": {
+    "login": "Login",
+    "signup": "Sign Up",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "signin": "Sign In",
+    "register": "Create Account",
+    "loading": "Loading...",
+    "signout_success": "Successfully signed out",
+    "signout_error": "Error signing out"
+  },
+  "dashboard": {
+    "title": "Carbon Dashboard",
+    "carbon_footprint": "Carbon Footprint",
+    "total_emissions": "Total Emissions",
+    "carbon_intensity": "Carbon Intensity",
+    "scope_breakdown": "Scope Breakdown",
+    "scope1": "Scope 1",
+    "scope2": "Scope 2",
+    "scope3": "Scope 3",
+    "emissions_chart": "Emissions Chart",
+    "monthly_evolution": "Monthly Evolution",
+    "co2_equivalent": "CO2 equivalent"
+  },
+  "calculator": {
+    "title": "Advanced GHG Calculator",
+    "company_info": "Company Information",
+    "company_name": "Company Name",
+    "sector": "Business Sector",
+    "employees": "Number of Employees",
+    "revenue": "Revenue (€)",
+    "carbon_balance": "Carbon Balance by Scope",
+    "total": "Total",
+    "carbon_intensity_calc": "Carbon Intensity",
+    "calculate": "Calculate"
+  },
+  "actions": {
+    "title": "Carbon Action Plan",
+    "tracking": "Action Tracking",
+    "add_action": "Add Action",
+    "status": "Status",
+    "priority": "Priority",
+    "category": "Category",
+    "impact": "Impact",
+    "cost": "Cost",
+    "deadline": "Deadline"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "close": "Close",
+    "submit": "Submit",
+    "reset": "Reset",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Information"
+  },
+  "language": {
+    "select": "Select Language",
+    "french": "Français",
+    "english": "English",
+    "arabic": "العربية",
+    "german": "Deutsch"
+  }
+}

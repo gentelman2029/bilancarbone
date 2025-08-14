@@ -9,11 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Target, Calendar, TrendingDown, CheckCircle, Clock, AlertCircle, Edit, Eye } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { useActions } from "@/contexts/ActionsContext";
 import { useEmissions } from "@/contexts/EmissionsContext";
 
 export const Actions = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { emissions } = useEmissions();
   const { 
@@ -149,14 +151,14 @@ export const Actions = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Plan d'actions carbone</h1>
-          <p className="text-muted-foreground">Pilotez vos initiatives de réduction d'empreinte</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">{t('actions.title')}</h1>
+          <p className="text-muted-foreground">{t('actions.tracking')}</p>
         </div>
         <Dialog>
           <DialogTrigger asChild>
             <Button variant="eco">
               <Plus className="w-4 h-4 mr-2" />
-              Nouvelle action
+              {t('actions.add_action')}
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">

@@ -6,12 +6,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, Calculator, FileSpreadsheet, Zap, Car, Trash2, Building, Factory, TrendingUp, RotateCcw } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { useEmissions } from "@/contexts/EmissionsContext";
 import { usePersistentForm } from "@/hooks/usePersistentForm";
 import { SectorComparison } from "@/components/SectorComparison";
 
 export const DataCollection = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { emissions, updateEmissions, resetEmissions, hasEmissions, saveToSupabase } = useEmissions();
 
@@ -491,8 +493,8 @@ export const DataCollection = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Collecte de données GES</h1>
-        <p className="text-muted-foreground">Saisissez vos données d'émissions par scope</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">{t('data_collection.title')}</h1>
+        <p className="text-muted-foreground">{t('data_collection.subtitle')}</p>
       </div>
 
       {/* Score global */}

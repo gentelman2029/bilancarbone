@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Leaf, BarChart3, Target, Shield, Users, Zap, TrendingDown, CheckCircle, Building, Eye, Search, FileText, Calculator, DollarSign, ClipboardCheck, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import heroImage from "@/assets/hero-carbon.jpg";
 import teamSustainabilityImage from "@/assets/team-sustainability.jpg";
 import { QuickCarbonCalculator } from "@/components/QuickCarbonCalculator";
@@ -11,26 +12,28 @@ import { CBAMChecker } from "@/components/CBAMChecker";
 import { CSRDChecker } from "@/components/CSRDChecker";
 
 const Index = () => {
+  const { t } = useTranslation();
+  
   const features = [
     {
       icon: BarChart3,
-      title: "Bilan Carbone® automatisé",
-      description: "Calcul précis de vos émissions selon les standards GHG Protocol et ISO 14064"
+      title: t('home.features.bilan_title'),
+      description: t('home.features.bilan_desc')
     },
     {
       icon: Target,
-      title: "Pilotage des actions",
-      description: "Suivez vos initiatives de réduction et mesurez leur impact en temps réel"
+      title: t('home.features.pilotage_title'),
+      description: t('home.features.pilotage_desc')
     },
     {
       icon: Shield,
-      title: "Conformité réglementaire",
-      description: "Rapports exportables conformes aux exigences CSRD et autres réglementations"
+      title: t('home.features.conformite_title'),
+      description: t('home.features.conformite_desc')
     },
     {
       icon: Users,
-      title: "Collaboration équipe",
-      description: "Accès multi-utilisateurs avec droits différenciés pour vos équipes"
+      title: t('home.features.collaboration_title'),
+      description: t('home.features.collaboration_desc')
     }
   ];
 
@@ -50,16 +53,15 @@ const Index = () => {
             <div className="space-y-8 animate-fade-in">
               <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/15">
                 <Leaf className="w-4 h-4 mr-2" />
-                Plateforme SaaS certifiée
+                {t('home.hero.badge')}
               </Badge>
               
               <div className="space-y-6">
                 <h1 className="text-4xl lg:text-6xl font-bold text-foreground leading-tight">
-                  Votre <span className="text-primary">Bilan Carbone®</span> simplifié
+                  {t('home.hero.title')} <span className="text-primary">{t('home.hero.title_highlight')}</span> {t('home.hero.title_end')}
                 </h1>
                 <p className="text-xl text-muted-foreground leading-relaxed">
-                  La plateforme tout-en-un pour calculer, suivre et réduire l'empreinte carbone de votre entreprise. 
-                  Conformité réglementaire garantie.
+                  {t('home.hero.subtitle')}
                 </p>
               </div>
 
@@ -67,13 +69,13 @@ const Index = () => {
                 <Button variant="hero" size="lg" asChild>
                   <Link to="/trial">
                     <BarChart3 className="w-5 h-5 mr-2" />
-                    Essai gratuit 14 jours
+                    {t('home.hero.cta_trial')}
                   </Link>
                 </Button>
                 <Button variant="outline" size="lg" asChild>
                   <Link to="/contact">
                     <Target className="w-5 h-5 mr-2" />
-                    Voir la démo
+                    {t('home.hero.cta_demo')}
                   </Link>
                 </Button>
               </div>
@@ -150,13 +152,13 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
-              Fonctionnalités
+              {t('home.features.badge')}
             </Badge>
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Tout ce dont vous avez besoin pour votre transition carbone
+              {t('home.features.title')}
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Une solution complète pour mesurer, analyser et réduire votre empreinte carbone
+              {t('home.features.subtitle')}
             </p>
           </div>
 
@@ -187,10 +189,10 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Votre Bilan Carbone® en 3 étapes
+              {t('home.process.title')}
             </h2>
             <p className="text-xl text-muted-foreground">
-              Un processus simple et guidé pour obtenir votre certification
+              {t('home.process.subtitle')}
             </p>
           </div>
 
@@ -199,9 +201,9 @@ const Index = () => {
               <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto shadow-glow">
                 <Zap className="w-8 h-8 text-primary-foreground" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground">1. Collectez vos données</h3>
+              <h3 className="text-xl font-semibold text-foreground">{t('home.process.step1_title')}</h3>
               <p className="text-muted-foreground">
-                Import automatique ou saisie manuelle de vos consommations énergétiques
+                {t('home.process.step1_desc')}
               </p>
             </div>
 
@@ -209,9 +211,9 @@ const Index = () => {
               <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto shadow-glow">
                 <BarChart3 className="w-8 h-8 text-primary-foreground" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground">2. Analysez vos émissions</h3>
+              <h3 className="text-xl font-semibold text-foreground">{t('home.process.step2_title')}</h3>
               <p className="text-muted-foreground">
-                Calculs automatiques selon les facteurs d'émission ADEME et GHG Protocol
+                {t('home.process.step2_desc')}
               </p>
             </div>
 
@@ -219,9 +221,9 @@ const Index = () => {
               <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto shadow-glow">
                 <TrendingDown className="w-8 h-8 text-primary-foreground" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground">3. Pilotez vos actions</h3>
+              <h3 className="text-xl font-semibold text-foreground">{t('home.process.step3_title')}</h3>
               <p className="text-muted-foreground">
-                Définissez et suivez votre plan de réduction d'empreinte carbone
+                {t('home.process.step3_desc')}
               </p>
             </div>
           </div>

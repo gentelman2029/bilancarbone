@@ -7,6 +7,52 @@
     "actions": "Actions",
     "contact": "Contact"
   },
+  "home": {
+    "hero": {
+      "badge": "Certified SaaS Platform",
+      "title": "Your",
+      "title_highlight": "Carbon Assessment",
+      "title_end": "simplified",
+      "subtitle": "The all-in-one platform to calculate, track and reduce your company's carbon footprint. Regulatory compliance guaranteed.",
+      "cta_trial": "Free 14-day trial",
+      "cta_demo": "See demo"
+    },
+    "features": {
+      "title": "Everything you need for your carbon transition",
+      "subtitle": "A complete solution to measure, analyze and reduce your carbon footprint",
+      "badge": "Features",
+      "bilan_title": "Automated Carbon Assessment",
+      "bilan_desc": "Accurate calculation of your emissions according to GHG Protocol and ISO 14064 standards",
+      "pilotage_title": "Action management",
+      "pilotage_desc": "Track your reduction initiatives and measure their impact in real-time",
+      "conformite_title": "Regulatory compliance",
+      "conformite_desc": "Exportable reports compliant with CSRD requirements and other regulations",
+      "collaboration_title": "Team collaboration",
+      "collaboration_desc": "Multi-user access with differentiated rights for your teams"
+    },
+    "process": {
+      "title": "Your Carbon Assessment in 3 steps",
+      "subtitle": "A simple and guided process to obtain your certification",
+      "step1_title": "1. Collect your data",
+      "step1_desc": "Automatic import or manual entry of your energy consumption",
+      "step2_title": "2. Analyze your emissions",
+      "step2_desc": "Automatic calculations according to ADEME and GHG Protocol emission factors",
+      "step3_title": "3. Manage your actions",
+      "step3_desc": "Define and track your carbon footprint reduction plan"
+    }
+  },
+  "data_collection": {
+    "title": "GHG Data Collection",
+    "subtitle": "Enter your emissions data by scope",
+    "tabs": {
+      "scope1": "Scope 1 - Direct emissions",
+      "scope2": "Scope 2 - Purchased energy",
+      "scope3": "Scope 3 - Other emissions"
+    },
+    "calculate": "Calculate",
+    "global_score": "Calculate global score",
+    "reset": "Reset"
+  },
   "auth": {
     "login": "Login",
     "signup": "Sign Up",

@@ -7,6 +7,52 @@
     "actions": "Aktionen",
     "contact": "Kontakt"
   },
+  "home": {
+    "hero": {
+      "badge": "Zertifizierte SaaS-Plattform",
+      "title": "Ihre",
+      "title_highlight": "Kohlenstoffbewertung",
+      "title_end": "vereinfacht",
+      "subtitle": "Die All-in-One-Plattform zur Berechnung, Verfolgung und Reduzierung des CO2-Fußabdrucks Ihres Unternehmens. Compliance garantiert.",
+      "cta_trial": "Kostenlose 14-Tage-Testversion",
+      "cta_demo": "Demo ansehen"
+    },
+    "features": {
+      "title": "Alles was Sie für Ihren Kohlenstoffübergang brauchen",
+      "subtitle": "Eine komplette Lösung zur Messung, Analyse und Reduzierung Ihres CO2-Fußabdrucks",
+      "badge": "Funktionen",
+      "bilan_title": "Automatisierte Kohlenstoffbewertung",
+      "bilan_desc": "Präzise Berechnung Ihrer Emissionen nach GHG Protocol und ISO 14064 Standards",
+      "pilotage_title": "Aktionsmanagement",
+      "pilotage_desc": "Verfolgen Sie Ihre Reduktionsinitiativen und messen Sie deren Auswirkungen in Echtzeit",
+      "conformite_title": "Regulatorische Compliance",
+      "conformite_desc": "Exportierbare Berichte konform mit CSRD-Anforderungen und anderen Vorschriften",
+      "collaboration_title": "Team-Zusammenarbeit",
+      "collaboration_desc": "Multi-User-Zugang mit differenzierten Rechten für Ihre Teams"
+    },
+    "process": {
+      "title": "Ihre Kohlenstoffbewertung in 3 Schritten",
+      "subtitle": "Ein einfacher und geführter Prozess zur Zertifizierung",
+      "step1_title": "1. Sammeln Sie Ihre Daten",
+      "step1_desc": "Automatischer Import oder manuelle Eingabe Ihres Energieverbrauchs",
+      "step2_title": "2. Analysieren Sie Ihre Emissionen",
+      "step2_desc": "Automatische Berechnungen nach ADEME und GHG Protocol Emissionsfaktoren",
+      "step3_title": "3. Verwalten Sie Ihre Aktionen",
+      "step3_desc": "Definieren und verfolgen Sie Ihren CO2-Fußabdruck-Reduktionsplan"
+    }
+  },
+  "data_collection": {
+    "title": "THG-Datensammlung",
+    "subtitle": "Geben Sie Ihre Emissionsdaten nach Scope ein",
+    "tabs": {
+      "scope1": "Scope 1 - Direkte Emissionen",
+      "scope2": "Scope 2 - Eingekaufte Energie",
+      "scope3": "Scope 3 - Andere Emissionen"
+    },
+    "calculate": "Berechnen",
+    "global_score": "Gesamtpunktzahl berechnen",
+    "reset": "Zurücksetzen"
+  },
   "auth": {
     "login": "Anmelden",
     "signup": "Registrieren",

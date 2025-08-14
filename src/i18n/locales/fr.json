@@ -7,6 +7,52 @@
     "actions": "Actions",
     "contact": "Contact"
   },
+  "home": {
+    "hero": {
+      "badge": "Plateforme SaaS certifiée",
+      "title": "Votre",
+      "title_highlight": "Bilan Carbone®",
+      "title_end": "simplifié",
+      "subtitle": "La plateforme tout-en-un pour calculer, suivre et réduire l'empreinte carbone de votre entreprise. Conformité réglementaire garantie.",
+      "cta_trial": "Essai gratuit 14 jours",
+      "cta_demo": "Voir la démo"
+    },
+    "features": {
+      "title": "Tout ce dont vous avez besoin pour votre transition carbone",
+      "subtitle": "Une solution complète pour mesurer, analyser et réduire votre empreinte carbone",
+      "badge": "Fonctionnalités",
+      "bilan_title": "Bilan Carbone® automatisé",
+      "bilan_desc": "Calcul précis de vos émissions selon les standards GHG Protocol et ISO 14064",
+      "pilotage_title": "Pilotage des actions",
+      "pilotage_desc": "Suivez vos initiatives de réduction et mesurez leur impact en temps réel",
+      "conformite_title": "Conformité réglementaire",
+      "conformite_desc": "Rapports exportables conformes aux exigences CSRD et autres réglementations",
+      "collaboration_title": "Collaboration équipe",
+      "collaboration_desc": "Accès multi-utilisateurs avec droits différenciés pour vos équipes"
+    },
+    "process": {
+      "title": "Votre Bilan Carbone® en 3 étapes",
+      "subtitle": "Un processus simple et guidé pour obtenir votre certification",
+      "step1_title": "1. Collectez vos données",
+      "step1_desc": "Import automatique ou saisie manuelle de vos consommations énergétiques",
+      "step2_title": "2. Analysez vos émissions",
+      "step2_desc": "Calculs automatiques selon les facteurs d'émission ADEME et GHG Protocol",
+      "step3_title": "3. Pilotez vos actions",
+      "step3_desc": "Définissez et suivez votre plan de réduction d'empreinte carbone"
+    }
+  },
+  "data_collection": {
+    "title": "Collecte de données GES",
+    "subtitle": "Saisissez vos données d'émissions par scope",
+    "tabs": {
+      "scope1": "Scope 1 - Émissions directes",
+      "scope2": "Scope 2 - Énergie achetée",
+      "scope3": "Scope 3 - Autres émissions"
+    },
+    "calculate": "Calculer",
+    "global_score": "Calculer le score global",
+    "reset": "Réinitialiser"
+  },
   "auth": {
     "login": "Se connecter",
     "signup": "S'inscrire",

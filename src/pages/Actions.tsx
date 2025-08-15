@@ -62,7 +62,7 @@ export const Actions = () => {
       priority: newAction.priority,
       implementationTime: newAction.implementationTime,
       category: newAction.category,
-      status: "planned" as const,
+      status: "todo" as const,
       progress: 0,
       estimatedReduction: 0,
       calculationId: emissions.calculationId
@@ -120,7 +120,7 @@ export const Actions = () => {
         return <CheckCircle className="w-5 h-5 text-primary" />;
       case "in-progress":
         return <Clock className="w-5 h-5 text-accent" />;
-      case "planned":
+      case "todo":
         return <Calendar className="w-5 h-5 text-muted-foreground" />;
       case "delayed":
         return <AlertCircle className="w-5 h-5 text-destructive" />;
@@ -135,8 +135,8 @@ export const Actions = () => {
         return <Badge className="bg-primary/10 text-primary">Terminé</Badge>;
       case "in-progress":
         return <Badge className="bg-accent/10 text-accent">En cours</Badge>;
-      case "planned":
-        return <Badge variant="secondary">Planifié</Badge>;
+      case "todo":
+        return <Badge variant="secondary">À faire</Badge>;
       case "delayed":
         return <Badge variant="destructive">En retard</Badge>;
       default:
@@ -418,7 +418,7 @@ export const Actions = () => {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="planned">Planifié</SelectItem>
+                            <SelectItem value="todo">À faire</SelectItem>
                             <SelectItem value="in-progress">En cours</SelectItem>
                             <SelectItem value="completed">Terminé</SelectItem>
                             <SelectItem value="delayed">En retard</SelectItem>

@@ -50,7 +50,7 @@ export const ActionsSummary = () => {
   const statusData = [
     { name: 'Terminé', value: actions.filter(a => a.status === 'completed').length, color: '#059669' },
     { name: 'En cours', value: actions.filter(a => a.status === 'in-progress').length, color: '#3B82F6' },
-    { name: 'Planifié', value: actions.filter(a => a.status === 'planned').length, color: '#F59E0B' },
+    { name: 'Planifié', value: actions.filter(a => a.status === 'todo').length, color: '#F59E0B' },
     { name: 'En retard', value: actions.filter(a => a.status === 'delayed').length, color: '#EF4444' }
   ].filter(status => status.value > 0);
 

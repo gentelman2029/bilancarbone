@@ -92,14 +92,52 @@
   },
   "actions": {
     "title": "Plan d'Actions Carbone",
-    "tracking": "Suivi des Actions",
-    "add_action": "Ajouter une action",
-    "status": "Statut",
-    "priority": "Priorité",
-    "category": "Catégorie",
-    "impact": "Impact",
-    "cost": "Coût",
-    "deadline": "Échéance"
+    "tracking": "Suivi et gestion de vos actions de réduction",
+    "add_action": "Nouvelle action",
+    "suggested_actions": "Actions suggérées",
+    "generate_suggestions": "Générer des suggestions",
+    "status": {
+      "todo": "À faire",
+      "in_progress": "En cours", 
+      "completed": "Terminée",
+      "delayed": "En retard"
+    },
+    "priority": {
+      "high": "Haute",
+      "medium": "Moyenne",
+      "low": "Faible"
+    },
+    "scope": {
+      "transverse": "Transverse"
+    },
+    "filters": {
+      "search_placeholder": "Rechercher une action...",
+      "filters": "Filtres",
+      "actions": "actions",
+      "clear": "Effacer",
+      "sort_by": "Trier par",
+      "asc": "Croissant",
+      "desc": "Décroissant",
+      "status": "Statut",
+      "scope": "Scope",
+      "priority": "Priorité"
+    },
+    "sort": {
+      "deadline": "Échéance",
+      "impact": "Impact",
+      "cost": "Coût",
+      "priority": "Priorité",
+      "status": "Statut",
+      "title": "Titre"
+    },
+    "export": {
+      "pdf": "Exporter PDF",
+      "excel": "Exporter Excel"
+    },
+    "form": {
+      "responsible": "Responsable",
+      "responsible_placeholder": "Nom du responsable"
+    }
   },
   "common": {
     "save": "Enregistrer",

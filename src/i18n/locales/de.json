@@ -92,14 +92,52 @@
   },
   "actions": {
     "title": "Kohlenstoff-Aktionsplan",
-    "tracking": "Aktionsverfolgung",
-    "add_action": "Aktion hinzufügen",
-    "status": "Status",
-    "priority": "Priorität",
-    "category": "Kategorie",
-    "impact": "Auswirkung",
-    "cost": "Kosten",
-    "deadline": "Fristende"
+    "tracking": "Verfolgen und verwalten Sie Ihre Reduktionsaktionen",
+    "add_action": "Neue Aktion",
+    "suggested_actions": "Vorgeschlagene Aktionen",
+    "generate_suggestions": "Vorschläge erzeugen",
+    "status": {
+      "todo": "Zu erledigen",
+      "in_progress": "In Arbeit",
+      "completed": "Abgeschlossen",
+      "delayed": "Verspätet"
+    },
+    "priority": {
+      "high": "Hoch",
+      "medium": "Mittel",
+      "low": "Niedrig"
+    },
+    "scope": {
+      "transverse": "Bereichsübergreifend"
+    },
+    "filters": {
+      "search_placeholder": "Aktion suchen...",
+      "filters": "Filter",
+      "actions": "Aktionen",
+      "clear": "Löschen",
+      "sort_by": "Sortieren nach",
+      "asc": "Aufsteigend",
+      "desc": "Absteigend",
+      "status": "Status",
+      "scope": "Scope",
+      "priority": "Priorität"
+    },
+    "sort": {
+      "deadline": "Frist",
+      "impact": "Auswirkung",
+      "cost": "Kosten",
+      "priority": "Priorität",
+      "status": "Status",
+      "title": "Titel"
+    },
+    "export": {
+      "pdf": "PDF exportieren",
+      "excel": "Excel exportieren"
+    },
+    "form": {
+      "responsible": "Verantwortlich",
+      "responsible_placeholder": "Verantwortliche Person"
+    }
   },
   "common": {
     "save": "Speichern",

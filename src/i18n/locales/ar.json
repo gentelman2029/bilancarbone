@@ -92,14 +92,52 @@
   },
   "actions": {
     "title": "خطة العمل الكربونية",
-    "tracking": "تتبع الإجراءات",
-    "add_action": "إضافة إجراء",
-    "status": "الحالة",
-    "priority": "الأولوية",
-    "category": "الفئة",
-    "impact": "التأثير",
-    "cost": "التكلفة",
-    "deadline": "الموعد النهائي"
+    "tracking": "تتبع وإدارة إجراءات التخفيض",
+    "add_action": "إجراء جديد",
+    "suggested_actions": "إجراءات مقترحة",
+    "generate_suggestions": "توليد اقتراحات",
+    "status": {
+      "todo": "للإنجاز",
+      "in_progress": "جارٍ التنفيذ",
+      "completed": "منتهية",
+      "delayed": "متأخرة"
+    },
+    "priority": {
+      "high": "عالية",
+      "medium": "متوسطة",
+      "low": "منخفضة"
+    },
+    "scope": {
+      "transverse": "شامل"
+    },
+    "filters": {
+      "search_placeholder": "ابحث عن إجراء...",
+      "filters": "فلاتر",
+      "actions": "إجراءات",
+      "clear": "مسح",
+      "sort_by": "ترتيب حسب",
+      "asc": "تصاعدي",
+      "desc": "تنازلي",
+      "status": "الحالة",
+      "scope": "النطاق",
+      "priority": "الأولوية"
+    },
+    "sort": {
+      "deadline": "الموعد النهائي",
+      "impact": "التأثير",
+      "cost": "التكلفة",
+      "priority": "الأولوية",
+      "status": "الحالة",
+      "title": "العنوان"
+    },
+    "export": {
+      "pdf": "تصدير PDF",
+      "excel": "تصدير Excel"
+    },
+    "form": {
+      "responsible": "المسؤول",
+      "responsible_placeholder": "اسم المسؤول"
+    }
   },
   "common": {
     "save": "حفظ",

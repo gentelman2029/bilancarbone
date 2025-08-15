@@ -12,7 +12,7 @@ export const CarbonActionsTracking = () => {
 
   // Trier les actions par priorité et statut
   const priorityOrder = { 'high': 0, 'medium': 1, 'low': 2 };
-  const statusOrder = { 'delayed': 0, 'in-progress': 1, 'planned': 2, 'completed': 3 };
+  const statusOrder = { 'delayed': 0, 'in-progress': 1, 'todo': 2, 'completed': 3 };
   
   const sortedActions = [...actions].sort((a, b) => {
     if (a.status === 'delayed' && b.status !== 'delayed') return -1;
@@ -31,8 +31,8 @@ export const CarbonActionsTracking = () => {
         return <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">Terminée</Badge>;
       case 'in-progress':
         return <Badge variant="default" className="bg-blue-100 text-blue-800 hover:bg-blue-100">En cours</Badge>;
-      case 'planned':
-        return <Badge variant="outline">Planifiée</Badge>;
+      case 'todo':
+        return <Badge variant="outline">À faire</Badge>;
       case 'delayed':
         return <Badge variant="destructive">En retard</Badge>;
       default:

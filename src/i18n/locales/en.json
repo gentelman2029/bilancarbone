@@ -92,14 +92,52 @@
   },
   "actions": {
     "title": "Carbon Action Plan",
-    "tracking": "Action Tracking",
-    "add_action": "Add Action",
-    "status": "Status",
-    "priority": "Priority",
-    "category": "Category",
-    "impact": "Impact",
-    "cost": "Cost",
-    "deadline": "Deadline"
+    "tracking": "Track and manage your reduction actions",
+    "add_action": "New action",
+    "suggested_actions": "Suggested actions",
+    "generate_suggestions": "Generate suggestions",
+    "status": {
+      "todo": "To do",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "delayed": "Delayed"
+    },
+    "priority": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "scope": {
+      "transverse": "Cross-functional"
+    },
+    "filters": {
+      "search_placeholder": "Search an action...",
+      "filters": "Filters",
+      "actions": "actions",
+      "clear": "Clear",
+      "sort_by": "Sort by",
+      "asc": "Ascending",
+      "desc": "Descending",
+      "status": "Status",
+      "scope": "Scope",
+      "priority": "Priority"
+    },
+    "sort": {
+      "deadline": "Deadline",
+      "impact": "Impact",
+      "cost": "Cost",
+      "priority": "Priority",
+      "status": "Status",
+      "title": "Title"
+    },
+    "export": {
+      "pdf": "Export PDF",
+      "excel": "Export Excel"
+    },
+    "form": {
+      "responsible": "Owner",
+      "responsible_placeholder": "Action owner"
+    }
   },
   "common": {
     "save": "Save",

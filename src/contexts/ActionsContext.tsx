@@ -158,7 +158,7 @@ export const ActionsProvider: React.FC<{ children: React.ReactNode }> = ({ child
           title: action.title,
           description: action.description,
           impact: Number(action.estimated_reduction_kg || 0) / 1000, // Conversion kg -> tonnes
-          status: action.status as Action['status'],
+          status: ((action.status === 'planned' || action.status === 'proposed') ? 'todo' : action.status) as Action['status'],
           progress: Number(action.progress || 0),
           deadline: action.target_date || '',
           scope: action.scope_type,

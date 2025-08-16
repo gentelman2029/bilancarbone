@@ -18,6 +18,7 @@ import { useCSVExport } from "@/hooks/useCSVExport";
 import { CarbonActionsTracking } from "@/components/CarbonActionsTracking";
 import { CompletePDFReport } from "@/components/CompletePDFReport";
 import { useTranslation } from "react-i18next";
+import { useActions } from "@/contexts/ActionsContext";
 import jsPDF from "jspdf";
 
 export const Dashboard = () => {
@@ -25,7 +26,7 @@ export const Dashboard = () => {
   const { reports, loading, getLatestReport } = useCarbonReports();
   const { toast } = useToast();
   const { t } = useTranslation();
-  const { exportCurrentData, exportSiteData, exportCategoryData } = useCSVExport();
+  const { exportCurrentData, exportSiteData, exportCategoryData, exportActionsData, exportCompleteData } = useCSVExport();
   
   const latestReport = getLatestReport();
   const displayEmissions = latestReport ? {
@@ -641,7 +642,7 @@ export const Dashboard = () => {
               <p className="text-sm text-muted-foreground">Visualisation Power BI des émissions GES - Conforme Base Carbone® ADEME</p>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm" onClick={exportCompleteCSV}>
+              <Button variant="outline" size="sm" onClick={() => exportCompleteData()}>
                 <Download className="w-4 h-4 mr-2" />
                 Export CSV Complet
               </Button>
@@ -663,11 +664,7 @@ export const Dashboard = () => {
                   leaders: sectorBenchmark[2]?.value || 0,
                   company: sectorBenchmark[0]?.value || 0
                 }}
-              />
-              <Button variant="outline" size="sm" onClick={handleShare}>
-                <Share className="w-4 h-4 mr-2" />
-                Partager
-              </Button>
+               />
             </div>
           </div>
         </div>

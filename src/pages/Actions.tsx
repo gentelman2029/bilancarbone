@@ -492,71 +492,139 @@ export const Actions = () => {
                     <DialogTitle>Modifier l'action</DialogTitle>
                   </DialogHeader>
                   {editingAction && (
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="edit-title">Titre</Label>
-                        <Input
-                          id="edit-title"
-                          value={editingAction.title}
-                          onChange={(e) => setEditingAction({...editingAction, title: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="edit-description">Description</Label>
-                        <Textarea
-                          id="edit-description"
-                          value={editingAction.description}
-                          onChange={(e) => setEditingAction({...editingAction, description: e.target.value})}
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="edit-impact">Impact (tCO2e)</Label>
-                          <Input
-                            id="edit-impact"
-                            type="number"
-                            value={editingAction.impact}
-                            onChange={(e) => setEditingAction({...editingAction, impact: parseFloat(e.target.value)})}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="edit-progress">Progression (%)</Label>
-                          <Input
-                            id="edit-progress"
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={editingAction.progress}
-                            onChange={(e) => setEditingAction({...editingAction, progress: parseInt(e.target.value)})}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="edit-status">Statut</Label>
-                        <Select
-                          value={editingAction.status}
-                          onValueChange={(value) => setEditingAction({...editingAction, status: value})}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="todo">{t('actions.status.todo')}</SelectItem>
-                            <SelectItem value="in-progress">{t('actions.status.in_progress')}</SelectItem>
-                            <SelectItem value="completed">{t('actions.status.completed')}</SelectItem>
-                            <SelectItem value="delayed">{t('actions.status.delayed')}</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="edit-responsible">{t('actions.form.responsible')}</Label>
-                        <Input
-                          id="edit-responsible"
-                          value={editingAction.responsible || ''}
-                          onChange={(e) => setEditingAction({...editingAction, responsible: e.target.value})}
-                          placeholder={t('actions.form.responsible_placeholder')}
-                        />
-                      </div>
+                     <div className="space-y-4">
+                       <div>
+                         <Label htmlFor="edit-title">Titre</Label>
+                         <Input
+                           id="edit-title"
+                           value={editingAction.title}
+                           onChange={(e) => setEditingAction({...editingAction, title: e.target.value})}
+                         />
+                       </div>
+                       <div>
+                         <Label htmlFor="edit-description">Description</Label>
+                         <Textarea
+                           id="edit-description"
+                           value={editingAction.description}
+                           onChange={(e) => setEditingAction({...editingAction, description: e.target.value})}
+                         />
+                       </div>
+                       <div className="grid grid-cols-2 gap-4">
+                         <div>
+                           <Label htmlFor="edit-impact">Impact (tCO2e)</Label>
+                           <Input
+                             id="edit-impact"
+                             type="number"
+                             step="0.1"
+                             value={editingAction.impact}
+                             onChange={(e) => setEditingAction({...editingAction, impact: parseFloat(e.target.value) || 0})}
+                           />
+                         </div>
+                         <div>
+                           <Label htmlFor="edit-cost">Coût (€)</Label>
+                           <Input
+                             id="edit-cost"
+                             type="number"
+                             value={editingAction.cost}
+                             onChange={(e) => setEditingAction({...editingAction, cost: parseFloat(e.target.value) || 0})}
+                             placeholder="Ex: 10000"
+                           />
+                         </div>
+                       </div>
+                       <div className="grid grid-cols-2 gap-4">
+                         <div>
+                           <Label htmlFor="edit-scope">Scope</Label>
+                           <Select
+                             value={editingAction.scope}
+                             onValueChange={(value) => setEditingAction({...editingAction, scope: value})}
+                           >
+                             <SelectTrigger>
+                               <SelectValue />
+                             </SelectTrigger>
+                             <SelectContent>
+                               <SelectItem value="Scope 1">Scope 1</SelectItem>
+                               <SelectItem value="Scope 2">Scope 2</SelectItem>
+                               <SelectItem value="Scope 3">Scope 3</SelectItem>
+                               <SelectItem value="Transverse">{t('actions.scope.transverse')}</SelectItem>
+                             </SelectContent>
+                           </Select>
+                         </div>
+                         <div>
+                           <Label htmlFor="edit-priority">Priorité</Label>
+                           <Select
+                             value={editingAction.priority}
+                             onValueChange={(value) => setEditingAction({...editingAction, priority: value})}
+                           >
+                             <SelectTrigger>
+                               <SelectValue />
+                             </SelectTrigger>
+                             <SelectContent>
+                               <SelectItem value="low">{t('actions.priority.low')}</SelectItem>
+                               <SelectItem value="medium">{t('actions.priority.medium')}</SelectItem>
+                               <SelectItem value="high">{t('actions.priority.high')}</SelectItem>
+                             </SelectContent>
+                           </Select>
+                         </div>
+                       </div>
+                       <div className="grid grid-cols-2 gap-4">
+                         <div>
+                           <Label htmlFor="edit-deadline">Échéance</Label>
+                           <Input
+                             id="edit-deadline"
+                             type="date"
+                             value={editingAction.deadline}
+                             onChange={(e) => setEditingAction({...editingAction, deadline: e.target.value})}
+                           />
+                         </div>
+                         <div>
+                           <Label htmlFor="edit-progress">Progression (%)</Label>
+                           <Input
+                             id="edit-progress"
+                             type="number"
+                             min="0"
+                             max="100"
+                             value={editingAction.progress}
+                             onChange={(e) => setEditingAction({...editingAction, progress: parseInt(e.target.value) || 0})}
+                           />
+                         </div>
+                       </div>
+                       <div>
+                         <Label htmlFor="edit-status">Statut</Label>
+                         <Select
+                           value={editingAction.status}
+                           onValueChange={(value) => setEditingAction({...editingAction, status: value})}
+                         >
+                           <SelectTrigger>
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="todo">{t('actions.status.todo')}</SelectItem>
+                             <SelectItem value="in-progress">{t('actions.status.in_progress')}</SelectItem>
+                             <SelectItem value="completed">{t('actions.status.completed')}</SelectItem>
+                             <SelectItem value="delayed">{t('actions.status.delayed')}</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+                       <div className="grid grid-cols-2 gap-4">
+                         <div>
+                           <Label htmlFor="edit-responsible">{t('actions.form.responsible')}</Label>
+                           <Input
+                             id="edit-responsible"
+                             value={editingAction.responsible || ''}
+                             onChange={(e) => setEditingAction({...editingAction, responsible: e.target.value})}
+                             placeholder={t('actions.form.responsible_placeholder')}
+                           />
+                         </div>
+                         <div>
+                           <Label htmlFor="edit-category">Catégorie</Label>
+                           <Input
+                             id="edit-category"
+                             value={editingAction.category || ''}
+                             onChange={(e) => setEditingAction({...editingAction, category: e.target.value})}
+                             placeholder="Ex: Énergie, Transport, etc."
+                           />
+                         </div>
+                       </div>
                       <Button onClick={handleUpdateAction} className="w-full">
                         Mettre à jour
                       </Button>

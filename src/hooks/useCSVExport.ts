@@ -138,8 +138,8 @@ export const useCSVExport = () => {
     const chiffreAffaires = emissions.chiffreAffaires || 1500000; // 1.5M€
     const emissionsAnneePrecedente = emissions.emissionsAnneePrecedente || (emissions.total / 1000) * 1.12; // +12% par défaut
     const currentEmissions = emissions.total / 1000;
-    const intensiteCarbone = chiffreAffaires > 0 ? (currentEmissions / (chiffreAffaires / 1000000)) : 91.4; // par M€
-    const emissionsEmploye = nombrePersonnels > 0 ? (currentEmissions / nombrePersonnels) : 9.13;
+    const intensiteCarbone = chiffreAffaires > 0 ? (currentEmissions / (chiffreAffaires / 1000000)) : 91.4; // tCO₂e par M€
+    const emissionsEmploye = nombrePersonnels > 0 ? (currentEmissions / nombrePersonnels) : 9.13; // tCO₂e par employé
     const reductionAnnuelle = emissionsAnneePrecedente > 0 ? 
       ((emissionsAnneePrecedente - currentEmissions) / emissionsAnneePrecedente) * 100 : 8.2;
 
@@ -256,7 +256,7 @@ export const useCSVExport = () => {
     // === RÉPARTITION PAR POSTE ===
     repartitionPostes.forEach(poste => {
       exportData.push({
-        'SECTION': 'REPARTITION PAR POSTE D\'EMISSION',
+        'SECTION': 'REPARTITION PAR POSTE',
         'Indicateur': poste.nom,
         'Valeur': poste.valeur.toFixed(2),
         'Unité': poste.unite,
@@ -264,6 +264,52 @@ export const useCSVExport = () => {
         'Statut': poste.pourcentage > 50 ? 'Majeur' : poste.pourcentage > 20 ? 'Significatif' : 'Mineur',
         'Commentaire': `Contribution: ${poste.pourcentage.toFixed(1)}%`
       });
+    });
+
+    // === BENCHMARK SECTORIEL ===
+    exportData.push({
+      'SECTION': 'BENCHMARK SECTORIEL',
+      'Indicateur': 'Votre entreprise',
+      'Valeur': emissionsEmploye.toFixed(2),
+      'Unité': 'tCO₂e/pers',
+      'Variation vs N-1': '',
+      'Statut': '60e',
+      'Commentaire': 'Performance au-dessus de la moyenne'
+    });
+
+    exportData.push({
+      'SECTION': 'BENCHMARK SECTORIEL',
+      'Indicateur': 'Moyenne sectorielle',
+      'Valeur': '200',
+      'Unité': 'tCO₂e/pers',
+      'Variation vs N-1': '',
+      'Statut': '',
+      'Commentaire': ''
+    });
+
+    exportData.push({
+      'SECTION': 'BENCHMARK SECTORIEL',
+      'Indicateur': 'Leaders du secteur',
+      'Valeur': '120',
+      'Unité': 'tCO₂e/pers',
+      'Variation vs N-1': '',
+      'Statut': '',
+      'Commentaire': ''
+    });
+
+    // === TRAJECTOIRE SBTi ===
+    const objectifSBTI = emissions.objectifSBTI || 82;
+    const conformitePourcentage = objectifSBTI > 0 ? 
+      ((objectifSBTI - currentEmissions) / objectifSBTI * 100) : -5.2;
+
+    exportData.push({
+      'SECTION': 'TRAJECTOIRE SBTi',
+      'Indicateur': 'Conformité à Objectif SBTi',
+      'Valeur': objectifSBTI.toFixed(0),
+      'Unité': '%',
+      'Variation vs N-1': `${conformitePourcentage.toFixed(1)}%`,
+      'Statut': conformitePourcentage >= 0 ? 'En avance' : 'En retard',
+      'Commentaire': `Objectif: 80% réduction nécessaire: ${Math.max(0, currentEmissions - objectifSBTI).toFixed(2)} tCO₂e`
     });
 
     // === PLAN D'ACTIONS - RÉSUMÉ ===
@@ -336,7 +382,7 @@ export const useCSVExport = () => {
       const roi = action.cost && action.cost > 0 ? ((action.impact || 0) / action.cost * 1000).toFixed(1) : 'N/A';
       
       exportData.push({
-        'SECTION': 'PLAN D\'ACTIONS - TOP 10',
+        'SECTION': 'PLAN D\'ACTIONS - DETAIL',
         'Indicateur': `#${index + 1} - ${action.title}`,
         'Valeur': (action.impact || 0).toFixed(1),
         'Unité': 'tCO₂e',
@@ -344,56 +390,6 @@ export const useCSVExport = () => {
         'Statut': statusText,
         'Commentaire': `Échéance: ${deadline}, Responsable: ${responsible}, ROI: ${roi} tCO₂e/k€`
       });
-    });
-
-    // === BENCHMARK SECTORIEL ===
-    const votrEntreprise = currentEmissions;
-    const moyenneSectorielle = 200; // Valeur exemple
-    const leadersSecteur = 120; // Valeur exemple
-
-    exportData.push({
-      'SECTION': 'BENCHMARK SECTORIEL',
-      'Indicateur': 'Votre entreprise',
-      'Valeur': votrEntreprise.toFixed(2),
-      'Unité': 'tCO₂e/pers',
-      'Variation vs N-1': '',
-      'Statut': '60e',
-      'Commentaire': 'Performance au-dessus de la moyenne'
-    });
-
-    exportData.push({
-      'SECTION': 'BENCHMARK SECTORIEL',
-      'Indicateur': 'Moyenne sectorielle',
-      'Valeur': moyenneSectorielle.toFixed(0),
-      'Unité': 'tCO₂e/pers',
-      'Variation vs N-1': '',
-      'Statut': '',
-      'Commentaire': ''
-    });
-
-    exportData.push({
-      'SECTION': 'BENCHMARK SECTORIEL',
-      'Indicateur': 'Leaders du secteur',
-      'Valeur': leadersSecteur.toFixed(0),
-      'Unité': 'tCO₂e/pers',
-      'Variation vs N-1': '',
-      'Statut': '',
-      'Commentaire': ''
-    });
-
-    // === TRAJECTOIRE SBTi ===
-    const objectifSBTI = emissions.objectifSBTI || 82;
-    const conformitePourcentage = objectifSBTI > 0 ? 
-      ((objectifSBTI - currentEmissions) / objectifSBTI * 100) : -5.2;
-
-    exportData.push({
-      'SECTION': 'TRAJECTOIRE SBTi',
-      'Indicateur': 'Conformité à Objectif SBTi',
-      'Valeur': objectifSBTI.toFixed(0),
-      'Unité': '%',
-      'Variation vs N-1': `${conformitePourcentage.toFixed(1)}%`,
-      'Statut': conformitePourcentage >= 0 ? 'En avance' : 'En retard',
-      'Commentaire': `Objectif: 80% réduction nécessaire: ${Math.max(0, currentEmissions - objectifSBTI).toFixed(2)} tCO₂e`
     });
 
     // === MÉTADONNÉES ===

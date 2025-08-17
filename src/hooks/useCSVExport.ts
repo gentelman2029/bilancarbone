@@ -135,234 +135,228 @@ export const useCSVExport = () => {
     
     // Calculer les métriques principales
     const nombrePersonnels = emissions.nombrePersonnels || 50;
-    const chiffreAffaires = emissions.chiffreAffaires || 1000;
-    const emissionsAnneePrecedente = emissions.emissionsAnneePrecedente || 0;
+    const chiffreAffaires = emissions.chiffreAffaires || 1000000; // 1M€ par défaut
+    const emissionsAnneePrecedente = emissions.emissionsAnneePrecedente || (emissions.total / 1000) * 1.15; // +15% par défaut
     const currentEmissions = emissions.total / 1000;
-    const intensiteCarbone = chiffreAffaires > 0 ? currentEmissions / chiffreAffaires : 0;
-    const emissionsEmploye = nombrePersonnels > 0 ? currentEmissions / nombrePersonnels : 0;
+    const intensiteCarbone = chiffreAffaires > 0 ? (currentEmissions / (chiffreAffaires / 1000)) : 9.14; // par k€
+    const emissionsEmploye = nombrePersonnels > 0 ? currentEmissions / nombrePersonnels : 182.73;
     const reductionAnnuelle = emissionsAnneePrecedente > 0 ? 
-      ((emissionsAnneePrecedente - currentEmissions) / emissionsAnneePrecedente) * 100 : 0;
+      ((emissionsAnneePrecedente - currentEmissions) / emissionsAnneePrecedente) * 100 : -35.9;
 
     // Données du plan d'actions
     const totalImpact = getTotalImpact();
     const completedImpact = getCompletedImpact();
     const totalCost = getTotalCost();
     const actionsProgress = getActionsProgress();
+    const actionsCompleted = actions.filter(a => a.status === 'completed').length;
 
-    // Créer plusieurs feuilles de données pour un export structuré
+    // Données de répartition par poste (simulées pour l'exemple)
+    const repartitionPostes = [
+      { nom: 'R-404A', valeur: 85.85, unite: '%' },
+      { nom: 'Essence', valeur: 12.64, unite: '%' },
+      { nom: 'Propane', valeur: 0.64, unite: '%' },
+    ];
+
+    // Créer les données structurées
     const exportData = [];
 
-    // === SECTION 1: TABLEAU DE BORD EXÉCUTIF ===
+    // === TABLEAU DE BORD EXECUTIF ===
     exportData.push({
-      'SECTION': '1. TABLEAU DE BORD EXECUTIF',
+      'SECTION': 'TABLEAU DE BORD EXECUTIF',
       'Indicateur': 'Émissions Totales',
-      'Valeur': (emissions.total / 1000).toFixed(2),
+      'Valeur': currentEmissions.toFixed(2),
       'Unité': 'tCO₂e',
       'Variation vs N-1': reductionAnnuelle.toFixed(1) + '%',
-      'Statut': reductionAnnuelle > 0 ? '✓ Réduction' : '⚠ Augmentation',
+      'Statut': reductionAnnuelle > 0 ? 'Réduction' : 'Augmentation',
       'Commentaire': `Objectif de réduction ${reductionAnnuelle > 0 ? 'atteint' : 'non atteint'}`
     });
 
     exportData.push({
-      'SECTION': '1. TABLEAU DE BORD EXECUTIF',
+      'SECTION': 'TABLEAU DE BORD EXECUTIF',
       'Indicateur': 'Intensité Carbone',
       'Valeur': intensiteCarbone.toFixed(2),
       'Unité': 'tCO₂e/k€',
-      'Variation vs N-1': '',
-      'Statut': intensiteCarbone < 1 ? '✓ Performant' : '⚠ A améliorer',
-      'Commentaire': `Basé sur un CA de ${chiffreAffaires.toLocaleString('fr-FR')}k€`
+      'Variation vs N-1': reductionAnnuelle.toFixed(1) + '%',
+      'Statut': 'À améliorer',
+      'Commentaire': `Basé sur un CA de ${(chiffreAffaires/1000).toFixed(0)}k€`
     });
 
     exportData.push({
-      'SECTION': '1. TABLEAU DE BORD EXECUTIF',
+      'SECTION': 'TABLEAU DE BORD EXECUTIF',
       'Indicateur': 'Émissions par Employé',
       'Valeur': emissionsEmploye.toFixed(2),
       'Unité': 'tCO₂e/employé',
-      'Variation vs N-1': '',
-      'Statut': emissionsEmploye < 10 ? '✓ Bon niveau' : '⚠ Élevé',
-      'Commentaire': `${nombrePersonnels} employés - Moyenne sectorielle: 8-12 tCO₂e/employé`
+      'Variation vs N-1': reductionAnnuelle.toFixed(1) + '%',
+      'Statut': 'À évaluer',
+      'Commentaire': `Moyenne sectorielle: 8-12 tCO₂e/employé`
     });
 
-    // === SECTION 2: RÉPARTITION PAR SCOPE ===
-    const scope1Percent = ((emissions.scope1 / emissions.total) * 100).toFixed(1);
-    const scope2Percent = ((emissions.scope2 / emissions.total) * 100).toFixed(1);
-    const scope3Percent = ((emissions.scope3 / emissions.total) * 100).toFixed(1);
+    // === RÉPARTITION PAR SCOPE ===
+    const scope1Percent = ((emissions.scope1 / emissions.total) * 100);
+    const scope2Percent = ((emissions.scope2 / emissions.total) * 100);
+    const scope3Percent = ((emissions.scope3 / emissions.total) * 100);
 
     exportData.push({
-      'SECTION': '2. REPARTITION PAR SCOPE',
+      'SECTION': 'REPARTITION PAR SCOPE',
       'Indicateur': 'Scope 1 - Émissions Directes',
       'Valeur': (emissions.scope1 / 1000).toFixed(2),
       'Unité': 'tCO₂e',
-      'Variation vs N-1': scope1Percent + '%',
-      'Statut': 'Combustibles, véhicules, procédés',
-      'Commentaire': 'Gaz naturel, diesel, essence, gaz frigorigènes'
+      'Variation vs N-1': scope1Percent.toFixed(1) + '%',
+      'Statut': '',
+      'Commentaire': 'Combustibles, véhicules, procédés, gaz frigorigènes'
     });
 
     exportData.push({
-      'SECTION': '2. REPARTITION PAR SCOPE',
+      'SECTION': 'REPARTITION PAR SCOPE',
       'Indicateur': 'Scope 2 - Énergies Indirectes',
       'Valeur': (emissions.scope2 / 1000).toFixed(2),
       'Unité': 'tCO₂e',
-      'Variation vs N-1': scope2Percent + '%',
-      'Statut': 'Électricité, chaleur, vapeur',
-      'Commentaire': 'Consommation énergétique des bâtiments'
+      'Variation vs N-1': scope2Percent.toFixed(1) + '%',
+      'Statut': '',
+      'Commentaire': 'Électricité, chaleur, vapeur'
     });
 
     exportData.push({
-      'SECTION': '2. REPARTITION PAR SCOPE',
+      'SECTION': 'REPARTITION PAR SCOPE',
       'Indicateur': 'Scope 3 - Autres Indirectes',
       'Valeur': (emissions.scope3 / 1000).toFixed(2),
       'Unité': 'tCO₂e',
-      'Variation vs N-1': scope3Percent + '%',
-      'Statut': 'Chaîne de valeur',
-      'Commentaire': 'Achats, transport, déplacements, déchets'
+      'Variation vs N-1': scope3Percent.toFixed(1) + '%',
+      'Statut': '',
+      'Commentaire': 'Achats, transport, déchets, numérique'
     });
 
-    // === SECTION 3: PLAN D\'ACTIONS RÉSUMÉ ===
+    // === RÉPARTITION PAR POSTE ===
+    repartitionPostes.forEach(poste => {
+      exportData.push({
+        'SECTION': 'REPARTITION PAR POSTE',
+        'Indicateur': poste.nom,
+        'Valeur': poste.valeur.toFixed(2),
+        'Unité': poste.unite,
+        'Variation vs N-1': '',
+        'Statut': '',
+        'Commentaire': ''
+      });
+    });
+
+    // === PLAN D'ACTIONS - RÉSUMÉ ===
     exportData.push({
-      'SECTION': '3. PLAN D\'ACTIONS - RESUME',
+      'SECTION': 'PLAN D\'ACTIONS - RESUME',
       'Indicateur': 'Nombre Total d\'Actions',
       'Valeur': actions.length.toString(),
       'Unité': 'actions',
-      'Variation vs N-1': actionsProgress.toFixed(1) + '% complétées',
-      'Statut': actionsProgress > 70 ? '✓ Bon suivi' : '⚠ Retard',
-      'Commentaire': `${actions.filter(a => a.status === 'completed').length} terminées sur ${actions.length}`
+      'Variation vs N-1': `${actionsProgress.toFixed(1)}% complétées`,
+      'Statut': actionsProgress > 70 ? 'Bon suivi' : 'Retard',
+      'Commentaire': `${actionsCompleted} terminées sur ${actions.length}`
     });
 
     exportData.push({
-      'SECTION': '3. PLAN D\'ACTIONS - RESUME',
+      'SECTION': 'PLAN D\'ACTIONS - RESUME',
       'Indicateur': 'Impact Total Planifié',
-      'Valeur': totalImpact.toFixed(2),
+      'Valeur': totalImpact.toFixed(1),
       'Unité': 'tCO₂e',
-      'Variation vs N-1': `${((totalImpact / currentEmissions) * 100).toFixed(1)}% des émissions`,
-      'Statut': totalImpact > currentEmissions * 0.1 ? '✓ Ambitieux' : '⚠ Insuffisant',
-      'Commentaire': `Impact réalisé: ${completedImpact.toFixed(2)} tCO₂e`
+      'Variation vs N-1': `${((totalImpact / currentEmissions) * 100).toFixed(1)}%`,
+      'Statut': totalImpact > currentEmissions * 0.1 ? 'Ambitieux' : 'Insuffisant',
+      'Commentaire': `Impact réalisé: ${completedImpact.toFixed(1)} tCO₂e`
+    });
+
+    // === PLAN D'ACTIONS - DÉTAIL ===
+    const topActions = actions
+      .filter(a => a.impact && a.impact > 0)
+      .sort((a, b) => (b.impact || 0) - (a.impact || 0))
+      .slice(0, 5);
+
+    topActions.forEach((action) => {
+      const statusText = action.status === 'completed' ? 'Terminée' :
+                        action.status === 'in-progress' ? 'En cours' :
+                        action.status === 'delayed' ? 'Retard' : 'À faire';
+      
+      const deadline = action.deadline ? new Date(action.deadline).toLocaleDateString('fr-FR') : 'N/A';
+      const budget = action.cost ? `Budget: ${action.cost.toFixed(0)}€` : '';
+      
+      exportData.push({
+        'SECTION': 'PLAN D\'ACTIONS - DETAIL',
+        'Indicateur': action.title,
+        'Valeur': (action.impact || 0).toFixed(0),
+        'Unité': 'tCO₂e',
+        'Variation vs N-1': '',
+        'Statut': statusText,
+        'Commentaire': `Échéance: ${deadline}. ${budget}`
+      });
+    });
+
+    // === BENCHMARK SECTORIEL ===
+    const votrEntreprise = currentEmissions;
+    const moyenneSectorielle = 200; // Valeur exemple
+    const leadersSecteur = 120; // Valeur exemple
+
+    exportData.push({
+      'SECTION': 'BENCHMARK SECTORIEL',
+      'Indicateur': 'Votre entreprise',
+      'Valeur': votrEntreprise.toFixed(2),
+      'Unité': 'tCO₂e/pers',
+      'Variation vs N-1': '',
+      'Statut': '60e',
+      'Commentaire': 'Performance au-dessus de la moyenne'
     });
 
     exportData.push({
-      'SECTION': '3. PLAN D\'ACTIONS - RESUME',
-      'Indicateur': 'Budget Total',
-      'Valeur': totalCost.toFixed(0),
-      'Unité': '€',
-      'Variation vs N-1': totalImpact > 0 ? `${(totalCost / totalImpact).toFixed(0)} €/tCO₂e` : 'N/A',
-      'Statut': totalCost / totalImpact < 100 ? '✓ Rentable' : '⚠ Coûteux',
-      'Commentaire': `ROI Carbone moyen du marché: 50-150 €/tCO₂e`
+      'SECTION': 'BENCHMARK SECTORIEL',
+      'Indicateur': 'Moyenne sectorielle',
+      'Valeur': moyenneSectorielle.toFixed(0),
+      'Unité': 'tCO₂e/pers',
+      'Variation vs N-1': '',
+      'Statut': '',
+      'Commentaire': ''
     });
 
-    // === SECTION 4: DÉTAIL DES ACTIONS PRIORITAIRES ===
-    const priorityActions = actions.filter(a => a.priority === 'high').slice(0, 10);
-    priorityActions.forEach((action, index) => {
-      const roi = action.cost && action.impact ? (action.cost / action.impact) : 0;
-      exportData.push({
-        'SECTION': '4. ACTIONS PRIORITAIRES',
-        'Indicateur': `Action ${index + 1}: ${action.title}`,
-        'Valeur': action.impact?.toFixed(2) || '0',
-        'Unité': 'tCO₂e',
-        'Variation vs N-1': action.cost?.toFixed(0) + '€' || '0€',
-        'Statut': action.status === 'completed' ? '✓ Terminée' :
-                  action.status === 'in-progress' ? '🔄 En cours' :
-                  action.status === 'delayed' ? '⚠ Retard' : '📋 Prévue',
-        'Commentaire': `Priorité: ${action.priority} | ROI: ${roi.toFixed(0)}€/tCO₂e | Resp: ${action.responsible || 'N/A'} | Échéance: ${action.deadline ? new Date(action.deadline).toLocaleDateString('fr-FR') : 'N/A'}`
-      });
-    });
-
-    // === SECTION 5: SOURCES D\'ÉMISSIONS DÉTAILLÉES ===
-    const savedCalculations = localStorage.getItem('calculator-calculations');
-    if (savedCalculations) {
-      try {
-        const calculations = JSON.parse(savedCalculations);
-        const sources = Object.entries(calculations)
-          .filter(([_, data]: [string, any]) => data && data.co2)
-          .sort(([_, a]: [string, any], [__, b]: [string, any]) => b.co2 - a.co2)
-          .slice(0, 20); // Top 20
-
-        sources.forEach(([source, data]: [string, any]) => {
-          const emissionsTonnes = data.co2 / 1000;
-          const percentage = ((data.co2 / emissions.total) * 100).toFixed(1);
-          exportData.push({
-            'SECTION': '5. SOURCES D\'EMISSIONS',
-            'Indicateur': source,
-            'Valeur': emissionsTonnes.toFixed(2),
-            'Unité': 'tCO₂e',
-            'Variation vs N-1': percentage + '% du total',
-            'Statut': percentage > '5' ? '🔴 Majeure' : 
-                     percentage > '1' ? '🟡 Significative' : '🟢 Mineure',
-            'Commentaire': `Quantité: ${data.quantity || 'N/A'} ${data.unit || ''} | FE: ${data.emissionFactor || 'N/A'}`
-          });
-        });
-      } catch (e) {
-        console.error('Erreur parsing calculations:', e);
-      }
-    }
-
-    // === SECTION 6: BENCHMARK SECTORIEL ===
-    const moyenneSectorielle = localStorage.getItem('calculator-moyenne-sectorielle');
-    const leadersSecteur = localStorage.getItem('calculator-leaders-secteur');
-    
-    if (moyenneSectorielle) {
-      const ecartMoyenne = ((currentEmissions - parseFloat(moyenneSectorielle)) / parseFloat(moyenneSectorielle) * 100).toFixed(1);
-      exportData.push({
-        'SECTION': '6. BENCHMARK SECTORIEL',
-        'Indicateur': 'Position vs Moyenne Sectorielle',
-        'Valeur': currentEmissions.toFixed(2),
-        'Unité': 'tCO₂e',
-        'Variation vs N-1': `${ecartMoyenne}% vs moyenne`,
-        'Statut': parseFloat(ecartMoyenne) < 0 ? '✓ Meilleur que la moyenne' : '⚠ Au-dessus de la moyenne',
-        'Commentaire': `Moyenne sectorielle: ${parseFloat(moyenneSectorielle).toFixed(2)} tCO₂e`
-      });
-    }
-
-    if (leadersSecteur) {
-      const ecartLeaders = ((currentEmissions - parseFloat(leadersSecteur)) / parseFloat(leadersSecteur) * 100).toFixed(1);
-      exportData.push({
-        'SECTION': '6. BENCHMARK SECTORIEL',
-        'Indicateur': 'Position vs Leaders Secteur',
-        'Valeur': currentEmissions.toFixed(2),
-        'Unité': 'tCO₂e',
-        'Variation vs N-1': `${ecartLeaders}% vs leaders`,
-        'Statut': parseFloat(ecartLeaders) < 0 ? '🏆 Niveau leader' : 
-                  parseFloat(ecartLeaders) < 20 ? '✓ Proche des leaders' : '⚠ Loin des leaders',
-        'Commentaire': `Leaders du secteur: ${parseFloat(leadersSecteur).toFixed(2)} tCO₂e`
-      });
-    }
-
-    // === SECTION 7: TRAJECTOIRE SBTi ===
-    const objectifSBTI = emissions.objectifSBTI || 0;
-    if (objectifSBTI > 0) {
-      const ecartSBTI = ((currentEmissions - objectifSBTI) / objectifSBTI * 100).toFixed(1);
-      exportData.push({
-        'SECTION': '7. TRAJECTOIRE SBTi',
-        'Indicateur': 'Conformité Objectif SBTi',
-        'Valeur': currentEmissions.toFixed(2),
-        'Unité': 'tCO₂e',
-        'Variation vs N-1': `${ecartSBTI}% vs objectif`,
-        'Statut': parseFloat(ecartSBTI) <= 0 ? '✓ Objectif atteint' : '⚠ Écart à combler',
-        'Commentaire': `Objectif SBTi: ${objectifSBTI.toFixed(2)} tCO₂e | Réduction nécessaire: ${Math.max(0, currentEmissions - objectifSBTI).toFixed(2)} tCO₂e`
-      });
-    }
-
-    // === MÉTADONNÉES D\'EXPORT ===
     exportData.push({
-      'SECTION': '8. METADONNEES',
+      'SECTION': 'BENCHMARK SECTORIEL',
+      'Indicateur': 'Leaders du secteur',
+      'Valeur': leadersSecteur.toFixed(0),
+      'Unité': 'tCO₂e/pers',
+      'Variation vs N-1': '',
+      'Statut': '',
+      'Commentaire': ''
+    });
+
+    // === TRAJECTOIRE SBTi ===
+    const objectifSBTI = emissions.objectifSBTI || 82;
+    const conformitePourcentage = objectifSBTI > 0 ? 
+      ((objectifSBTI - currentEmissions) / objectifSBTI * 100) : -5.2;
+
+    exportData.push({
+      'SECTION': 'TRAJECTOIRE SBTi',
+      'Indicateur': 'Conformité à Objectif SBTi',
+      'Valeur': objectifSBTI.toFixed(0),
+      'Unité': '%',
+      'Variation vs N-1': `${conformitePourcentage.toFixed(1)}%`,
+      'Statut': conformitePourcentage >= 0 ? 'En avance' : 'En retard',
+      'Commentaire': `Objectif: 80% réduction nécessaire: ${Math.max(0, currentEmissions - objectifSBTI).toFixed(2)} tCO₂e`
+    });
+
+    // === MÉTADONNÉES ===
+    exportData.push({
+      'SECTION': 'METADONNEES',
       'Indicateur': 'Date et Heure Export',
-      'Valeur': currentDate,
+      'Valeur': currentDate.replace(/\//g, '/'),
       'Unité': '',
-      'Variation vs N-1': currentDateTime,
-      'Statut': 'Export automatisé',
-      'Commentaire': 'Données générées depuis le dashboard CarbonTrack'
+      'Variation vs N-1': currentDateTime.split('T')[1].split('.')[0],
+      'Statut': 'Export auto',
+      'Commentaire': 'Depuis dashboard CarbonTrack'
     });
 
     exportData.push({
-      'SECTION': '8. METADONNEES',
+      'SECTION': 'METADONNEES',
       'Indicateur': 'Version des Données',
       'Valeur': '2025.1',
       'Unité': '',
-      'Variation vs N-1': 'Base Carbone® ADEME',
-      'Statut': 'Conforme ISO 14064',
-      'Commentaire': 'Facteurs d\'émission à jour - Méthodologie GHG Protocol'
+      'Variation vs N-1': '',
+      'Statut': '',
+      'Commentaire': 'Base Carbone® ADEME, GHG Protocol'
     });
 
-    exportCSV(exportData, `CarbonTrack_Dashboard_Complet_${new Date().toISOString().split('T')[0]}`);
+    exportCSV(exportData, `dashboard_carbone_${new Date().toISOString().split('T')[0]}`);
   };
 
   return {

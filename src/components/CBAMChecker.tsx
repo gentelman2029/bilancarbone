@@ -447,8 +447,19 @@ export const CBAMChecker = () => {
                     <div className="text-6xl font-mono font-bold text-red-600">
                       152 : 00 : 05 : 19
                     </div>
-                    <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white px-8 py-3">
-                      Commencez avec Greenly
+                    <Button 
+                      size="lg" 
+                      className="bg-green-600 hover:bg-green-700 text-white px-8 py-3"
+                      onClick={() => {
+                        toast({
+                          title: "Module CBAM Compliance",
+                          description: "Démarrage du module de conformité CBAM..."
+                        });
+                        // TODO: Implement CBAM compliance module navigation
+                        window.open('/dashboard', '_blank');
+                      }}
+                    >
+                      Commencez avec Carbontrack
                     </Button>
                   </div>
                 </div>

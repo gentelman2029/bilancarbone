@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import { Auth } from "./pages/Auth";
 import Trial from "./pages/Trial";
 import Pricing from "./pages/Pricing";
+import CBAM from "./pages/CBAM";
 import { EmissionsProvider } from "./contexts/EmissionsContext";
 import { ActionsProvider } from "./contexts/ActionsContext";
 
@@ -37,6 +38,7 @@ const App = () => (
                 <Route path="data" element={<DataCollection />} />
                 <Route path="calculator" element={<AdvancedGHGCalculator />} />
                 <Route path="actions" element={<Actions />} />
+                <Route path="cbam" element={<CBAM />} />
                 <Route path="contact" element={<Contact />} />
               </Route>
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

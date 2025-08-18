@@ -4,10 +4,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Globe } from 'lucide-react';
-import { useEffect } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Globe, Languages } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useAutoTranslation } from '@/services/translationService';
 
 const languages = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
@@ -18,9 +21,25 @@ const languages = [
 
 export const LanguageSelector = () => {
   const { i18n, t } = useTranslation();
+  const { detectLanguage } = useAutoTranslation();
+  const [isAutoDetecting, setIsAutoDetecting] = useState(false);
 
   const changeLanguage = (languageCode: string) => {
     i18n.changeLanguage(languageCode);
+  };
+
+  const handleAutoDetect = async () => {
+    setIsAutoDetecting(true);
+    try {
+      const detectedLang = await detectLanguage(document.body.textContent || '');
+      if (detectedLang && detectedLang !== i18n.language) {
+        changeLanguage(detectedLang);
+      }
+    } catch (error) {
+      console.error('Language detection failed:', error);
+    } finally {
+      setIsAutoDetecting(false);
+    }
   };
 
   useEffect(() => {
@@ -41,7 +60,19 @@ export const LanguageSelector = () => {
           <span className="sm:hidden">{currentLanguage.flag}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[150px]">
+      <DropdownMenuContent align="end" className="min-w-[180px]">
+        <DropdownMenuItem
+          onClick={handleAutoDetect}
+          disabled={isAutoDetecting}
+          className="cursor-pointer flex items-center gap-2"
+        >
+          <Languages className="h-4 w-4" />
+          <span>Détection auto</span>
+          <Badge variant="outline" className="ml-auto text-xs">
+            AUTO
+          </Badge>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         {languages.map((language) => (
           <DropdownMenuItem
             key={language.code}
@@ -52,6 +83,11 @@ export const LanguageSelector = () => {
           >
             <span className="mr-2">{language.flag}</span>
             {language.name}
+            {i18n.language === language.code && (
+              <Badge variant="secondary" className="ml-auto text-xs">
+                ACTUEL
+              </Badge>
+            )}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

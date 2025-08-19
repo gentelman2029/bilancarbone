@@ -16,10 +16,15 @@ import {
   Trash2,
   CheckCircle,
   AlertCircle,
-  Clock
+  Clock,
+  X
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { CBAMProductForm } from './CBAMProductForm';
+import { CBAMCalculator } from './CBAMCalculator';
+import { CBAMReports } from './CBAMReports';
+import { CBAMSchedules } from './CBAMSchedules';
+import { CBAMFileUpload } from './CBAMFileUpload';
 
 interface CBAMProduct {
   id: string;
@@ -34,7 +39,8 @@ interface CBAMProduct {
 
 export const CBAMDashboard = () => {
   const [showProductForm, setShowProductForm] = useState(false);
-  const [products] = useState<CBAMProduct[]>([
+  const [showFileUpload, setShowFileUpload] = useState(false);
+  const [products, setProducts] = useState<CBAMProduct[]>([
     {
       id: '1',
       name: 'Acier laminé à chaud',
@@ -101,9 +107,39 @@ export const CBAMDashboard = () => {
   };
 
   const handleAdvancedConfig = () => {
+    setShowFileUpload(true);
+  };
+
+  const handleEditProduct = (productId: string) => {
     toast({
-      title: "Configuration Avancée",
-      description: "Paramètres avancés du module CBAM..."
+      title: "Édition produit",
+      description: "Ouverture du formulaire d'édition..."
+    });
+    setShowProductForm(true);
+  };
+
+  const handleDownloadProduct = (productId: string, productName: string) => {
+    const csvData = `Nom du Produit,Code CN,Secteur,Volume,Statut,Émissions
+${productName},7208 10,Fer et acier,2500,Conforme,2.1`;
+
+    const blob = new Blob([csvData], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `produit-${productName.toLowerCase().replace(/\s+/g, '-')}.csv`;
+    a.click();
+
+    toast({
+      title: "Téléchargement lancé",
+      description: `Données de ${productName} exportées`
+    });
+  };
+
+  const handleDeleteProduct = (productId: string) => {
+    setProducts(prev => prev.filter(p => p.id !== productId));
+    toast({
+      title: "Produit supprimé",
+      description: "Le produit a été retiré de la liste"
     });
   };
 
@@ -248,13 +284,28 @@ export const CBAMDashboard = () => {
                           </td>
                           <td className="p-2">
                             <div className="flex items-center justify-center gap-1">
-                              <Button variant="ghost" size="sm">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleEditProduct(product.id)}
+                                title="Éditer"
+                              >
                                 <Edit className="h-4 w-4" />
                               </Button>
-                              <Button variant="ghost" size="sm">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleDownloadProduct(product.id, product.name)}
+                                title="Télécharger"
+                              >
                                 <Download className="h-4 w-4" />
                               </Button>
-                              <Button variant="ghost" size="sm">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleDeleteProduct(product.id)}
+                                title="Supprimer"
+                              >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
@@ -297,66 +348,15 @@ export const CBAMDashboard = () => {
         </TabsContent>
 
         <TabsContent value="calculations" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Calculs d'Émissions Embarquées</CardTitle>
-              <p className="text-muted-foreground">
-                Calculez les émissions directes et indirectes de vos produits
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12">
-                <BarChart3 className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-semibold mb-2">Module de Calcul</h3>
-                <p className="text-muted-foreground mb-4">
-                  Fonctionnalité en cours de développement
-                </p>
-                <Button>Accéder aux Calculs</Button>
-              </div>
-            </CardContent>
-          </Card>
+          <CBAMCalculator />
         </TabsContent>
 
         <TabsContent value="reports" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Génération de Rapports</CardTitle>
-              <p className="text-muted-foreground">
-                Créez vos passeports carbone produit et rapports d'exportation
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12">
-                <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-semibold mb-2">Rapports CBAM</h3>
-                <p className="text-muted-foreground mb-4">
-                  Générez vos rapports de conformité
-                </p>
-                <Button>Générer un Rapport</Button>
-              </div>
-            </CardContent>
-          </Card>
+          <CBAMReports />
         </TabsContent>
 
         <TabsContent value="schedules" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Calendrier des Échéances</CardTitle>
-              <p className="text-muted-foreground">
-                Suivez vos obligations de reporting CBAM
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12">
-                <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-semibold mb-2">Prochaines Échéances</h3>
-                <p className="text-muted-foreground mb-4">
-                  Q1 2024 - Rapport trimestriel dans 15 jours
-                </p>
-                <Button>Voir le Calendrier</Button>
-              </div>
-            </CardContent>
-          </Card>
+          <CBAMSchedules />
         </TabsContent>
       </Tabs>
 
@@ -364,6 +364,27 @@ export const CBAMDashboard = () => {
         open={showProductForm} 
         onClose={() => setShowProductForm(false)} 
       />
+
+      {/* Modal d'upload de fichiers */}
+      {showFileUpload && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold">Gestion des Documents</h2>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => setShowFileUpload(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <CBAMFileUpload />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

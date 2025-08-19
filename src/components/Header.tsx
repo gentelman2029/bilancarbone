@@ -1,4 +1,4 @@
-import { Leaf, BarChart3, Users, Settings, LogOut, Menu, X, Calculator } from "lucide-react";
+import { Leaf, BarChart3, Users, Settings, LogOut, Menu, X, Calculator, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -31,6 +31,7 @@ export const Header = () => {
   
   const navItems = [
     { path: "/", label: t("navigation.home"), icon: Leaf },
+    { path: "/cbam", label: "Module CBAM Compliance", icon: ShieldCheck },
     { path: "/data", label: t("navigation.data"), icon: Users },
     { path: "/calculator", label: t("navigation.calculator"), icon: Calculator },
     { path: "/dashboard", label: t("navigation.dashboard"), icon: BarChart3 },

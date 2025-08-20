@@ -13,9 +13,18 @@ import { toast } from '@/hooks/use-toast';
 interface CBAMProductFormProps {
   open: boolean;
   onClose: () => void;
+  onProductAdd?: (product: {
+    name: string;
+    cnCode: string;
+    sector: string;
+    volume: number;
+    status: 'Conforme' | 'En cours' | 'À réviser';
+    emissions: number;
+    lastUpdate: string;
+  }) => void;
 }
 
-export const CBAMProductForm = ({ open, onClose }: CBAMProductFormProps) => {
+export const CBAMProductForm = ({ open, onClose, onProductAdd }: CBAMProductFormProps) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
@@ -46,10 +55,50 @@ export const CBAMProductForm = ({ open, onClose }: CBAMProductFormProps) => {
   ];
 
   const handleSubmit = () => {
+    if (!formData.name || !formData.cnCode || !formData.sector) {
+      toast({
+        title: "Erreur de validation",
+        description: "Veuillez remplir tous les champs obligatoires",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const newProduct = {
+      name: formData.name,
+      cnCode: formData.cnCode,
+      sector: sectors.find(s => s.value === formData.sector)?.label || formData.sector,
+      volume: parseFloat(formData.productionVolume) || 0,
+      status: 'En cours' as const,
+      emissions: 0,
+      lastUpdate: new Date().toISOString().split('T')[0]
+    };
+
+    onProductAdd?.(newProduct);
+    
     toast({
-      title: "Produit CBAM créé",
-      description: "Le produit a été ajouté avec succès au catalogue."
+      title: "Produit créé",
+      description: "Le nouveau produit CBAM a été ajouté avec succès"
     });
+    
+    // Reset form
+    setFormData({
+      name: '',
+      cnCode: '',
+      sector: '',
+      description: '',
+      productionVolume: '',
+      exportVolume: '',
+      productionMethod: '',
+      electricity: '',
+      naturalGas: '',
+      coal: '',
+      heavyFuel: '',
+      diesel: '',
+      rawMaterials: [],
+      documents: []
+    });
+    
     onClose();
   };
 

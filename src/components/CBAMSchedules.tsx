@@ -32,7 +32,7 @@ interface CBAMDeadline {
 }
 
 export const CBAMSchedules = () => {
-  const [deadlines] = useState<CBAMDeadline[]>([
+  const [deadlines, setDeadlines] = useState<CBAMDeadline[]>([
     {
       id: '1',
       title: 'Rapport Trimestriel Q1 2024',
@@ -120,9 +120,22 @@ export const CBAMSchedules = () => {
       return;
     }
 
+    const deadline: CBAMDeadline = {
+      id: Date.now().toString(),
+      title: newDeadline.title,
+      description: newDeadline.description,
+      dueDate: newDeadline.dueDate,
+      priority: newDeadline.priority as 'Haute' | 'Moyenne' | 'Faible',
+      status: 'À venir',
+      type: newDeadline.type as 'Rapport' | 'Notification' | 'Audit' | 'Formation',
+      productIds: []
+    };
+
+    setDeadlines(prev => [...prev, deadline]);
+
     toast({
       title: "Échéance créée",
-      description: `Nouvelle échéance "${newDeadline.title}" ajoutée`
+      description: `Nouvelle échéance "${newDeadline.title}" ajoutée au calendrier`
     });
 
     setShowNewDeadline(false);

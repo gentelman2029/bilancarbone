@@ -40,6 +40,8 @@ interface CBAMProduct {
 export const CBAMDashboard = () => {
   const [showProductForm, setShowProductForm] = useState(false);
   const [showFileUpload, setShowFileUpload] = useState(false);
+  const [phaseMode, setPhaseMode] = useState<'transition' | 'operationnel'>('transition');
+  const [reportingFrequency, setReportingFrequency] = useState<'trimestriel' | 'mensuel'>('trimestriel');
   const [products, setProducts] = useState<CBAMProduct[]>([
     {
       id: '1',
@@ -63,11 +65,20 @@ export const CBAMDashboard = () => {
     }
   ]);
 
+  // Calcul automatique des métriques basées sur les données du tableau
   const metrics = {
-    totalProducts: 12,
-    avgEmissions: 2.4,
-    reportsGenerated: 8,
-    nextReporting: 15
+    totalProducts: products.length,
+    avgEmissions: products.length > 0 
+      ? parseFloat((products.reduce((acc, p) => acc + p.emissions * p.volume, 0) / products.reduce((acc, p) => acc + p.volume, 0)).toFixed(2))
+      : 0,
+    reportsGenerated: products.filter(p => p.status === 'Conforme').length,
+    nextReporting: products.length > 0 ? Math.min(...products.map(p => {
+      const lastUpdate = new Date(p.lastUpdate);
+      const nextReporting = new Date(lastUpdate);
+      nextReporting.setDate(nextReporting.getDate() + (reportingFrequency === 'trimestriel' ? 90 : 30));
+      const daysRemaining = Math.ceil((nextReporting.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      return daysRemaining > 0 ? daysRemaining : 0;
+    })) : 0
   };
 
   const getStatusColor = (status: string) => {
@@ -90,6 +101,18 @@ export const CBAMDashboard = () => {
 
   const handleNewProduct = () => {
     setShowProductForm(true);
+  };
+
+  const handleAddProduct = (newProduct: Omit<CBAMProduct, 'id'>) => {
+    const product: CBAMProduct = {
+      ...newProduct,
+      id: Date.now().toString()
+    };
+    setProducts(prev => [...prev, product]);
+    toast({
+      title: "Produit ajouté",
+      description: `${newProduct.name} a été ajouté à la liste CBAM`
+    });
   };
 
   const handleImportLot = () => {
@@ -154,8 +177,30 @@ ${productName},7208 10,Fer et acier,2500,Conforme,2.1`;
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">Phase de Transition</Button>
-          <Button variant="outline">Reporting Trimestriel</Button>
+          <Button 
+            variant={phaseMode === 'transition' ? 'default' : 'outline'}
+            onClick={() => {
+              setPhaseMode(phaseMode === 'transition' ? 'operationnel' : 'transition');
+              toast({
+                title: `Mode ${phaseMode === 'transition' ? 'Opérationnel' : 'Phase de Transition'}`,
+                description: `Basculement vers le mode ${phaseMode === 'transition' ? 'opérationnel' : 'phase de transition'}`
+              });
+            }}
+          >
+            {phaseMode === 'transition' ? 'Phase de Transition' : 'Mode Opérationnel'}
+          </Button>
+          <Button 
+            variant={reportingFrequency === 'trimestriel' ? 'default' : 'outline'}
+            onClick={() => {
+              setReportingFrequency(reportingFrequency === 'trimestriel' ? 'mensuel' : 'trimestriel');
+              toast({
+                title: `Reporting ${reportingFrequency === 'trimestriel' ? 'Mensuel' : 'Trimestriel'}`,
+                description: `Fréquence de reporting changée vers ${reportingFrequency === 'trimestriel' ? 'mensuel' : 'trimestriel'}`
+              });
+            }}
+          >
+            Reporting {reportingFrequency === 'trimestriel' ? 'Trimestriel' : 'Mensuel'}
+          </Button>
         </div>
       </div>
 
@@ -363,6 +408,7 @@ ${productName},7208 10,Fer et acier,2500,Conforme,2.1`;
       <CBAMProductForm 
         open={showProductForm} 
         onClose={() => setShowProductForm(false)} 
+        onProductAdd={handleAddProduct}
       />
 
       {/* Modal d'upload de fichiers */}

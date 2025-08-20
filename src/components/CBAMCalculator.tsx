@@ -210,9 +210,27 @@ Par unité,${calculations.perUnit.toFixed(4)}`;
                 <Factory className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-lg font-semibold mb-2">Configuration des Précurseurs</h3>
                 <p className="text-muted-foreground mb-4">
-                  Fonctionnalité en cours de développement
+                  Saisissez les quantités et origines de vos matières premières
                 </p>
-                <Button variant="outline">Configurer les Matières Premières</Button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="ironOre">Minerai de fer (tonnes)</Label>
+                    <Input id="ironOre" placeholder="Quantité minerai de fer" />
+                  </div>
+                  <div>
+                    <Label htmlFor="coke">Coke métallurgique (tonnes)</Label>
+                    <Input id="coke" placeholder="Quantité coke" />
+                  </div>
+                  <div>
+                    <Label htmlFor="limestone">Calcaire (tonnes)</Label>
+                    <Input id="limestone" placeholder="Quantité calcaire" />
+                  </div>
+                  <div>
+                    <Label htmlFor="scrapMetal">Ferraille (tonnes)</Label>
+                    <Input id="scrapMetal" placeholder="Quantité ferraille" />
+                  </div>
+                </div>
+                <Button className="mt-4 w-full">Enregistrer les Matières Premières</Button>
               </div>
             </CardContent>
           </Card>

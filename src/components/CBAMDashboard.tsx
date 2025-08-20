@@ -25,6 +25,8 @@ import { CBAMCalculator } from './CBAMCalculator';
 import { CBAMReports } from './CBAMReports';
 import { CBAMSchedules } from './CBAMSchedules';
 import { CBAMFileUpload } from './CBAMFileUpload';
+import { CBAMBulkImport } from './CBAMBulkImport';
+import { CBAMSectorModels } from './CBAMSectorModels';
 
 interface CBAMProduct {
   id: string;
@@ -40,6 +42,8 @@ interface CBAMProduct {
 export const CBAMDashboard = () => {
   const [showProductForm, setShowProductForm] = useState(false);
   const [showFileUpload, setShowFileUpload] = useState(false);
+  const [showBulkImport, setShowBulkImport] = useState(false);
+  const [showSectorModels, setShowSectorModels] = useState(false);
   const [phaseMode, setPhaseMode] = useState<'transition' | 'operationnel'>('transition');
   const [reportingFrequency, setReportingFrequency] = useState<'trimestriel' | 'mensuel'>('trimestriel');
   const [products, setProducts] = useState<CBAMProduct[]>([
@@ -116,17 +120,41 @@ export const CBAMDashboard = () => {
   };
 
   const handleImportLot = () => {
-    toast({
-      title: "Import en Lot",
-      description: "Fonctionnalité d'import en cours de développement..."
-    });
+    setShowBulkImport(true);
   };
 
   const handleSectorModels = () => {
-    toast({
-      title: "Modèles Sectoriels",
-      description: "Accès aux modèles de calcul sectoriels..."
-    });
+    setShowSectorModels(true);
+  };
+
+  const handleBulkImportProducts = (importedProducts: any[]) => {
+    const newProducts = importedProducts.map(product => ({
+      id: product.id,
+      name: product.name,
+      cnCode: product.cnCode,
+      sector: product.sector,
+      volume: product.monthlyVolume,
+      status: product.status as 'Conforme' | 'En cours' | 'À réviser',
+      emissions: product.totalEmissions,
+      lastUpdate: product.lastUpdate
+    }));
+    setProducts(prev => [...prev, ...newProducts]);
+  };
+
+  const handleSelectSectorModel = (model: any) => {
+    // Créer un nouveau produit basé sur le modèle sectoriel
+    const newProduct = {
+      id: Date.now().toString(),
+      name: `${model.name} - Nouveau Produit`,
+      cnCode: '',
+      sector: model.sector,
+      volume: 0,
+      status: 'En cours' as const,
+      emissions: model.defaultEmissions.scope1 + model.defaultEmissions.scope2 + model.defaultEmissions.scope3,
+      lastUpdate: new Date().toISOString().split('T')[0]
+    };
+    setProducts(prev => [...prev, newProduct]);
+    setShowProductForm(true);
   };
 
   const handleAdvancedConfig = () => {
@@ -431,6 +459,18 @@ ${productName},7208 10,Fer et acier,2500,Conforme,2.1`;
           </div>
         </div>
       )}
+
+      <CBAMBulkImport 
+        open={showBulkImport}
+        onOpenChange={setShowBulkImport}
+        onImportProducts={handleBulkImportProducts}
+      />
+
+      <CBAMSectorModels 
+        open={showSectorModels}
+        onOpenChange={setShowSectorModels}
+        onSelectModel={handleSelectSectorModel}
+      />
     </div>
   );
 };

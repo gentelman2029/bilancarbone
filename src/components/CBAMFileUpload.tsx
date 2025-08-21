@@ -32,7 +32,6 @@ interface UploadedFile {
   uploadDate: string;
   status: 'Validé' | 'En attente' | 'Rejeté';
   description?: string;
-  // Données du fichier pour aperçu/téléchargement
   file?: File;
   url?: string;
 }
@@ -138,7 +137,6 @@ export const CBAMFileUpload = () => {
     }
 
     Array.from(files).forEach(file => {
-      // Validation des types de fichiers
       const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'application/vnd.ms-excel', 'text/csv'];
       if (!allowedTypes.includes(file.type)) {
         toast({
@@ -149,7 +147,6 @@ export const CBAMFileUpload = () => {
         return;
       }
 
-      // Validation de la taille (10MB max)
       if (file.size > 10 * 1024 * 1024) {
         toast({
           title: "Fichier trop volumineux",
@@ -182,7 +179,6 @@ export const CBAMFileUpload = () => {
       });
     });
 
-    // Reset form
     setFileDescription('');
   };
 
@@ -221,12 +217,12 @@ export const CBAMFileUpload = () => {
   const removeFile = (id: string) => {
     setUploadedFiles(prev => {
       const toRemove = prev.find(f => f.id === id);
-      // Libère l'URL blob si nécessaire
       if (toRemove?.url && toRemove.url.startsWith('blob:')) {
-        try { URL.revokeObjectURL(toRemove.url); } catch {}
+        try { 
+          URL.revokeObjectURL(toRemove.url); 
+        } catch {}
       }
-      const next = prev.filter(file => file.id !== id);
-      return next;
+      return prev.filter(file => file.id !== id);
     });
     toast({
       title: "Fichier supprimé",
@@ -235,8 +231,7 @@ export const CBAMFileUpload = () => {
   };
 
   const downloadFile = (file: UploadedFile) => {
-    // Préfère l'URL du fichier si disponible
-    const href = file.url || undefined;
+    const href = file.url;
     if (href) {
       const a = document.createElement('a');
       a.href = href;
@@ -244,7 +239,10 @@ export const CBAMFileUpload = () => {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      toast({ title: 'Téléchargement lancé', description: `${file.name} téléchargé` });
+      toast({ 
+        title: 'Téléchargement lancé', 
+        description: `${file.name} téléchargé` 
+      });
       return;
     }
     toast({
@@ -256,7 +254,11 @@ export const CBAMFileUpload = () => {
 
   const openPreview = (file: UploadedFile) => {
     if (!file.url) {
-      toast({ title: 'Aperçu indisponible', description: "Ce document n'a pas de source pour l'aperçu", variant: 'destructive' });
+      toast({ 
+        title: 'Aperçu indisponible', 
+        description: "Ce document n'a pas de source pour l'aperçu", 
+        variant: 'destructive' 
+      });
       return;
     }
     setPreviewFile(file);
@@ -522,7 +524,11 @@ export const CBAMFileUpload = () => {
                     className="w-full h-[70vh]"
                   />
                 ) : previewFile.type.includes('image') ? (
-                  <img src={previewFile.url} alt={previewFile.name} className="max-h-[70vh] w-auto mx-auto" />
+                  <img 
+                    src={previewFile.url} 
+                    alt={previewFile.name} 
+                    className="max-h-[70vh] w-auto mx-auto" 
+                  />
                 ) : (
                   <iframe
                     src={previewFile.url}
@@ -541,14 +547,10 @@ export const CBAMFileUpload = () => {
                   Fermer
                 </Button>
               </div>
-              <div className="flex justify-end gap-2">
-                <Button onClick={() => updateFile(editingFile)}>
-                  Sauvegarder
-                </Button>
-                <Button variant="outline" onClick={() => setEditingFile(null)}>
-                  Annuler
-                </Button>
-              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Modal d'édition */}
       {editingFile && (
@@ -631,6 +633,16 @@ export const CBAMFileUpload = () => {
                   }}
                 />
                 <p className="text-xs text-muted-foreground mt-1">PDF, Images, Excel, CSV - Max 10MB</p>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button onClick={() => updateFile(editingFile)}>
+                  Sauvegarder
+                </Button>
+                <Button variant="outline" onClick={() => setEditingFile(null)}>
+                  Annuler
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>

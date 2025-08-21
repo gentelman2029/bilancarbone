@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Upload, 
   FileText, 
@@ -32,6 +32,9 @@ interface UploadedFile {
   uploadDate: string;
   status: 'Validé' | 'En attente' | 'Rejeté';
   description?: string;
+  // Données du fichier pour aperçu/téléchargement
+  file?: File;
+  url?: string;
 }
 
 export const CBAMFileUpload = () => {
@@ -44,7 +47,8 @@ export const CBAMFileUpload = () => {
       category: 'Factures énergétiques',
       uploadDate: '2024-01-15',
       status: 'Validé',
-      description: 'Facture électricité site principal'
+      description: 'Facture électricité site principal',
+      url: '/docs/dummy.pdf'
     },
     {
       id: '2',
@@ -54,7 +58,8 @@ export const CBAMFileUpload = () => {
       category: 'Certificats techniques',
       uploadDate: '2024-01-12',
       status: 'En attente',
-      description: 'Certificat d\'analyse chimique acier batch #1234'
+      description: 'Certificat d\'analyse chimique acier batch #1234',
+      url: '/docs/dummy.pdf'
     },
     {
       id: '3',
@@ -64,7 +69,8 @@ export const CBAMFileUpload = () => {
       category: 'Certificats techniques',
       uploadDate: '2025-08-21',
       status: 'En attente',
-      description: 'certificat'
+      description: 'certificat',
+      url: '/docs/dummy.pdf'
     },
     {
       id: '4',
@@ -74,7 +80,8 @@ export const CBAMFileUpload = () => {
       category: 'Factures énergétiques',
       uploadDate: '2025-08-21',
       status: 'En attente',
-      description: 'facture'
+      description: 'facture',
+      url: '/docs/dummy.pdf'
     }
   ]);
 
@@ -152,6 +159,8 @@ export const CBAMFileUpload = () => {
         return;
       }
 
+      const objectUrl = URL.createObjectURL(file);
+
       const newFile: UploadedFile = {
         id: Date.now().toString() + Math.random(),
         name: file.name,
@@ -160,7 +169,9 @@ export const CBAMFileUpload = () => {
         category: selectedCategory,
         uploadDate: new Date().toISOString().split('T')[0],
         status: 'En attente',
-        description: fileDescription || `Document ${selectedCategory.toLowerCase()}`
+        description: fileDescription || `Document ${selectedCategory.toLowerCase()}`,
+        file,
+        url: objectUrl
       };
 
       setUploadedFiles(prev => [...prev, newFile]);
@@ -208,7 +219,15 @@ export const CBAMFileUpload = () => {
   };
 
   const removeFile = (id: string) => {
-    setUploadedFiles(prev => prev.filter(file => file.id !== id));
+    setUploadedFiles(prev => {
+      const toRemove = prev.find(f => f.id === id);
+      // Libère l'URL blob si nécessaire
+      if (toRemove?.url && toRemove.url.startsWith('blob:')) {
+        try { URL.revokeObjectURL(toRemove.url); } catch {}
+      }
+      const next = prev.filter(file => file.id !== id);
+      return next;
+    });
     toast({
       title: "Fichier supprimé",
       description: "Le fichier a été retiré de la liste"
@@ -216,25 +235,30 @@ export const CBAMFileUpload = () => {
   };
 
   const downloadFile = (file: UploadedFile) => {
-    // Créer un lien de téléchargement simulé
-    const element = document.createElement('a');
-    const fileContent = new Blob(['Contenu du fichier simulé'], { type: file.type });
-    const fileURL = URL.createObjectURL(fileContent);
-    
-    element.href = fileURL;
-    element.download = file.name;
-    element.click();
-    
-    // Nettoyer l'URL après téléchargement
-    URL.revokeObjectURL(fileURL);
-    
+    // Préfère l'URL du fichier si disponible
+    const href = file.url || undefined;
+    if (href) {
+      const a = document.createElement('a');
+      a.href = href;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      toast({ title: 'Téléchargement lancé', description: `${file.name} téléchargé` });
+      return;
+    }
     toast({
-      title: "Téléchargement lancé",
-      description: `${file.name} téléchargé avec succès`
+      title: 'Téléchargement indisponible',
+      description: "Aucune source de fichier n'est associée",
+      variant: 'destructive'
     });
   };
 
   const openPreview = (file: UploadedFile) => {
+    if (!file.url) {
+      toast({ title: 'Aperçu indisponible', description: "Ce document n'a pas de source pour l'aperçu", variant: 'destructive' });
+      return;
+    }
     setPreviewFile(file);
   };
 
@@ -489,18 +513,23 @@ export const CBAMFileUpload = () => {
                 <p className="mt-1 text-muted-foreground">{previewFile.description}</p>
               </div>
               
-              {/* Zone d'aperçu simulée */}
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-50">
-                {getFileIcon(previewFile.type)}
-                <h3 className="mt-4 text-lg font-semibold">Aperçu du document</h3>
-                <p className="text-muted-foreground">
-                  {previewFile.type.includes('pdf') 
-                    ? "Contenu PDF affiché ici" 
-                    : previewFile.type.includes('image')
-                    ? "Image affichée ici"
-                    : "Contenu du fichier affiché ici"
-                  }
-                </p>
+              {/* Zone d'aperçu réelle */}
+              <div className="rounded-lg overflow-hidden border">
+                {previewFile.type.includes('pdf') ? (
+                  <iframe
+                    src={previewFile.url}
+                    title={`Aperçu ${previewFile.name}`}
+                    className="w-full h-[70vh]"
+                  />
+                ) : previewFile.type.includes('image') ? (
+                  <img src={previewFile.url} alt={previewFile.name} className="max-h-[70vh] w-auto mx-auto" />
+                ) : (
+                  <iframe
+                    src={previewFile.url}
+                    title={`Aperçu ${previewFile.name}`}
+                    className="w-full h-[70vh]"
+                  />
+                )}
               </div>
 
               <div className="flex justify-end gap-2">
@@ -512,10 +541,14 @@ export const CBAMFileUpload = () => {
                   Fermer
                 </Button>
               </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+              <div className="flex justify-end gap-2">
+                <Button onClick={() => updateFile(editingFile)}>
+                  Sauvegarder
+                </Button>
+                <Button variant="outline" onClick={() => setEditingFile(null)}>
+                  Annuler
+                </Button>
+              </div>
 
       {/* Modal d'édition */}
       {editingFile && (
@@ -576,14 +609,28 @@ export const CBAMFileUpload = () => {
                 </Select>
               </div>
 
-              <div className="flex justify-end gap-2">
-                <Button onClick={() => updateFile(editingFile)}>
-                  Sauvegarder
-                </Button>
-                <Button variant="outline" onClick={() => setEditingFile(null)}>
-                  Annuler
-                </Button>
-              </div>
+              <div>
+                <Label>Remplacer le fichier</Label>
+                <Input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.xls,.xlsx,.csv"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (!f || !editingFile) return;
+                    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'application/vnd.ms-excel', 'text/csv'];
+                    if (!allowedTypes.includes(f.type)) {
+                      toast({ title: 'Type non supporté', variant: 'destructive' });
+                      return;
+                    }
+                    if (f.size > 10 * 1024 * 1024) {
+                      toast({ title: 'Fichier trop volumineux', variant: 'destructive' });
+                      return;
+                    }
+                    const url = URL.createObjectURL(f);
+                    setEditingFile({ ...editingFile, name: f.name, type: f.type, size: f.size, file: f, url });
+                  }}
+                />
+                <p className="text-xs text-muted-foreground mt-1">PDF, Images, Excel, CSV - Max 10MB</p>
             </div>
           </DialogContent>
         </Dialog>

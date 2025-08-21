@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   Upload, 
   FileText, 
@@ -17,7 +18,8 @@ import {
   Trash2,
   CheckCircle,
   AlertCircle,
-  Folder
+  Folder,
+  Edit3
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -53,12 +55,34 @@ export const CBAMFileUpload = () => {
       uploadDate: '2024-01-12',
       status: 'En attente',
       description: 'Certificat d\'analyse chimique acier batch #1234'
+    },
+    {
+      id: '3',
+      name: 'agile.pdf',
+      type: 'application/pdf',
+      size: 1100000,
+      category: 'Certificats techniques',
+      uploadDate: '2025-08-21',
+      status: 'En attente',
+      description: 'certificat'
+    },
+    {
+      id: '4',
+      name: 'waterfall hybrid.pdf',
+      type: 'application/pdf',
+      size: 1078784,
+      category: 'Factures énergétiques',
+      uploadDate: '2025-08-21',
+      status: 'En attente',
+      description: 'facture'
     }
   ]);
 
   const [dragActive, setDragActive] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [fileDescription, setFileDescription] = useState('');
+  const [previewFile, setPreviewFile] = useState<UploadedFile | null>(null);
+  const [editingFile, setEditingFile] = useState<UploadedFile | null>(null);
 
   const fileCategories = [
     'Factures énergétiques',
@@ -192,17 +216,40 @@ export const CBAMFileUpload = () => {
   };
 
   const downloadFile = (file: UploadedFile) => {
-    // Simulation de téléchargement
+    // Créer un lien de téléchargement simulé
+    const element = document.createElement('a');
+    const fileContent = new Blob(['Contenu du fichier simulé'], { type: file.type });
+    const fileURL = URL.createObjectURL(fileContent);
+    
+    element.href = fileURL;
+    element.download = file.name;
+    element.click();
+    
+    // Nettoyer l'URL après téléchargement
+    URL.revokeObjectURL(fileURL);
+    
     toast({
       title: "Téléchargement lancé",
-      description: `Téléchargement de ${file.name}`
+      description: `${file.name} téléchargé avec succès`
     });
   };
 
-  const previewFile = (file: UploadedFile) => {
+  const openPreview = (file: UploadedFile) => {
+    setPreviewFile(file);
+  };
+
+  const editFile = (file: UploadedFile) => {
+    setEditingFile(file);
+  };
+
+  const updateFile = (updatedFile: UploadedFile) => {
+    setUploadedFiles(prev => 
+      prev.map(file => file.id === updatedFile.id ? updatedFile : file)
+    );
+    setEditingFile(null);
     toast({
-      title: "Aperçu du fichier",
-      description: `Ouverture de ${file.name}`
+      title: "Document modifié",
+      description: `Les informations de ${updatedFile.name} ont été mises à jour`
     });
   };
 
@@ -372,7 +419,7 @@ export const CBAMFileUpload = () => {
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      onClick={() => previewFile(file)}
+                      onClick={() => openPreview(file)}
                       title="Aperçu"
                     >
                       <Eye className="h-4 w-4" />
@@ -384,6 +431,14 @@ export const CBAMFileUpload = () => {
                       title="Télécharger"
                     >
                       <Download className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => editFile(file)}
+                      title="Modifier"
+                    >
+                      <Edit3 className="h-4 w-4" />
                     </Button>
                     <Button 
                       variant="ghost" 
@@ -400,6 +455,139 @@ export const CBAMFileUpload = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modal d'aperçu */}
+      {previewFile && (
+        <Dialog open={!!previewFile} onOpenChange={() => setPreviewFile(null)}>
+          <DialogContent className="max-w-4xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                {getFileIcon(previewFile.type)}
+                Aperçu - {previewFile.name}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <strong>Taille:</strong> {formatFileSize(previewFile.size)}
+                </div>
+                <div>
+                  <strong>Catégorie:</strong> {previewFile.category}
+                </div>
+                <div>
+                  <strong>Date d'upload:</strong> {previewFile.uploadDate}
+                </div>
+                <div>
+                  <strong>Statut:</strong> 
+                  <Badge className={`ml-2 ${getStatusColor(previewFile.status)}`}>
+                    {previewFile.status}
+                  </Badge>
+                </div>
+              </div>
+              <div>
+                <strong>Description:</strong>
+                <p className="mt-1 text-muted-foreground">{previewFile.description}</p>
+              </div>
+              
+              {/* Zone d'aperçu simulée */}
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-50">
+                {getFileIcon(previewFile.type)}
+                <h3 className="mt-4 text-lg font-semibold">Aperçu du document</h3>
+                <p className="text-muted-foreground">
+                  {previewFile.type.includes('pdf') 
+                    ? "Contenu PDF affiché ici" 
+                    : previewFile.type.includes('image')
+                    ? "Image affichée ici"
+                    : "Contenu du fichier affiché ici"
+                  }
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button onClick={() => downloadFile(previewFile)}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Télécharger
+                </Button>
+                <Button variant="outline" onClick={() => setPreviewFile(null)}>
+                  Fermer
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Modal d'édition */}
+      {editingFile && (
+        <Dialog open={!!editingFile} onOpenChange={() => setEditingFile(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Edit3 className="h-5 w-5" />
+                Modifier - {editingFile.name}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-category">Catégorie</Label>
+                <Select 
+                  value={editingFile.category} 
+                  onValueChange={(value) => setEditingFile({...editingFile, category: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fileCategories.map(category => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={editingFile.description || ''}
+                  onChange={(e) => setEditingFile({...editingFile, description: e.target.value})}
+                  placeholder="Description du document..."
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-status">Statut</Label>
+                <Select 
+                  value={editingFile.status} 
+                  onValueChange={(value: 'Validé' | 'En attente' | 'Rejeté') => 
+                    setEditingFile({...editingFile, status: value})
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="En attente">En attente</SelectItem>
+                    <SelectItem value="Validé">Validé</SelectItem>
+                    <SelectItem value="Rejeté">Rejeté</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button onClick={() => updateFile(editingFile)}>
+                  Sauvegarder
+                </Button>
+                <Button variant="outline" onClick={() => setEditingFile(null)}>
+                  Annuler
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

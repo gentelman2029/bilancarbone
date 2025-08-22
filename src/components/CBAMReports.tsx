@@ -31,7 +31,7 @@ interface CBAMReport {
 }
 
 export const CBAMReports = () => {
-  const [reports] = useState<CBAMReport[]>([
+  const [reports, setReports] = useState<CBAMReport[]>([
     {
       id: '1',
       productName: 'Acier laminé à chaud',
@@ -102,9 +102,33 @@ export const CBAMReports = () => {
       return;
     }
 
+    // Mapping des produits pour avoir le nom complet
+    const productNames = {
+      'acier': 'Acier laminé à chaud',
+      'ciment': 'Ciment Portland',
+      'aluminium': 'Aluminium brut'
+    };
+
+    // Créer le nouveau rapport
+    const newCBAMReport: CBAMReport = {
+      id: (reports.length + 1).toString(),
+      productName: productNames[newReport.product as keyof typeof productNames] || newReport.product,
+      reportType: newReport.reportType === 'passeport' ? 'Passeport Carbone Produit' :
+                  newReport.reportType === 'trimestriel' ? 'Rapport Trimestriel' :
+                  newReport.reportType === 'annuel' ? 'Rapport Annuel' : 'Données d\'Exportation',
+      period: newReport.period,
+      status: 'Généré',
+      createdDate: new Date().toLocaleDateString('fr-CA'), // Format YYYY-MM-DD
+      emissions: Math.round((Math.random() * 2 + 0.5) * 100) / 100, // Émissions aléatoires entre 0.5 et 2.5
+      volume: Math.round(Math.random() * 10000 + 1000) // Volume aléatoire entre 1000 et 11000
+    };
+
+    // Ajouter le nouveau rapport à la liste
+    setReports(prev => [...prev, newCBAMReport]);
+
     toast({
       title: "Rapport généré",
-      description: `Rapport ${newReport.reportType} créé avec succès`
+      description: `Rapport ${newCBAMReport.reportType} créé avec succès`
     });
 
     setShowNewReport(false);
@@ -282,17 +306,11 @@ Signature électronique: [Hash de validation]
 
               <div>
                 <Label htmlFor="period">Période*</Label>
-                <Select value={newReport.period} onValueChange={(value) => setNewReport(prev => ({ ...prev, period: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner la période..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="q1-2024">Q1 2024</SelectItem>
-                    <SelectItem value="q2-2024">Q2 2024</SelectItem>
-                    <SelectItem value="q3-2024">Q3 2024</SelectItem>
-                    <SelectItem value="q4-2024">Q4 2024</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  value={newReport.period}
+                  onChange={(e) => setNewReport(prev => ({ ...prev, period: e.target.value }))}
+                  placeholder="Ex: Q1 2024, Janvier 2024, 2024, etc."
+                />
               </div>
 
               <div>

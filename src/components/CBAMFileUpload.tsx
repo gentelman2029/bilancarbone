@@ -47,7 +47,7 @@ export const CBAMFileUpload = () => {
       uploadDate: '2024-01-15',
       status: 'Validé',
       description: 'Facture électricité site principal',
-      url: '/docs/dummy.pdf'
+      url: '/docs/facture-electricite-janvier-2024.pdf'
     },
     {
       id: '2',
@@ -58,7 +58,7 @@ export const CBAMFileUpload = () => {
       uploadDate: '2024-01-12',
       status: 'En attente',
       description: 'Certificat d\'analyse chimique acier batch #1234',
-      url: '/docs/dummy.pdf'
+      url: '/docs/certificat-analyse-acier.pdf'
     },
     {
       id: '3',
@@ -69,7 +69,7 @@ export const CBAMFileUpload = () => {
       uploadDate: '2025-08-21',
       status: 'En attente',
       description: 'certificat',
-      url: '/docs/dummy.pdf'
+      url: '/docs/agile.pdf'
     },
     {
       id: '4',
@@ -80,7 +80,7 @@ export const CBAMFileUpload = () => {
       uploadDate: '2025-08-21',
       status: 'En attente',
       description: 'facture',
-      url: '/docs/dummy.pdf'
+      url: '/docs/waterfall-hybrid.pdf'
     }
   ]);
 

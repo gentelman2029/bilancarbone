@@ -61,6 +61,18 @@ export const CBAMReports = () => {
     period: '',
     notes: ''
   });
+  const [search, setSearch] = useState('');
+
+  const filteredReports = reports.filter((r) => {
+    const q = search.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      r.productName.toLowerCase().includes(q) ||
+      r.reportType.toLowerCase().includes(q) ||
+      r.period.toLowerCase().includes(q) ||
+      r.status.toLowerCase().includes(q)
+    );
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -168,16 +180,18 @@ Signature électronique: [Hash de validation]
     window.URL.revokeObjectURL(url);
 
     toast({
-      title: "Rapport PDF exporté",
-      description: `Passeport carbone de ${productName} téléchargé avec succès`
+      title: "Rapport exporté",
+      description: `Passeport carbone de ${productName} téléchargé`
     });
   };
 
   const previewReport = (reportId: string) => {
-    toast({
-      title: "Aperçu du rapport",
-      description: "Ouverture de l'aperçu..."
-    });
+    const report = reports.find(r => r.id === reportId);
+    const content = `Aperçu du rapport CBAM\n\nProduit: ${report?.productName}\nType: ${report?.reportType}\nPériode: ${report?.period}\nStatut: ${report?.status}\nDate: ${report?.createdDate}`;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    window.open(url, '_blank', 'noopener');
+    toast({ title: 'Aperçu du rapport', description: 'Ouverture dans un nouvel onglet' });
   };
 
   return (
@@ -201,7 +215,7 @@ Signature électronique: [Hash de validation]
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-green-600">8</div>
+              <div className="text-2xl font-bold text-green-600">{filteredReports.filter(r => r.status === 'Généré').length}</div>
               <div className="text-sm text-muted-foreground">Rapports générés</div>
             </div>
             <CheckCircle className="h-8 w-8 text-green-600" />
@@ -211,7 +225,7 @@ Signature électronique: [Hash de validation]
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-yellow-600">3</div>
+              <div className="text-2xl font-bold text-yellow-600">{filteredReports.filter(r => r.status === 'En cours').length}</div>
               <div className="text-sm text-muted-foreground">En cours</div>
             </div>
             <Clock className="h-8 w-8 text-yellow-600" />
@@ -311,8 +325,8 @@ Signature électronique: [Hash de validation]
           <div className="flex items-center justify-between">
             <CardTitle>Rapports Existants</CardTitle>
             <div className="flex items-center gap-2">
-              <Input placeholder="Rechercher..." className="w-64" />
-              <Button variant="outline" size="icon">
+              <Input placeholder="Rechercher..." className="w-64" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Rechercher des rapports" />
+              <Button variant="outline" size="icon" aria-label="Lancer la recherche">
                 <Search className="h-4 w-4" />
               </Button>
             </div>
@@ -333,7 +347,7 @@ Signature électronique: [Hash de validation]
                 </tr>
               </thead>
               <tbody>
-                {reports.map((report) => (
+                {filteredReports.map((report) => (
                   <tr key={report.id} className="border-b hover:bg-gray-50">
                     <td className="p-2 font-medium">{report.productName}</td>
                     <td className="p-2 text-sm">{report.reportType}</td>
@@ -350,17 +364,19 @@ Signature électronique: [Hash de validation]
                       <div className="flex items-center justify-center gap-1">
                         <Button 
                           variant="ghost" 
-                          size="sm" 
+                          size="icon" 
                           onClick={() => previewReport(report.id)}
                           title="Aperçu"
+                          aria-label={`Aperçu du rapport ${report.productName}`}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button 
                           variant="ghost" 
-                          size="sm"
+                          size="icon"
                           onClick={() => downloadReport(report.id, report.productName)}
                           title="Télécharger"
+                          aria-label={`Télécharger le rapport ${report.productName}`}
                         >
                           <Download className="h-4 w-4" />
                         </Button>

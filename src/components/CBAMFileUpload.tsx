@@ -236,6 +236,8 @@ export const CBAMFileUpload = () => {
       const a = document.createElement('a');
       a.href = href;
       a.download = file.name;
+      a.target = '_blank';
+      a.rel = 'noopener';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -519,18 +521,22 @@ export const CBAMFileUpload = () => {
               <div className="rounded-lg overflow-hidden border">
                 {previewFile.type.includes('pdf') ? (
                   <iframe
+                    key={previewFile.id}
                     src={previewFile.url}
                     title={`Aperçu ${previewFile.name}`}
                     className="w-full h-[70vh]"
                   />
                 ) : previewFile.type.includes('image') ? (
                   <img 
+                    key={previewFile.id}
                     src={previewFile.url} 
                     alt={previewFile.name} 
                     className="max-h-[70vh] w-auto mx-auto" 
+                    loading="lazy"
                   />
                 ) : (
                   <iframe
+                    key={previewFile.id}
                     src={previewFile.url}
                     title={`Aperçu ${previewFile.name}`}
                     className="w-full h-[70vh]"

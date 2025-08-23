@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Progress } from '@/components/ui/progress';
 import { 
   Calendar, 
   Clock, 
@@ -16,7 +19,13 @@ import {
   Edit,
   Trash2,
   Bell,
-  CalendarDays
+  CalendarDays,
+  Search,
+  Filter,
+  SortAsc,
+  AlertCircle,
+  XCircle,
+  FileText
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -39,7 +48,7 @@ export const CBAMSchedules = () => {
       description: 'Soumission du rapport CBAM pour le premier trimestre',
       dueDate: '2024-01-31',
       priority: 'Haute',
-      status: 'À venir',
+      status: 'En retard',
       type: 'Rapport',
       productIds: ['1', '2']
     },
@@ -49,7 +58,7 @@ export const CBAMSchedules = () => {
       description: 'Formation du personnel sur les nouvelles procédures',
       dueDate: '2024-02-15',
       priority: 'Moyenne',
-      status: 'À venir',
+      status: 'En retard',
       type: 'Formation',
       productIds: []
     },
@@ -61,6 +70,16 @@ export const CBAMSchedules = () => {
       priority: 'Haute',
       status: 'En retard',
       type: 'Audit',
+      productIds: ['1']
+    },
+    {
+      id: '4',
+      title: 'Rapport semestriel',
+      description: 'Soumission rapport semestrielle',
+      dueDate: '2025-12-31',
+      priority: 'Haute',
+      status: 'À venir',
+      type: 'Rapport',
       productIds: ['1']
     }
   ]);
@@ -74,27 +93,40 @@ export const CBAMSchedules = () => {
     type: ''
   });
 
+  // Filtres et recherche
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+
+  // État pour la confirmation de suppression
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState('');
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'Haute': return 'bg-red-100 text-red-800';
-      case 'Moyenne': return 'bg-yellow-100 text-yellow-800';
-      case 'Faible': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'Haute': return 'bg-red-500 text-white border-red-500';
+      case 'Moyenne': return 'bg-amber-500 text-white border-amber-500';
+      case 'Faible': return 'bg-emerald-500 text-white border-emerald-500';
+      default: return 'bg-slate-500 text-white border-slate-500';
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string, daysLate?: number) => {
     switch (status) {
-      case 'À venir': return 'bg-blue-100 text-blue-800';
-      case 'En retard': return 'bg-red-100 text-red-800';
-      case 'Terminé': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'À venir': return 'bg-blue-500 text-white border-blue-500';
+      case 'En retard': 
+        if (daysLate && daysLate > 90) return 'bg-red-900 text-white border-red-900'; // Très critique
+        if (daysLate && daysLate > 30) return 'bg-red-700 text-white border-red-700'; // Critique
+        return 'bg-red-500 text-white border-red-500'; // Retard normal
+      case 'Terminé': return 'bg-emerald-500 text-white border-emerald-500';
+      default: return 'bg-slate-500 text-white border-slate-500';
     }
   };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'Rapport': return <Calendar className="h-4 w-4" />;
+      case 'Rapport': return <FileText className="h-4 w-4" />;
       case 'Notification': return <Bell className="h-4 w-4" />;
       case 'Audit': return <CheckCircle2 className="h-4 w-4" />;
       case 'Formation': return <CalendarDays className="h-4 w-4" />;
@@ -109,6 +141,60 @@ export const CBAMSchedules = () => {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
   };
+
+  const formatDueDate = (dueDate: string) => {
+    const date = new Date(dueDate);
+    return date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  // Données filtrées et triées
+  const filteredAndSortedDeadlines = useMemo(() => {
+    let filtered = deadlines.filter(deadline => {
+      const matchesSearch = searchQuery === '' || 
+        deadline.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        deadline.description.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesStatus = statusFilter === '' || deadline.status === statusFilter;
+      const matchesPriority = priorityFilter === '' || deadline.priority === priorityFilter;
+      const matchesType = typeFilter === '' || deadline.type === typeFilter;
+      
+      return matchesSearch && matchesStatus && matchesPriority && matchesType;
+    });
+
+    // Tri par date d'échéance (plus proche en premier)
+    return filtered.sort((a, b) => {
+      const dateA = new Date(a.dueDate);
+      const dateB = new Date(b.dueDate);
+      return dateA.getTime() - dateB.getTime();
+    });
+  }, [deadlines, searchQuery, statusFilter, priorityFilter, typeFilter]);
+
+  // Calcul des statistiques dynamiques
+  const stats = useMemo(() => {
+    const now = new Date();
+    const urgent = filteredAndSortedDeadlines.filter(d => {
+      const daysRemaining = calculateDaysRemaining(d.dueDate);
+      return d.status === 'En retard' || (d.status === 'À venir' && daysRemaining <= 7);
+    }).length;
+
+    const thisWeek = filteredAndSortedDeadlines.filter(d => {
+      const daysRemaining = calculateDaysRemaining(d.dueDate);
+      return d.status === 'À venir' && daysRemaining <= 7 && daysRemaining >= 0;
+    }).length;
+
+    const completed = filteredAndSortedDeadlines.filter(d => d.status === 'Terminé').length;
+
+    const nextDeadline = filteredAndSortedDeadlines.find(d => d.status === 'À venir');
+    const nextDeadlineText = nextDeadline 
+      ? `${formatDueDate(nextDeadline.dueDate)} (dans ${calculateDaysRemaining(nextDeadline.dueDate)} jours)`
+      : 'Aucune';
+
+    return { urgent, thisWeek, completed, nextDeadlineText };
+  }, [filteredAndSortedDeadlines]);
 
   const createDeadline = () => {
     if (!newDeadline.title || !newDeadline.dueDate || !newDeadline.priority || !newDeadline.type) {
@@ -149,11 +235,23 @@ export const CBAMSchedules = () => {
     });
   };
 
-  const deleteDeadline = (id: string) => {
+  const confirmDelete = (id: string) => {
+    setDeleteId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const deleteDeadline = () => {
+    setDeadlines(prev => prev.filter(d => d.id !== deleteId));
+    setDeleteDialogOpen(false);
+    setDeleteId('');
     toast({
       title: "Échéance supprimée",
       description: "L'échéance a été supprimée avec succès"
     });
+  };
+
+  const filterByStatus = (status: string) => {
+    setStatusFilter(status === statusFilter ? '' : status);
   };
 
   const setReminder = (id: string) => {
@@ -260,12 +358,85 @@ export const CBAMSchedules = () => {
         </Dialog>
       </div>
 
+      {/* Filtres et recherche */}
+      <Card className="p-4">
+        <div className="flex flex-wrap gap-4 items-center">
+          <div className="flex-1 min-w-[200px]">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Rechercher une échéance..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+          
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Statut" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Tous les statuts</SelectItem>
+              <SelectItem value="À venir">À venir</SelectItem>
+              <SelectItem value="En retard">En retard</SelectItem>
+              <SelectItem value="Terminé">Terminé</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Priorité" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Toutes priorités</SelectItem>
+              <SelectItem value="Haute">Haute</SelectItem>
+              <SelectItem value="Moyenne">Moyenne</SelectItem>
+              <SelectItem value="Faible">Faible</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Tous les types</SelectItem>
+              <SelectItem value="Rapport">Rapport</SelectItem>
+              <SelectItem value="Notification">Notification</SelectItem>
+              <SelectItem value="Audit">Audit</SelectItem>
+              <SelectItem value="Formation">Formation</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {(searchQuery || statusFilter || priorityFilter || typeFilter) && (
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setSearchQuery('');
+                setStatusFilter('');
+                setPriorityFilter('');
+                setTypeFilter('');
+              }}
+              size="sm"
+            >
+              <XCircle className="h-4 w-4 mr-2" />
+              Effacer filtres
+            </Button>
+          )}
+        </div>
+      </Card>
+
       {/* Vue d'ensemble rapide */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
+        <Card 
+          className="p-4 cursor-pointer hover:shadow-md transition-shadow" 
+          onClick={() => filterByStatus('En retard')}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-red-600">3</div>
+              <div className="text-2xl font-bold text-red-600">{stats.urgent}</div>
               <div className="text-sm text-muted-foreground">Échéances urgentes</div>
             </div>
             <AlertTriangle className="h-8 w-8 text-red-600" />
@@ -275,27 +446,32 @@ export const CBAMSchedules = () => {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-yellow-600">5</div>
+              <div className="text-2xl font-bold text-amber-600">{stats.thisWeek}</div>
               <div className="text-sm text-muted-foreground">Cette semaine</div>
             </div>
-            <Calendar className="h-8 w-8 text-yellow-600" />
+            <Calendar className="h-8 w-8 text-amber-600" />
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card 
+          className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => filterByStatus('Terminé')}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-green-600">12</div>
+              <div className="text-2xl font-bold text-emerald-600">{stats.completed}</div>
               <div className="text-sm text-muted-foreground">Terminées ce mois</div>
             </div>
-            <CheckCircle2 className="h-8 w-8 text-green-600" />
+            <CheckCircle2 className="h-8 w-8 text-emerald-600" />
           </div>
         </Card>
 
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-blue-600">15j</div>
+              <div className="text-lg font-semibold text-blue-600 leading-tight">
+                {stats.nextDeadlineText}
+              </div>
               <div className="text-sm text-muted-foreground">Prochaine échéance</div>
             </div>
             <Clock className="h-8 w-8 text-blue-600" />
@@ -306,87 +482,189 @@ export const CBAMSchedules = () => {
       {/* Liste des échéances */}
       <Card>
         <CardHeader>
-          <CardTitle>Prochaines Échéances</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>
+              Prochaines Échéances ({filteredAndSortedDeadlines.length})
+            </CardTitle>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <SortAsc className="h-4 w-4" />
+              Triées par date d'échéance
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {deadlines.map((deadline) => {
-              const daysRemaining = calculateDaysRemaining(deadline.dueDate);
-              return (
-                <Card key={deadline.id} className={`p-4 border-l-4 ${
-                  deadline.status === 'En retard' ? 'border-l-red-500' :
-                  daysRemaining <= 7 ? 'border-l-yellow-500' : 'border-l-green-500'
-                }`}>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        {getTypeIcon(deadline.type)}
-                        <h3 className="font-semibold">{deadline.title}</h3>
-                        <Badge className={getPriorityColor(deadline.priority)}>
-                          {deadline.priority}
-                        </Badge>
-                        <Badge className={getStatusColor(deadline.status)}>
-                          {deadline.status}
-                        </Badge>
+          {filteredAndSortedDeadlines.length === 0 ? (
+            <div className="text-center py-8">
+              <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="font-semibold text-lg mb-2">Aucune échéance trouvée</h3>
+              <p className="text-muted-foreground mb-4">
+                {searchQuery || statusFilter || priorityFilter || typeFilter 
+                  ? "Essayez d'ajuster vos filtres ou de lancer une nouvelle recherche."
+                  : "Créez votre première échéance pour commencer."}
+              </p>
+              {(searchQuery || statusFilter || priorityFilter || typeFilter) && (
+                <Button variant="outline" onClick={() => {
+                  setSearchQuery('');
+                  setStatusFilter('');
+                  setPriorityFilter('');
+                  setTypeFilter('');
+                }}>
+                  Effacer les filtres
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <TooltipProvider>
+                {filteredAndSortedDeadlines.map((deadline) => {
+                  const daysRemaining = calculateDaysRemaining(deadline.dueDate);
+                  const daysLate = daysRemaining < 0 ? Math.abs(daysRemaining) : 0;
+                  
+                  return (
+                    <Card key={deadline.id} className={`p-6 border-l-4 hover:shadow-md transition-shadow ${
+                      deadline.status === 'En retard' 
+                        ? daysLate > 90 ? 'border-l-red-900 bg-red-50' 
+                          : daysLate > 30 ? 'border-l-red-700 bg-red-50'
+                          : 'border-l-red-500 bg-red-50'
+                        : daysRemaining <= 7 ? 'border-l-amber-500 bg-amber-50' 
+                        : 'border-l-emerald-500 bg-emerald-50'
+                    }`}>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="flex items-center gap-2">
+                              {getTypeIcon(deadline.type)}
+                              <h3 className="font-semibold text-lg">{deadline.title}</h3>
+                            </div>
+                            <Badge className={getPriorityColor(deadline.priority)}>
+                              {deadline.priority}
+                            </Badge>
+                            <Badge className={getStatusColor(deadline.status, daysLate)}>
+                              {deadline.status}
+                              {deadline.status === 'En retard' && daysLate > 90 && (
+                                <AlertTriangle className="h-3 w-3 ml-1" />
+                              )}
+                            </Badge>
+                          </div>
+                          
+                          <p className="text-muted-foreground mb-4 text-base">
+                            {deadline.description}
+                          </p>
+                          
+                          <div className="flex items-center gap-6 text-sm">
+                            <span className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium">
+                                {formatDueDate(deadline.dueDate)}
+                              </span>
+                            </span>
+                            <span className={`flex items-center gap-2 font-medium px-3 py-1 rounded-full ${
+                              daysRemaining < 0 
+                                ? daysLate > 90 ? 'bg-red-900 text-white'
+                                  : daysLate > 30 ? 'bg-red-700 text-white'
+                                  : 'bg-red-500 text-white'
+                                : daysRemaining <= 7 ? 'bg-amber-500 text-white' 
+                                : 'bg-emerald-500 text-white'
+                            }`}>
+                              <Clock className="h-4 w-4" />
+                              {daysRemaining < 0 
+                                ? `En retard de ${Math.abs(daysRemaining)} jour(s)${daysLate > 90 ? ' - TRÈS CRITIQUE' : daysLate > 30 ? ' - CRITIQUE' : ''}`
+                                : daysRemaining === 0 
+                                ? 'Aujourd\'hui'
+                                : `Dans ${daysRemaining} jour(s)`
+                              }
+                            </span>
+                            
+                            {deadline.status !== 'Terminé' && (
+                              <div className="flex items-center gap-2">
+                                <Progress 
+                                  value={deadline.status === 'En retard' ? 100 : Math.max(0, 100 - (daysRemaining / 30) * 100)} 
+                                  className="w-20"
+                                />
+                                <span className="text-xs text-muted-foreground">
+                                  {deadline.status === 'En retard' ? 'Dépassé' : 
+                                   daysRemaining <= 7 ? 'Urgent' : 'En cours'}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-1">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => setReminder(deadline.id)}
+                              >
+                                <Bell className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Activer notification</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => editDeadline(deadline.id)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Modifier</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => confirmDelete(deadline.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Supprimer</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
                       </div>
-                      
-                      <p className="text-muted-foreground text-sm mb-2">
-                        {deadline.description}
-                      </p>
-                      
-                      <div className="flex items-center gap-4 text-sm">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          {deadline.dueDate}
-                        </span>
-                        <span className={`flex items-center gap-1 font-medium ${
-                          daysRemaining < 0 ? 'text-red-600' :
-                          daysRemaining <= 7 ? 'text-yellow-600' : 'text-green-600'
-                        }`}>
-                          <Clock className="h-4 w-4" />
-                          {daysRemaining < 0 
-                            ? `En retard de ${Math.abs(daysRemaining)} jour(s)`
-                            : daysRemaining === 0 
-                            ? 'Aujourd\'hui'
-                            : `Dans ${daysRemaining} jour(s)`
-                          }
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => setReminder(deadline.id)}
-                        title="Configurer un rappel"
-                      >
-                        <Bell className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => editDeadline(deadline.id)}
-                        title="Éditer"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => deleteDeadline(deadline.id)}
-                        title="Supprimer"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
+                    </Card>
+                  );
+                })}
+              </TooltipProvider>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Dialog de confirmation de suppression */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer cette échéance ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteDialogOpen(false)}>
+              Annuler
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={deleteDeadline} className="bg-red-600 hover:bg-red-700">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

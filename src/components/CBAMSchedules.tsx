@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,9 +25,12 @@ import {
   SortAsc,
   AlertCircle,
   XCircle,
-  FileText
+  FileText,
+  Download
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface CBAMDeadline {
   id: string;
@@ -92,6 +95,20 @@ export const CBAMSchedules = () => {
     priority: '',
     type: ''
   });
+
+  // États pour l'édition
+  const [showEditDeadline, setShowEditDeadline] = useState(false);
+  const [editingDeadline, setEditingDeadline] = useState<CBAMDeadline | null>(null);
+  const [editDeadlineForm, setEditDeadlineForm] = useState({
+    title: '',
+    description: '',
+    dueDate: '',
+    priority: '',
+    type: ''
+  });
+
+  // État pour les notifications
+  const [notifications, setNotifications] = useState<Set<string>>(new Set());
 
   // Filtres et recherche
   const [searchQuery, setSearchQuery] = useState('');
@@ -229,10 +246,51 @@ export const CBAMSchedules = () => {
   };
 
   const editDeadline = (id: string) => {
+    const deadline = deadlines.find(d => d.id === id);
+    if (deadline) {
+      setEditingDeadline(deadline);
+      setEditDeadlineForm({
+        title: deadline.title,
+        description: deadline.description,
+        dueDate: deadline.dueDate,
+        priority: deadline.priority,
+        type: deadline.type
+      });
+      setShowEditDeadline(true);
+    }
+  };
+
+  const saveEditedDeadline = () => {
+    if (!editingDeadline || !editDeadlineForm.title || !editDeadlineForm.dueDate || !editDeadlineForm.priority || !editDeadlineForm.type) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs obligatoires",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setDeadlines(prev => prev.map(d => 
+      d.id === editingDeadline.id 
+        ? {
+            ...d,
+            title: editDeadlineForm.title,
+            description: editDeadlineForm.description,
+            dueDate: editDeadlineForm.dueDate,
+            priority: editDeadlineForm.priority as 'Haute' | 'Moyenne' | 'Faible',
+            type: editDeadlineForm.type as 'Rapport' | 'Notification' | 'Audit' | 'Formation'
+          }
+        : d
+    ));
+
     toast({
-      title: "Édition d'échéance",
-      description: "Ouverture du formulaire d'édition..."
+      title: "Échéance modifiée",
+      description: `L'échéance "${editDeadlineForm.title}" a été mise à jour`
     });
+
+    setShowEditDeadline(false);
+    setEditingDeadline(null);
+    setEditDeadlineForm({ title: '', description: '', dueDate: '', priority: '', type: '' });
   };
 
   const confirmDelete = (id: string) => {
@@ -255,15 +313,118 @@ export const CBAMSchedules = () => {
   };
 
   const setReminder = (id: string) => {
+    const deadline = deadlines.find(d => d.id === id);
+    if (deadline) {
+      const newNotifications = new Set(notifications);
+      if (newNotifications.has(id)) {
+        newNotifications.delete(id);
+        toast({
+          title: "Rappel désactivé",
+          description: "Les notifications pour cette échéance ont été désactivées"
+        });
+      } else {
+        newNotifications.add(id);
+        toast({
+          title: "Rappel configuré",
+          description: "Vous recevrez une notification 3 jours avant l'échéance"
+        });
+      }
+      setNotifications(newNotifications);
+    }
+  };
+
+  const generatePDFReport = () => {
+    const doc = new jsPDF();
+    
+    // En-tête du document
+    doc.setFontSize(20);
+    doc.text('Rapport des Échéances CBAM', 20, 20);
+    
+    doc.setFontSize(12);
+    doc.text(`Généré le: ${new Date().toLocaleDateString('fr-FR')}`, 20, 30);
+    doc.text(`Nombre total d'échéances: ${deadlines.length}`, 20, 40);
+
+    // Statistiques
+    const urgentCount = deadlines.filter(d => {
+      const daysRemaining = calculateDaysRemaining(d.dueDate);
+      return d.status === 'En retard' || (d.status === 'À venir' && daysRemaining <= 7);
+    }).length;
+    
+    const lateCount = deadlines.filter(d => d.status === 'En retard').length;
+    const completedCount = deadlines.filter(d => d.status === 'Terminé').length;
+
+    doc.text(`Échéances urgentes: ${urgentCount}`, 20, 50);
+    doc.text(`En retard: ${lateCount}`, 20, 60);
+    doc.text(`Terminées: ${completedCount}`, 20, 70);
+
+    // Tableau des échéances
+    const tableData = deadlines.map(deadline => {
+      const daysRemaining = calculateDaysRemaining(deadline.dueDate);
+      const daysLate = daysRemaining < 0 ? Math.abs(daysRemaining) : 0;
+      
+      return [
+        deadline.title,
+        deadline.description,
+        deadline.priority,
+        deadline.status,
+        formatDueDate(deadline.dueDate),
+        deadline.status === 'En retard' ? `${daysLate} jours` : 
+          daysRemaining === 0 ? 'Aujourd\'hui' : 
+          daysRemaining > 0 ? `Dans ${daysRemaining} jours` : '-'
+      ];
+    });
+
+    autoTable(doc, {
+      head: [['Titre', 'Description', 'Criticité', 'État', 'Date d\'échéance', 'Retard/Délai']],
+      body: tableData,
+      startY: 80,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [63, 81, 181] },
+      columnStyles: {
+        0: { cellWidth: 30 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 20 },
+        3: { cellWidth: 20 },
+        4: { cellWidth: 25 },
+        5: { cellWidth: 25 }
+      }
+    });
+
+    // Téléchargement
+    doc.save(`rapport-echeances-cbam-${new Date().toISOString().split('T')[0]}.pdf`);
+    
     toast({
-      title: "Rappel configuré",
-      description: "Vous recevrez une notification 3 jours avant l'échéance"
+      title: "Rapport généré",
+      description: "Le rapport PDF a été téléchargé avec succès"
     });
   };
 
+  // Vérification des notifications (simulation)
+  useEffect(() => {
+    const checkNotifications = () => {
+      deadlines.forEach(deadline => {
+        if (notifications.has(deadline.id) && deadline.status === 'À venir') {
+          const daysRemaining = calculateDaysRemaining(deadline.dueDate);
+          if (daysRemaining === 3) {
+            toast({
+              title: "Rappel d'échéance",
+              description: `L'échéance "${deadline.title}" arrive dans 3 jours`
+            });
+          }
+        }
+      });
+    };
+
+    // Vérification immédiate et ensuite toutes les heures
+    checkNotifications();
+    const interval = setInterval(checkNotifications, 60 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, [deadlines, notifications]);
+
   return (
     <div className="space-y-6">
-      {/* Header avec bouton nouvelle échéance */}
+      {/* Header avec boutons */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Calendrier des Échéances CBAM</h2>
@@ -271,13 +432,18 @@ export const CBAMSchedules = () => {
             Suivez et gérez vos obligations de reporting et conformité
           </p>
         </div>
-        <Dialog open={showNewDeadline} onOpenChange={setShowNewDeadline}>
-          <DialogTrigger asChild>
-            <Button className="bg-green-600 hover:bg-green-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Nouvelle Échéance
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={generatePDFReport}>
+            <Download className="h-4 w-4 mr-2" />
+            Exporter PDF
+          </Button>
+          <Dialog open={showNewDeadline} onOpenChange={setShowNewDeadline}>
+            <DialogTrigger asChild>
+              <Button className="bg-green-600 hover:bg-green-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Nouvelle Échéance
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Créer une Nouvelle Échéance</DialogTitle>
@@ -356,6 +522,7 @@ export const CBAMSchedules = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Filtres et recherche */}
@@ -591,20 +758,21 @@ export const CBAMSchedules = () => {
                         </div>
                         
                         <div className="flex items-center gap-1">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                onClick={() => setReminder(deadline.id)}
-                              >
-                                <Bell className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Activer notification</p>
-                            </TooltipContent>
-                          </Tooltip>
+                           <Tooltip>
+                             <TooltipTrigger asChild>
+                               <Button 
+                                 variant="ghost" 
+                                 size="icon"
+                                 onClick={() => setReminder(deadline.id)}
+                                 className={notifications.has(deadline.id) ? 'text-blue-600 bg-blue-50' : ''}
+                               >
+                                 <Bell className={`h-4 w-4 ${notifications.has(deadline.id) ? 'fill-current' : ''}`} />
+                               </Button>
+                             </TooltipTrigger>
+                             <TooltipContent>
+                               <p>{notifications.has(deadline.id) ? 'Désactiver notification' : 'Activer notification'}</p>
+                             </TooltipContent>
+                           </Tooltip>
                           
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -645,6 +813,87 @@ export const CBAMSchedules = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog d'édition */}
+      <Dialog open={showEditDeadline} onOpenChange={setShowEditDeadline}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier l'Échéance</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-title">Titre*</Label>
+              <Input
+                id="edit-title"
+                value={editDeadlineForm.title}
+                onChange={(e) => setEditDeadlineForm(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Nom de l'échéance..."
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={editDeadlineForm.description}
+                onChange={(e) => setEditDeadlineForm(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Description détaillée..."
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-dueDate">Date d'échéance*</Label>
+                <Input
+                  id="edit-dueDate"
+                  type="date"
+                  value={editDeadlineForm.dueDate}
+                  onChange={(e) => setEditDeadlineForm(prev => ({ ...prev, dueDate: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-priority">Priorité*</Label>
+                <Select value={editDeadlineForm.priority} onValueChange={(value) => setEditDeadlineForm(prev => ({ ...prev, priority: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Niveau de priorité..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Haute">Haute</SelectItem>
+                    <SelectItem value="Moyenne">Moyenne</SelectItem>
+                    <SelectItem value="Faible">Faible</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-type">Type*</Label>
+              <Select value={editDeadlineForm.type} onValueChange={(value) => setEditDeadlineForm(prev => ({ ...prev, type: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Type d'échéance..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Rapport">Rapport</SelectItem>
+                  <SelectItem value="Notification">Notification</SelectItem>
+                  <SelectItem value="Audit">Audit</SelectItem>
+                  <SelectItem value="Formation">Formation</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button onClick={saveEditedDeadline} className="flex-1">
+                Sauvegarder les Modifications
+              </Button>
+              <Button variant="outline" onClick={() => setShowEditDeadline(false)} className="flex-1">
+                Annuler
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog de confirmation de suppression */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

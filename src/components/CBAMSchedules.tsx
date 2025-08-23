@@ -95,9 +95,9 @@ export const CBAMSchedules = () => {
 
   // Filtres et recherche
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
 
   // État pour la confirmation de suppression
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -158,9 +158,9 @@ export const CBAMSchedules = () => {
         deadline.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         deadline.description.toLowerCase().includes(searchQuery.toLowerCase());
       
-      const matchesStatus = statusFilter === '' || deadline.status === statusFilter;
-      const matchesPriority = priorityFilter === '' || deadline.priority === priorityFilter;
-      const matchesType = typeFilter === '' || deadline.type === typeFilter;
+      const matchesStatus = statusFilter === '' || statusFilter === 'all' || deadline.status === statusFilter;
+      const matchesPriority = priorityFilter === '' || priorityFilter === 'all' || deadline.priority === priorityFilter;
+      const matchesType = typeFilter === '' || typeFilter === 'all' || deadline.type === typeFilter;
       
       return matchesSearch && matchesStatus && matchesPriority && matchesType;
     });
@@ -251,7 +251,7 @@ export const CBAMSchedules = () => {
   };
 
   const filterByStatus = (status: string) => {
-    setStatusFilter(status === statusFilter ? '' : status);
+    setStatusFilter(status === statusFilter ? 'all' : status);
   };
 
   const setReminder = (id: string) => {
@@ -378,7 +378,7 @@ export const CBAMSchedules = () => {
               <SelectValue placeholder="Statut" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tous les statuts</SelectItem>
+              <SelectItem value="all">Tous les statuts</SelectItem>
               <SelectItem value="À venir">À venir</SelectItem>
               <SelectItem value="En retard">En retard</SelectItem>
               <SelectItem value="Terminé">Terminé</SelectItem>
@@ -390,7 +390,7 @@ export const CBAMSchedules = () => {
               <SelectValue placeholder="Priorité" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Toutes priorités</SelectItem>
+              <SelectItem value="all">Toutes priorités</SelectItem>
               <SelectItem value="Haute">Haute</SelectItem>
               <SelectItem value="Moyenne">Moyenne</SelectItem>
               <SelectItem value="Faible">Faible</SelectItem>
@@ -402,7 +402,7 @@ export const CBAMSchedules = () => {
               <SelectValue placeholder="Type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tous les types</SelectItem>
+              <SelectItem value="all">Tous les types</SelectItem>
               <SelectItem value="Rapport">Rapport</SelectItem>
               <SelectItem value="Notification">Notification</SelectItem>
               <SelectItem value="Audit">Audit</SelectItem>
@@ -410,14 +410,14 @@ export const CBAMSchedules = () => {
             </SelectContent>
           </Select>
 
-          {(searchQuery || statusFilter || priorityFilter || typeFilter) && (
+          {(searchQuery || (statusFilter && statusFilter !== 'all') || (priorityFilter && priorityFilter !== 'all') || (typeFilter && typeFilter !== 'all')) && (
             <Button 
               variant="outline" 
               onClick={() => {
                 setSearchQuery('');
-                setStatusFilter('');
-                setPriorityFilter('');
-                setTypeFilter('');
+                setStatusFilter('all');
+                setPriorityFilter('all');
+                setTypeFilter('all');
               }}
               size="sm"
             >
@@ -498,16 +498,16 @@ export const CBAMSchedules = () => {
               <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-semibold text-lg mb-2">Aucune échéance trouvée</h3>
               <p className="text-muted-foreground mb-4">
-                {searchQuery || statusFilter || priorityFilter || typeFilter 
+                {searchQuery || (statusFilter && statusFilter !== 'all') || (priorityFilter && priorityFilter !== 'all') || (typeFilter && typeFilter !== 'all') 
                   ? "Essayez d'ajuster vos filtres ou de lancer une nouvelle recherche."
                   : "Créez votre première échéance pour commencer."}
               </p>
-              {(searchQuery || statusFilter || priorityFilter || typeFilter) && (
+              {(searchQuery || (statusFilter && statusFilter !== 'all') || (priorityFilter && priorityFilter !== 'all') || (typeFilter && typeFilter !== 'all')) && (
                 <Button variant="outline" onClick={() => {
                   setSearchQuery('');
-                  setStatusFilter('');
-                  setPriorityFilter('');
-                  setTypeFilter('');
+                  setStatusFilter('all');
+                  setPriorityFilter('all');
+                  setTypeFilter('all');
                 }}>
                   Effacer les filtres
                 </Button>

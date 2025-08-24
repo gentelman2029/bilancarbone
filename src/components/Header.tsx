@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
-import { LanguageSelector } from "./LanguageSelector";
 import type { User } from "@supabase/supabase-js";
 
 export const Header = () => {
@@ -91,7 +90,6 @@ export const Header = () => {
 
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center space-x-3">
-            <LanguageSelector />
             {user ? (
               <>
                 <span className="text-sm text-muted-foreground hidden lg:block">
@@ -163,9 +161,6 @@ export const Header = () => {
             
             {/* Mobile Auth */}
             <div className="mt-4 pt-4 border-t border-border space-y-2">
-              <div className="px-4 mb-2">
-                <LanguageSelector />
-              </div>
               {user ? (
                 <>
                   <div className="px-4 py-2 text-sm text-muted-foreground">

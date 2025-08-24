@@ -42,6 +42,25 @@
       "step2_desc": "Calculs automatiques selon les facteurs d'émission ADEME et GHG Protocol",
       "step3_title": "3. Pilotez vos actions",
       "step3_desc": "Définissez et suivez votre plan de réduction d'empreinte carbone"
+    },
+    "alert": {
+      "badge": "Urgence climatique",
+      "title": "+1,5°C en 2030 : Il est encore temps d'agir",
+      "description": "Les entreprises représentent 70% des émissions mondiales de CO2. Face à l'urgence climatique, mesurer et réduire son empreinte carbone n'est plus une option, c'est une responsabilité essentielle pour l'avenir de notre planète.",
+      "cards": {
+        "warming_title": "Réchauffement accéléré",
+        "warming_desc": "2023 : année la plus chaude jamais enregistrée",
+        "regulation_title": "Réglementation renforcée",
+        "regulation_desc": "CSRD obligatoire dès 2024-2026",
+        "business_title": "Opportunité business",
+        "business_desc": "Économies et compétitivité durable"
+      },
+      "cta_badge": "Agissez maintenant pour votre entreprise et la planète"
+    },
+    "case_studies": {
+      "badge": "Études de cas",
+      "title": "Résultats concrets obtenus",
+      "subtitle": "Découvrez comment nos clients ont transformé leur empreinte carbone"
     }
   },
   "data_collection": {
@@ -162,11 +181,43 @@
     "warning": "Attention",
     "info": "Information"
   },
-  "language": {
-    "select": "Choisir la langue",
-    "french": "Français",
-    "english": "English",
-    "arabic": "العربية",
-    "german": "Deutsch"
+  "cbam": {
+    "title": "Module CBAM Compliance",
+    "subtitle": "Mécanisme d'Ajustement Carbone aux Frontières - Conformité UE",
+    "phase": {
+      "transition": "Phase de Transition",
+      "operational": "Mode Opérationnel"
+    },
+    "reporting": {
+      "label_prefix": "Reporting",
+      "quarterly": "Trimestriel",
+      "monthly": "Mensuel"
+    },
+    "tabs": {
+      "products": "Produits",
+      "calculations": "Calculs",
+      "reports": "Rapports",
+      "schedules": "Échéances"
+    },
+    "products": {
+      "manage_title": "Gestion des Produits CBAM",
+      "new_product": "Nouveau Produit",
+      "manage_subtitle": "Configurez vos produits soumis au mécanisme CBAM",
+      "catalog_title": "Catalogue des Produits",
+      "table": {
+        "name": "Nom du Produit",
+        "cn_code": "Code CN",
+        "sector": "Secteur",
+        "volume": "Volume",
+        "status": "Statut",
+        "actions": "Actions"
+      },
+      "import_bulk": "Import en Lot",
+      "import_bulk_desc": "Importez plusieurs produits via un fichier Excel",
+      "sector_models": "Modèles Sectoriels",
+      "sector_models_desc": "Utilisez des modèles prédéfinis par secteur",
+      "advanced_config": "Configuration Avancée",
+      "advanced_config_desc": "Paramètres détaillés et facteurs personnalisés"
+    }
   }
 }

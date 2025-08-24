@@ -229,7 +229,7 @@ ${productName},7208 10,Fer et acier,2500,Conforme,2.1`;
               });
             }}
           >
-            {t('cbam.reporting.label', { frequency: reportingFrequency === 'trimestriel' ? t('cbam.reporting.quarterly') : t('cbam.reporting.monthly') })}
+            {`${t('cbam.reporting.label_prefix')} ${reportingFrequency === 'trimestriel' ? t('cbam.reporting.quarterly') : t('cbam.reporting.monthly')}`}
           </Button>
         </div>
       </div>

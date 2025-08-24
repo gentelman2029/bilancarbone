@@ -27,6 +27,7 @@ import { CBAMSchedules } from './CBAMSchedules';
 import { CBAMFileUpload } from './CBAMFileUpload';
 import { CBAMBulkImport } from './CBAMBulkImport';
 import { CBAMSectorModels } from './CBAMSectorModels';
+import { useTranslation } from 'react-i18next';
 
 interface CBAMProduct {
   id: string;
@@ -40,6 +41,7 @@ interface CBAMProduct {
 }
 
 export const CBAMDashboard = () => {
+  const { t } = useTranslation();
   const [showProductForm, setShowProductForm] = useState(false);
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [showBulkImport, setShowBulkImport] = useState(false);
@@ -199,9 +201,9 @@ ${productName},7208 10,Fer et acier,2500,Conforme,2.1`;
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Module CBAM Compliance</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t('cbam.title')}</h1>
           <p className="text-muted-foreground">
-            Mécanisme d'Ajustement Carbone aux Frontières - Conformité UE
+            {t('cbam.subtitle')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -215,7 +217,7 @@ ${productName},7208 10,Fer et acier,2500,Conforme,2.1`;
               });
             }}
           >
-            {phaseMode === 'transition' ? 'Phase de Transition' : 'Mode Opérationnel'}
+            {phaseMode === 'transition' ? t('cbam.phase.transition') : t('cbam.phase.operational')}
           </Button>
           <Button 
             variant={reportingFrequency === 'trimestriel' ? 'default' : 'outline'}
@@ -227,7 +229,7 @@ ${productName},7208 10,Fer et acier,2500,Conforme,2.1`;
               });
             }}
           >
-            Reporting {reportingFrequency === 'trimestriel' ? 'Trimestriel' : 'Mensuel'}
+            {t('cbam.reporting.label', { frequency: reportingFrequency === 'trimestriel' ? t('cbam.reporting.quarterly') : t('cbam.reporting.monthly') })}
           </Button>
         </div>
       </div>
@@ -296,19 +298,19 @@ ${productName},7208 10,Fer et acier,2500,Conforme,2.1`;
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="products" className="flex items-center gap-2">
             <Factory className="h-4 w-4" />
-            Produits
+            {t('cbam.tabs.products')}
           </TabsTrigger>
           <TabsTrigger value="calculations" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
-            Calculs
+            {t('cbam.tabs.calculations')}
           </TabsTrigger>
           <TabsTrigger value="reports" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
-            Rapports
+            {t('cbam.tabs.reports')}
           </TabsTrigger>
           <TabsTrigger value="schedules" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
-            Échéances
+            {t('cbam.tabs.schedules')}
           </TabsTrigger>
         </TabsList>
 
@@ -316,30 +318,30 @@ ${productName},7208 10,Fer et acier,2500,Conforme,2.1`;
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Gestion des Produits CBAM</CardTitle>
+                <CardTitle>{t('cbam.products.manage_title')}</CardTitle>
                 <Button onClick={handleNewProduct} className="bg-green-600 hover:bg-green-700">
                   <Plus className="h-4 w-4 mr-2" />
-                  Nouveau Produit
+                  {t('cbam.products.new_product')}
                 </Button>
               </div>
               <p className="text-muted-foreground">
-                Configurez vos produits soumis au mécanisme CBAM
+                {t('cbam.products.manage_subtitle')}
               </p>
             </CardHeader>
             <CardContent>
               {/* Product Catalog */}
               <div className="space-y-4">
-                <h3 className="font-semibold">📋 Catalogue des Produits</h3>
+                <h3 className="font-semibold">📋 {t('cbam.products.catalog_title')}</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b text-sm text-muted-foreground">
-                        <th className="text-left p-2">Nom du Produit</th>
-                        <th className="text-left p-2">Code CN</th>
-                        <th className="text-left p-2">Secteur</th>
-                        <th className="text-left p-2">Volume</th>
-                        <th className="text-left p-2">Statut</th>
-                        <th className="text-center p-2">Actions</th>
+                        <th className="text-left p-2">{t('cbam.products.table.name')}</th>
+                        <th className="text-left p-2">{t('cbam.products.table.cn_code')}</th>
+                        <th className="text-left p-2">{t('cbam.products.table.sector')}</th>
+                        <th className="text-left p-2">{t('cbam.products.table.volume')}</th>
+                        <th className="text-left p-2">{t('cbam.products.table.status')}</th>
+                        <th className="text-center p-2">{t('cbam.products.table.actions')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -393,25 +395,25 @@ ${productName},7208 10,Fer et acier,2500,Conforme,2.1`;
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6">
                   <Card className="p-6 text-center hover:shadow-md transition-shadow cursor-pointer" onClick={handleImportLot}>
                     <Upload className="h-8 w-8 mx-auto mb-3 text-blue-600" />
-                    <h4 className="font-semibold mb-2">Import en Lot</h4>
+                    <h4 className="font-semibold mb-2">{t('cbam.products.import_bulk')}</h4>
                     <p className="text-sm text-muted-foreground">
-                      Importez plusieurs produits via un fichier Excel
+                      {t('cbam.products.import_bulk_desc')}
                     </p>
                   </Card>
 
                   <Card className="p-6 text-center hover:shadow-md transition-shadow cursor-pointer" onClick={handleSectorModels}>
                     <Factory className="h-8 w-8 mx-auto mb-3 text-green-600" />
-                    <h4 className="font-semibold mb-2">Modèles Sectoriels</h4>
+                    <h4 className="font-semibold mb-2">{t('cbam.products.sector_models')}</h4>
                     <p className="text-sm text-muted-foreground">
-                      Utilisez des modèles prédéfinis par secteur
+                      {t('cbam.products.sector_models_desc')}
                     </p>
                   </Card>
 
                   <Card className="p-6 text-center hover:shadow-md transition-shadow cursor-pointer" onClick={handleAdvancedConfig}>
                     <Settings className="h-8 w-8 mx-auto mb-3 text-purple-600" />
-                    <h4 className="font-semibold mb-2">Configuration Avancée</h4>
+                    <h4 className="font-semibold mb-2">{t('cbam.products.advanced_config')}</h4>
                     <p className="text-sm text-muted-foreground">
-                      Paramètres détaillés et facteurs personnalisés
+                      {t('cbam.products.advanced_config_desc')}
                     </p>
                   </Card>
                 </div>

@@ -99,48 +99,46 @@ const Index = () => {
           <div className="max-w-4xl mx-auto text-center space-y-6">
             <div className="inline-flex items-center space-x-2 bg-destructive/10 text-destructive px-4 py-2 rounded-full border border-destructive/20">
               <span className="text-2xl">🌍</span>
-              <span className="font-semibold">Urgence climatique</span>
+              <span className="font-semibold">{t('home.alert.badge')}</span>
             </div>
             
             <h2 className="text-2xl lg:text-3xl font-bold text-foreground">
-              +1,5°C en 2030 : Il est encore temps d'agir
+              {t('home.alert.title')}
             </h2>
             
             <p className="text-lg text-muted-foreground leading-relaxed">
-              Les entreprises représentent <strong className="text-primary">70% des émissions mondiales de CO2</strong>. 
-              Face à l'urgence climatique, mesurer et réduire son empreinte carbone n'est plus une option, 
-              c'est une <strong className="text-foreground">responsabilité essentielle</strong> pour l'avenir de notre planète.
+              {t('home.alert.description')}
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
               <div className="bg-card p-6 rounded-lg border shadow-sm">
                 <div className="text-2xl mb-2">🔥</div>
-                <div className="text-sm font-semibold text-foreground">Réchauffement accéléré</div>
+                <div className="text-sm font-semibold text-foreground">{t('home.alert.cards.warming_title')}</div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  2023 : année la plus chaude jamais enregistrée
+                  {t('home.alert.cards.warming_desc')}
                 </div>
               </div>
               
               <div className="bg-card p-6 rounded-lg border shadow-sm">
                 <div className="text-2xl mb-2">⚖️</div>
-                <div className="text-sm font-semibold text-foreground">Réglementation renforcée</div>
+                <div className="text-sm font-semibold text-foreground">{t('home.alert.cards.regulation_title')}</div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  CSRD obligatoire dès 2024-2026
+                  {t('home.alert.cards.regulation_desc')}
                 </div>
               </div>
               
               <div className="bg-card p-6 rounded-lg border shadow-sm">
                 <div className="text-2xl mb-2">💚</div>
-                <div className="text-sm font-semibold text-foreground">Opportunité business</div>
+                <div className="text-sm font-semibold text-foreground">{t('home.alert.cards.business_title')}</div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  Économies et compétitivité durable
+                  {t('home.alert.cards.business_desc')}
                 </div>
               </div>
             </div>
             
             <div className="pt-4">
               <Badge className="bg-primary/10 text-primary border-primary/20">
-                Agissez maintenant pour votre entreprise et la planète
+                {t('home.alert.cta_badge')}
               </Badge>
             </div>
           </div>
@@ -248,13 +246,13 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
-              Études de cas
+              {t('home.case_studies.badge')}
             </Badge>
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Résultats concrets obtenus
+              {t('home.case_studies.title')}
             </h2>
             <p className="text-xl text-muted-foreground">
-              Découvrez comment nos clients ont transformé leur empreinte carbone
+              {t('home.case_studies.subtitle')}
             </p>
           </div>
 

@@ -31,11 +31,11 @@ export const Header = () => {
   
   const navItems = [
     { path: "/", label: t("navigation.home"), icon: Leaf },
-    { path: "/cbam", label: "Module CBAM Compliance", icon: ShieldCheck },
-    { path: "/data", label: t("navigation.data"), icon: Users },
-    { path: "/calculator", label: t("navigation.calculator"), icon: Calculator },
+    { path: "/data", label: t("navigation.simple_calculator"), icon: Users },
+    { path: "/calculator", label: t("navigation.advanced_calculator"), icon: Calculator },
     { path: "/dashboard", label: t("navigation.dashboard"), icon: BarChart3 },
     { path: "/actions", label: t("navigation.actions"), icon: Settings },
+    { path: "/cbam", label: t("navigation.cbam_module"), icon: ShieldCheck },
   ];
 
   const handleSignOut = async () => {
@@ -47,7 +47,7 @@ export const Header = () => {
       navigate("/");
       toast({
         title: t("auth.signout_success"),
-        description: "À bientôt sur CarbonTrack !",
+        description: t("auth.signout_message"),
       });
     } catch (error: any) {
       toast({

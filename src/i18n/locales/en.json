@@ -2,10 +2,13 @@
   "navigation": {
     "home": "Home",
     "dashboard": "Dashboard",
+    "simple_calculator": "Simple Calculator",
+    "advanced_calculator": "Advanced Calculator",
     "data": "Data Collection",
     "calculator": "Calculator",
     "actions": "Actions",
-    "contact": "Contact"
+    "contact": "Contact",
+    "cbam_module": "CBAM Compliance Module"
   },
   "home": {
     "hero": {
@@ -63,6 +66,7 @@
     "register": "Create Account",
     "loading": "Loading...",
     "signout_success": "Successfully signed out",
+    "signout_message": "See you soon on CarbonTrack!",
     "signout_error": "Error signing out"
   },
   "dashboard": {

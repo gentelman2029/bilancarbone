@@ -2,10 +2,13 @@
   "navigation": {
     "home": "Accueil",
     "dashboard": "Tableau de bord",
+    "simple_calculator": "Calculateur simple",
+    "advanced_calculator": "Calculateur avancé",
     "data": "Collecte de données",
     "calculator": "Calculateur",
     "actions": "Actions",
-    "contact": "Contact"
+    "contact": "Contact",
+    "cbam_module": "Module CBAM Compliance"
   },
   "home": {
     "hero": {
@@ -63,6 +66,7 @@
     "register": "Créer un compte",
     "loading": "Chargement...",
     "signout_success": "Déconnexion réussie",
+    "signout_message": "À bientôt sur CarbonTrack !",
     "signout_error": "Erreur lors de la déconnexion"
   },
   "dashboard": {

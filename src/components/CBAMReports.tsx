@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   FileText, 
   Download, 
@@ -15,7 +16,11 @@ import {
   Clock,
   AlertCircle,
   Plus,
-  Search
+  Search,
+  CreditCard,
+  BarChart3,
+  Database,
+  Loader
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -24,10 +29,11 @@ interface CBAMReport {
   productName: string;
   reportType: string;
   period: string;
-  status: 'Généré' | 'En cours' | 'Brouillon';
+  status: 'Généré' | 'En attente de données' | 'En cours de génération' | 'En cours de validation' | 'Brouillon';
   createdDate: string;
   emissions: number;
   volume: number;
+  deadline?: string;
 }
 
 export const CBAMReports = () => {
@@ -38,19 +44,31 @@ export const CBAMReports = () => {
       reportType: 'Passeport Carbone Produit',
       period: 'Q1 2024',
       status: 'Généré',
-      createdDate: '2024-01-15',
+      createdDate: '2024-03-28',
       emissions: 2.1,
-      volume: 2500
+      volume: 2500,
+      deadline: '2024-04-30'
     },
     {
       id: '2',
       productName: 'Ciment Portland',
       reportType: 'Rapport Trimestriel',
       period: 'Q1 2024',
-      status: 'En cours',
-      createdDate: '2024-01-10',
+      status: 'En attente de données',
+      createdDate: '2024-03-25',
       emissions: 0.82,
-      volume: 15000
+      volume: 15000,
+      deadline: '2024-04-30'
+    },
+    {
+      id: '3',
+      productName: 'Acier laminé à chaud',
+      reportType: 'Rapport Trimestriel',
+      period: 'Q3 2025',
+      status: 'Généré',
+      createdDate: '2025-08-26',
+      emissions: 1.93,
+      volume: 3200
     }
   ]);
 
@@ -77,7 +95,9 @@ export const CBAMReports = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Généré': return 'bg-green-100 text-green-800';
-      case 'En cours': return 'bg-yellow-100 text-yellow-800';
+      case 'En attente de données': return 'bg-orange-100 text-orange-800';
+      case 'En cours de génération': return 'bg-blue-100 text-blue-800';
+      case 'En cours de validation': return 'bg-yellow-100 text-yellow-800';
       case 'Brouillon': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -86,10 +106,30 @@ export const CBAMReports = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'Généré': return <CheckCircle className="h-4 w-4" />;
-      case 'En cours': return <Clock className="h-4 w-4" />;
+      case 'En attente de données': return <Database className="h-4 w-4" />;
+      case 'En cours de génération': return <Loader className="h-4 w-4 animate-spin" />;
+      case 'En cours de validation': return <Clock className="h-4 w-4" />;
       case 'Brouillon': return <AlertCircle className="h-4 w-4" />;
       default: return null;
     }
+  };
+
+  const getReportTypeIcon = (reportType: string) => {
+    if (reportType.includes('Passeport')) {
+      return <CreditCard className="h-4 w-4 text-blue-600" />;
+    } else if (reportType.includes('Trimestriel')) {
+      return <BarChart3 className="h-4 w-4 text-green-600" />;
+    }
+    return <FileText className="h-4 w-4 text-gray-600" />;
+  };
+
+  const getReportTypeColor = (reportType: string) => {
+    if (reportType.includes('Passeport')) {
+      return 'text-blue-600';
+    } else if (reportType.includes('Trimestriel')) {
+      return 'text-green-600';
+    }
+    return 'text-gray-600';
   };
 
   const generateReport = () => {
@@ -249,18 +289,23 @@ Signature électronique: [Hash de validation]
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-yellow-600">{filteredReports.filter(r => r.status === 'En cours').length}</div>
+              <div className="text-2xl font-bold text-yellow-600">{filteredReports.filter(r => r.status.includes('cours') || r.status.includes('attente')).length}</div>
               <div className="text-sm text-muted-foreground">En cours</div>
             </div>
             <Clock className="h-8 w-8 text-yellow-600" />
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="p-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => {
+          toast({
+            title: "Échéance CBAM",
+            description: "Rapport trimestriel Q1 2024 à soumettre avant le 30 avril 2024"
+          });
+        }}>
           <div className="flex items-center justify-between">
             <div>
               <div className="text-2xl font-bold text-blue-600">15j</div>
-              <div className="text-sm text-muted-foreground">Prochaine échéance</div>
+              <div className="text-sm text-muted-foreground">Échéance Q1 2024</div>
             </div>
             <Calendar className="h-8 w-8 text-blue-600" />
           </div>
@@ -366,9 +411,14 @@ Signature électronique: [Hash de validation]
               </thead>
               <tbody>
                 {filteredReports.map((report) => (
-                  <tr key={report.id} className="border-b hover:bg-gray-50">
+                  <tr key={report.id} className="border-b hover:bg-muted/50">
                     <td className="p-2 font-medium">{report.productName}</td>
-                    <td className="p-2 text-sm">{report.reportType}</td>
+                    <td className="p-2">
+                      <div className={`flex items-center gap-2 text-sm font-medium ${getReportTypeColor(report.reportType)}`}>
+                        {getReportTypeIcon(report.reportType)}
+                        {report.reportType}
+                      </div>
+                    </td>
                     <td className="p-2 text-sm">{report.period}</td>
                     <td className="p-2">
                       <Badge className={getStatusColor(report.status)}>
@@ -379,26 +429,40 @@ Signature électronique: [Hash de validation]
                     <td className="p-2 text-sm">{report.emissions} tCO₂e</td>
                     <td className="p-2 text-sm text-muted-foreground">{report.createdDate}</td>
                     <td className="p-2">
-                      <div className="flex items-center justify-center gap-1">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => previewReport(report.id)}
-                          title="Aperçu"
-                          aria-label={`Aperçu du rapport ${report.productName}`}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => downloadReport(report.id, report.productName)}
-                          title="Télécharger"
-                          aria-label={`Télécharger le rapport ${report.productName}`}
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <TooltipProvider>
+                        <div className="flex items-center justify-center gap-1">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => previewReport(report.id)}
+                                aria-label={`Aperçu du rapport ${report.productName}`}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Aperçu du rapport</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => downloadReport(report.id, report.productName)}
+                                aria-label={`Télécharger le rapport ${report.productName}`}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Télécharger le rapport</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </TooltipProvider>
                     </td>
                   </tr>
                 ))}

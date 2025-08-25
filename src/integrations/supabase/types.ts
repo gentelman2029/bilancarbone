@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -140,6 +140,901 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cbam_audit_log: {
+        Row: {
+          action: string
+          id: string
+          ip_address: unknown | null
+          new_values: Json | null
+          old_values: Json | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cbam_carbon_price_origin: {
+        Row: {
+          carbon_price_eur: number
+          carbon_price_local: number
+          carbon_pricing_system: string
+          country_code: string
+          created_at: string
+          exchange_rate: number
+          id: string
+          local_currency: string
+          period_end: string
+          period_start: string
+          shipment_item_id: string | null
+          supporting_documents: Json | null
+          updated_at: string
+          user_id: string
+          verification_date: string | null
+          verified: boolean
+        }
+        Insert: {
+          carbon_price_eur: number
+          carbon_price_local: number
+          carbon_pricing_system: string
+          country_code: string
+          created_at?: string
+          exchange_rate: number
+          id?: string
+          local_currency: string
+          period_end: string
+          period_start: string
+          shipment_item_id?: string | null
+          supporting_documents?: Json | null
+          updated_at?: string
+          user_id: string
+          verification_date?: string | null
+          verified?: boolean
+        }
+        Update: {
+          carbon_price_eur?: number
+          carbon_price_local?: number
+          carbon_pricing_system?: string
+          country_code?: string
+          created_at?: string
+          exchange_rate?: number
+          id?: string
+          local_currency?: string
+          period_end?: string
+          period_start?: string
+          shipment_item_id?: string | null
+          supporting_documents?: Json | null
+          updated_at?: string
+          user_id?: string
+          verification_date?: string | null
+          verified?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cbam_carbon_price_origin_shipment_item_id_fkey"
+            columns: ["shipment_item_id"]
+            isOneToOne: false
+            referencedRelation: "cbam_shipment_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cbam_certificates: {
+        Row: {
+          certificate_serial: string
+          certificate_type: string
+          created_at: string
+          declaration_id: string | null
+          id: string
+          importer_id: string | null
+          is_active: boolean
+          quantity: number
+          total_cost_eur: number | null
+          transaction_date: string
+          transaction_type: string
+          unit_price_eur: number | null
+          updated_at: string
+          user_id: string
+          validity_period_end: string | null
+          validity_period_start: string | null
+        }
+        Insert: {
+          certificate_serial: string
+          certificate_type?: string
+          created_at?: string
+          declaration_id?: string | null
+          id?: string
+          importer_id?: string | null
+          is_active?: boolean
+          quantity: number
+          total_cost_eur?: number | null
+          transaction_date: string
+          transaction_type: string
+          unit_price_eur?: number | null
+          updated_at?: string
+          user_id: string
+          validity_period_end?: string | null
+          validity_period_start?: string | null
+        }
+        Update: {
+          certificate_serial?: string
+          certificate_type?: string
+          created_at?: string
+          declaration_id?: string | null
+          id?: string
+          importer_id?: string | null
+          is_active?: boolean
+          quantity?: number
+          total_cost_eur?: number | null
+          transaction_date?: string
+          transaction_type?: string
+          unit_price_eur?: number | null
+          updated_at?: string
+          user_id?: string
+          validity_period_end?: string | null
+          validity_period_start?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cbam_certificates_declaration_id_fkey"
+            columns: ["declaration_id"]
+            isOneToOne: false
+            referencedRelation: "cbam_declarations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cbam_certificates_importer_id_fkey"
+            columns: ["importer_id"]
+            isOneToOne: false
+            referencedRelation: "cbam_importers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cbam_declarants: {
+        Row: {
+          company_name: string
+          contact_email: string
+          country_code: string
+          created_at: string
+          eori_number: string | null
+          id: string
+          importer_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_name: string
+          contact_email: string
+          country_code: string
+          created_at?: string
+          eori_number?: string | null
+          id?: string
+          importer_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_name?: string
+          contact_email?: string
+          country_code?: string
+          created_at?: string
+          eori_number?: string | null
+          id?: string
+          importer_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cbam_declarants_importer_id_fkey"
+            columns: ["importer_id"]
+            isOneToOne: false
+            referencedRelation: "cbam_importers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cbam_declarations: {
+        Row: {
+          certificates_required: number
+          created_at: string
+          id: string
+          importer_id: string | null
+          status: Database["public"]["Enums"]["cbam_status"]
+          submission_deadline: string
+          submitted_at: string | null
+          total_cbam_obligation_eur: number
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          certificates_required?: number
+          created_at?: string
+          id?: string
+          importer_id?: string | null
+          status?: Database["public"]["Enums"]["cbam_status"]
+          submission_deadline: string
+          submitted_at?: string | null
+          total_cbam_obligation_eur?: number
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          certificates_required?: number
+          created_at?: string
+          id?: string
+          importer_id?: string | null
+          status?: Database["public"]["Enums"]["cbam_status"]
+          submission_deadline?: string
+          submitted_at?: string | null
+          total_cbam_obligation_eur?: number
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cbam_declarations_importer_id_fkey"
+            columns: ["importer_id"]
+            isOneToOne: false
+            referencedRelation: "cbam_importers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cbam_default_emission_factors: {
+        Row: {
+          country_code: string
+          created_at: string
+          direct_factor: number
+          id: string
+          indirect_factor: number
+          is_active: boolean
+          product_category: string
+          sector: Database["public"]["Enums"]["cbam_sector"]
+          source_regulation: string
+          valid_from: string
+          valid_to: string | null
+          version: string
+        }
+        Insert: {
+          country_code: string
+          created_at?: string
+          direct_factor: number
+          id?: string
+          indirect_factor?: number
+          is_active?: boolean
+          product_category: string
+          sector: Database["public"]["Enums"]["cbam_sector"]
+          source_regulation: string
+          valid_from: string
+          valid_to?: string | null
+          version?: string
+        }
+        Update: {
+          country_code?: string
+          created_at?: string
+          direct_factor?: number
+          id?: string
+          indirect_factor?: number
+          is_active?: boolean
+          product_category?: string
+          sector?: Database["public"]["Enums"]["cbam_sector"]
+          source_regulation?: string
+          valid_from?: string
+          valid_to?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
+      cbam_emissions_data: {
+        Row: {
+          calculation_details: Json | null
+          created_at: string
+          direct_emissions: number
+          direct_method: Database["public"]["Enums"]["emission_method"]
+          direct_verified: boolean
+          id: string
+          indirect_emissions: number
+          indirect_method: Database["public"]["Enums"]["emission_method"]
+          indirect_verified: boolean
+          installation_id: string | null
+          measurement_uncertainty: number | null
+          reporting_period: string
+          shipment_item_id: string | null
+          supporting_documents: Json | null
+          updated_at: string
+          user_id: string
+          verification_date: string | null
+          verifier_name: string | null
+        }
+        Insert: {
+          calculation_details?: Json | null
+          created_at?: string
+          direct_emissions?: number
+          direct_method: Database["public"]["Enums"]["emission_method"]
+          direct_verified?: boolean
+          id?: string
+          indirect_emissions?: number
+          indirect_method: Database["public"]["Enums"]["emission_method"]
+          indirect_verified?: boolean
+          installation_id?: string | null
+          measurement_uncertainty?: number | null
+          reporting_period: string
+          shipment_item_id?: string | null
+          supporting_documents?: Json | null
+          updated_at?: string
+          user_id: string
+          verification_date?: string | null
+          verifier_name?: string | null
+        }
+        Update: {
+          calculation_details?: Json | null
+          created_at?: string
+          direct_emissions?: number
+          direct_method?: Database["public"]["Enums"]["emission_method"]
+          direct_verified?: boolean
+          id?: string
+          indirect_emissions?: number
+          indirect_method?: Database["public"]["Enums"]["emission_method"]
+          indirect_verified?: boolean
+          installation_id?: string | null
+          measurement_uncertainty?: number | null
+          reporting_period?: string
+          shipment_item_id?: string | null
+          supporting_documents?: Json | null
+          updated_at?: string
+          user_id?: string
+          verification_date?: string | null
+          verifier_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cbam_emissions_data_installation_id_fkey"
+            columns: ["installation_id"]
+            isOneToOne: false
+            referencedRelation: "cbam_installations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cbam_emissions_data_shipment_item_id_fkey"
+            columns: ["shipment_item_id"]
+            isOneToOne: false
+            referencedRelation: "cbam_shipment_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cbam_ets_prices: {
+        Row: {
+          contract_type: string
+          created_at: string
+          date: string
+          id: string
+          price_eur_per_tonne: number
+          source: string
+        }
+        Insert: {
+          contract_type?: string
+          created_at?: string
+          date: string
+          id?: string
+          price_eur_per_tonne: number
+          source?: string
+        }
+        Update: {
+          contract_type?: string
+          created_at?: string
+          date?: string
+          id?: string
+          price_eur_per_tonne?: number
+          source?: string
+        }
+        Relationships: []
+      }
+      cbam_exchange_rates: {
+        Row: {
+          created_at: string
+          currency_code: string
+          date: string
+          id: string
+          rate_to_eur: number
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          currency_code: string
+          date: string
+          id?: string
+          rate_to_eur: number
+          source?: string
+        }
+        Update: {
+          created_at?: string
+          currency_code?: string
+          date?: string
+          id?: string
+          rate_to_eur?: number
+          source?: string
+        }
+        Relationships: []
+      }
+      cbam_importers: {
+        Row: {
+          address: string | null
+          company_name: string
+          contact_email: string | null
+          contact_phone: string | null
+          country_code: string
+          created_at: string
+          eori_number: string
+          id: string
+          is_active: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          company_name: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          country_code: string
+          created_at?: string
+          eori_number: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          company_name?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          country_code?: string
+          created_at?: string
+          eori_number?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cbam_installations: {
+        Row: {
+          address: string
+          coordinates: unknown | null
+          country_code: string
+          created_at: string
+          id: string
+          installation_name: string
+          is_verified: boolean
+          permit_number: string | null
+          sector: Database["public"]["Enums"]["cbam_sector"]
+          supplier_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          coordinates?: unknown | null
+          country_code: string
+          created_at?: string
+          id?: string
+          installation_name: string
+          is_verified?: boolean
+          permit_number?: string | null
+          sector: Database["public"]["Enums"]["cbam_sector"]
+          supplier_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          coordinates?: unknown | null
+          country_code?: string
+          created_at?: string
+          id?: string
+          installation_name?: string
+          is_verified?: boolean
+          permit_number?: string | null
+          sector?: Database["public"]["Enums"]["cbam_sector"]
+          supplier_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cbam_installations_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "cbam_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cbam_products: {
+        Row: {
+          cn8_code: string
+          created_at: string
+          description: string | null
+          id: string
+          is_precursor: boolean
+          parent_product_id: string | null
+          product_name: string
+          sector: Database["public"]["Enums"]["cbam_sector"]
+          unit_measure: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cn8_code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_precursor?: boolean
+          parent_product_id?: string | null
+          product_name: string
+          sector: Database["public"]["Enums"]["cbam_sector"]
+          unit_measure?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cn8_code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_precursor?: boolean
+          parent_product_id?: string | null
+          product_name?: string
+          sector?: Database["public"]["Enums"]["cbam_sector"]
+          unit_measure?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cbam_products_parent_product_id_fkey"
+            columns: ["parent_product_id"]
+            isOneToOne: false
+            referencedRelation: "cbam_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cbam_quarterly_report_items: {
+        Row: {
+          country_of_origin: string
+          created_at: string
+          id: string
+          predominant_direct_method: Database["public"]["Enums"]["emission_method"]
+          predominant_indirect_method: Database["public"]["Enums"]["emission_method"]
+          product_id: string | null
+          report_id: string | null
+          total_direct_emissions: number
+          total_indirect_emissions: number
+          total_quantity: number
+          total_value_eur: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          country_of_origin: string
+          created_at?: string
+          id?: string
+          predominant_direct_method: Database["public"]["Enums"]["emission_method"]
+          predominant_indirect_method: Database["public"]["Enums"]["emission_method"]
+          product_id?: string | null
+          report_id?: string | null
+          total_direct_emissions: number
+          total_indirect_emissions: number
+          total_quantity: number
+          total_value_eur: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          country_of_origin?: string
+          created_at?: string
+          id?: string
+          predominant_direct_method?: Database["public"]["Enums"]["emission_method"]
+          predominant_indirect_method?: Database["public"]["Enums"]["emission_method"]
+          product_id?: string | null
+          report_id?: string | null
+          total_direct_emissions?: number
+          total_indirect_emissions?: number
+          total_quantity?: number
+          total_value_eur?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cbam_quarterly_report_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "cbam_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cbam_quarterly_report_items_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "cbam_quarterly_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cbam_quarterly_reports: {
+        Row: {
+          created_at: string
+          export_file_path: string | null
+          export_generated_at: string | null
+          id: string
+          importer_id: string | null
+          phase: Database["public"]["Enums"]["cbam_phase"]
+          quarter: number
+          status: Database["public"]["Enums"]["cbam_status"]
+          submission_deadline: string
+          submitted_at: string | null
+          total_emissions_direct: number
+          total_emissions_indirect: number
+          total_shipments: number
+          total_value_eur: number
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          export_file_path?: string | null
+          export_generated_at?: string | null
+          id?: string
+          importer_id?: string | null
+          phase?: Database["public"]["Enums"]["cbam_phase"]
+          quarter: number
+          status?: Database["public"]["Enums"]["cbam_status"]
+          submission_deadline: string
+          submitted_at?: string | null
+          total_emissions_direct?: number
+          total_emissions_indirect?: number
+          total_shipments?: number
+          total_value_eur?: number
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          export_file_path?: string | null
+          export_generated_at?: string | null
+          id?: string
+          importer_id?: string | null
+          phase?: Database["public"]["Enums"]["cbam_phase"]
+          quarter?: number
+          status?: Database["public"]["Enums"]["cbam_status"]
+          submission_deadline?: string
+          submitted_at?: string | null
+          total_emissions_direct?: number
+          total_emissions_indirect?: number
+          total_shipments?: number
+          total_value_eur?: number
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cbam_quarterly_reports_importer_id_fkey"
+            columns: ["importer_id"]
+            isOneToOne: false
+            referencedRelation: "cbam_importers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cbam_shipment_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string | null
+          quantity: number
+          shipment_id: string | null
+          total_value_eur: number | null
+          unit: string
+          unit_value_eur: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id?: string | null
+          quantity: number
+          shipment_id?: string | null
+          total_value_eur?: number | null
+          unit?: string
+          unit_value_eur?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string | null
+          quantity?: number
+          shipment_id?: string | null
+          total_value_eur?: number | null
+          unit?: string
+          unit_value_eur?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cbam_shipment_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "cbam_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cbam_shipment_items_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "cbam_shipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cbam_shipments: {
+        Row: {
+          country_of_origin: string
+          created_at: string
+          currency_code: string | null
+          exchange_rate: number | null
+          exchange_rate_date: string | null
+          id: string
+          import_date: string
+          importer_id: string | null
+          installation_id: string | null
+          phase: Database["public"]["Enums"]["cbam_phase"]
+          reference_number: string
+          status: Database["public"]["Enums"]["cbam_status"]
+          supplier_id: string | null
+          total_value_eur: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          country_of_origin: string
+          created_at?: string
+          currency_code?: string | null
+          exchange_rate?: number | null
+          exchange_rate_date?: string | null
+          id?: string
+          import_date: string
+          importer_id?: string | null
+          installation_id?: string | null
+          phase?: Database["public"]["Enums"]["cbam_phase"]
+          reference_number: string
+          status?: Database["public"]["Enums"]["cbam_status"]
+          supplier_id?: string | null
+          total_value_eur?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          country_of_origin?: string
+          created_at?: string
+          currency_code?: string | null
+          exchange_rate?: number | null
+          exchange_rate_date?: string | null
+          id?: string
+          import_date?: string
+          importer_id?: string | null
+          installation_id?: string | null
+          phase?: Database["public"]["Enums"]["cbam_phase"]
+          reference_number?: string
+          status?: Database["public"]["Enums"]["cbam_status"]
+          supplier_id?: string | null
+          total_value_eur?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cbam_shipments_importer_id_fkey"
+            columns: ["importer_id"]
+            isOneToOne: false
+            referencedRelation: "cbam_importers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cbam_shipments_installation_id_fkey"
+            columns: ["installation_id"]
+            isOneToOne: false
+            referencedRelation: "cbam_installations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cbam_shipments_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "cbam_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cbam_suppliers: {
+        Row: {
+          address: string | null
+          carbon_pricing_system: string | null
+          company_name: string
+          contact_email: string | null
+          country_code: string
+          created_at: string
+          id: string
+          tax_number: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          carbon_pricing_system?: string | null
+          company_name: string
+          contact_email?: string | null
+          country_code: string
+          created_at?: string
+          id?: string
+          tax_number?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          carbon_pricing_system?: string | null
+          company_name?: string
+          contact_email?: string | null
+          country_code?: string
+          created_at?: string
+          id?: string
+          tax_number?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       emissions_calculations: {
         Row: {
@@ -294,7 +1189,22 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      cbam_phase: "transitional" | "operational"
+      cbam_sector:
+        | "cement"
+        | "iron_steel"
+        | "aluminium"
+        | "fertilizers"
+        | "electricity"
+        | "hydrogen"
+      cbam_status:
+        | "draft"
+        | "submitted"
+        | "corrected"
+        | "validated"
+        | "rejected"
+      emission_method: "ACTUAL" | "DEFAULT" | "HYBRID"
+      priority_level: "high" | "medium" | "low"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -421,6 +1331,19 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      cbam_phase: ["transitional", "operational"],
+      cbam_sector: [
+        "cement",
+        "iron_steel",
+        "aluminium",
+        "fertilizers",
+        "electricity",
+        "hydrogen",
+      ],
+      cbam_status: ["draft", "submitted", "corrected", "validated", "rejected"],
+      emission_method: ["ACTUAL", "DEFAULT", "HYBRID"],
+      priority_level: ["high", "medium", "low"],
+    },
   },
 } as const

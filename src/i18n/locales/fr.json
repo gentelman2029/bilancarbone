@@ -45,7 +45,7 @@
     },
     "alert": {
       "badge": "Urgence climatique",
-      "title": "+1,5°C en 2030 : Il est encore temps d'agir",
+      "title": "1,5°C en 2030 : Il est encore temps d'agir+",
       "description": "Les entreprises représentent 70% des émissions mondiales de CO2. Face à l'urgence climatique, mesurer et réduire son empreinte carbone n'est plus une option, c'est une responsabilité essentielle pour l'avenir de notre planète.",
       "cards": {
         "warming_title": "Réchauffement accéléré",

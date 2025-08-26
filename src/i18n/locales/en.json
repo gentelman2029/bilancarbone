@@ -42,6 +42,20 @@
       "step2_desc": "Automatic calculations according to ADEME and GHG Protocol emission factors",
       "step3_title": "3. Manage your actions",
       "step3_desc": "Define and track your carbon footprint reduction plan"
+    },
+    "alert": {
+      "badge": "Climate Emergency",
+      "title": "1.5°C by 2030: There's still time to act+",
+      "description": "Companies represent 70% of global CO2 emissions. Faced with climate urgency, measuring and reducing your carbon footprint is no longer an option, it's an essential responsibility for the future of our planet.",
+      "cards": {
+        "business_title": "Business opportunity",
+        "business_desc": "Savings and sustainable competitiveness",
+        "regulation_title": "Enhanced regulation",
+        "regulation_desc": "CSRD mandatory from 2024-2026",
+        "warming_title": "Accelerated warming",
+        "warming_desc": "2023: hottest year ever recorded"
+      },
+      "cta_badge": "Act now for your business and the planet"
     }
   },
   "data_collection": {

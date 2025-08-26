@@ -39,6 +39,20 @@
       "step2_desc": "Automatische Berechnungen nach ADEME und GHG Protocol Emissionsfaktoren",
       "step3_title": "3. Verwalten Sie Ihre Aktionen",
       "step3_desc": "Definieren und verfolgen Sie Ihren CO2-Fußabdruck-Reduktionsplan"
+    },
+    "alert": {
+      "badge": "Klimanotstand",
+      "title": "1,5°C bis 2030: Es ist noch Zeit zu handeln+",
+      "description": "Unternehmen sind für 70% der weltweiten CO2-Emissionen verantwortlich. Angesichts der Klimakrise ist die Messung und Reduzierung Ihres CO2-Fußabdrucks keine Option mehr, sondern eine wesentliche Verantwortung für die Zukunft unseres Planeten.",
+      "cards": {
+        "business_title": "Geschäftschance",
+        "business_desc": "Einsparungen und nachhaltige Wettbewerbsfähigkeit",
+        "regulation_title": "Verschärfte Regulierung",
+        "regulation_desc": "CSRD verpflichtend ab 2024-2026",
+        "warming_title": "Beschleunigte Erwärmung",
+        "warming_desc": "2023: das heißeste Jahr aller Zeiten"
+      },
+      "cta_badge": "Handeln Sie jetzt für Ihr Unternehmen und den Planeten"
     }
   },
   "data_collection": {

@@ -141,6 +141,7 @@ const ChatBot = () => {
       {/* Bouton flottant */}
       {!isOpen && (
         <Button
+          type="button"
           onClick={() => setIsOpen(true)}
           className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg z-50 transition-all hover:scale-110"
           size="icon"
@@ -161,10 +162,11 @@ const ChatBot = () => {
                 <CardTitle className="text-lg">Assistant Carbone</CardTitle>
               </div>
               <Button
+                type="button"
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsOpen(false)}
-                className="h-8 w-8 text-primary-foreground hover:bg-white/20"
+                className="h-8 w-8 text-primary-foreground hover:bg:white/20"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -197,18 +199,23 @@ const ChatBot = () => {
                     {message.suggestions && (
                       <div className="flex flex-wrap gap-2 ml-10">
                         {message.suggestions.map((suggestion, index) => (
-                          <Badge
+                          <button
+                            type="button"
                             key={`suggestion-${message.id}-${index}`}
-                            variant="outline"
-                            className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-xs select-none"
+                            className="focus:outline-none"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
                               handleSuggestionClick(suggestion);
                             }}
                           >
-                            {suggestion}
-                          </Badge>
+                            <Badge
+                              variant="outline"
+                              className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-xs select-none"
+                            >
+                              {suggestion}
+                            </Badge>
+                          </button>
                         ))}
                       </div>
                     )}
@@ -244,12 +251,13 @@ const ChatBot = () => {
                 <Input
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleKeyPress}
                   placeholder="Posez votre question..."
                   className="flex-1"
                   disabled={isTyping}
                 />
                 <Button
+                  type="button"
                   onClick={() => handleSendMessage()}
                   disabled={!inputValue.trim() || isTyping}
                   size="icon"

@@ -20,9 +20,11 @@ import {
   CreditCard,
   BarChart3,
   Database,
-  Loader
+  Loader,
+  FileDown
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import jsPDF from 'jspdf';
 
 interface CBAMReport {
   id: string;
@@ -258,6 +260,95 @@ Signature électronique: [Hash de validation]
     toast({ title: 'Aperçu du rapport', description: 'Ouverture dans un nouvel onglet' });
   };
 
+  const generateComprehensivePDF = () => {
+    const doc = new jsPDF();
+    
+    // En-tête
+    doc.setFontSize(20);
+    doc.text('RAPPORT CBAM GLOBAL', 20, 30);
+    doc.setFontSize(12);
+    doc.text(`Généré le ${new Date().toLocaleDateString('fr-FR')}`, 20, 40);
+    
+    // Statistiques globales
+    doc.setFontSize(16);
+    doc.text('STATISTIQUES GLOBALES', 20, 60);
+    doc.setFontSize(12);
+    
+    const totalReports = reports.length;
+    const generatedReports = reports.filter(r => r.status === 'Généré').length;
+    const pendingReports = reports.filter(r => r.status.includes('cours') || r.status.includes('attente')).length;
+    const totalEmissions = reports.reduce((sum, r) => sum + r.emissions, 0);
+    const totalVolume = reports.reduce((sum, r) => sum + r.volume, 0);
+    
+    doc.text(`Nombre total de rapports: ${totalReports}`, 20, 75);
+    doc.text(`Rapports générés: ${generatedReports}`, 20, 85);
+    doc.text(`Rapports en cours: ${pendingReports}`, 20, 95);
+    doc.text(`Émissions totales: ${totalEmissions.toFixed(2)} tCO₂e`, 20, 105);
+    doc.text(`Volume total: ${totalVolume.toLocaleString()} tonnes`, 20, 115);
+    
+    // Détail des rapports
+    doc.setFontSize(16);
+    doc.text('DÉTAIL DES RAPPORTS', 20, 140);
+    
+    let yPos = 155;
+    reports.forEach((report, index) => {
+      if (yPos > 250) {
+        doc.addPage();
+        yPos = 30;
+      }
+      
+      doc.setFontSize(14);
+      doc.text(`${index + 1}. ${report.productName}`, 20, yPos);
+      doc.setFontSize(10);
+      doc.text(`Type: ${report.reportType}`, 25, yPos + 10);
+      doc.text(`Période: ${report.period}`, 25, yPos + 20);
+      doc.text(`Statut: ${report.status}`, 25, yPos + 30);
+      doc.text(`Émissions: ${report.emissions} tCO₂e`, 25, yPos + 40);
+      doc.text(`Volume: ${report.volume.toLocaleString()} tonnes`, 25, yPos + 50);
+      doc.text(`Date de création: ${report.createdDate}`, 25, yPos + 60);
+      
+      yPos += 75;
+    });
+    
+    // Sauvegarde
+    const fileName = `CBAM_Rapport_Global_${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
+    
+    toast({
+      title: "Rapport global généré",
+      description: `${totalReports} rapports consolidés dans le PDF`
+    });
+  };
+
+  const calculateDeadlineStatus = () => {
+    const today = new Date();
+    const q1Deadline = new Date('2024-04-30');
+    const daysDiff = Math.ceil((q1Deadline.getTime() - today.getTime()) / (1000 * 3600 * 24));
+    
+    if (daysDiff < 0) {
+      return {
+        text: `${Math.abs(daysDiff)}j dépassé`,
+        color: 'text-red-600',
+        bgColor: 'text-red-600',
+        icon: <AlertCircle className="h-8 w-8 text-red-600" />
+      };
+    } else if (daysDiff <= 15) {
+      return {
+        text: `${daysDiff}j`,
+        color: 'text-orange-600',
+        bgColor: 'text-orange-600',
+        icon: <Calendar className="h-8 w-8 text-orange-600" />
+      };
+    } else {
+      return {
+        text: `${daysDiff}j`,
+        color: 'text-blue-600',
+        bgColor: 'text-blue-600',
+        icon: <Calendar className="h-8 w-8 text-blue-600" />
+      };
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header avec bouton nouveau rapport */}
@@ -268,10 +359,16 @@ Signature électronique: [Hash de validation]
             Générez et gérez vos passeports carbone produit
           </p>
         </div>
-        <Button onClick={() => setShowNewReport(true)} className="bg-green-600 hover:bg-green-700">
-          <Plus className="h-4 w-4 mr-2" />
-          Nouveau Rapport
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={generateComprehensivePDF} variant="outline">
+            <FileDown className="h-4 w-4 mr-2" />
+            Rapport Global PDF
+          </Button>
+          <Button onClick={() => setShowNewReport(true)} className="bg-green-600 hover:bg-green-700">
+            <Plus className="h-4 w-4 mr-2" />
+            Nouveau Rapport
+          </Button>
+        </div>
       </div>
 
       {/* Statistiques rapides */}
@@ -297,17 +394,24 @@ Signature électronique: [Hash de validation]
         </Card>
 
         <Card className="p-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => {
+          const deadlineStatus = calculateDeadlineStatus();
+          const isOverdue = deadlineStatus.text.includes('dépassé');
           toast({
-            title: "Échéance CBAM",
-            description: "Rapport trimestriel Q1 2024 à soumettre avant le 30 avril 2024"
+            title: isOverdue ? "⚠️ Échéance dépassée" : "Échéance CBAM",
+            description: isOverdue 
+              ? "Le rapport trimestriel Q1 2024 devait être soumis avant le 30 avril 2024"
+              : "Rapport trimestriel Q1 2024 à soumettre avant le 30 avril 2024",
+            variant: isOverdue ? "destructive" : "default"
           });
         }}>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-blue-600">15j</div>
+              <div className={`text-2xl font-bold ${calculateDeadlineStatus().color}`}>
+                {calculateDeadlineStatus().text}
+              </div>
               <div className="text-sm text-muted-foreground">Échéance Q1 2024</div>
             </div>
-            <Calendar className="h-8 w-8 text-blue-600" />
+            {calculateDeadlineStatus().icon}
           </div>
         </Card>
       </div>

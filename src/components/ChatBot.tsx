@@ -94,6 +94,8 @@ const ChatBot = () => {
     const text = messageText || inputValue.trim();
     if (!text) return;
 
+    console.log('[ChatBot] send', { text });
+
     const userMessage: Message = {
       id: Date.now().toString(),
       text,
@@ -126,6 +128,7 @@ const ChatBot = () => {
   };
 
   const handleSuggestionClick = (suggestion: string) => {
+    console.log('[ChatBot] suggestion click', suggestion);
     handleSendMessage(suggestion);
   };
 
@@ -166,7 +169,7 @@ const ChatBot = () => {
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsOpen(false)}
-                className="h-8 w-8 text-primary-foreground hover:bg:white/20"
+                className="h-8 w-8 text-primary-foreground hover:bg-white/20"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -197,7 +200,7 @@ const ChatBot = () => {
 
                     {/* Suggestions */}
                     {message.suggestions && (
-                      <div className="flex flex-wrap gap-2 ml-10">
+                      <div className="relative z-10 flex flex-wrap gap-2 ml-10">
                         {message.suggestions.map((suggestion, index) => (
                           <button
                             type="button"

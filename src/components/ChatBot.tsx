@@ -22,10 +22,16 @@ const ChatBot = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const viewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement | null;
+    if (viewport) {
+      viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   useEffect(() => {
@@ -177,7 +183,7 @@ const ChatBot = () => {
           </CardHeader>
 
           <CardContent className="flex-1 flex flex-col p-0">
-            <ScrollArea className="flex-1 p-4">
+            <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
               <div className="space-y-4">
                 {messages.map((message) => (
                   <div key={message.id} className="space-y-2">

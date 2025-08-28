@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { CBAMProductForm } from './CBAMProductForm';
-import { CBAMCalculator } from './CBAMCalculator';
+import { AdvancedCBAMCalculator } from './AdvancedCBAMCalculator';
 import { CBAMReports } from './CBAMReports';
 import { CBAMSchedules } from './CBAMSchedules';
 import { CBAMFileUpload } from './CBAMFileUpload';
@@ -426,7 +426,7 @@ ${productName},7208 10,Fer et acier,2500,Conforme,2.1`;
         </TabsContent>
 
         <TabsContent value="calculations" className="space-y-4">
-          <CBAMCalculator />
+          <AdvancedCBAMCalculator />
         </TabsContent>
 
         <TabsContent value="reports" className="space-y-4">

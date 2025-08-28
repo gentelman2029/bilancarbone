@@ -151,7 +151,7 @@ const ChatBot = () => {
 
       {/* Interface de chat */}
       {isOpen && (
-        <Card className="fixed bottom-6 right-6 w-96 h-[500px] shadow-2xl z-50 flex flex-col border-2 border-primary/20">
+        <Card className="fixed bottom-6 right-6 w-96 h-[600px] shadow-2xl z-50 flex flex-col border-2 border-primary/20">
           <CardHeader className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground p-4 rounded-t-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -188,7 +188,7 @@ const ChatBot = () => {
                             ? 'bg-muted text-muted-foreground' 
                             : 'bg-primary text-primary-foreground'
                         }`}>
-                          <p className="text-sm">{message.text}</p>
+                          <p className="text-sm whitespace-pre-wrap break-words">{message.text}</p>
                         </div>
                       </div>
                     </div>
@@ -198,10 +198,14 @@ const ChatBot = () => {
                       <div className="flex flex-wrap gap-2 ml-10">
                         {message.suggestions.map((suggestion, index) => (
                           <Badge
-                            key={index}
+                            key={`suggestion-${message.id}-${index}`}
                             variant="outline"
-                            className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-xs"
-                            onClick={() => handleSuggestionClick(suggestion)}
+                            className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-xs select-none"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleSuggestionClick(suggestion);
+                            }}
                           >
                             {suggestion}
                           </Badge>

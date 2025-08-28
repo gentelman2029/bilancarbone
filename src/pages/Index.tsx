@@ -10,7 +10,7 @@ import teamSustainabilityImage from "@/assets/team-sustainability.jpg";
 import { QuickCarbonCalculator } from "@/components/QuickCarbonCalculator";
 import { CBAMChecker } from "@/components/CBAMChecker";
 import { CSRDChecker } from "@/components/CSRDChecker";
-import ChatBot from "@/components/ChatBot";
+
 
 const Index = () => {
   const { t } = useTranslation();
@@ -746,7 +746,7 @@ const Index = () => {
           </div>
         </div>
       </section>
-      <ChatBot />
+      
     </div>
   );
 };

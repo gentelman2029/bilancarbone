@@ -1,4 +1,4 @@
-import { Leaf, BarChart3, Users, Settings, LogOut, Menu, X, Calculator, ShieldCheck, Flame } from "lucide-react";
+import { Leaf, BarChart3, Users, Settings, LogOut, Menu, X, Calculator, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -32,7 +32,6 @@ export const Header = () => {
     { path: "/", label: t("navigation.home"), icon: Leaf },
     { path: "/data", label: t("navigation.simple_calculator"), icon: Users },
     { path: "/calculator", label: t("navigation.advanced_calculator"), icon: Calculator },
-    { path: "/other-ghg", label: "Autres GES", icon: Flame },
     { path: "/dashboard", label: t("navigation.dashboard"), icon: BarChart3 },
     { path: "/actions", label: t("navigation.actions"), icon: Settings },
     { path: "/cbam", label: t("navigation.cbam_module"), icon: ShieldCheck },

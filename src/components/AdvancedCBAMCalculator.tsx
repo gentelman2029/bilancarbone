@@ -385,6 +385,11 @@ Score Conformité,${results.compliance_score.toFixed(0)},N/A,Algorithme,Évaluat
                   <p className="text-xs text-muted-foreground mt-1">PRG: 298 (AR6 IPCC)</p>
                 </div>
               </div>
+            <div className="mt-4">
+              <Button onClick={calculateAdvancedEmissions} className="w-full" disabled={isCalculating}>
+                {isCalculating ? 'Calcul en cours...' : 'Calculer Autres GES'}
+              </Button>
+            </div>
             </CardContent>
           </Card>
         </TabsContent>

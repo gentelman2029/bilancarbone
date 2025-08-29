@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import { Dashboard } from "./pages/Dashboard";
 import { DataCollection } from "./pages/DataCollection";
 import { AdvancedGHGCalculator } from "./components/AdvancedGHGCalculator";
+import { OtherGHGCalculator } from "./components/OtherGHGCalculator";
 import { Actions } from "./pages/Actions";
 import { Contact } from "./pages/Contact";
 import NotFound from "./pages/NotFound";
@@ -37,6 +38,7 @@ const App = () => (
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="data" element={<DataCollection />} />
                 <Route path="calculator" element={<AdvancedGHGCalculator />} />
+                <Route path="other-ghg" element={<OtherGHGCalculator />} />
                 <Route path="actions" element={<Actions />} />
                 <Route path="cbam" element={<CBAM />} />
                 <Route path="contact" element={<Contact />} />

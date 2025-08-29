@@ -39,6 +39,7 @@ export const PDFExport = ({ data, filters }: PDFExportProps) => {
     setIsGenerating(true);
     
     try {
+      console.log('Début génération PDF...');
       // Créer un nouveau document PDF
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
@@ -175,10 +176,15 @@ export const PDFExport = ({ data, filters }: PDFExportProps) => {
       
       // Sauvegarder le PDF
       const fileName = `bilan-carbone-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      console.log('Sauvegarde du PDF:', fileName);
       pdf.save(fileName);
+      
+      console.log('PDF généré avec succès');
+      setShowPreview(false); // Fermer le modal après génération
       
     } catch (error) {
       console.error('Erreur lors de la génération du PDF:', error);
+      alert('Erreur lors de la génération du PDF. Veuillez réessayer.');
     } finally {
       setIsGenerating(false);
     }

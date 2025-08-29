@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 interface Action {
   id: string;
@@ -60,7 +60,7 @@ export const exportActionsToPDF = (actions: Action[], companyName = "Mon Entrepr
     action.responsible || '-'
   ]);
   
-  (doc as any).autoTable({
+  autoTable(doc, {
     head: [['Action', 'Statut', 'Scope', 'Impact', 'Coût', 'Échéance', 'Priorité', 'Responsable']],
     body: tableData,
     startY: 130,

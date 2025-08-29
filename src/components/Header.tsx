@@ -71,12 +71,12 @@ export const Header = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
+          <nav className="hidden md:flex items-center space-x-0.5">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                className={`flex items-center space-x-1.5 px-3 py-2 rounded-lg transition-all duration-200 text-sm ${
                   location.pathname === item.path
                     ? "bg-gradient-primary text-primary-foreground shadow-eco"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"

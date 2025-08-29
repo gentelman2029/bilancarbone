@@ -217,14 +217,14 @@ const Trial = () => {
                     <Mail className="w-5 h-5 text-primary" />
                     <div>
                       <p className="font-medium text-foreground">Email</p>
-                      <p className="text-sm text-muted-foreground">support@carbontrack.fr</p>
+                      <p className="text-sm text-muted-foreground">Carbontrack2025@protonmail.com</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Phone className="w-5 h-5 text-primary" />
                     <div>
                       <p className="font-medium text-foreground">Téléphone</p>
-                      <p className="text-sm text-muted-foreground">+33 1 23 45 67 89</p>
+                      <p className="text-sm text-muted-foreground">+216 93 460 745</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">

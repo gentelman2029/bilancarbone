@@ -96,7 +96,7 @@ export const Contact = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="phone">Téléphone</Label>
-                  <Input id="phone" type="tel" placeholder="+33 1 23 45 67 89" />
+                  <Input id="phone" type="tel" placeholder="+216 93 460 745" />
                 </div>
 
                 <div className="space-y-2">

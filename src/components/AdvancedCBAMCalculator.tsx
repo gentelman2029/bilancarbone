@@ -25,6 +25,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { cbamEnhancedCalculator, type AdvancedEmissionResult, type EmissionScenario } from '@/services/cbamEnhancedCalculator';
 import { CBAMSector, EmissionMethod } from '@/lib/cbam/types';
+import { CBAMPrecursorsModule } from './CBAMPrecursorsModule';
 
 export const AdvancedCBAMCalculator = () => {
   const [selectedProduct, setSelectedProduct] = useState('');
@@ -340,21 +341,7 @@ Score Conformité,${results.compliance_score.toFixed(0)},N/A,Algorithme,Évaluat
         </TabsContent>
 
         <TabsContent value="materials">
-          <Card>
-            <CardHeader>
-              <CardTitle>Matières Premières et Précurseurs</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Factory className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-semibold mb-2">Module Précurseurs</h3>
-                <p className="text-muted-foreground mb-4">
-                  Fonctionnalité avancée pour traçabilité complète des matières premières
-                </p>
-                <Badge variant="outline">Prochainement disponible</Badge>
-              </div>
-            </CardContent>
-          </Card>
+          <CBAMPrecursorsModule />
         </TabsContent>
 
         <TabsContent value="ghg">

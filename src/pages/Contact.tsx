@@ -188,7 +188,7 @@ export const Contact = () => {
                   </div>
                   <div>
                     <p className="text-sm font-medium">Email</p>
-                    <p className="text-sm text-muted-foreground">demo@carbone-insights.com</p>
+                    <p className="text-sm text-muted-foreground">Carbontrack2025@protonmail.com</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
@@ -197,7 +197,7 @@ export const Contact = () => {
                   </div>
                   <div>
                     <p className="text-sm font-medium">Téléphone</p>
-                    <p className="text-sm text-muted-foreground">+33 1 85 14 02 67</p>
+                    <p className="text-sm text-muted-foreground">+216 93 460 745</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">

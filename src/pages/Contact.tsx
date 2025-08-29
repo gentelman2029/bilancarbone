@@ -65,7 +65,7 @@ export const Contact = () => {
             Demande de Démonstration
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Découvrez comment notre solution Power BI peut transformer votre reporting carbone en tableaux de bord interactifs et intelligents
+            Découvrez comment notre solution peut transformer votre reporting carbone en tableaux de bord interactifs et intelligents
           </p>
         </div>
 

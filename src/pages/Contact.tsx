@@ -206,7 +206,7 @@ export const Contact = () => {
                   </div>
                   <div>
                     <p className="text-sm font-medium">Adresse</p>
-                    <p className="text-sm text-muted-foreground">75 rue de Rivoli<br />75001 Paris</p>
+                    <p className="text-sm text-muted-foreground">Avenue Habib Bourguiba - 2080 Ariana</p>
                   </div>
                 </div>
               </div>

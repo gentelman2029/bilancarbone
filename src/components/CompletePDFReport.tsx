@@ -176,9 +176,12 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
       pdf.text('Émissions par catégorie:', 20, yPos);
       yPos += 10;
       
+      const totalVal = Number.isFinite(Number(emissionsData.total)) ? Number(emissionsData.total) : 0;
       emissionsByCategory.forEach(category => {
-        const percentage = ((category.value / emissionsData.total) * 100).toFixed(1);
-        pdf.text(`• ${category.name}: ${(category.value / 1000).toFixed(2)} tCO2e (${percentage}%)`, 25, yPos);
+        const pctNum = totalVal > 0 ? (Number(category.value) / totalVal) * 100 : 0;
+        const percentage = pctNum.toFixed(1);
+        const tco2e = (Number(category.value) / 1000).toFixed(2);
+        pdf.text(`• ${category.name}: ${tco2e} tCO2e (${percentage}%)`, 25, yPos);
         yPos += 8;
       });
 

@@ -124,12 +124,14 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
       const reportElement = document.getElementById('complete-pdf-preview');
       if (reportElement) {
         try {
+          console.log('[PDF] Start html2canvas capture');
           const canvas = await html2canvas(reportElement, {
             scale: 2,
             useCORS: true,
             allowTaint: true,
             backgroundColor: '#ffffff'
           });
+          console.log('[PDF] html2canvas capture success', { w: canvas.width, h: canvas.height });
           
           const imgData = canvas.toDataURL('image/png');
           const imgWidth = pageWidth - 40;
@@ -151,6 +153,7 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
           
           pdf.addImage(imgData, 'PNG', 20, currentY, imgWidth, Math.min(imgHeight, maxY - currentY));
         } catch (e) {
+          console.error('[PDF] html2canvas failed', e);
           // Fallback: on continue sans les graphiques mais on laisse une note
           pdf.addPage();
           pdf.setFontSize(16);
@@ -295,9 +298,12 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
       const fileName = `rapport_carbone_${new Date().toISOString().split('T')[0]}.pdf`;
       
       try {
+        console.log('[PDF] Attempt save via pdf.save');
         // Méthode 1: Téléchargement direct
         pdf.save(fileName);
+        console.log('[PDF] pdf.save triggered');
       } catch (saveError) {
+        console.warn('[PDF] pdf.save failed, fallback to blob', saveError);
         try {
           // Méthode 2: Blob + lien temporaire
           const pdfBlob = pdf.output('blob');
@@ -309,7 +315,9 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
           link.click();
           document.body.removeChild(link);
           URL.revokeObjectURL(blobUrl);
+          console.log('[PDF] Blob download triggered');
         } catch (blobError) {
+          console.error('[PDF] Blob fallback failed, open data URL', blobError);
           // Méthode 3: Nouvel onglet
           const dataUrl = pdf.output('datauristring');
           window.open(dataUrl, '_blank');
@@ -343,7 +351,7 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" type="button">
+        <Button variant="outline" size="sm" type="button" onClick={() => { console.log('[PDF] Open preview dialog'); setIsOpen(true); }}>
           <FileText className="w-4 h-4 mr-2" />
           Rapport PDF Complet
         </Button>

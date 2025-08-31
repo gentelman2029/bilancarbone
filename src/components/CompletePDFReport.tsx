@@ -58,6 +58,12 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
+  // Safe number formatting helper to prevent UI crashes
+  const safeFixed = (v: any, d = 1) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n.toFixed(d) : (0).toFixed(d);
+  };
+ 
   const generateCompletePDF = async () => {
     setIsGenerating(true);
     console.log('[PDF] Start generation');
@@ -126,7 +132,8 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
         try {
           console.log('[PDF] Start html2canvas capture');
           const canvas = await html2canvas(reportElement, {
-            scale: 2,
+            // lower scale to reduce memory usage and avoid canvas taint issues on some devices
+            scale: 1.5,
             useCORS: true,
             allowTaint: true,
             backgroundColor: '#ffffff'
@@ -179,11 +186,15 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
       pdf.text('Émissions par catégorie:', 20, yPos);
       yPos += 10;
       
-      const totalVal = Number.isFinite(Number(emissionsData.total)) ? Number(emissionsData.total) : 0;
-      emissionsByCategory.forEach(category => {
-        const pctNum = totalVal > 0 ? (Number(category.value) / totalVal) * 100 : 0;
+      const totalVal = Number.isFinite(Number(emissionsData.total)) ? Number(emissionsData.total) : 0; // total in kg
+      emissionsByCategory.forEach((category: any) => {
+        // category.value is in tonnes in our dashboard; prefer category.emissions (kg) if present
+        const catKg = Number.isFinite(Number(category.emissions))
+          ? Number(category.emissions)
+          : Number(category.value) * 1000;
+        const pctNum = totalVal > 0 ? (catKg / totalVal) * 100 : 0;
         const percentage = pctNum.toFixed(1);
-        const tco2e = (Number(category.value) / 1000).toFixed(2);
+        const tco2e = (catKg / 1000).toFixed(2);
         pdf.text(`• ${category.name}: ${tco2e} tCO2e (${percentage}%)`, 25, yPos);
         yPos += 8;
       });
@@ -382,7 +393,7 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
                 <CardTitle className="text-sm">Réduction</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">{emissionsData.reductionAnnuelle.toFixed(1)}%</div>
+                <div className="text-2xl font-bold text-green-600">{safeFixed(emissionsData.reductionAnnuelle, 1)}%</div>
                 <p className="text-xs text-muted-foreground">annuelle</p>
               </CardContent>
             </Card>
@@ -392,7 +403,7 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
                 <CardTitle className="text-sm">Intensité</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{emissionsData.intensiteCarbone.toFixed(1)}</div>
+                <div className="text-2xl font-bold">{safeFixed(emissionsData.intensiteCarbone, 1)}</div>
                 <p className="text-xs text-muted-foreground">kgCO₂e/k€</p>
               </CardContent>
             </Card>
@@ -461,7 +472,7 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="category" angle={-45} textAnchor="end" height={100} />
                     <YAxis />
-                    <Tooltip formatter={(value: number) => [`${(Number(value) / 1000).toFixed(1)} tCO₂e`, 'Émissions']} />
+                    <Tooltip formatter={(value: number) => [`${Number(value).toFixed(1)} tCO₂e`, 'Émissions']} />
                     <Bar dataKey="scope1" stackId="a" fill="#ff6b6b" name="Scope 1" />
                     <Bar dataKey="scope2" stackId="a" fill="#4ecdc4" name="Scope 2" />
                     <Bar dataKey="scope3" stackId="a" fill="#45b7d1" name="Scope 3" />
@@ -481,7 +492,7 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
-                    <Tooltip formatter={(value: number) => [`${(value / 1000).toFixed(1)} tCO₂e`, 'Émissions']} />
+                    <Tooltip formatter={(value: number) => [`${Number(value).toFixed(1)} tCO₂e`, 'Émissions']} />
                     <Line type="monotone" dataKey="emissions" stroke="#82ca9d" strokeWidth={2} />
                   </LineChart>
                 </ResponsiveContainer>
@@ -516,15 +527,15 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
             <CardContent>
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center">
-                  <div className="text-lg font-semibold">{sectorBenchmark.average.toFixed(1)} tCO₂e</div>
+                  <div className="text-lg font-semibold">{safeFixed(sectorBenchmark.average, 1)} tCO₂e</div>
                   <div className="text-sm text-muted-foreground">Moyenne Secteur</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-semibold text-green-600">{sectorBenchmark.leaders.toFixed(1)} tCO₂e</div>
+                  <div className="text-lg font-semibold text-green-600">{safeFixed(sectorBenchmark.leaders, 1)} tCO₂e</div>
                   <div className="text-sm text-muted-foreground">Leaders</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-semibold text-blue-600">{sectorBenchmark.company.toFixed(1)} tCO₂e</div>
+                  <div className="text-lg font-semibold text-blue-600">{safeFixed(sectorBenchmark.company, 1)} tCO₂e</div>
                   <div className="text-sm text-muted-foreground">Notre Entreprise</div>
                 </div>
               </div>

@@ -205,8 +205,10 @@ export const CompletePDFReport: React.FC<CompletePDFReportProps> = ({
       yPos += 10;
       
       sbtTrajectory.forEach(point => {
-        const gap = point.gap ? `(Écart: ${point.gap.toFixed(1)}%)` : '';
-        pdf.text(`• ${point.year}: Objectif ${point.target.toFixed(2)} - Réalisé ${point.actual.toFixed(2)} ${gap}`, 25, yPos);
+        const gapText = Number.isFinite(Number(point.gap)) ? `(Écart: ${Number(point.gap).toFixed(1)}%)` : '';
+        const tgt = Number.isFinite(Number(point.target)) ? Number(point.target).toFixed(2) : 'N/A';
+        const act = Number.isFinite(Number(point.actual)) ? Number(point.actual).toFixed(2) : 'N/A';
+        pdf.text(`• ${point.year}: Objectif ${tgt} - Réalisé ${act} ${gapText}`.trim(), 25, yPos);
         yPos += 8;
       });
 

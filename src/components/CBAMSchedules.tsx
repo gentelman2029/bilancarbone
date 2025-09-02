@@ -310,6 +310,16 @@ export const CBAMSchedules = () => {
     });
   };
 
+  // Suppression directe (contournement du dialog si nécessaire)
+  const deleteDeadlineById = (id: string) => {
+    console.log('deleteDeadlineById appelé, id:', id);
+    setDeadlines(prev => prev.filter(d => d.id !== id));
+    toast({
+      title: "Échéance supprimée",
+      description: "L'échéance a été supprimée avec succès"
+    });
+  };
+
   const filterByStatus = (status: string) => {
     setStatusFilter(status === statusFilter ? 'all' : status);
   };
@@ -796,7 +806,7 @@ export const CBAMSchedules = () => {
                               <Button 
                                 variant="ghost" 
                                 size="icon"
-                                onClick={() => confirmDelete(deadline.id)}
+                                onClick={() => deleteDeadlineById(deadline.id)}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>

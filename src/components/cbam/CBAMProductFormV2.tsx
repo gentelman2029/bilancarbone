@@ -28,6 +28,7 @@ import type {
   CBAMProduct 
 } from '@/lib/cbam/types';
 import { CBAM_SECTORS, CN8_CODES_BY_SECTOR } from '@/lib/cbam/types';
+import { CBAM_PRODUCTS_DATABASE, getProductsBySector, getProductByCN8Code } from '@/lib/cbam/products-data';
 
 interface CBAMProductFormV2Props {
   open: boolean;
@@ -182,12 +183,43 @@ export const CBAMProductFormV2 = ({
     setValidationErrors({});
   };
 
+  // Obtenir les produits disponibles pour le secteur sélectionné
+  const getAvailableProducts = () => {
+    if (!formData.sector) return [];
+    return getProductsBySector(formData.sector);
+  };
+
+  // Handler pour sélectionner un produit depuis la liste
+  const handleProductSelect = (selectedProductName: string) => {
+    const availableProducts = getAvailableProducts();
+    const selectedProduct = availableProducts.find(p => p.product_name === selectedProductName);
+    
+    if (selectedProduct) {
+      setFormData(prev => ({ 
+        ...prev, 
+        product_name: selectedProduct.product_name,
+        cn8_code: selectedProduct.cn8_code,
+        description: selectedProduct.description
+      }));
+    }
+  };
+
   const getSuggestedCN8Codes = (sector: CBAMSector): string[] => {
     return CN8_CODES_BY_SECTOR[sector] || [];
   };
 
   const handleCN8Suggestion = (code: string) => {
-    setFormData(prev => ({ ...prev, cn8_code: code }));
+    const product = getProductByCN8Code(code);
+    if (product) {
+      setFormData(prev => ({ 
+        ...prev, 
+        cn8_code: code,
+        product_name: product.product_name,
+        description: product.description
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, cn8_code: code }));
+    }
     if (validationErrors.cn8_code) {
       setValidationErrors(prev => ({ ...prev, cn8_code: '' }));
     }
@@ -316,18 +348,36 @@ export const CBAMProductFormV2 = ({
                 {/* Nom du produit */}
                 <div className="space-y-2">
                   <Label htmlFor="product_name">Nom du produit *</Label>
-                  <Input
-                    id="product_name"
-                    value={formData.product_name}
-                    onChange={(e) => {
-                      setFormData(prev => ({ ...prev, product_name: e.target.value }));
-                      if (validationErrors.product_name) {
-                        setValidationErrors(prev => ({ ...prev, product_name: '' }));
-                      }
-                    }}
-                    placeholder="Ex: Acier laminé à chaud"
-                    disabled={isLoading}
-                  />
+                  {formData.sector ? (
+                    <Select 
+                      value={formData.product_name} 
+                      onValueChange={(value) => {
+                        handleProductSelect(value);
+                        if (validationErrors.product_name) {
+                          setValidationErrors(prev => ({ ...prev, product_name: '' }));
+                        }
+                      }}
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez un produit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getAvailableProducts().map((product) => (
+                          <SelectItem key={product.cn8_code} value={product.product_name}>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{product.product_name}</span>
+                              <span className="text-xs text-muted-foreground">CN8: {product.cn8_code}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="text-sm text-muted-foreground p-3 bg-muted rounded-md">
+                      Veuillez d'abord sélectionner un secteur CBAM pour voir les produits disponibles.
+                    </div>
+                  )}
                   {validationErrors.product_name && (
                     <p className="text-sm text-red-600">{validationErrors.product_name}</p>
                   )}

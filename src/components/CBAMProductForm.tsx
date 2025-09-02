@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, FileText, Calculator, Zap } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { CBAM_PRODUCTS_DATABASE } from '@/lib/cbam/products-data';
 
 interface CBAMProductFormProps {
   open: boolean;
@@ -53,6 +54,34 @@ export const CBAMProductForm = ({ open, onClose, onProductAdd }: CBAMProductForm
     { value: 'aluminium', label: 'Aluminium' },
     { value: 'electricity', label: 'Électricité' }
   ];
+
+  // Listes déroulantes synchronisées (produit <-> code CN8)
+  const sectorMap: Record<string, string> = {
+    'iron-steel': 'iron_steel',
+    cement: 'cement',
+    fertilizers: 'fertilizers',
+    aluminium: 'aluminium',
+    electricity: 'electricity',
+    hydrogen: 'hydrogen'
+  };
+
+  const availableProducts = React.useMemo(() => {
+    const mapped = sectorMap[formData.sector as keyof typeof sectorMap];
+    if (mapped) {
+      return CBAM_PRODUCTS_DATABASE.filter(p => p.sector === mapped);
+    }
+    return CBAM_PRODUCTS_DATABASE;
+  }, [formData.sector]);
+
+  const handleSelectProduct = (name: string) => {
+    const p = availableProducts.find(p => p.product_name === name);
+    setFormData(prev => ({ ...prev, name, cnCode: p ? p.cn8_code : prev.cnCode }));
+  };
+
+  const handleSelectCode = (code: string) => {
+    const p = availableProducts.find(p => p.cn8_code === code);
+    setFormData(prev => ({ ...prev, cnCode: code, name: p ? p.product_name : prev.name }));
+  };
 
   const handleSubmit = () => {
     if (!formData.name || !formData.cnCode || !formData.sector) {
@@ -137,21 +166,39 @@ export const CBAMProductForm = ({ open, onClose, onProductAdd }: CBAMProductForm
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Nom du produit *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="Ex: Acier laminé à chaud"
-                    />
+                    <Select value={formData.name} onValueChange={(value) => handleSelectProduct(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez un produit" />
+                      </SelectTrigger>
+                      <SelectContent className="z-50 bg-popover text-popover-foreground border border-border">
+                        {availableProducts.map((p) => (
+                          <SelectItem key={p.cn8_code} value={p.product_name}>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{p.product_name}</span>
+                              <span className="text-xs text-muted-foreground">CN8: {p.cn8_code}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="cnCode">Code de nomenclature douanière (CN) *</Label>
-                    <Input
-                      id="cnCode"
-                      value={formData.cnCode}
-                      onChange={(e) => setFormData({ ...formData, cnCode: e.target.value })}
-                      placeholder="Ex: 7208 10"
-                    />
+                    <Select value={formData.cnCode} onValueChange={(value) => handleSelectCode(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez un code CN8" />
+                      </SelectTrigger>
+                      <SelectContent className="z-50 bg-popover text-popover-foreground border border-border">
+                        {availableProducts.map((p) => (
+                          <SelectItem key={p.cn8_code} value={p.cn8_code}>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{p.cn8_code}</span>
+                              <span className="text-xs text-muted-foreground">{p.product_name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 

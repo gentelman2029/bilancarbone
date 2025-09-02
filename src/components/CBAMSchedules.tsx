@@ -294,11 +294,13 @@ export const CBAMSchedules = () => {
   };
 
   const confirmDelete = (id: string) => {
+    console.log('confirmDelete appelé avec id:', id);
     setDeleteId(id);
     setDeleteDialogOpen(true);
   };
 
   const deleteDeadline = () => {
+    console.log('deleteDeadline appelé, deleteId:', deleteId);
     setDeadlines(prev => prev.filter(d => d.id !== deleteId));
     setDeleteDialogOpen(false);
     setDeleteId('');

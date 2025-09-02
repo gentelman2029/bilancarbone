@@ -29,6 +29,7 @@ interface CBAMProductFormProps {
 export const CBAMProductForm = ({ open, onClose, onProductAdd }: CBAMProductFormProps) => {
   const [step, setStep] = useState(1);
   const [showPrecursorsModule, setShowPrecursorsModule] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: '',
     cnCode: '',
@@ -83,6 +84,26 @@ export const CBAMProductForm = ({ open, onClose, onProductAdd }: CBAMProductForm
   const handleSelectCode = (code: string) => {
     const p = availableProducts.find(p => p.cn8_code === code);
     setFormData(prev => ({ ...prev, cnCode: code, name: p ? p.product_name : prev.name }));
+  };
+
+  const handleFileSelect = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const fileArray = Array.from(files);
+      setFormData(prev => ({
+        ...prev,
+        documents: [...prev.documents, ...fileArray]
+      }));
+      
+      toast({
+        title: "Fichiers ajoutés",
+        description: `${fileArray.length} fichier(s) sélectionné(s) avec succès`
+      });
+    }
   };
 
   const handleSubmit = () => {
@@ -392,10 +413,42 @@ export const CBAMProductForm = ({ open, onClose, onProductAdd }: CBAMProductForm
                   <p className="text-muted-foreground mb-4">
                     Factures d'énergie, certificats, fiches techniques...
                   </p>
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={handleFileSelect}>
                     Choisir des fichiers
                   </Button>
                 </div>
+
+                {/* Input file caché */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                  style={{ display: 'none' }}
+                  onChange={handleFileChange}
+                />
+
+                {/* Liste des fichiers sélectionnés */}
+                {formData.documents.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-semibold">Fichiers sélectionnés :</h4>
+                    {formData.documents.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <span className="text-sm">{file.name}</span>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            const newDocs = formData.documents.filter((_, i) => i !== index);
+                            setFormData(prev => ({ ...prev, documents: newDocs }));
+                          }}
+                        >
+                          Supprimer
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 <div className="p-4 bg-yellow-50 rounded-lg">
                   <h4 className="font-semibold mb-2">📋 Documents recommandés</h4>

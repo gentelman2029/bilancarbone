@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, FileText, Calculator, Zap } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { CBAM_PRODUCTS_DATABASE } from '@/lib/cbam/products-data';
+import { CBAMPrecursorsModule } from './CBAMPrecursorsModule';
 
 interface CBAMProductFormProps {
   open: boolean;
@@ -27,6 +28,7 @@ interface CBAMProductFormProps {
 
 export const CBAMProductForm = ({ open, onClose, onProductAdd }: CBAMProductFormProps) => {
   const [step, setStep] = useState(1);
+  const [showPrecursorsModule, setShowPrecursorsModule] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     cnCode: '',
@@ -355,7 +357,7 @@ export const CBAMProductForm = ({ open, onClose, onProductAdd }: CBAMProductForm
                   <p className="text-muted-foreground mb-4">
                     Fonctionnalité en cours de développement
                   </p>
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={() => setShowPrecursorsModule(true)}>
                     Ajouter des Matières Premières
                   </Button>
                 </div>
@@ -419,6 +421,13 @@ export const CBAMProductForm = ({ open, onClose, onProductAdd }: CBAMProductForm
           </TabsContent>
         </Tabs>
       </DialogContent>
+
+      {/* Module Matières Premières */}
+      <Dialog open={showPrecursorsModule} onOpenChange={setShowPrecursorsModule}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <CBAMPrecursorsModule />
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };

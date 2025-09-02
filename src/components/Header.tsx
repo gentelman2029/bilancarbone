@@ -1,10 +1,25 @@
-import { Leaf, BarChart3, Users, Settings, LogOut, Menu, X, Calculator, ShieldCheck } from "lucide-react";
+import { 
+  Leaf, 
+  BarChart3, 
+  Users, 
+  Settings, 
+  LogOut, 
+  Menu, 
+  X, 
+  Calculator, 
+  ShieldCheck, 
+  AlertTriangle, 
+  LogIn, 
+  UserPlus 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { useCBAMDeadlines } from "@/hooks/useCBAMDeadlines";
 import type { User } from "@supabase/supabase-js";
 
 export const Header = () => {
@@ -15,6 +30,7 @@ export const Header = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { criticalOverdueCount } = useCBAMDeadlines();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -84,6 +100,18 @@ export const Header = () => {
               >
                 <item.icon className="w-4 h-4" />
                 <span className="font-medium">{item.label}</span>
+                {/* Affichage du badge d'alerte pour CBAM */}
+                {item.path === "/cbam" && criticalOverdueCount > 0 && (
+                  <div className="relative">
+                    <AlertTriangle className="w-4 h-4 text-destructive" />
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                    >
+                      {criticalOverdueCount}
+                    </Badge>
+                  </div>
+                )}
               </Link>
             ))}
           </nav>
@@ -155,6 +183,18 @@ export const Header = () => {
                 >
                   <item.icon className="w-5 h-5" />
                   <span className="font-medium">{item.label}</span>
+                  {/* Affichage du badge d'alerte pour CBAM en mobile */}
+                  {item.path === "/cbam" && criticalOverdueCount > 0 && (
+                    <div className="relative ml-auto">
+                      <AlertTriangle className="w-5 h-5 text-destructive" />
+                      <Badge 
+                        variant="destructive" 
+                        className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                      >
+                        {criticalOverdueCount}
+                      </Badge>
+                    </div>
+                  )}
                 </Link>
               ))}
             </nav>

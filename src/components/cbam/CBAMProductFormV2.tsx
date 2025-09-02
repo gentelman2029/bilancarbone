@@ -2,7 +2,7 @@
 // Remplace l'ancienne version mockée par une vraie intégration base de données
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -233,6 +233,9 @@ export const CBAMProductFormV2 = ({
             <FileText className="h-6 w-6" />
             {editProduct ? 'Modifier le Produit CBAM' : 'Nouveau Produit CBAM'}
           </DialogTitle>
+          <DialogDescription>
+            Renseignez les champs puis validez pour créer ou modifier un produit CBAM.
+          </DialogDescription>
           
           <div className="w-full bg-muted rounded-full h-2 mt-4">
             <div 
@@ -285,7 +288,7 @@ export const CBAMProductFormV2 = ({
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionnez un secteur" />
                     </SelectTrigger>
-                    <SelectContent>
+                     <SelectContent className="z-50 bg-popover text-popover-foreground border border-border">
                       {sectors.map((sector) => (
                         <SelectItem key={sector.value} value={sector.value}>
                           <div className="flex items-center gap-2">
@@ -304,44 +307,38 @@ export const CBAMProductFormV2 = ({
                 {/* Code CN8 avec suggestions */}
                 <div className="space-y-2">
                   <Label htmlFor="cn8_code">Code de nomenclature douanière (CN8) *</Label>
-                  <Input
-                    id="cn8_code"
-                    value={formData.cn8_code}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '').slice(0, 8);
-                      setFormData(prev => ({ ...prev, cn8_code: value }));
-                      if (validationErrors.cn8_code) {
-                        setValidationErrors(prev => ({ ...prev, cn8_code: '' }));
-                      }
-                    }}
-                    placeholder="Ex: 72081000"
-                    maxLength={8}
-                    disabled={isLoading}
-                  />
+                  {formData.sector ? (
+                    <Select
+                      value={formData.cn8_code}
+                      onValueChange={(value) => {
+                        handleCN8Suggestion(value);
+                        if (validationErrors.cn8_code) {
+                          setValidationErrors(prev => ({ ...prev, cn8_code: '' }));
+                        }
+                      }}
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez un code CN8" />
+                      </SelectTrigger>
+                      <SelectContent className="z-50 bg-popover text-popover-foreground border border-border">
+                        {getAvailableProducts().map((product) => (
+                          <SelectItem key={product.cn8_code} value={product.cn8_code}>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{product.cn8_code}</span>
+                              <span className="text-xs text-muted-foreground">{product.product_name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="text-sm text-muted-foreground p-3 bg-muted rounded-md">
+                      Veuillez d'abord sélectionner un secteur CBAM pour voir les codes disponibles.
+                    </div>
+                  )}
                   {validationErrors.cn8_code && (
                     <p className="text-sm text-red-600">{validationErrors.cn8_code}</p>
-                  )}
-                  
-                  {/* Suggestions de codes CN8 */}
-                  {formData.sector && getSuggestedCN8Codes(formData.sector).length > 0 && (
-                    <div className="space-y-2">
-                      <Label className="text-sm text-muted-foreground">
-                        Codes suggérés pour {CBAM_SECTORS[formData.sector]}:
-                      </Label>
-                      <div className="flex flex-wrap gap-2">
-                        {getSuggestedCN8Codes(formData.sector).map(code => (
-                          <Button
-                            key={code}
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleCN8Suggestion(code)}
-                            disabled={isLoading}
-                          >
-                            {code}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
                   )}
                 </div>
 
@@ -362,7 +359,7 @@ export const CBAMProductFormV2 = ({
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionnez un produit" />
                       </SelectTrigger>
-                      <SelectContent>
+                       <SelectContent className="z-50 bg-popover text-popover-foreground border border-border">
                         {getAvailableProducts().map((product) => (
                           <SelectItem key={product.cn8_code} value={product.product_name}>
                             <div className="flex flex-col">
@@ -431,7 +428,7 @@ export const CBAMProductFormV2 = ({
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionnez une unité" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-50 bg-popover text-popover-foreground border border-border">
                       {unitsOfMeasure.map((unit) => (
                         <SelectItem key={unit.value} value={unit.value}>
                           {unit.label}

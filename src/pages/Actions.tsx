@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Target, Calendar, TrendingDown, CheckCircle, Clock, AlertCircle, Edit, Eye, FileDown, Lightbulb, Download } from "lucide-react";
+import { Plus, Target, Calendar, TrendingDown, CheckCircle, Clock, AlertCircle, Edit, Eye, FileDown, Lightbulb, Download, Trash2, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +25,7 @@ export const Actions = () => {
     addAction, 
     updateAction, 
     deleteAction,
+    clearAllActions,
     getTotalImpact,
     getCompletedImpact,
     filteredActions,
@@ -153,6 +154,26 @@ export const Actions = () => {
     });
   };
 
+  const handleDeleteAction = async (id: string) => {
+    await deleteAction(id);
+    toast({
+      title: t('common.success'),
+      description: "L'action a été supprimée avec succès"
+    });
+  };
+
+  const handleClearAllActions = async () => {
+    if (actions.length === 0) return;
+    
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer toutes les ${actions.length} actions ? Cette action est irréversible.`)) {
+      await clearAllActions();
+      toast({
+        title: t('common.success'),
+        description: "Toutes les actions ont été supprimées"
+      });
+    }
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
@@ -204,6 +225,12 @@ export const Actions = () => {
         </div>
         
         <div className="flex gap-2">
+          {actions.length > 0 && (
+            <Button variant="outline" onClick={handleClearAllActions} className="gap-2 text-destructive hover:text-destructive">
+              <RefreshCw className="w-4 h-4" />
+              Réinitialiser tout
+            </Button>
+          )}
           <Button variant="outline" onClick={() => exportToPDF()} className="gap-2">
             <FileDown className="w-4 h-4" />
             {t('actions.export.pdf')}
@@ -480,6 +507,15 @@ export const Actions = () => {
             </div>
 
             <div className="flex justify-end space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleDeleteAction(action.id)}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                Supprimer
+              </Button>
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm" onClick={() => handleEditAction(action)}>

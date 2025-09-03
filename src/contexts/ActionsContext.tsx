@@ -25,6 +25,7 @@ interface ActionsContextType {
   addAction: (action: Omit<Action, 'id'>) => Promise<void>;
   updateAction: (id: string, updates: Partial<Action>) => Promise<void>;
   deleteAction: (id: string) => Promise<void>;
+  clearAllActions: () => Promise<void>;
   getTotalImpact: () => number;
   getCompletedImpact: () => number;
   getTotalCost: () => number;
@@ -316,6 +317,22 @@ export const ActionsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const clearAllActions = async () => {
+    setActions([]);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase
+        .from('carbon_actions')
+        .delete()
+        .eq('user_id', user.id);
+    } catch (error) {
+      console.error('Erreur lors de la suppression de toutes les actions:', error);
+    }
+  };
+
   const getTotalImpact = () => {
     return actions.reduce((sum, action) => sum + action.impact, 0);
   };
@@ -346,6 +363,7 @@ export const ActionsProvider: React.FC<{ children: React.ReactNode }> = ({ child
       addAction,
       updateAction,
       deleteAction,
+      clearAllActions,
       getTotalImpact,
       getCompletedImpact,
       getTotalCost,

@@ -20,7 +20,7 @@ export const CarbonActionsTracking = () => {
     return priorityOrder[a.priority] - priorityOrder[b.priority];
   });
 
-  const topActions = sortedActions.slice(0, 3);
+  const displayedActions = sortedActions;
   const totalImpact = getTotalImpact();
   const completedImpact = getCompletedImpact();
   const progressPercentage = getActionsProgress();
@@ -140,8 +140,8 @@ export const CarbonActionsTracking = () => {
 
           {/* Top 3 des actions prioritaires */}
           <div className="space-y-3">
-            <h4 className="font-medium text-sm text-muted-foreground">Actions prioritaires</h4>
-            {topActions.map((action, index) => (
+            <h4 className="font-medium text-sm text-muted-foreground">Toutes les actions</h4>
+            {displayedActions.map((action, index) => (
               <div key={action.id} className="p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                 <div className="flex items-start gap-3">
                   {getActionIcon(action.status)}

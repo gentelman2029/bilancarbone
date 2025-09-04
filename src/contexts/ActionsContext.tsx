@@ -56,6 +56,51 @@ export const ActionsProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [sortField, setSortField] = useState<string>('deadline');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
+  // Local persistence fallback when user is not authenticated
+  const STORAGE_KEY = 'carbon_actions_local';
+  const saveLocal = (list: Action[]) => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); } catch (e) { console.error('Erreur lors de la sauvegarde locale:', e); }
+  };
+  const loadFromLocalStorage = () => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed: Action[] = JSON.parse(raw);
+        setActions(parsed);
+      }
+    } catch (e) { console.error('Erreur lors du chargement local:', e); }
+  };
+  const isUUID = (id: string) => /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(id);
+  const migrateLocalToSupabase = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const local: Action[] = JSON.parse(raw);
+      const toInsert = local.filter(a => !isUUID(a.id));
+      if (toInsert.length === 0) return;
+      const payload = toInsert.map(a => ({
+        user_id: user.id,
+        title: a.title,
+        description: a.description,
+        estimated_reduction_kg: a.impact * 1000,
+        estimated_cost: a.cost,
+        target_date: a.deadline,
+        scope_type: a.scope,
+        status: a.status,
+        priority: a.priority,
+        implementation_time: a.implementationTime,
+        category: a.category,
+        estimated_reduction_percent: a.estimatedReduction,
+        progress: a.progress || 0,
+        calculation_id: a.calculationId
+      }));
+      await supabase.from('carbon_actions').insert(payload);
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (e) { console.error('Erreur migration locale -> Supabase:', e); }
+  };
+
   const filteredActions = React.useMemo(() => {
     let result = [...actions];
 
@@ -134,7 +179,27 @@ export const ActionsProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   useEffect(() => {
-    loadFromSupabase();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setTimeout(() => {
+        if (session?.user) {
+          migrateLocalToSupabase().then(() => {
+            loadFromSupabase();
+          });
+        } else {
+          loadFromLocalStorage();
+        }
+      }, 0);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        loadFromSupabase();
+      } else {
+        loadFromLocalStorage();
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const loadFromSupabase = async () => {
@@ -172,6 +237,7 @@ export const ActionsProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }));
 
         setActions(formattedActions);
+        saveLocal(formattedActions);
       }
     } catch (error) {
       console.error('Erreur lors du chargement des actions:', error);
@@ -226,7 +292,7 @@ export const ActionsProvider: React.FC<{ children: React.ReactNode }> = ({ child
       id: `temp_${Date.now()}`, // ID temporaire
     };
 
-    setActions(prev => [...prev, newAction]);
+    setActions(prev => { const updated = [...prev, newAction]; saveLocal(updated); return updated; });
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -259,18 +325,22 @@ export const ActionsProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
 
       // Mettre à jour avec l'ID réel
-      setActions(prev => prev.map(action => 
-        action.id === newAction.id ? { ...action, id: data.id } : action
-      ));
+      setActions(prev => {
+        const updated = prev.map(action => 
+          action.id === newAction.id ? { ...action, id: data.id } : action
+        );
+        saveLocal(updated);
+        return updated;
+      });
     } catch (error) {
       console.error('Erreur lors de l\'ajout:', error);
     }
   };
 
   const updateAction = async (id: string, updates: Partial<Action>) => {
-    setActions(prev => prev.map(action => 
+    setActions(prev => { const updated = prev.map(action => 
       action.id === id ? { ...action, ...updates } : action
-    ));
+    ); saveLocal(updated); return updated; });
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -301,7 +371,7 @@ export const ActionsProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const deleteAction = async (id: string) => {
-    setActions(prev => prev.filter(action => action.id !== id));
+    setActions(prev => { const updated = prev.filter(action => action.id !== id); saveLocal(updated); return updated; });
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -319,6 +389,7 @@ export const ActionsProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const clearAllActions = async () => {
     setActions([]);
+    try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
 
     try {
       const { data: { user } } = await supabase.auth.getUser();

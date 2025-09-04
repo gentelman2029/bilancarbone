@@ -67,6 +67,14 @@ export const Actions = () => {
         scope3: emissions.scope3
       });
       setSuggestedActions(suggestions);
+    } else {
+      // Générer des suggestions par défaut si pas de données d'émissions
+      const defaultSuggestions = generateSuggestedActions({
+        scope1: 50,  // Valeurs par défaut pour démonstration
+        scope2: 30,
+        scope3: 100
+      });
+      setSuggestedActions(defaultSuggestions);
     }
   }, [emissions]);
 

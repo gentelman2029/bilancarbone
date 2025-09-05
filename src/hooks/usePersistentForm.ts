@@ -33,9 +33,11 @@ export function usePersistentForm<T>(
     setData(initialData);
   };
 
-  const hasData = Object.values(data as any).some(value => 
-    value !== "" && value !== null && value !== undefined
-  );
+  const hasData = data && typeof data === 'object' 
+    ? Object.values(data as any).some(value => 
+        value !== "" && value !== null && value !== undefined
+      )
+    : Boolean(data);
 
   useEffect(() => {
     localStorage.setItem(storageKey, JSON.stringify(data));

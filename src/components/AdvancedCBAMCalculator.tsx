@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   Calculator, 
   Zap, 
@@ -20,12 +21,17 @@ import {
   TrendingUp,
   Globe,
   Eye,
-  Settings
+  Settings,
+  RotateCcw,
+  ChevronDown,
+  ChevronUp,
+  Calculator as CalcIcon
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { cbamEnhancedCalculator, type AdvancedEmissionResult, type EmissionScenario } from '@/services/cbamEnhancedCalculator';
 import { CBAMSector, EmissionMethod } from '@/lib/cbam/types';
 import { CBAMPrecursorsModule } from './CBAMPrecursorsModule';
+import { usePersistentForm } from '@/hooks/usePersistentForm';
 
 export const AdvancedCBAMCalculator = () => {
   const [selectedProduct, setSelectedProduct] = useState('');
@@ -34,9 +40,17 @@ export const AdvancedCBAMCalculator = () => {
   const [calculationMethod, setCalculationMethod] = useState<EmissionMethod>('ACTUAL');
   const [showUncertainties, setShowUncertainties] = useState(true);
   const [showFormulas, setShowFormulas] = useState(false);
-  const [results, setResults] = useState<AdvancedEmissionResult | null>(null);
   const [scenarios, setScenarios] = useState<EmissionScenario[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [showCalculationDetails, setShowCalculationDetails] = useState(false);
+
+  // Utilisation du hook de persistance pour les résultats
+  const { 
+    data: results, 
+    updateData: updateResults, 
+    resetData: resetResults, 
+    hasData: hasResults 
+  } = usePersistentForm<AdvancedEmissionResult | null>('cbam-advanced-results', null);
 
   const [energyData, setEnergyData] = useState({
     electricity_kwh: '',
@@ -99,7 +113,7 @@ export const AdvancedCBAMCalculator = () => {
       };
 
       const calculationResults = cbamEnhancedCalculator.calculateAdvancedEmissions(inputs);
-      setResults(calculationResults);
+      updateResults(calculationResults);
       
       // Générer scénarios
       const scenarioResults = cbamEnhancedCalculator.createScenarios(inputs);
@@ -159,6 +173,120 @@ Score Conformité,${results.compliance_score.toFixed(0)},N/A,Algorithme,Évaluat
     if (uncertainty <= 5) return <CheckCircle className="h-4 w-4 text-green-600" />;
     if (uncertainty <= 15) return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
     return <AlertTriangle className="h-4 w-4 text-red-600" />;
+  };
+
+  const resetCalculation = () => {
+    resetResults();
+    setScenarios([]);
+    toast({
+      title: "Réinitialisation",
+      description: "Tous les résultats ont été effacés"
+    });
+  };
+
+  const renderCalculationDetails = () => {
+    if (!results) return null;
+
+    return (
+      <Collapsible open={showCalculationDetails} onOpenChange={setShowCalculationDetails}>
+        <CollapsibleTrigger asChild>
+          <Button variant="outline" className="w-full justify-between">
+            <span className="flex items-center gap-2">
+              <CalcIcon className="h-4 w-4" />
+              Détail des calculs et formules
+            </span>
+            {showCalculationDetails ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-4 mt-4">
+          <Card className="p-4">
+            <h4 className="font-semibold mb-4">Détail des Calculs par Scope</h4>
+            
+            {/* Scope 1 Details */}
+            <div className="mb-4">
+              <h5 className="font-medium text-red-600 mb-2">Scope 1 - Émissions Directes</h5>
+              <div className="bg-red-50 p-3 rounded text-sm">
+                <p><strong>Formule:</strong> {results.scope1.formula}</p>
+                <p><strong>Méthode:</strong> {results.scope1.method}</p>
+                <p><strong>Sources:</strong> {results.scope1.sources.join(', ')}</p>
+                <p><strong>Valeur:</strong> {results.scope1.value.toFixed(6)} tCO₂e</p>
+                <p><strong>Incertitude:</strong> ±{results.scope1.uncertainty.toFixed(2)}%</p>
+              </div>
+            </div>
+
+            {/* Scope 2 Details */}
+            <div className="mb-4">
+              <h5 className="font-medium text-orange-600 mb-2">Scope 2 - Émissions Indirectes Électricité</h5>
+              <div className="bg-orange-50 p-3 rounded text-sm">
+                <p><strong>Formule:</strong> {results.scope2.formula}</p>
+                <p><strong>Méthode:</strong> {results.scope2.method}</p>
+                <p><strong>Sources:</strong> {results.scope2.sources.join(', ')}</p>
+                <p><strong>Valeur:</strong> {results.scope2.value.toFixed(6)} tCO₂e</p>
+                <p><strong>Incertitude:</strong> ±{results.scope2.uncertainty.toFixed(2)}%</p>
+              </div>
+            </div>
+
+            {/* Scope 3 Details */}
+            <div className="mb-4">
+              <h5 className="font-medium text-blue-600 mb-2">Scope 3 - Émissions Indirectes Précurseurs</h5>
+              <div className="bg-blue-50 p-3 rounded text-sm">
+                <p><strong>Formule:</strong> {results.scope3.formula}</p>
+                <p><strong>Méthode:</strong> {results.scope3.method}</p>
+                <p><strong>Sources:</strong> {results.scope3.sources.join(', ')}</p>
+                <p><strong>Valeur:</strong> {results.scope3.value.toFixed(6)} tCO₂e</p>
+                <p><strong>Incertitude:</strong> ±{results.scope3.uncertainty.toFixed(2)}%</p>
+              </div>
+            </div>
+
+            {/* Total Calculation */}
+            <div className="mb-4">
+              <h5 className="font-medium text-green-600 mb-2">Total des Émissions</h5>
+              <div className="bg-green-50 p-3 rounded text-sm">
+                <p><strong>Calcul:</strong> Scope 1 + Scope 2 + Scope 3</p>
+                <p><strong>Détail:</strong> {results.scope1.value.toFixed(3)} + {results.scope2.value.toFixed(3)} + {results.scope3.value.toFixed(3)} = {results.total.value.toFixed(3)} tCO₂e</p>
+                <p><strong>Incertitude combinée:</strong> ±{results.total.uncertainty.toFixed(2)}%</p>
+                <p><strong>Méthode d'agrégation:</strong> {results.total.method}</p>
+              </div>
+            </div>
+
+            {/* Per Unit Calculation */}
+            <div className="mb-4">
+              <h5 className="font-medium text-purple-600 mb-2">Intensité Carbone</h5>
+              <div className="bg-purple-50 p-3 rounded text-sm">
+                <p><strong>Formule:</strong> Total Émissions ÷ Production</p>
+                <p><strong>Calcul:</strong> {results.total.value.toFixed(3)} tCO₂e ÷ {energyData.production_tonnes} tonnes = {results.per_unit.value.toFixed(6)} tCO₂e/tonne</p>
+                <p><strong>Incertitude:</strong> ±{results.per_unit.uncertainty.toFixed(2)}%</p>
+              </div>
+            </div>
+
+            {/* GHG Details */}
+            {(results.all_ghg.ch4_co2e > 0 || results.all_ghg.n2o_co2e > 0) && (
+              <div className="mb-4">
+                <h5 className="font-medium text-teal-600 mb-2">Détail Autres GES</h5>
+                <div className="bg-teal-50 p-3 rounded text-sm">
+                  <p><strong>CO₂ pur:</strong> {results.all_ghg.co2.toFixed(6)} tCO₂</p>
+                  <p><strong>CH₄ → CO₂e:</strong> {(parseFloat(energyData.ch4_kg) || 0)} kg × 25 (PRG) = {results.all_ghg.ch4_co2e.toFixed(6)} tCO₂e</p>
+                  <p><strong>N₂O → CO₂e:</strong> {(parseFloat(energyData.n2o_kg) || 0)} kg × 298 (PRG) = {results.all_ghg.n2o_co2e.toFixed(6)} tCO₂e</p>
+                  <p><strong>Référence PRG:</strong> IPCC AR6 (2021)</p>
+                </div>
+              </div>
+            )}
+
+            {/* Carbon Cost Details */}
+            {results.carbon_cost_eur > 0 && (
+              <div className="mb-4">
+                <h5 className="font-medium text-yellow-600 mb-2">Coût Carbone</h5>
+                <div className="bg-yellow-50 p-3 rounded text-sm">
+                  <p><strong>Calcul:</strong> Total Émissions × Prix EEX</p>
+                  <p><strong>Détail:</strong> {results.total.value.toFixed(3)} tCO₂e × 68,45€/tCO₂ = {results.carbon_cost_eur.toFixed(2)}€</p>
+                  <p><strong>Source prix:</strong> European Energy Exchange (EEX) - Temps réel</p>
+                </div>
+              </div>
+            )}
+          </Card>
+        </CollapsibleContent>
+      </Collapsible>
+    );
   };
 
   return (
@@ -389,9 +517,20 @@ Score Conformité,${results.compliance_score.toFixed(0)},N/A,Algorithme,Évaluat
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     Résultats du Calcul
-                    <Badge className={`${getComplianceColor(results.compliance_score)} border`}>
-                      Score: {results.compliance_score}%
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge className={`${getComplianceColor(results.compliance_score)} border`}>
+                        Score: {results.compliance_score}%
+                      </Badge>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={resetCalculation}
+                        className="text-red-600 hover:bg-red-50"
+                      >
+                        <RotateCcw className="h-4 w-4 mr-1" />
+                        Réinitialiser
+                      </Button>
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -531,7 +670,10 @@ Score Conformité,${results.compliance_score.toFixed(0)},N/A,Algorithme,Évaluat
                     </Card>
                   )}
 
-                  <div className="flex gap-2">
+                  {/* Section détail des calculs */}
+                  {renderCalculationDetails()}
+
+                  <div className="flex gap-2 mt-4">
                     <Button onClick={() => {}} className="flex-1">
                       <Save className="h-4 w-4 mr-2" />
                       Sauvegarder

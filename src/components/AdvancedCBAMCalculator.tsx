@@ -25,7 +25,8 @@ import {
   RotateCcw,
   ChevronDown,
   ChevronUp,
-  Calculator as CalcIcon
+  Calculator as CalcIcon,
+  Info
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { cbamEnhancedCalculator, type AdvancedEmissionResult, type EmissionScenario } from '@/services/cbamEnhancedCalculator';
@@ -651,6 +652,37 @@ Score Conformité,${results.compliance_score.toFixed(0)},N/A,Algorithme,Évaluat
                         <div className="text-lg font-semibold text-yellow-600">
                           Coût carbone estimé (prix EEX actuel)
                         </div>
+                        
+                        <Collapsible className="mt-4">
+                          <CollapsibleTrigger asChild>
+                            <Button variant="ghost" size="sm" className="w-full">
+                              <Info className="h-4 w-4 mr-2" />
+                              Comment ce coût est-il calculé ?
+                            </Button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="mt-3 text-left text-sm space-y-2">
+                            <div className="bg-white p-3 rounded border">
+                              <h5 className="font-semibold mb-2">Formule de calcul :</h5>
+                              <p className="font-mono text-xs bg-gray-100 p-2 rounded mb-2">
+                                Coût = Total CO₂e (t) × Prix carbone EEX (€/t)
+                              </p>
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                  <strong>Total émissions:</strong> {results.total.value.toFixed(3)} tCO₂e
+                                </div>
+                                <div>
+                                  <strong>Prix EEX actuel:</strong> ~{(results.carbon_cost_eur / results.total.value).toFixed(2)} €/t
+                                </div>
+                              </div>
+                              <div className="mt-2 pt-2 border-t">
+                                <p className="text-xs text-muted-foreground">
+                                  <strong>EEX:</strong> European Energy Exchange - Prix de référence du marché européen du carbone.
+                                  Ce prix fluctue selon l'offre et la demande des quotas d'émission.
+                                </p>
+                              </div>
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
                       </div>
                     </Card>
                   )}

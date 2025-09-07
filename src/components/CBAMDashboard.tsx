@@ -27,6 +27,7 @@ import { CBAMSchedules } from './CBAMSchedules';
 import { CBAMFileUpload } from './CBAMFileUpload';
 import { CBAMBulkImport } from './CBAMBulkImport';
 import { CBAMSectorModels } from './CBAMSectorModels';
+import { useCBAMDeadlines } from '@/hooks/useCBAMDeadlines';
 import { useTranslation } from 'react-i18next';
 
 interface CBAMProduct {
@@ -42,6 +43,7 @@ interface CBAMProduct {
 
 export const CBAMDashboard = () => {
   const { t } = useTranslation();
+  const { deadlines } = useCBAMDeadlines();
   const [showProductForm, setShowProductForm] = useState(false);
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [showBulkImport, setShowBulkImport] = useState(false);
@@ -71,23 +73,38 @@ export const CBAMDashboard = () => {
     }
   ]);
 
-  // Calcul automatique des métriques basées sur les données réelles de chaque section
+  // Calcul automatique des métriques basées sur les données réelles synchronisées
   const metrics = {
     // Produits: nombre de produits configurés dans le tableau
     totalProducts: products.length,
     monthlyIncrease: 2, // Basé sur les 2 produits existants
     
-    // Émissions: basé sur les calculs réels du calculateur (actuellement 0.000)
-    avgEmissions: 0, // Correspond aux résultats 0.000 du calculateur
+    // Émissions: moyenne réelle des émissions des produits
+    avgEmissions: products.length > 0 ? 
+      Number((products.reduce((sum, p) => sum + p.emissions, 0) / products.length).toFixed(3)) : 0,
     emissionsChange: -8, // Pourcentage de changement vs trimestre précédent
     
     // Rapports: basé sur l'interface des rapports (2 générés, 1 en cours)
     reportsGenerated: 2, // Nombre de rapports générés selon l'interface rapports
     reportsPending: 1, // Nombre de rapports en cours
     
-    // Échéances: basé sur les vraies données du calendrier des échéances
-    nextReporting: 127, // 127 jours selon l'échéance 31/12/2025
-    nextReportingPeriod: '31/12/2025' // Prochaine échéance réelle
+    // Échéances: calculé automatiquement depuis les vraies données
+    nextReporting: (() => {
+      const nextDeadline = deadlines
+        .filter(d => d.status === 'À venir')
+        .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0];
+      if (!nextDeadline) return 0;
+      const today = new Date();
+      const dueDate = new Date(nextDeadline.dueDate);
+      const diffTime = dueDate.getTime() - today.getTime();
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    })(),
+    nextReportingPeriod: (() => {
+      const nextDeadline = deadlines
+        .filter(d => d.status === 'À venir')
+        .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0];
+      return nextDeadline ? new Date(nextDeadline.dueDate).toLocaleDateString('fr-FR') : 'Aucune';
+    })()
   };
 
   const getStatusColor = (status: string) => {

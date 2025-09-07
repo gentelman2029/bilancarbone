@@ -47,7 +47,7 @@ export const useCBAMDeadlines = () => {
       id: '4',
       title: 'Rapport semestriel',
       description: 'Rapport complet des émissions du semestre',
-      dueDate: '2024-12-31',
+      dueDate: '2025-12-31',
       priority: 'Haute',
       status: 'À venir',
       type: 'Rapport',
@@ -55,20 +55,40 @@ export const useCBAMDeadlines = () => {
     }
   ]);
 
+  // Mettre à jour automatiquement les statuts selon les dates
+  const deadlinesWithUpdatedStatus = useMemo(() => {
+    const today = new Date();
+    return deadlines.map(deadline => {
+      const dueDate = new Date(deadline.dueDate);
+      let status: 'À venir' | 'En retard' | 'Terminé' = deadline.status;
+      
+      // Ne modifier que si le statut n'est pas déjà "Terminé"
+      if (deadline.status !== 'Terminé') {
+        if (dueDate < today) {
+          status = 'En retard';
+        } else {
+          status = 'À venir';
+        }
+      }
+      
+      return { ...deadline, status };
+    });
+  }, [deadlines]);
+
   // Calculer le nombre d'échéances critiques (en retard avec priorité Haute)
   const criticalOverdueCount = useMemo(() => {
-    return deadlines.filter(deadline => 
+    return deadlinesWithUpdatedStatus.filter(deadline => 
       deadline.status === 'En retard' && deadline.priority === 'Haute'
     ).length;
-  }, [deadlines]);
+  }, [deadlinesWithUpdatedStatus]);
 
   // Calculer le nombre total d'échéances en retard
   const totalOverdueCount = useMemo(() => {
-    return deadlines.filter(deadline => deadline.status === 'En retard').length;
-  }, [deadlines]);
+    return deadlinesWithUpdatedStatus.filter(deadline => deadline.status === 'En retard').length;
+  }, [deadlinesWithUpdatedStatus]);
 
   return {
-    deadlines,
+    deadlines: deadlinesWithUpdatedStatus,
     criticalOverdueCount,
     totalOverdueCount,
     setDeadlines

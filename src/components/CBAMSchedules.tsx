@@ -29,6 +29,7 @@ import {
   Download
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useCBAMDeadlines } from '@/hooks/useCBAMDeadlines';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -44,48 +45,7 @@ interface CBAMDeadline {
 }
 
 export const CBAMSchedules = () => {
-  const [deadlines, setDeadlines] = useState<CBAMDeadline[]>([
-    {
-      id: '1',
-      title: 'Rapport Trimestriel Q1 2024',
-      description: 'Soumission du rapport CBAM pour le premier trimestre',
-      dueDate: '2024-01-31',
-      priority: 'Haute',
-      status: 'En retard',
-      type: 'Rapport',
-      productIds: ['1', '2']
-    },
-    {
-      id: '2',
-      title: 'Formation équipe CBAM',
-      description: 'Formation du personnel sur les nouvelles procédures',
-      dueDate: '2024-02-15',
-      priority: 'Moyenne',
-      status: 'En retard',
-      type: 'Formation',
-      productIds: []
-    },
-    {
-      id: '3',
-      title: 'Audit interne émissions',
-      description: 'Vérification des calculs d\'émissions embarquées',
-      dueDate: '2024-01-20',
-      priority: 'Haute',
-      status: 'En retard',
-      type: 'Audit',
-      productIds: ['1']
-    },
-    {
-      id: '4',
-      title: 'Rapport semestriel',
-      description: 'Soumission rapport semestrielle',
-      dueDate: '2025-12-31',
-      priority: 'Haute',
-      status: 'À venir',
-      type: 'Rapport',
-      productIds: ['1']
-    }
-  ]);
+  const { deadlines, setDeadlines } = useCBAMDeadlines();
 
   const [showNewDeadline, setShowNewDeadline] = useState(false);
   const [newDeadline, setNewDeadline] = useState({

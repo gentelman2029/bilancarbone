@@ -210,3 +210,64 @@ All colors MUST be HSL.
   padding-right: 0;
   padding-left: 1rem;
 }
+
+/* Google Translate Widget Styles */
+.google-translate-widget {
+  @apply flex items-center;
+}
+
+.google-translate-widget select {
+  @apply bg-background border border-border rounded-md px-2 py-1 text-sm text-foreground min-h-[32px] transition-colors;
+}
+
+.google-translate-widget select:hover {
+  @apply bg-secondary/50 border-ring;
+}
+
+.google-translate-widget select:focus {
+  @apply outline-none ring-2 ring-ring ring-offset-2;
+}
+
+/* Hide Google Translate powered by logo */
+.goog-te-gadget {
+  font-family: inherit !important;
+  font-size: inherit !important;
+}
+
+.goog-te-gadget .goog-te-combo {
+  @apply bg-background border border-border rounded-md px-2 py-1 text-sm text-foreground min-h-[32px] transition-colors;
+  margin: 0 !important;
+  vertical-align: top !important;
+}
+
+.goog-te-gadget .goog-te-combo:hover {
+  @apply bg-secondary/50 border-ring;
+}
+
+.goog-te-gadget .goog-te-combo:focus {
+  @apply outline-none ring-2 ring-ring ring-offset-2;
+}
+
+.goog-te-banner-frame {
+  display: none !important;
+}
+
+.goog-te-menu-value {
+  padding: 0 !important;
+}
+
+.goog-te-gadget-icon {
+  display: none !important;
+}
+
+.goog-te-gadget > span > a {
+  display: none !important;
+}
+
+#goog-gt- {
+  display: none !important;
+}
+
+.goog-te-balloon-frame {
+  display: none !important;
+}

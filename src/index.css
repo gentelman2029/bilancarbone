@@ -213,61 +213,45 @@ All colors MUST be HSL.
 
 /* Google Translate Widget Styles */
 .google-translate-widget {
-  @apply flex items-center;
+  @apply flex items-center flex-1;
 }
 
-.google-translate-widget select {
-  @apply bg-background border border-border rounded-md px-2 py-1 text-sm text-foreground min-h-[32px] transition-colors;
+.google-translate-widget select,
+.goog-te-gadget .goog-te-combo {
+  @apply bg-transparent border-0 text-foreground text-sm font-medium outline-none transition-colors cursor-pointer;
+  min-height: 24px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  vertical-align: top !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
 }
 
-.google-translate-widget select:hover {
-  @apply bg-secondary/50 border-ring;
+.google-translate-widget select:hover,
+.goog-te-gadget .goog-te-combo:hover {
+  @apply text-primary;
 }
 
-.google-translate-widget select:focus {
-  @apply outline-none ring-2 ring-ring ring-offset-2;
+.google-translate-widget select:focus,
+.goog-te-gadget .goog-te-combo:focus {
+  @apply outline-none text-primary;
 }
 
-/* Hide Google Translate powered by logo */
+/* Hide Google Translate elements */
+.goog-te-banner-frame,
+.goog-te-gadget-icon,
+.goog-te-gadget > span > a,
+#goog-gt-,
+.goog-te-balloon-frame {
+  display: none !important;
+}
+
 .goog-te-gadget {
   font-family: inherit !important;
   font-size: inherit !important;
 }
 
-.goog-te-gadget .goog-te-combo {
-  @apply bg-background border border-border rounded-md px-2 py-1 text-sm text-foreground min-h-[32px] transition-colors;
-  margin: 0 !important;
-  vertical-align: top !important;
-}
-
-.goog-te-gadget .goog-te-combo:hover {
-  @apply bg-secondary/50 border-ring;
-}
-
-.goog-te-gadget .goog-te-combo:focus {
-  @apply outline-none ring-2 ring-ring ring-offset-2;
-}
-
-.goog-te-banner-frame {
-  display: none !important;
-}
-
 .goog-te-menu-value {
   padding: 0 !important;
-}
-
-.goog-te-gadget-icon {
-  display: none !important;
-}
-
-.goog-te-gadget > span > a {
-  display: none !important;
-}
-
-#goog-gt- {
-  display: none !important;
-}
-
-.goog-te-balloon-frame {
-  display: none !important;
+  color: inherit !important;
 }

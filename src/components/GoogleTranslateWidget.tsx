@@ -48,14 +48,12 @@ export const GoogleTranslateWidget = () => {
   }, []);
 
   return (
-    <div className="relative">
-      <div className="flex items-center gap-1 px-2 py-1.5 rounded-md border border-border/50 bg-card/50 hover:bg-accent/30 transition-all duration-200 min-h-[32px]">
-        <Globe className="w-3.5 h-3.5 text-primary/70 flex-shrink-0" />
-        <div 
-          id="google_translate_element"
-          className="google-translate-widget flex-1 min-w-0"
-        />
-      </div>
+    <div className="flex items-center gap-1">
+      <Globe className="w-3.5 h-3.5 text-muted-foreground" />
+      <div 
+        id="google_translate_element"
+        className="google-translate-widget"
+      />
     </div>
   );
 };

@@ -76,6 +76,7 @@ const baseCarbone = {
     electricite: {
       // Mix électrique par pays (kg CO2e/kWh)
       france: { unite: "kWh", facteur: 0.057, description: "Électricité France (mix national)" },
+      tunisie: { unite: "kWh", facteur: 0.474, description: "Électricité Tunisie" },
       allemagne: { unite: "kWh", facteur: 0.401, description: "Électricité Allemagne" },
       espagne: { unite: "kWh", facteur: 0.256, description: "Électricité Espagne" },
       italie: { unite: "kWh", facteur: 0.359, description: "Électricité Italie" },

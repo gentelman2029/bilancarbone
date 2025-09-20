@@ -20,7 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useCBAMDeadlines } from "@/hooks/useCBAMDeadlines";
-import { GoogleTranslateWidget } from "@/components/GoogleTranslateWidget";
+
 import type { User } from "@supabase/supabase-js";
 
 export const Header = () => {
@@ -119,7 +119,6 @@ export const Header = () => {
 
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center space-x-3">
-            <GoogleTranslateWidget />
             {user ? (
               <>
                 <span className="text-sm text-muted-foreground hidden lg:block">

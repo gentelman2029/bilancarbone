@@ -156,6 +156,13 @@ export const CBAMPrecursorsModule = () => {
     const totalQuantity = precursors.reduce((sum, p) => sum + p.quantity, 0);
     const averageEmissionFactor = totalQuantity > 0 ? totalEmissions / totalQuantity : 0;
 
+    console.log('Calcul des précurseurs:', {
+      precursors: precursors.map(p => ({ name: p.name, quantity: p.quantity, emissions: p.emissions })),
+      totalEmissions,
+      totalQuantity,
+      averageEmissionFactor
+    });
+
     const calc: PrecursorCalculation = {
       total_precursor_emissions: totalEmissions,
       total_quantity: totalQuantity,
@@ -167,7 +174,7 @@ export const CBAMPrecursorsModule = () => {
 
     toast({
       title: "Calcul effectué ✅",
-      description: `Émissions précurseurs: ${totalEmissions.toFixed(3)} tCO₂e`
+      description: `Émissions totales: ${totalEmissions.toFixed(3)} tCO₂e (${precursors.length} précurseurs)`
     });
   };
 

@@ -13,6 +13,8 @@ import { useEmissions } from '@/contexts/EmissionsContext';
 import { useCarbonReports } from '@/hooks/useCarbonReports';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
+import { useCalculationDetails } from '@/hooks/useCalculationDetails';
+import { CalculationDetailsSection } from '@/components/CalculationDetailsSection';
 
 
 // Base Carbone® ADEME - Facteurs d'émissions complets (kg CO2e par unité)
@@ -177,6 +179,16 @@ export const AdvancedGHGCalculator = () => {
   const [calculations, setCalculations] = useState<CalculationResult[]>([]);
   const [activeTab, setActiveTab] = useState("scope1");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  // Hook pour les détails de calcul par section
+  const { 
+    sectionDetails, 
+    addCalculationDetail, 
+    removeCalculationDetail, 
+    clearSectionDetails, 
+    clearAllDetails,
+    getTotalEmissionsBySection 
+  } = useCalculationDetails();
 
   // États pour les formulaires avec persistance
   const [scope1Data, setScope1Data] = useState(() => {
@@ -374,9 +386,22 @@ export const AdvancedGHGCalculator = () => {
 
     setCalculations(prev => [...prev, newCalculation]);
     
+    // Ajouter aux détails de section pour la traçabilité
+    const formuleDetail = `${quantity} ${item.unite} × ${item.facteur} kg CO₂e/${item.unite} = ${emissions.toFixed(2)} kg CO₂e`;
+    
+    addCalculationDetail(scope as 'scope1' | 'scope2' | 'scope3', {
+      type: category,
+      description: item.description,
+      quantity,
+      unit: item.unite,
+      emissionFactor: item.facteur,
+      emissions,
+      formuleDetail
+    });
+    
     toast({
-      title: "Calcul ajouté",
-      description: `${emissions.toFixed(2)} kg CO2e ajoutés au bilan`,
+      title: "Calcul ajouté ✅",
+      description: `${emissions.toFixed(2)} kg CO₂e ajoutés au ${scope.toUpperCase()}`,
     });
   };
 
@@ -431,11 +456,14 @@ export const AdvancedGHGCalculator = () => {
     setScope2Data(initialScope2);
     setScope3Data(initialScope3);
     
+    // Réinitialiser les détails de calcul par section
+    clearAllDetails();
+    
     updateEmissions({ scope1: 0, scope2: 0, scope3: 0 });
     
     toast({
-      title: "Calculs réinitialisés",
-      description: "Tous les calculs ont été supprimés",
+      title: "Calculs réinitialisés ✅",
+      description: "Tous les calculs et détails ont été supprimés",
     });
   };
 
@@ -981,6 +1009,17 @@ export const AdvancedGHGCalculator = () => {
               </div>
             </CardContent>
           </Card>
+          
+          {/* Section des détails de calcul Scope 1 */}
+          <CalculationDetailsSection
+            title="Détails des Calculs Scope 1"
+            icon={<Flame className="h-5 w-5" />}
+            details={sectionDetails.scope1}
+            sectionColor="destructive"
+            onRemoveDetail={(detailId) => removeCalculationDetail('scope1', detailId)}
+            onClearSection={() => clearSectionDetails('scope1')}
+            className="mt-6"
+          />
         </TabsContent>
 
         {/* SCOPE 2 */}
@@ -1077,6 +1116,17 @@ export const AdvancedGHGCalculator = () => {
               </div>
             </CardContent>
           </Card>
+          
+          {/* Section des détails de calcul Scope 2 */}
+          <CalculationDetailsSection
+            title="Détails des Calculs Scope 2"
+            icon={<Zap className="h-5 w-5" />}
+            details={sectionDetails.scope2}
+            sectionColor="default"
+            onRemoveDetail={(detailId) => removeCalculationDetail('scope2', detailId)}
+            onClearSection={() => clearSectionDetails('scope2')}
+            className="mt-6"
+          />
         </TabsContent>
 
         {/* SCOPE 3 */}
@@ -1313,6 +1363,17 @@ export const AdvancedGHGCalculator = () => {
               </CardContent>
             </Card>
           </div>
+          
+          {/* Section des détails de calcul Scope 3 */}
+          <CalculationDetailsSection
+            title="Détails des Calculs Scope 3"
+            icon={<Building className="h-5 w-5" />}
+            details={sectionDetails.scope3}
+            sectionColor="secondary"
+            onRemoveDetail={(detailId) => removeCalculationDetail('scope3', detailId)}
+            onClearSection={() => clearSectionDetails('scope3')}
+            className="mt-6"
+          />
         </TabsContent>
       </Tabs>
 

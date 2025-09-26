@@ -279,7 +279,7 @@ export const Pricing = () => {
           <Card className="p-8 bg-gradient-primary text-primary-foreground">
             <h2 className="text-3xl font-bold mb-4">Prêt à commencer ?</h2>
             <p className="text-xl mb-6 opacity-90">
-              Rejoignez plus de 1000 entreprises qui font confiance à CarbonTrack
+              Soyez parmi les premiers à révolutionner votre approche environnementale avec CarbonTrack
             </p>
             <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
               <Button variant="secondary" size="lg" asChild>

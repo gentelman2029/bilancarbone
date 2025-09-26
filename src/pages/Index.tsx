@@ -717,7 +717,7 @@ const Index = () => {
                 Commencez votre transition carbone aujourd'hui
               </h2>
               <p className="text-xl opacity-90 max-w-2xl mx-auto">
-                Rejoignez plus de 1000 entreprises qui font confiance à Carbontrack pour leur Bilan Carbone®
+                Rejoignez les entreprises pionnières qui transforment leur impact environnemental avec CarbonTrack
               </p>
             </div>
 

@@ -37,6 +37,7 @@ import CBAMComplianceReportComponent from './CBAMComplianceReport';
 import { CBAMSector, EmissionMethod } from '@/lib/cbam/types';
 import { CBAMPrecursorsModule } from './CBAMPrecursorsModule';
 import { usePersistentForm } from '@/hooks/usePersistentForm';
+import { exportComplianceReportToPDF } from '@/utils/exportUtils';
 
 export const AdvancedCBAMCalculator = () => {
   const [selectedProduct, setSelectedProduct] = useState('');
@@ -832,12 +833,7 @@ Score Conformité,${results.compliance_score.toFixed(0)},N/A,Algorithme,Évaluat
           {complianceReport ? (
             <CBAMComplianceReportComponent 
               report={complianceReport}
-              onExport={() => {
-                toast({
-                  title: "Export en cours",
-                  description: "Génération du rapport PDF conforme UE 2023/956..."
-                });
-              }}
+              onExport={() => exportComplianceReportToPDF(complianceReport)}
             />
           ) : (
             <Card>

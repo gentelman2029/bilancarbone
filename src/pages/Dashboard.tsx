@@ -409,8 +409,8 @@ export const Dashboard = () => {
     setFilters(newFilters);
     // Ici vous pourriez implémenter la logique de filtrage des données
     toast({
-      title: "Filtres appliqués",
-      description: "Les données du dashboard ont été mises à jour selon vos filtres",
+      title: t("dashboard.filters_applied"),
+      description: t("dashboard.dashboard_updated"),
     });
   };
 
@@ -545,8 +545,8 @@ export const Dashboard = () => {
       try {
         await navigator.share(shareData);
         toast({
-          title: "Partage réussi",
-          description: "Le dashboard a été partagé avec succès.",
+          title: t("dashboard.share_success"),
+          description: t("dashboard.share_success_desc"),
         });
       } catch (error) {
         if (error instanceof Error && error.name !== 'AbortError') {
@@ -564,8 +564,8 @@ export const Dashboard = () => {
       const textToShare = `${shareData.title}\n${shareData.text}\n${shareData.url}`;
       navigator.clipboard.writeText(textToShare).then(() => {
         toast({
-          title: "Lien copié",
-          description: "Le lien du dashboard a été copié dans le presse-papiers.",
+          title: t("dashboard.link_copied"),
+          description: t("dashboard.link_copied_desc"),
         });
       }).catch(() => {
         showShareOptions(shareData);
@@ -584,8 +584,8 @@ export const Dashboard = () => {
     window.open(`mailto:?subject=${emailSubject}&body=${emailBody}`, '_blank');
     
     toast({
-      title: "Options de partage",
-      description: "Le client email par défaut s'ouvre pour partager le rapport.",
+      title: t("dashboard.share_options"),
+      description: t("dashboard.share_options_desc"),
     });
   };
 
@@ -619,14 +619,14 @@ export const Dashboard = () => {
       pdf.save(filename);
 
       toast({
-        title: 'Rapport sectoriel généré',
-        description: 'Le téléchargement du PDF a été lancé.',
+        title: t("dashboard.sector_report_generated"),
+        description: t("dashboard.pdf_download_started"),
       });
     } catch (e) {
       console.error('Erreur rapport sectoriel:', e);
       toast({
-        title: 'Erreur',
-        description: 'Impossible de générer le rapport sectoriel.',
+        title: t("common.error"),
+        description: t("dashboard.error_generating_report"),
         variant: 'destructive',
       });
     }
@@ -639,12 +639,12 @@ export const Dashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground">{t("dashboard.title")}</h1>
-              <p className="text-sm text-muted-foreground">Visualisation Power BI des émissions GES - Conforme Base Carbone® ADEME</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.subtitle")}</p>
             </div>
             <div className="flex items-center gap-3">
               <Button variant="outline" size="sm" onClick={() => exportCompleteData()}>
                 <Download className="w-4 h-4 mr-2" />
-                Export CSV Complet
+                {t("dashboard.export_csv_complete")}
               </Button>
               <CompletePDFReport 
                 emissionsData={{
@@ -681,7 +681,7 @@ export const Dashboard = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-muted-foreground">Émissions totales</span>
+                    <span className="text-sm font-medium text-muted-foreground">{t("dashboard.total_emissions")}</span>
                   </div>
                   <div className="text-3xl font-bold text-foreground mb-1">
                     {hasData ? currentEmissions.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "4,200"} <span className="text-lg">tCO2e</span>
@@ -697,7 +697,7 @@ export const Dashboard = () => {
                     </span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
-                    Total des émissions GES sur la période
+                    {t("dashboard.total_emissions_period")}
                   </div>
                 </div>
               </div>
@@ -711,7 +711,7 @@ export const Dashboard = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-muted-foreground">Réduction annuelle</span>
+                    <span className="text-sm font-medium text-muted-foreground">{t("dashboard.annual_reduction")}</span>
                   </div>
                    <div className="text-3xl font-bold text-foreground mb-1">
                      {hasData ? reductionAnnuelle.toFixed(0) : "600"} <span className="text-lg">tCO2e</span>
@@ -726,9 +726,9 @@ export const Dashboard = () => {
                        {(hasData ? Math.abs(pourcentageReduction).toFixed(1) : "16.3")}%
                      </span>
                    </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Réduction par rapport à l'année précédente
-                  </div>
+                   <div className="text-xs text-muted-foreground mt-1">
+                     {t("dashboard.reduction_vs_previous")}
+                   </div>
                 </div>
               </div>
             </CardContent>
@@ -741,7 +741,7 @@ export const Dashboard = () => {
                  <div className="flex-1">
                    <div className="flex items-center gap-2 mb-2">
                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                     <span className="text-sm font-medium text-muted-foreground">Objectif SBT 2024</span>
+                     <span className="text-sm font-medium text-muted-foreground">{t("dashboard.sbt_target")}</span>
                    </div>
                     <div className="text-3xl font-bold text-foreground mb-1">
                       {hasData && objectifsSBTParAnnee[2024] ? objectifsSBTParAnnee[2024].toFixed(0) : "87"} <span className="text-lg">tCO2e</span>
@@ -768,7 +768,7 @@ export const Dashboard = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-muted-foreground">Intensité carbone</span>
+                    <span className="text-sm font-medium text-muted-foreground">{t("dashboard.carbon_intensity")}</span>
                   </div>
                    <div className="text-3xl font-bold text-destructive mb-1">
                      {hasData ? intensiteCarbone.toFixed(1) : "1.2"} <span className="text-lg">tCO2e/k€</span>
@@ -783,9 +783,9 @@ export const Dashboard = () => {
                       {Math.abs(intensiteChangePercent).toFixed(1)}%
                     </span>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Émissions par unité de chiffre d'affaires
-                  </div>
+                   <div className="text-xs text-muted-foreground mt-1">
+                     {t("dashboard.emissions_per_revenue")}
+                   </div>
                 </div>
               </div>
             </CardContent>
@@ -798,7 +798,7 @@ export const Dashboard = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-muted-foreground">Émissions/employé</span>
+                    <span className="text-sm font-medium text-muted-foreground">{t("dashboard.emissions_per_employee")}</span>
                   </div>
                    <div className="text-3xl font-bold text-foreground mb-1">
                      {hasData ? emissionsEmploye.toFixed(1) : "8.4"} <span className="text-lg">tCO2e/pers</span>
@@ -813,9 +813,9 @@ export const Dashboard = () => {
                       {Math.abs(emissionsEmployeChangePercent).toFixed(1)}%
                     </span>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Intensité carbone par collaborateur
-                  </div>
+                   <div className="text-xs text-muted-foreground mt-1">
+                     {t("dashboard.carbon_intensity_employee")}
+                   </div>
                 </div>
               </div>
             </CardContent>
@@ -828,18 +828,18 @@ export const Dashboard = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-muted-foreground">Conformité réglementaire</span>
+                    <span className="text-sm font-medium text-muted-foreground">{t("dashboard.regulatory_compliance")}</span>
                   </div>
                    <div className="text-3xl font-bold text-foreground mb-1">
-                     {hasData ? conformiteReglementaire.toFixed(0) : "95"}% <span className="text-lg">complète</span>
+                     {hasData ? conformiteReglementaire.toFixed(0) : "95"}% <span className="text-lg">{t("dashboard.complete_compliance")}</span>
                    </div>
                    <div className="flex items-center gap-1 text-sm">
                      <ArrowUp className="w-4 h-4 text-primary" />
                      <span className="text-primary font-medium">{hasData ? "5.2" : "5.2"}%</span>
                    </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Avancement conformité CSRD/BEGES
-                  </div>
+                   <div className="text-xs text-muted-foreground mt-1">
+                     {t("dashboard.csrd_compliance_progress")}
+                   </div>
                 </div>
               </div>
             </CardContent>
@@ -853,8 +853,8 @@ export const Dashboard = () => {
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
                 <BarChart3 className="w-5 h-5" />
-                Répartition par Poste d'Émission
-                <Badge variant="secondary" className="ml-auto text-xs">Cliquable</Badge>
+                {t("dashboard.emissions_by_source")}
+                <Badge variant="secondary" className="ml-auto text-xs">{t("dashboard.clickable")}</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -909,7 +909,7 @@ export const Dashboard = () => {
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
                 <BarChart3 className="w-5 h-5" />
-                Analyse par Catégorie et Scope
+                {t("dashboard.category_scope_analysis")}
                 <div className="flex gap-1 ml-auto">
                   <Badge variant="destructive" className="text-xs">Scope 1</Badge>
                   <Badge variant="secondary" className="text-xs">Scope 2</Badge>
@@ -951,7 +951,7 @@ export const Dashboard = () => {
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Globe className="w-5 h-5" />
-                Répartition par Scope GES
+                {t("dashboard.scope_breakdown")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -1030,7 +1030,7 @@ export const Dashboard = () => {
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Target className="w-5 h-5" />
-                Trajectoire Science Based Targets
+                {t("dashboard.sbt_trajectory")}
                 <div className="flex gap-1 ml-auto">
                   <Badge variant="secondary" className="text-xs">En avance</Badge>
                   <Badge variant="outline" className="text-xs">4.2% vs objectif</Badge>
@@ -1077,7 +1077,7 @@ export const Dashboard = () => {
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Award className="w-5 h-5" />
-                Benchmark Sectoriel
+                {t("dashboard.sector_benchmark")}
                 <Badge variant="default" className="ml-auto text-lg font-bold">{sectorBenchmark[0]?.rank}</Badge>
               </CardTitle>
             </CardHeader>

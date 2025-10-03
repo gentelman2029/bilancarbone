@@ -1,0 +1,100 @@
+{
+  "navigation": {
+    "home": "Home",
+    "dashboard": "Cruscotto",
+    "data": "Dati",
+    "simple_calculator": "Calcolatore Semplice",
+    "advanced_calculator": "Calcolatore Avanzato",
+    "actions": "Azioni",
+    "cbam_module": "Modulo CBAM",
+    "contact": "Contatto"
+  },
+  "home": {
+    "hero_title": "Misura e Riduci la Tua Impronta di Carbonio",
+    "hero_subtitle": "Soluzione completa di tracciamento del carbonio per aziende impegnate nella transizione ecologica",
+    "cta_start": "Inizia",
+    "cta_learn": "Scopri di più",
+    "features_title": "Una Piattaforma Completa per la Tua Transizione Ecologica",
+    "feature_1_title": "Calcolatore GHG Avanzato",
+    "feature_1_desc": "Calcola le tue emissioni secondo il GHG Protocol e il Bilancio Carbonio®",
+    "feature_2_title": "Cruscotto Interattivo",
+    "feature_2_desc": "Visualizza e analizza le tue emissioni in tempo reale",
+    "feature_3_title": "Piano d'Azione",
+    "feature_3_desc": "Stabilisci e segui azioni concrete di riduzione",
+    "process_title": "Il Nostro Processo",
+    "process_step_1": "Raccolta Dati",
+    "process_step_2": "Analisi",
+    "process_step_3": "Piano d'Azione",
+    "climate_alert": "Emergenza Climatica",
+    "climate_message": "Il tempo stringe per limitare il riscaldamento globale a 1,5°C"
+  },
+  "data_collection": {
+    "title": "Raccolta Dati GHG",
+    "scope_1": "Scope 1: Emissioni dirette",
+    "scope_2": "Scope 2: Emissioni indirette energetiche",
+    "scope_3": "Scope 3: Altre emissioni indirette",
+    "calculate": "Calcola"
+  },
+  "auth": {
+    "login": "Accedi",
+    "signup": "Registrati",
+    "logout": "Esci",
+    "email": "Email",
+    "password": "Password",
+    "signout_success": "Disconnessione riuscita",
+    "signout_message": "Hai effettuato l'uscita con successo",
+    "signout_error": "Errore durante la disconnessione"
+  },
+  "dashboard": {
+    "title": "Cruscotto Carbonio",
+    "total_emissions": "Emissioni Totali",
+    "scope_breakdown": "Ripartizione per Scope",
+    "trends": "Tendenze",
+    "intensity": "Intensità di Carbonio"
+  },
+  "calculator": {
+    "title": "Calcolatore GHG Avanzato",
+    "company_info": "Informazioni Azienda",
+    "company_name": "Nome Azienda",
+    "results": "Risultati del Calcolo"
+  },
+  "actions": {
+    "title": "Piano d'Azione Carbonio",
+    "tracking": "Monitoraggio Azioni",
+    "add_action": "Aggiungi Azione",
+    "status": "Stato",
+    "priority": "Priorità",
+    "filter": "Filtra",
+    "sort": "Ordina",
+    "status_pending": "In Attesa",
+    "status_in_progress": "In Corso",
+    "status_completed": "Completato",
+    "priority_high": "Alta",
+    "priority_medium": "Media",
+    "priority_low": "Bassa"
+  },
+  "common": {
+    "save": "Salva",
+    "cancel": "Annulla",
+    "delete": "Elimina",
+    "edit": "Modifica",
+    "add": "Aggiungi",
+    "search": "Cerca",
+    "filter": "Filtra",
+    "export": "Esporta",
+    "import": "Importa",
+    "loading": "Caricamento...",
+    "error": "Errore",
+    "success": "Successo",
+    "confirm": "Conferma",
+    "close": "Chiudi"
+  },
+  "language": {
+    "select": "Seleziona lingua",
+    "english": "Inglese",
+    "french": "Francese",
+    "spanish": "Spagnolo",
+    "german": "Tedesco",
+    "arabic": "Arabo"
+  }
+}

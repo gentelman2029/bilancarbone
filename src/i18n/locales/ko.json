@@ -1,0 +1,100 @@
+{
+  "navigation": {
+    "home": "홈",
+    "dashboard": "대시보드",
+    "data": "데이터",
+    "simple_calculator": "간단한 계산기",
+    "advanced_calculator": "고급 계산기",
+    "actions": "조치",
+    "cbam_module": "CBAM 모듈",
+    "contact": "문의"
+  },
+  "home": {
+    "hero_title": "탄소 발자국 측정 및 감축",
+    "hero_subtitle": "생태 전환에 전념하는 기업을 위한 완전한 탄소 추적 솔루션",
+    "cta_start": "시작하기",
+    "cta_learn": "자세히 보기",
+    "features_title": "생태 전환을 위한 완전한 플랫폼",
+    "feature_1_title": "고급 온실가스 계산기",
+    "feature_1_desc": "GHG 프로토콜 및 탄소 균형®에 따라 배출량 계산",
+    "feature_2_title": "대화형 대시보드",
+    "feature_2_desc": "실시간으로 배출량 시각화 및 분석",
+    "feature_3_title": "실행 계획",
+    "feature_3_desc": "구체적인 감축 조치 설정 및 추적",
+    "process_title": "우리의 프로세스",
+    "process_step_1": "데이터 수집",
+    "process_step_2": "분석",
+    "process_step_3": "실행 계획",
+    "climate_alert": "기후 긴급 상황",
+    "climate_message": "지구 온난화를 1.5°C로 제한할 시간이 얼마 남지 않았습니다"
+  },
+  "data_collection": {
+    "title": "온실가스 데이터 수집",
+    "scope_1": "범위 1: 직접 배출",
+    "scope_2": "범위 2: 간접 에너지 배출",
+    "scope_3": "범위 3: 기타 간접 배출",
+    "calculate": "계산"
+  },
+  "auth": {
+    "login": "로그인",
+    "signup": "회원가입",
+    "logout": "로그아웃",
+    "email": "이메일",
+    "password": "비밀번호",
+    "signout_success": "로그아웃 성공",
+    "signout_message": "성공적으로 로그아웃되었습니다",
+    "signout_error": "로그아웃 오류"
+  },
+  "dashboard": {
+    "title": "탄소 대시보드",
+    "total_emissions": "총 배출량",
+    "scope_breakdown": "범위별 분류",
+    "trends": "추세",
+    "intensity": "탄소 집약도"
+  },
+  "calculator": {
+    "title": "고급 온실가스 계산기",
+    "company_info": "회사 정보",
+    "company_name": "회사 이름",
+    "results": "계산 결과"
+  },
+  "actions": {
+    "title": "탄소 실행 계획",
+    "tracking": "조치 추적",
+    "add_action": "조치 추가",
+    "status": "상태",
+    "priority": "우선순위",
+    "filter": "필터",
+    "sort": "정렬",
+    "status_pending": "대기 중",
+    "status_in_progress": "진행 중",
+    "status_completed": "완료",
+    "priority_high": "높음",
+    "priority_medium": "보통",
+    "priority_low": "낮음"
+  },
+  "common": {
+    "save": "저장",
+    "cancel": "취소",
+    "delete": "삭제",
+    "edit": "편집",
+    "add": "추가",
+    "search": "검색",
+    "filter": "필터",
+    "export": "내보내기",
+    "import": "가져오기",
+    "loading": "로딩 중...",
+    "error": "오류",
+    "success": "성공",
+    "confirm": "확인",
+    "close": "닫기"
+  },
+  "language": {
+    "select": "언어 선택",
+    "english": "영어",
+    "french": "프랑스어",
+    "spanish": "스페인어",
+    "german": "독일어",
+    "arabic": "아랍어"
+  }
+}

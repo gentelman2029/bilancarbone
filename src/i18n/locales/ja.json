@@ -1,0 +1,100 @@
+{
+  "navigation": {
+    "home": "ホーム",
+    "dashboard": "ダッシュボード",
+    "data": "データ",
+    "simple_calculator": "シンプル計算機",
+    "advanced_calculator": "高度な計算機",
+    "actions": "アクション",
+    "cbam_module": "CBAMモジュール",
+    "contact": "お問い合わせ"
+  },
+  "home": {
+    "hero_title": "カーボンフットプリントを測定・削減",
+    "hero_subtitle": "エコロジカル・トランジションに取り組む企業のための完全な炭素追跡ソリューション",
+    "cta_start": "始める",
+    "cta_learn": "詳細を見る",
+    "features_title": "エコロジカル・トランジションのための完全なプラットフォーム",
+    "feature_1_title": "高度なGHG計算機",
+    "feature_1_desc": "GHGプロトコルとカーボンバランス®に基づいて排出量を計算",
+    "feature_2_title": "インタラクティブダッシュボード",
+    "feature_2_desc": "リアルタイムで排出量を可視化・分析",
+    "feature_3_title": "アクションプラン",
+    "feature_3_desc": "具体的な削減アクションを設定し、追跡",
+    "process_title": "私たちのプロセス",
+    "process_step_1": "データ収集",
+    "process_step_2": "分析",
+    "process_step_3": "アクションプラン",
+    "climate_alert": "気候緊急事態",
+    "climate_message": "地球温暖化を1.5°Cに制限する時間が限られています"
+  },
+  "data_collection": {
+    "title": "GHGデータ収集",
+    "scope_1": "スコープ1：直接排出",
+    "scope_2": "スコープ2：間接エネルギー排出",
+    "scope_3": "スコープ3：その他の間接排出",
+    "calculate": "計算"
+  },
+  "auth": {
+    "login": "ログイン",
+    "signup": "新規登録",
+    "logout": "ログアウト",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "signout_success": "ログアウト成功",
+    "signout_message": "正常にログアウトしました",
+    "signout_error": "ログアウトエラー"
+  },
+  "dashboard": {
+    "title": "カーボンダッシュボード",
+    "total_emissions": "総排出量",
+    "scope_breakdown": "スコープ別内訳",
+    "trends": "トレンド",
+    "intensity": "炭素強度"
+  },
+  "calculator": {
+    "title": "高度なGHG計算機",
+    "company_info": "会社情報",
+    "company_name": "会社名",
+    "results": "計算結果"
+  },
+  "actions": {
+    "title": "カーボンアクションプラン",
+    "tracking": "アクショントラッキング",
+    "add_action": "アクションを追加",
+    "status": "ステータス",
+    "priority": "優先度",
+    "filter": "フィルター",
+    "sort": "並び替え",
+    "status_pending": "保留中",
+    "status_in_progress": "進行中",
+    "status_completed": "完了",
+    "priority_high": "高",
+    "priority_medium": "中",
+    "priority_low": "低"
+  },
+  "common": {
+    "save": "保存",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "add": "追加",
+    "search": "検索",
+    "filter": "フィルター",
+    "export": "エクスポート",
+    "import": "インポート",
+    "loading": "読み込み中...",
+    "error": "エラー",
+    "success": "成功",
+    "confirm": "確認",
+    "close": "閉じる"
+  },
+  "language": {
+    "select": "言語を選択",
+    "english": "英語",
+    "french": "フランス語",
+    "spanish": "スペイン語",
+    "german": "ドイツ語",
+    "arabic": "アラビア語"
+  }
+}

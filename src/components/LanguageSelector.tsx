@@ -15,8 +15,49 @@ import { useAutoTranslation } from '@/services/translationService';
 const languages = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
   { code: 'en', name: 'English', flag: '🇬🇧' },
-  { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
   { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'it', name: 'Italiano', flag: '🇮🇹' },
+  { code: 'pt', name: 'Português', flag: '🇵🇹' },
+  { code: 'nl', name: 'Nederlands', flag: '🇳🇱' },
+  { code: 'pl', name: 'Polski', flag: '🇵🇱' },
+  { code: 'ru', name: 'Русский', flag: '🇷🇺' },
+  { code: 'zh', name: '中文', flag: '🇨🇳' },
+  { code: 'ja', name: '日本語', flag: '🇯🇵' },
+  { code: 'ko', name: '한국어', flag: '🇰🇷' },
+  { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+  { code: 'hi', name: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
+  { code: 'sv', name: 'Svenska', flag: '🇸🇪' },
+  { code: 'no', name: 'Norsk', flag: '🇳🇴' },
+  { code: 'da', name: 'Dansk', flag: '🇩🇰' },
+  { code: 'fi', name: 'Suomi', flag: '🇫🇮' },
+  { code: 'cs', name: 'Čeština', flag: '🇨🇿' },
+  { code: 'el', name: 'Ελληνικά', flag: '🇬🇷' },
+  { code: 'he', name: 'עברית', flag: '🇮🇱' },
+  { code: 'th', name: 'ไทย', flag: '🇹🇭' },
+  { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
+  { code: 'id', name: 'Bahasa Indonesia', flag: '🇮🇩' },
+  { code: 'ms', name: 'Bahasa Melayu', flag: '🇲🇾' },
+  { code: 'ro', name: 'Română', flag: '🇷🇴' },
+  { code: 'hu', name: 'Magyar', flag: '🇭🇺' },
+  { code: 'uk', name: 'Українська', flag: '🇺🇦' },
+  { code: 'bg', name: 'Български', flag: '🇧🇬' },
+  { code: 'hr', name: 'Hrvatski', flag: '🇭🇷' },
+  { code: 'sr', name: 'Српски', flag: '🇷🇸' },
+  { code: 'sk', name: 'Slovenčina', flag: '🇸🇰' },
+  { code: 'sl', name: 'Slovenščina', flag: '🇸🇮' },
+  { code: 'lt', name: 'Lietuvių', flag: '🇱🇹' },
+  { code: 'lv', name: 'Latviešu', flag: '🇱🇻' },
+  { code: 'et', name: 'Eesti', flag: '🇪🇪' },
+  { code: 'fa', name: 'فارسی', flag: '🇮🇷' },
+  { code: 'ur', name: 'اردو', flag: '🇵🇰' },
+  { code: 'bn', name: 'বাংলা', flag: '🇧🇩' },
+  { code: 'sw', name: 'Kiswahili', flag: '🇰🇪' },
+  { code: 'af', name: 'Afrikaans', flag: '🇿🇦' },
+  { code: 'ca', name: 'Català', flag: '🏴' },
+  { code: 'eu', name: 'Euskara', flag: '🏴' },
+  { code: 'gl', name: 'Galego', flag: '🏴' },
 ];
 
 export const LanguageSelector = () => {
@@ -60,7 +101,7 @@ export const LanguageSelector = () => {
           <span className="sm:hidden">{currentLanguage.flag}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[180px]">
+      <DropdownMenuContent align="end" className="min-w-[200px] max-h-[400px] overflow-y-auto">
         <DropdownMenuItem
           onClick={handleAutoDetect}
           disabled={isAutoDetecting}

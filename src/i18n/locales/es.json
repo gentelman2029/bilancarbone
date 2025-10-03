@@ -1,0 +1,100 @@
+{
+  "navigation": {
+    "home": "Inicio",
+    "dashboard": "Panel de Control",
+    "data": "Datos",
+    "simple_calculator": "Calculadora Simple",
+    "advanced_calculator": "Calculadora Avanzada",
+    "actions": "Acciones",
+    "cbam_module": "Módulo CBAM",
+    "contact": "Contacto"
+  },
+  "home": {
+    "hero_title": "Mida y Reduzca su Huella de Carbono",
+    "hero_subtitle": "Solución completa de seguimiento de carbono para empresas comprometidas con la transición ecológica",
+    "cta_start": "Comenzar",
+    "cta_learn": "Más información",
+    "features_title": "Una Plataforma Completa para su Transición Ecológica",
+    "feature_1_title": "Calculadora GEI Avanzada",
+    "feature_1_desc": "Calcule sus emisiones según el GHG Protocol y el Balance de Carbono®",
+    "feature_2_title": "Panel de Control Interactivo",
+    "feature_2_desc": "Visualice y analice sus emisiones en tiempo real",
+    "feature_3_title": "Plan de Acción",
+    "feature_3_desc": "Establezca y siga acciones concretas de reducción",
+    "process_title": "Nuestro Proceso",
+    "process_step_1": "Recopilación de Datos",
+    "process_step_2": "Análisis",
+    "process_step_3": "Plan de Acción",
+    "climate_alert": "Urgencia Climática",
+    "climate_message": "El tiempo se acaba para limitar el calentamiento global a 1.5°C"
+  },
+  "data_collection": {
+    "title": "Recopilación de Datos GEI",
+    "scope_1": "Alcance 1: Emisiones directas",
+    "scope_2": "Alcance 2: Emisiones indirectas de energía",
+    "scope_3": "Alcance 3: Otras emisiones indirectas",
+    "calculate": "Calcular"
+  },
+  "auth": {
+    "login": "Iniciar Sesión",
+    "signup": "Registrarse",
+    "logout": "Cerrar Sesión",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "signout_success": "Cierre de sesión exitoso",
+    "signout_message": "Ha cerrado sesión correctamente",
+    "signout_error": "Error al cerrar sesión"
+  },
+  "dashboard": {
+    "title": "Panel de Control de Carbono",
+    "total_emissions": "Emisiones Totales",
+    "scope_breakdown": "Desglose por Alcance",
+    "trends": "Tendencias",
+    "intensity": "Intensidad de Carbono"
+  },
+  "calculator": {
+    "title": "Calculadora GEI Avanzada",
+    "company_info": "Información de la Empresa",
+    "company_name": "Nombre de la Empresa",
+    "results": "Resultados del Cálculo"
+  },
+  "actions": {
+    "title": "Plan de Acción de Carbono",
+    "tracking": "Seguimiento de Acciones",
+    "add_action": "Añadir Acción",
+    "status": "Estado",
+    "priority": "Prioridad",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "status_pending": "Pendiente",
+    "status_in_progress": "En Curso",
+    "status_completed": "Completado",
+    "priority_high": "Alta",
+    "priority_medium": "Media",
+    "priority_low": "Baja"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Añadir",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "export": "Exportar",
+    "import": "Importar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "confirm": "Confirmar",
+    "close": "Cerrar"
+  },
+  "language": {
+    "select": "Seleccionar idioma",
+    "english": "Inglés",
+    "french": "Francés",
+    "spanish": "Español",
+    "german": "Alemán",
+    "arabic": "Árabe"
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "navigation": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "data": "Gegevens",
+    "simple_calculator": "Eenvoudige Calculator",
+    "advanced_calculator": "Geavanceerde Calculator",
+    "actions": "Acties",
+    "cbam_module": "CBAM Module",
+    "contact": "Contact"
+  },
+  "home": {
+    "hero_title": "Meet en Verminder Uw Koolstofvoetafdruk",
+    "hero_subtitle": "Complete koolstoftrackingoplossing voor bedrijven die zich inzetten voor de ecologische transitie",
+    "cta_start": "Beginnen",
+    "cta_learn": "Meer informatie",
+    "features_title": "Een Compleet Platform voor Uw Ecologische Transitie",
+    "feature_1_title": "Geavanceerde BKG Calculator",
+    "feature_1_desc": "Bereken uw uitstoot volgens het GHG Protocol en de Carbon Balance®",
+    "feature_2_title": "Interactief Dashboard",
+    "feature_2_desc": "Visualiseer en analyseer uw uitstoot in real-time",
+    "feature_3_title": "Actieplan",
+    "feature_3_desc": "Stel concrete reductiemaatregelen vast en volg deze op",
+    "process_title": "Ons Proces",
+    "process_step_1": "Gegevensverzameling",
+    "process_step_2": "Analyse",
+    "process_step_3": "Actieplan",
+    "climate_alert": "Klimaatnoodtoestand",
+    "climate_message": "De tijd dringt om de opwarming van de aarde tot 1,5°C te beperken"
+  },
+  "data_collection": {
+    "title": "BKG Gegevensverzameling",
+    "scope_1": "Scope 1: Directe emissies",
+    "scope_2": "Scope 2: Indirecte energie-emissies",
+    "scope_3": "Scope 3: Andere indirecte emissies",
+    "calculate": "Berekenen"
+  },
+  "auth": {
+    "login": "Inloggen",
+    "signup": "Registreren",
+    "logout": "Uitloggen",
+    "email": "E-mail",
+    "password": "Wachtwoord",
+    "signout_success": "Succesvol uitgelogd",
+    "signout_message": "U bent succesvol uitgelogd",
+    "signout_error": "Fout bij uitloggen"
+  },
+  "dashboard": {
+    "title": "Koolstof Dashboard",
+    "total_emissions": "Totale Uitstoot",
+    "scope_breakdown": "Verdeling per Scope",
+    "trends": "Trends",
+    "intensity": "Koolstofintensiteit"
+  },
+  "calculator": {
+    "title": "Geavanceerde BKG Calculator",
+    "company_info": "Bedrijfsinformatie",
+    "company_name": "Bedrijfsnaam",
+    "results": "Berekeningsresultaten"
+  },
+  "actions": {
+    "title": "Koolstof Actieplan",
+    "tracking": "Actieopvolging",
+    "add_action": "Actie Toevoegen",
+    "status": "Status",
+    "priority": "Prioriteit",
+    "filter": "Filteren",
+    "sort": "Sorteren",
+    "status_pending": "In Behandeling",
+    "status_in_progress": "Lopend",
+    "status_completed": "Voltooid",
+    "priority_high": "Hoog",
+    "priority_medium": "Gemiddeld",
+    "priority_low": "Laag"
+  },
+  "common": {
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "delete": "Verwijderen",
+    "edit": "Bewerken",
+    "add": "Toevoegen",
+    "search": "Zoeken",
+    "filter": "Filteren",
+    "export": "Exporteren",
+    "import": "Importeren",
+    "loading": "Laden...",
+    "error": "Fout",
+    "success": "Succes",
+    "confirm": "Bevestigen",
+    "close": "Sluiten"
+  },
+  "language": {
+    "select": "Taal selecteren",
+    "english": "Engels",
+    "french": "Frans",
+    "spanish": "Spaans",
+    "german": "Duits",
+    "arabic": "Arabisch"
+  }
+}

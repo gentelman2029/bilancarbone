@@ -1,0 +1,100 @@
+{
+  "navigation": {
+    "home": "Início",
+    "dashboard": "Painel",
+    "data": "Dados",
+    "simple_calculator": "Calculadora Simples",
+    "advanced_calculator": "Calculadora Avançada",
+    "actions": "Ações",
+    "cbam_module": "Módulo CBAM",
+    "contact": "Contacto"
+  },
+  "home": {
+    "hero_title": "Meça e Reduza a Sua Pegada de Carbono",
+    "hero_subtitle": "Solução completa de rastreamento de carbono para empresas comprometidas com a transição ecológica",
+    "cta_start": "Começar",
+    "cta_learn": "Saber mais",
+    "features_title": "Uma Plataforma Completa para a Sua Transição Ecológica",
+    "feature_1_title": "Calculadora GEE Avançada",
+    "feature_1_desc": "Calcule as suas emissões segundo o GHG Protocol e o Balanço de Carbono®",
+    "feature_2_title": "Painel Interativo",
+    "feature_2_desc": "Visualize e analise as suas emissões em tempo real",
+    "feature_3_title": "Plano de Ação",
+    "feature_3_desc": "Estabeleça e acompanhe ações concretas de redução",
+    "process_title": "O Nosso Processo",
+    "process_step_1": "Recolha de Dados",
+    "process_step_2": "Análise",
+    "process_step_3": "Plano de Ação",
+    "climate_alert": "Urgência Climática",
+    "climate_message": "O tempo está a esgotar-se para limitar o aquecimento global a 1,5°C"
+  },
+  "data_collection": {
+    "title": "Recolha de Dados GEE",
+    "scope_1": "Âmbito 1: Emissões diretas",
+    "scope_2": "Âmbito 2: Emissões indiretas de energia",
+    "scope_3": "Âmbito 3: Outras emissões indiretas",
+    "calculate": "Calcular"
+  },
+  "auth": {
+    "login": "Entrar",
+    "signup": "Registar",
+    "logout": "Sair",
+    "email": "Email",
+    "password": "Palavra-passe",
+    "signout_success": "Sessão encerrada com sucesso",
+    "signout_message": "Encerrou a sessão com sucesso",
+    "signout_error": "Erro ao encerrar sessão"
+  },
+  "dashboard": {
+    "title": "Painel de Carbono",
+    "total_emissions": "Emissões Totais",
+    "scope_breakdown": "Repartição por Âmbito",
+    "trends": "Tendências",
+    "intensity": "Intensidade de Carbono"
+  },
+  "calculator": {
+    "title": "Calculadora GEE Avançada",
+    "company_info": "Informações da Empresa",
+    "company_name": "Nome da Empresa",
+    "results": "Resultados do Cálculo"
+  },
+  "actions": {
+    "title": "Plano de Ação de Carbono",
+    "tracking": "Acompanhamento de Ações",
+    "add_action": "Adicionar Ação",
+    "status": "Estado",
+    "priority": "Prioridade",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "status_pending": "Pendente",
+    "status_in_progress": "Em Curso",
+    "status_completed": "Concluído",
+    "priority_high": "Alta",
+    "priority_medium": "Média",
+    "priority_low": "Baixa"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Adicionar",
+    "search": "Pesquisar",
+    "filter": "Filtrar",
+    "export": "Exportar",
+    "import": "Importar",
+    "loading": "A carregar...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "confirm": "Confirmar",
+    "close": "Fechar"
+  },
+  "language": {
+    "select": "Selecionar idioma",
+    "english": "Inglês",
+    "french": "Francês",
+    "spanish": "Espanhol",
+    "german": "Alemão",
+    "arabic": "Árabe"
+  }
+}

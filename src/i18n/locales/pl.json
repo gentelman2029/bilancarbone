@@ -1,0 +1,100 @@
+{
+  "navigation": {
+    "home": "Strona Główna",
+    "dashboard": "Panel",
+    "data": "Dane",
+    "simple_calculator": "Prosty Kalkulator",
+    "advanced_calculator": "Zaawansowany Kalkulator",
+    "actions": "Działania",
+    "cbam_module": "Moduł CBAM",
+    "contact": "Kontakt"
+  },
+  "home": {
+    "hero_title": "Zmierz i Zredukuj Swój Ślad Węglowy",
+    "hero_subtitle": "Kompleksowe rozwiązanie do śledzenia emisji dla firm zaangażowanych w transformację ekologiczną",
+    "cta_start": "Rozpocznij",
+    "cta_learn": "Dowiedz się więcej",
+    "features_title": "Kompletna Platforma dla Twojej Transformacji Ekologicznej",
+    "feature_1_title": "Zaawansowany Kalkulator GHG",
+    "feature_1_desc": "Oblicz swoje emisje według GHG Protocol i Carbon Balance®",
+    "feature_2_title": "Interaktywny Panel",
+    "feature_2_desc": "Wizualizuj i analizuj swoje emisje w czasie rzeczywistym",
+    "feature_3_title": "Plan Działań",
+    "feature_3_desc": "Ustal i śledź konkretne działania redukcyjne",
+    "process_title": "Nasz Proces",
+    "process_step_1": "Zbieranie Danych",
+    "process_step_2": "Analiza",
+    "process_step_3": "Plan Działań",
+    "climate_alert": "Pilność Klimatyczna",
+    "climate_message": "Czas ucieka, aby ograniczyć globalne ocieplenie do 1,5°C"
+  },
+  "data_collection": {
+    "title": "Zbieranie Danych GHG",
+    "scope_1": "Zakres 1: Emisje bezpośrednie",
+    "scope_2": "Zakres 2: Pośrednie emisje energetyczne",
+    "scope_3": "Zakres 3: Inne emisje pośrednie",
+    "calculate": "Oblicz"
+  },
+  "auth": {
+    "login": "Zaloguj się",
+    "signup": "Zarejestruj się",
+    "logout": "Wyloguj się",
+    "email": "E-mail",
+    "password": "Hasło",
+    "signout_success": "Wylogowano pomyślnie",
+    "signout_message": "Zostałeś pomyślnie wylogowany",
+    "signout_error": "Błąd podczas wylogowywania"
+  },
+  "dashboard": {
+    "title": "Panel Emisji",
+    "total_emissions": "Całkowite Emisje",
+    "scope_breakdown": "Podział według Zakresu",
+    "trends": "Trendy",
+    "intensity": "Intensywność Emisji"
+  },
+  "calculator": {
+    "title": "Zaawansowany Kalkulator GHG",
+    "company_info": "Informacje o Firmie",
+    "company_name": "Nazwa Firmy",
+    "results": "Wyniki Obliczeń"
+  },
+  "actions": {
+    "title": "Plan Działań Emisyjnych",
+    "tracking": "Śledzenie Działań",
+    "add_action": "Dodaj Działanie",
+    "status": "Status",
+    "priority": "Priorytet",
+    "filter": "Filtruj",
+    "sort": "Sortuj",
+    "status_pending": "Oczekujące",
+    "status_in_progress": "W Trakcie",
+    "status_completed": "Ukończone",
+    "priority_high": "Wysoki",
+    "priority_medium": "Średni",
+    "priority_low": "Niski"
+  },
+  "common": {
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "delete": "Usuń",
+    "edit": "Edytuj",
+    "add": "Dodaj",
+    "search": "Szukaj",
+    "filter": "Filtruj",
+    "export": "Eksportuj",
+    "import": "Importuj",
+    "loading": "Ładowanie...",
+    "error": "Błąd",
+    "success": "Sukces",
+    "confirm": "Potwierdź",
+    "close": "Zamknij"
+  },
+  "language": {
+    "select": "Wybierz język",
+    "english": "Angielski",
+    "french": "Francuski",
+    "spanish": "Hiszpański",
+    "german": "Niemiecki",
+    "arabic": "Arabski"
+  }
+}

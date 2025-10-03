@@ -1,0 +1,100 @@
+{
+  "navigation": {
+    "home": "首页",
+    "dashboard": "仪表板",
+    "data": "数据",
+    "simple_calculator": "简易计算器",
+    "advanced_calculator": "高级计算器",
+    "actions": "行动",
+    "cbam_module": "CBAM模块",
+    "contact": "联系"
+  },
+  "home": {
+    "hero_title": "测量并减少您的碳足迹",
+    "hero_subtitle": "为致力于生态转型的企业提供完整的碳追踪解决方案",
+    "cta_start": "开始",
+    "cta_learn": "了解更多",
+    "features_title": "生态转型的完整平台",
+    "feature_1_title": "高级温室气体计算器",
+    "feature_1_desc": "根据GHG协议和碳平衡®计算您的排放",
+    "feature_2_title": "交互式仪表板",
+    "feature_2_desc": "实时可视化和分析您的排放",
+    "feature_3_title": "行动计划",
+    "feature_3_desc": "制定并跟踪具体的减排行动",
+    "process_title": "我们的流程",
+    "process_step_1": "数据收集",
+    "process_step_2": "分析",
+    "process_step_3": "行动计划",
+    "climate_alert": "气候紧急状况",
+    "climate_message": "限制全球变暖至1.5°C的时间已所剩无几"
+  },
+  "data_collection": {
+    "title": "温室气体数据收集",
+    "scope_1": "范围1：直接排放",
+    "scope_2": "范围2：间接能源排放",
+    "scope_3": "范围3：其他间接排放",
+    "calculate": "计算"
+  },
+  "auth": {
+    "login": "登录",
+    "signup": "注册",
+    "logout": "登出",
+    "email": "电子邮件",
+    "password": "密码",
+    "signout_success": "登出成功",
+    "signout_message": "您已成功登出",
+    "signout_error": "登出错误"
+  },
+  "dashboard": {
+    "title": "碳仪表板",
+    "total_emissions": "总排放量",
+    "scope_breakdown": "范围细分",
+    "trends": "趋势",
+    "intensity": "碳强度"
+  },
+  "calculator": {
+    "title": "高级温室气体计算器",
+    "company_info": "公司信息",
+    "company_name": "公司名称",
+    "results": "计算结果"
+  },
+  "actions": {
+    "title": "碳行动计划",
+    "tracking": "行动跟踪",
+    "add_action": "添加行动",
+    "status": "状态",
+    "priority": "优先级",
+    "filter": "筛选",
+    "sort": "排序",
+    "status_pending": "待处理",
+    "status_in_progress": "进行中",
+    "status_completed": "已完成",
+    "priority_high": "高",
+    "priority_medium": "中",
+    "priority_low": "低"
+  },
+  "common": {
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "add": "添加",
+    "search": "搜索",
+    "filter": "筛选",
+    "export": "导出",
+    "import": "导入",
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "confirm": "确认",
+    "close": "关闭"
+  },
+  "language": {
+    "select": "选择语言",
+    "english": "英语",
+    "french": "法语",
+    "spanish": "西班牙语",
+    "german": "德语",
+    "arabic": "阿拉伯语"
+  }
+}

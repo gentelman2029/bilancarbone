@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Calculator, Zap, Car, Plane, Building } from "lucide-react";
+import { Calculator, Zap, Car } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 export const QuickCarbonCalculator = () => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     employees: "",
     electricityConsumption: "",
@@ -47,15 +49,15 @@ export const QuickCarbonCalculator = () => {
     
     setResult(Math.round(totalEmissions * 10) / 10);
     
-    toast.success("Calcul effectué !", {
-      description: `Votre empreinte carbone estimée : ${Math.round(totalEmissions * 10) / 10} tCO2e/an`
+    toast.success(t('quick_calculator.calculation_done'), {
+      description: `${t('quick_calculator.estimated_footprint')} : ${Math.round(totalEmissions * 10) / 10} tCO2e/an`
     });
   };
 
   const getEmissionLevel = (emissions: number) => {
-    if (emissions < 50) return { level: "Faible", color: "text-green-600", description: "Votre empreinte est relativement faible" };
-    if (emissions < 200) return { level: "Modérée", color: "text-orange-500", description: "Empreinte dans la moyenne des PME" };
-    return { level: "Élevée", color: "text-red-600", description: "Potentiel d'amélioration important" };
+    if (emissions < 50) return { level: t('quick_calculator.low'), color: "text-green-600", description: t('quick_calculator.low_desc') };
+    if (emissions < 200) return { level: t('quick_calculator.moderate'), color: "text-orange-500", description: t('quick_calculator.moderate_desc') };
+    return { level: t('quick_calculator.high'), color: "text-red-600", description: t('quick_calculator.high_desc') };
   };
 
   return (
@@ -63,21 +65,21 @@ export const QuickCarbonCalculator = () => {
       <DialogTrigger asChild>
         <Button variant="outline" className="w-full">
           <Calculator className="w-4 h-4 mr-2" />
-          Accéder au calculateur
+          {t('quick_calculator.access')}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calculator className="w-5 h-5 text-primary" />
-            Calculateur Carbone Rapide
+            {t('quick_calculator.title')}
           </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="employees">Nombre d'employés</Label>
+              <Label htmlFor="employees">{t('quick_calculator.employees')}</Label>
               <Input
                 id="employees"
                 type="number"
@@ -88,16 +90,16 @@ export const QuickCarbonCalculator = () => {
             </div>
             
             <div>
-              <Label htmlFor="companySize">Taille d'entreprise</Label>
+              <Label htmlFor="companySize">{t('quick_calculator.company_size')}</Label>
               <Select value={formData.companySize} onValueChange={(value) => setFormData({...formData, companySize: value})}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="startup">Startup</SelectItem>
-                  <SelectItem value="pme">PME</SelectItem>
-                  <SelectItem value="eti">ETI</SelectItem>
-                  <SelectItem value="grande">Grande entreprise</SelectItem>
+                  <SelectItem value="startup">{t('quick_calculator.company_sizes.startup')}</SelectItem>
+                  <SelectItem value="pme">{t('quick_calculator.company_sizes.pme')}</SelectItem>
+                  <SelectItem value="eti">{t('quick_calculator.company_sizes.eti')}</SelectItem>
+                  <SelectItem value="grande">{t('quick_calculator.company_sizes.grande')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -106,12 +108,12 @@ export const QuickCarbonCalculator = () => {
           <div className="space-y-4">
             <h3 className="font-semibold flex items-center gap-2">
               <Zap className="w-4 h-4 text-primary" />
-              Consommations énergétiques (annuelles)
+              {t('quick_calculator.energy_consumption')}
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="electricity">Électricité (kWh/an)</Label>
+                <Label htmlFor="electricity">{t('quick_calculator.electricity')}</Label>
                 <Input
                   id="electricity"
                   type="number"
@@ -122,7 +124,7 @@ export const QuickCarbonCalculator = () => {
               </div>
               
               <div>
-                <Label htmlFor="gas">Gaz (kWh/an)</Label>
+                <Label htmlFor="gas">{t('quick_calculator.gas')}</Label>
                 <Input
                   id="gas"
                   type="number"
@@ -137,12 +139,12 @@ export const QuickCarbonCalculator = () => {
           <div className="space-y-4">
             <h3 className="font-semibold flex items-center gap-2">
               <Car className="w-4 h-4 text-primary" />
-              Transport et déplacements
+              {t('quick_calculator.transport')}
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="fuel">Carburant flotte (L/an)</Label>
+                <Label htmlFor="fuel">{t('quick_calculator.fuel_fleet')}</Label>
                 <Input
                   id="fuel"
                   type="number"
@@ -153,7 +155,7 @@ export const QuickCarbonCalculator = () => {
               </div>
               
               <div>
-                <Label htmlFor="trips">Voyages d'affaires (km/an)</Label>
+                <Label htmlFor="trips">{t('quick_calculator.business_trips')}</Label>
                 <Input
                   id="trips"
                   type="number"
@@ -167,7 +169,7 @@ export const QuickCarbonCalculator = () => {
 
           <Button onClick={calculateEmissions} className="w-full" size="lg">
             <Calculator className="w-4 h-4 mr-2" />
-            Calculer mon empreinte carbone
+            {t('quick_calculator.calculate_footprint')}
           </Button>
 
           {result !== null && (
@@ -177,7 +179,7 @@ export const QuickCarbonCalculator = () => {
                   {result} tCO2e/an
                 </div>
                 <div className={`text-lg font-semibold ${getEmissionLevel(result).color}`}>
-                  Niveau : {getEmissionLevel(result).level}
+                  {t('quick_calculator.level')} : {getEmissionLevel(result).level}
                 </div>
                 <p className="text-muted-foreground">
                   {getEmissionLevel(result).description}
@@ -188,20 +190,19 @@ export const QuickCarbonCalculator = () => {
                     <div className="text-lg font-semibold text-foreground">
                       {Math.round(result / parseInt(formData.employees || "1") * 10) / 10}
                     </div>
-                    <div className="text-sm text-muted-foreground">tCO2e/employé</div>
+                    <div className="text-sm text-muted-foreground">{t('quick_calculator.per_employee')}</div>
                   </div>
                   <div className="text-center">
                     <div className="text-lg font-semibold text-foreground">
                       {Math.round(result * 2.3 * 10) / 10}€
                     </div>
-                    <div className="text-sm text-muted-foreground">Coût carbone estimé</div>
+                    <div className="text-sm text-muted-foreground">{t('quick_calculator.carbon_cost')}</div>
                   </div>
                 </div>
                 
                 <div className="mt-4 p-3 bg-accent/20 rounded-lg">
                   <p className="text-sm text-muted-foreground">
-                    💡 <strong>Recommandation :</strong> Commencez par un audit détaillé pour identifier 
-                    les postes d'émissions prioritaires et définir un plan de réduction.
+                    💡 <strong>{t('quick_calculator.recommendation')} :</strong> {t('quick_calculator.recommendation_text')}
                   </p>
                 </div>
               </div>

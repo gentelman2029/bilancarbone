@@ -61,6 +61,96 @@
       "badge": "Études de cas",
       "title": "Résultats concrets obtenus",
       "subtitle": "Découvrez comment nos clients ont transformé leur empreinte carbone"
+    },
+    "stats": {
+      "clients": "Entreprises clientes",
+      "co2_calculated": "tCO2e calculées",
+      "satisfaction": "Satisfaction client",
+      "certification": "Certification"
+    },
+    "why_choose": {
+      "title": "Pourquoi choisir CarbonTrack ?",
+      "subtitle": "Nous résolvons les défis les plus courants des entreprises en matière de bilan carbone",
+      "complexity_title": "Complexité simplifiée",
+      "complexity_problem": "Problème :",
+      "complexity_problem_desc": "Les normes carbone sont complexes",
+      "complexity_solution": "Solution :",
+      "complexity_solution_desc": "Interface guidée, calculs automatiques",
+      "complexity_result": "Configuration en 5 minutes",
+      "cost_title": "Coûts maîtrisés",
+      "cost_problem": "Consultants à 15 000€+",
+      "cost_solution": "À partir de 99€/mois tout inclus",
+      "cost_result": "90% moins cher qu'un consultant",
+      "speed_title": "Rapidité d'exécution",
+      "speed_problem": "6 mois avec un consultant",
+      "speed_solution": "Bilan complet en 2 semaines",
+      "speed_result": "12x plus rapide"
+    },
+    "visualization": {
+      "badge": "Visualisation",
+      "title": "Visualisez l'impact environnemental de votre entreprise",
+      "subtitle": "Suivez les émissions de votre entreprise à l'aide de graphiques et de tableaux de bord personnalisables",
+      "dashboards_title": "Tableaux de bord personnalisables",
+      "dashboards_desc": "Visualisez vos progrès en matière de développement durable grâce à une analyse détaillée des tendances et à des comparaisons par périodes.",
+      "engagement_title": "Engagement des parties prenantes",
+      "engagement_desc": "Impliquez vos parties prenantes en partageant des données d'émissions précises avec des visualisations claires et percutantes.",
+      "trends_title": "Suivi des tendances",
+      "trends_desc": "Analysez l'évolution de vos émissions dans le temps avec des graphiques interactifs et des métriques de performance."
+    },
+    "hotspots": {
+      "badge": "Analyse",
+      "title": "Identifiez les points chauds d'émissions et leurs origines",
+      "subtitle": "Analyse et visualisation détaillées des données pour cibler vos efforts de décarbonation",
+      "breakdown_title": "Décomposition par source",
+      "breakdown_desc": "Identifiez la source de vos émissions en décomposant votre empreinte carbone par département, installation, projet ou toute autre dimension spécifique.",
+      "optimization_title": "Optimisation ciblée",
+      "optimization_desc": "Ciblez vos efforts de décarbonation pour un maximum d'impact en utilisant des informations approfondies sur vos données d'émissions."
+    },
+    "transparency": {
+      "badge": "Transparence",
+      "title": "Apportez de la transparence à vos données d'émissions",
+      "subtitle": "Une plateforme centralisée pour organiser et auditer toutes vos données carbone",
+      "centralization_title": "Centralisation des données",
+      "centralization_desc": "Téléchargez toutes vos données d'émissions sur une seule plateforme, organisées par scopes 1, 2 et 3 et par catégories d'émissions pour une visibilité complète.",
+      "organization_title": "Organisation multi-niveaux",
+      "organization_desc": "Organisez vos données par département, installation ou filiale pour suivre les émissions à tous les niveaux de l'organisation.",
+      "audit_title": "Prêt pour les audits",
+      "audit_desc": "Soyez toujours prêt pour les audits et conformez-vous facilement avec des rapports détaillés et des ressources éducatives intégrées."
+    },
+    "resources": {
+      "badge": "Ressources",
+      "title": "Outils et ressources essentiels",
+      "subtitle": "Accédez à nos calculateurs et outils d'évaluation spécialisés",
+      "quick_calc_title": "Calculateur Carbone Rapide",
+      "quick_calc_desc": "Estimez rapidement votre empreinte carbone avec notre calculateur intégré basé sur les derniers facteurs d'émission.",
+      "cbam_title": "CBAM Checker",
+      "cbam_desc": "Estimez vos futurs coûts MACF et les économies potentielles avec notre outil d'évaluation du mécanisme d'ajustement carbone aux frontières.",
+      "csrd_title": "CSRD Checker",
+      "csrd_desc": "Vérifiez votre conformité aux nouvelles exigences de reporting de durabilité et préparez-vous à la directive CSRD."
+    },
+    "faq": {
+      "badge": "Support",
+      "title": "Questions fréquemment posées",
+      "subtitle": "Trouvez rapidement les réponses à vos questions les plus courantes",
+      "q1_title": "Qu'est-ce qu'un calculateur d'empreinte carbone?",
+      "q1_answer": "Un calculateur d'empreinte carbone est un outil qui permet de quantifier les émissions de gaz à effet de serre générées par les activités d'une entreprise. Il mesure les émissions directes (Scope 1), indirectes liées à l'énergie (Scope 2) et autres émissions indirectes (Scope 3) selon les standards internationaux comme le GHG Protocol.",
+      "q2_title": "Quels sont les avantages d'un logiciel permettant de calculer l'empreinte carbone d'une entreprise ?",
+      "q2_answer": "Un logiciel de calcul d'empreinte carbone offre plusieurs avantages : automatisation des calculs, gain de temps considérable, précision des données, suivi en temps réel, génération de rapports conformes aux réglementations, identification des leviers de réduction, et aide à la prise de décision stratégique pour la transition écologique.",
+      "q3_title": "Comment la plateforme de développement durable de Carbontrack aide-t-elle les entreprises à mesurer leurs émissions ?",
+      "q3_answer": "Notre plateforme Carbontrack simplifie la mesure des émissions grâce à une interface intuitive, des facteurs d'émission actualisés automatiquement, l'intégration avec vos systèmes existants, des tableaux de bord personnalisables, et un accompagnement expert pour interpréter les résultats et définir un plan d'action.",
+      "q4_title": "Carbontrack permet-elle de calculer les émissions de scopes 1, 2 et 3 ?",
+      "q4_answer": "Oui, Carbontrack couvre l'intégralité des émissions selon la méthodologie GHG Protocol : Scope 1 (émissions directes), Scope 2 (électricité, chauffage, refroidissement), et Scope 3 (chaîne de valeur complète). Notre plateforme inclut plus de 15 catégories du Scope 3 pour une mesure exhaustive.",
+      "q5_title": "Quelles sont les principales caractéristiques du logiciel de bilan carbone ?",
+      "q5_answer": "Les principales caractéristiques incluent : calcul automatisé selon les normes ISO 14064 et GHG Protocol, interface collaborative multi-utilisateurs, tableaux de bord personnalisables, génération de rapports conformes CSRD, suivi des actions de réduction, alertes et notifications, API pour l'intégration, et support expert inclus.",
+      "q6_title": "Pourquoi les entreprises doivent-elles calculer leur empreinte carbone ?",
+      "q6_answer": "Le calcul de l'empreinte carbone est devenu essentiel pour : respecter les nouvelles réglementations (CSRD, taxonomie européenne), répondre aux attentes des investisseurs et clients, identifier des opportunités d'économies, améliorer sa compétitivité, contribuer aux objectifs climatiques, et préparer l'avenir face aux enjeux environnementaux."
+    },
+    "cta": {
+      "title": "Commencez votre transition carbone aujourd'hui",
+      "subtitle": "Rejoignez les entreprises pionnières qui transforment leur impact environnemental avec CarbonTrack",
+      "trial_button": "Essai gratuit 14 jours",
+      "demo_button": "Demander une démo",
+      "no_card": "Aucune carte bancaire requise • Configuration en 5 minutes"
     }
   },
   "data_collection": {

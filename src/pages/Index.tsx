@@ -39,10 +39,10 @@ const Index = () => {
   ];
 
   const stats = [
-    { value: "1000+", label: "Entreprises clientes" },
-    { value: "2.5M", label: "tCO2e calculées" },
-    { value: "98%", label: "Satisfaction client" },
-    { value: "ISO 14064", label: "Certification" }
+    { value: "1000+", label: t('home.stats.clients') },
+    { value: "2.5M", label: t('home.stats.co2_calculated') },
+    { value: "98%", label: t('home.stats.satisfaction') },
+    { value: "ISO 14064", label: t('home.stats.certification') }
   ];
 
   return (
@@ -352,10 +352,10 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Pourquoi choisir CarbonTrack ?
+              {t('home.why_choose.title')}
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Nous résolvons les défis les plus courants des entreprises en matière de bilan carbone
+              {t('home.why_choose.subtitle')}
             </p>
           </div>
 
@@ -364,36 +364,36 @@ const Index = () => {
               <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">⚡</span>
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">Complexité simplifiée</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-2">{t('home.why_choose.complexity_title')}</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                <strong>Problème :</strong> Les normes carbone sont complexes<br/>
-                <strong>Solution :</strong> Interface guidée, calculs automatiques
+                <strong>{t('home.why_choose.complexity_problem')}</strong> {t('home.why_choose.complexity_problem_desc')}<br/>
+                <strong>{t('home.why_choose.complexity_solution')}</strong> {t('home.why_choose.complexity_solution_desc')}
               </p>
-              <div className="text-primary font-semibold">Configuration en 5 minutes</div>
+              <div className="text-primary font-semibold">{t('home.why_choose.complexity_result')}</div>
             </Card>
 
             <Card className="p-6 bg-gradient-card border shadow-card text-center">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">💰</span>
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">Coûts maîtrisés</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-2">{t('home.why_choose.cost_title')}</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                <strong>Problème :</strong> Consultants à 15 000€+<br/>
-                <strong>Solution :</strong> À partir de 99€/mois tout inclus
+                <strong>{t('home.why_choose.complexity_problem')}</strong> {t('home.why_choose.cost_problem')}<br/>
+                <strong>{t('home.why_choose.complexity_solution')}</strong> {t('home.why_choose.cost_solution')}
               </p>
-              <div className="text-primary font-semibold">90% moins cher qu'un consultant</div>
+              <div className="text-primary font-semibold">{t('home.why_choose.cost_result')}</div>
             </Card>
 
             <Card className="p-6 bg-gradient-card border shadow-card text-center">
               <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">⏱️</span>
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">Rapidité d'exécution</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-2">{t('home.why_choose.speed_title')}</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                <strong>Problème :</strong> 6 mois avec un consultant<br/>
-                <strong>Solution :</strong> Bilan complet en 2 semaines
+                <strong>{t('home.why_choose.complexity_problem')}</strong> {t('home.why_choose.speed_problem')}<br/>
+                <strong>{t('home.why_choose.complexity_solution')}</strong> {t('home.why_choose.speed_solution')}
               </p>
-              <div className="text-primary font-semibold">12x plus rapide</div>
+              <div className="text-primary font-semibold">{t('home.why_choose.speed_result')}</div>
             </Card>
           </div>
         </div>
@@ -407,13 +407,13 @@ const Index = () => {
           <div className="text-center mb-16">
             <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
               <Eye className="w-4 h-4 mr-2" />
-              Visualisation
+              {t('home.visualization.badge')}
             </Badge>
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Visualisez l'impact environnemental de votre entreprise
+              {t('home.visualization.title')}
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Suivez les émissions de votre entreprise à l'aide de graphiques et de tableaux de bord personnalisables
+              {t('home.visualization.subtitle')}
             </p>
           </div>
 
@@ -424,9 +424,9 @@ const Index = () => {
                   <BarChart3 className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">Tableaux de bord personnalisables</h3>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">{t('home.visualization.dashboards_title')}</h3>
                   <p className="text-muted-foreground">
-                    Visualisez vos progrès en matière de développement durable grâce à une analyse détaillée des tendances et à des comparaisons par périodes.
+                    {t('home.visualization.dashboards_desc')}
                   </p>
                 </div>
               </div>
@@ -438,9 +438,9 @@ const Index = () => {
                   <Users className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">Engagement des parties prenantes</h3>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">{t('home.visualization.engagement_title')}</h3>
                   <p className="text-muted-foreground">
-                    Impliquez vos parties prenantes en partageant des données d'émissions précises avec des visualisations claires et percutantes.
+                    {t('home.visualization.engagement_desc')}
                   </p>
                 </div>
               </div>
@@ -452,9 +452,9 @@ const Index = () => {
                   <TrendingDown className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">Suivi des tendances</h3>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">{t('home.visualization.trends_title')}</h3>
                   <p className="text-muted-foreground">
-                    Analysez l'évolution de vos émissions dans le temps avec des graphiques interactifs et des métriques de performance.
+                    {t('home.visualization.trends_desc')}
                   </p>
                 </div>
               </div>
@@ -469,13 +469,13 @@ const Index = () => {
           <div className="text-center mb-16">
             <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
               <Search className="w-4 h-4 mr-2" />
-              Analyse
+              {t('home.hotspots.badge')}
             </Badge>
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Identifiez les points chauds d'émissions et leurs origines
+              {t('home.hotspots.title')}
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Analyse et visualisation détaillées des données pour cibler vos efforts de décarbonation
+              {t('home.hotspots.subtitle')}
             </p>
           </div>
 
@@ -486,9 +486,9 @@ const Index = () => {
                   <Building className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">Décomposition par source</h3>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">{t('home.hotspots.breakdown_title')}</h3>
                   <p className="text-muted-foreground">
-                    Identifiez la source de vos émissions en décomposant votre empreinte carbone par département, installation, projet ou toute autre dimension spécifique.
+                    {t('home.hotspots.breakdown_desc')}
                   </p>
                 </div>
               </div>
@@ -500,9 +500,9 @@ const Index = () => {
                   <Target className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">Optimisation ciblée</h3>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">{t('home.hotspots.optimization_title')}</h3>
                   <p className="text-muted-foreground">
-                    Ciblez vos efforts de décarbonation pour un maximum d'impact en utilisant des informations approfondies sur vos données d'émissions.
+                    {t('home.hotspots.optimization_desc')}
                   </p>
                 </div>
               </div>
@@ -517,13 +517,13 @@ const Index = () => {
           <div className="text-center mb-16">
             <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
               <Shield className="w-4 h-4 mr-2" />
-              Transparence
+              {t('home.transparency.badge')}
             </Badge>
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Apportez de la transparence à vos données d'émissions
+              {t('home.transparency.title')}
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Une plateforme centralisée pour organiser et auditer toutes vos données carbone
+              {t('home.transparency.subtitle')}
             </p>
           </div>
 
@@ -534,9 +534,9 @@ const Index = () => {
                   <FileText className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">Centralisation des données</h3>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">{t('home.transparency.centralization_title')}</h3>
                   <p className="text-muted-foreground">
-                    Téléchargez toutes vos données d'émissions sur une seule plateforme, organisées par scopes 1, 2 et 3 et par catégories d'émissions pour une visibilité complète.
+                    {t('home.transparency.centralization_desc')}
                   </p>
                 </div>
               </div>
@@ -548,9 +548,9 @@ const Index = () => {
                   <Building className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">Organisation multi-niveaux</h3>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">{t('home.transparency.organization_title')}</h3>
                   <p className="text-muted-foreground">
-                    Organisez vos données par département, installation ou filiale pour suivre les émissions à tous les niveaux de l'organisation.
+                    {t('home.transparency.organization_desc')}
                   </p>
                 </div>
               </div>
@@ -562,9 +562,9 @@ const Index = () => {
                   <CheckCircle className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">Prêt pour les audits</h3>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">{t('home.transparency.audit_title')}</h3>
                   <p className="text-muted-foreground">
-                    Soyez toujours prêt pour les audits et conformez-vous facilement avec des rapports détaillés et des ressources éducatives intégrées.
+                    {t('home.transparency.audit_desc')}
                   </p>
                 </div>
               </div>
@@ -579,13 +579,13 @@ const Index = () => {
           <div className="text-center mb-16">
             <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
               <FileText className="w-4 h-4 mr-2" />
-              Ressources
+              {t('home.resources.badge')}
             </Badge>
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Outils et ressources essentiels
+              {t('home.resources.title')}
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Accédez à nos calculateurs et outils d'évaluation spécialisés
+              {t('home.resources.subtitle')}
             </p>
           </div>
 
@@ -595,9 +595,9 @@ const Index = () => {
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto group-hover:bg-primary/20 transition-colors">
                   <Calculator className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold text-foreground">Calculateur Carbone Rapide</h3>
+                <h3 className="text-xl font-semibold text-foreground">{t('home.resources.quick_calc_title')}</h3>
                 <p className="text-muted-foreground">
-                  Estimez rapidement votre empreinte carbone avec notre calculateur intégré basé sur les derniers facteurs d'émission.
+                  {t('home.resources.quick_calc_desc')}
                 </p>
                 <QuickCarbonCalculator />
               </div>
@@ -608,9 +608,9 @@ const Index = () => {
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto group-hover:bg-primary/20 transition-colors">
                   <DollarSign className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold text-foreground">CBAM Checker</h3>
+                <h3 className="text-xl font-semibold text-foreground">{t('home.resources.cbam_title')}</h3>
                 <p className="text-muted-foreground">
-                  Estimez vos futurs coûts MACF et les économies potentielles avec notre outil d'évaluation du mécanisme d'ajustement carbone aux frontières.
+                  {t('home.resources.cbam_desc')}
                 </p>
                 <CBAMChecker />
               </div>
@@ -621,9 +621,9 @@ const Index = () => {
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto group-hover:bg-primary/20 transition-colors">
                   <ClipboardCheck className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold text-foreground">CSRD Checker</h3>
+                <h3 className="text-xl font-semibold text-foreground">{t('home.resources.csrd_title')}</h3>
                 <p className="text-muted-foreground">
-                  Vérifiez votre conformité aux nouvelles exigences de reporting de durabilité et préparez-vous à la directive CSRD.
+                  {t('home.resources.csrd_desc')}
                 </p>
                 <CSRDChecker />
               </div>
@@ -637,13 +637,13 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
-              Support
+              {t('home.faq.badge')}
             </Badge>
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Questions fréquemment posées
+              {t('home.faq.title')}
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Trouvez rapidement les réponses à vos questions les plus courantes
+              {t('home.faq.subtitle')}
             </p>
           </div>
 
@@ -651,55 +651,55 @@ const Index = () => {
             <Accordion type="single" collapsible className="space-y-4">
               <AccordionItem value="item-1" className="bg-gradient-card border shadow-card rounded-lg px-6">
                 <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
-                  Qu'est-ce qu'un calculateur d'empreinte carbone?
+                  {t('home.faq.q1_title')}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pt-4">
-                  Un calculateur d'empreinte carbone est un outil qui permet de quantifier les émissions de gaz à effet de serre générées par les activités d'une entreprise. Il mesure les émissions directes (Scope 1), indirectes liées à l'énergie (Scope 2) et autres émissions indirectes (Scope 3) selon les standards internationaux comme le GHG Protocol.
+                  {t('home.faq.q1_answer')}
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-2" className="bg-gradient-card border shadow-card rounded-lg px-6">
                 <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
-                  Quels sont les avantages d'un logiciel permettant de calculer l'empreinte carbone d'une entreprise ?
+                  {t('home.faq.q2_title')}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pt-4">
-                  Un logiciel de calcul d'empreinte carbone offre plusieurs avantages : automatisation des calculs, gain de temps considérable, précision des données, suivi en temps réel, génération de rapports conformes aux réglementations, identification des leviers de réduction, et aide à la prise de décision stratégique pour la transition écologique.
+                  {t('home.faq.q2_answer')}
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-3" className="bg-gradient-card border shadow-card rounded-lg px-6">
                 <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
-                  Comment la plateforme de développement durable de Carbontrack aide-t-elle les entreprises à mesurer leurs émissions ?
+                  {t('home.faq.q3_title')}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pt-4">
-                  Notre plateforme Carbontrack simplifie la mesure des émissions grâce à une interface intuitive, des facteurs d'émission actualisés automatiquement, l'intégration avec vos systèmes existants, des tableaux de bord personnalisables, et un accompagnement expert pour interpréter les résultats et définir un plan d'action.
+                  {t('home.faq.q3_answer')}
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-4" className="bg-gradient-card border shadow-card rounded-lg px-6">
                 <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
-                  Carbontrack permet-elle de calculer les émissions de scopes 1, 2 et 3 ?
+                  {t('home.faq.q4_title')}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pt-4">
-                  Oui, Carbontrack couvre l'intégralité des émissions selon la méthodologie GHG Protocol : Scope 1 (émissions directes), Scope 2 (électricité, chauffage, refroidissement), et Scope 3 (chaîne de valeur complète). Notre plateforme inclut plus de 15 catégories du Scope 3 pour une mesure exhaustive.
+                  {t('home.faq.q4_answer')}
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-5" className="bg-gradient-card border shadow-card rounded-lg px-6">
                 <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
-                  Quelles sont les principales caractéristiques du logiciel de bilan carbone ?
+                  {t('home.faq.q5_title')}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pt-4">
-                  Les principales caractéristiques incluent : calcul automatisé selon les normes ISO 14064 et GHG Protocol, interface collaborative multi-utilisateurs, tableaux de bord personnalisables, génération de rapports conformes CSRD, suivi des actions de réduction, alertes et notifications, API pour l'intégration, et support expert inclus.
+                  {t('home.faq.q5_answer')}
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-6" className="bg-gradient-card border shadow-card rounded-lg px-6">
                 <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
-                  Pourquoi les entreprises doivent-elles calculer leur empreinte carbone ?
+                  {t('home.faq.q6_title')}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pt-4">
-                  Le calcul de l'empreinte carbone est devenu essentiel pour : respecter les nouvelles réglementations (CSRD, taxonomie européenne), répondre aux attentes des investisseurs et clients, identifier des opportunités d'économies, améliorer sa compétitivité, contribuer aux objectifs climatiques, et préparer l'avenir face aux enjeux environnementaux.
+                  {t('home.faq.q6_answer')}
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -714,10 +714,10 @@ const Index = () => {
           <div className="text-center space-y-8">
             <div className="space-y-4">
               <h2 className="text-3xl lg:text-4xl font-bold">
-                Commencez votre transition carbone aujourd'hui
+                {t('home.cta.title')}
               </h2>
               <p className="text-xl opacity-90 max-w-2xl mx-auto">
-                Rejoignez les entreprises pionnières qui transforment leur impact environnemental avec CarbonTrack
+                {t('home.cta.subtitle')}
               </p>
             </div>
 
@@ -725,7 +725,7 @@ const Index = () => {
               <Button variant="secondary" size="lg" asChild>
                 <Link to="/trial">
                   <CheckCircle className="w-5 h-5 mr-2" />
-                  Essai gratuit 14 jours
+                  {t('home.cta.trial_button')}
                 </Link>
               </Button>
               <Button 
@@ -735,13 +735,13 @@ const Index = () => {
                 asChild
               >
                 <Link to="/contact">
-                  Demander une démo
+                  {t('home.cta.demo_button')}
                 </Link>
               </Button>
             </div>
 
             <p className="text-sm opacity-75">
-              Aucune carte bancaire requise • Configuration en 5 minutes
+              {t('home.cta.no_card')}
             </p>
           </div>
         </div>

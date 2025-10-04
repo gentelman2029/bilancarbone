@@ -3,14 +3,16 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, X, Star, Building, Users, Zap, Shield, BarChart3, Target, CreditCard } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export const Pricing = () => {
+  const { t } = useTranslation();
   const plans = [
     {
-      name: "Starter",
-      description: "Parfait pour les petites entreprises qui commencent",
+      name: t('pricing.plans.starter.name'),
+      description: t('pricing.plans.starter.description'),
       price: "99",
-      period: "mois",
+      period: t('pricing.per_month'),
       badge: null,
       features: [
         "Calcul Scope 1 et 2",
@@ -25,15 +27,15 @@ export const Pricing = () => {
         "Pas d'API",
         "Pas de support téléphone"
       ],
-      cta: "Commencer",
+      cta: t('pricing.plans.starter.cta'),
       variant: "outline" as const
     },
     {
-      name: "Professional",
-      description: "La solution complète pour les entreprises en croissance",
+      name: t('pricing.plans.professional.name'),
+      description: t('pricing.plans.professional.description'),
       price: "299",
-      period: "mois",
-      badge: "Populaire",
+      period: t('pricing.per_month'),
+      badge: t('pricing.plans.professional.badge'),
       features: [
         "Calcul Scope 1, 2 et 3 complet",
         "Dashboard avancé avec graphiques",
@@ -46,15 +48,15 @@ export const Pricing = () => {
         "Formation en ligne incluse"
       ],
       limitations: [],
-      cta: "Essai gratuit",
+      cta: t('pricing.plans.professional.cta'),
       variant: "hero" as const
     },
     {
-      name: "Enterprise",
-      description: "Pour les grandes organisations avec des besoins avancés",
-      price: "Sur devis",
+      name: t('pricing.plans.enterprise.name'),
+      description: t('pricing.plans.enterprise.description'),
+      price: t('pricing.on_quote'),
       period: "",
-      badge: "Sur mesure",
+      badge: t('pricing.plans.enterprise.badge'),
       features: [
         "Toutes les fonctionnalités Professional",
         "Utilisateurs illimités",
@@ -68,7 +70,7 @@ export const Pricing = () => {
         "SLA garantie 99.9%"
       ],
       limitations: [],
-      cta: "Nous contacter",
+      cta: t('pricing.plans.enterprise.cta'),
       variant: "outline" as const
     }
   ];
@@ -124,13 +126,13 @@ export const Pricing = () => {
         <div className="text-center mb-16">
           <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
             <BarChart3 className="w-4 h-4 mr-2" />
-            Tarification transparente
+            {t('pricing.transparent')}
           </Badge>
           <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            Choisissez le plan qui vous convient
+            {t('pricing.title')}
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Des solutions adaptées à chaque taille d'entreprise. Commencez gratuitement, évoluez selon vos besoins.
+            {t('pricing.subtitle')}
           </p>
         </div>
 
@@ -149,7 +151,7 @@ export const Pricing = () => {
                 <h3 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h3>
                 <p className="text-muted-foreground mb-4">{plan.description}</p>
                 <div className="mb-4">
-                  {plan.price !== "Sur devis" ? (
+                  {plan.price !== t('pricing.on_quote') ? (
                     <div className="flex items-baseline justify-center">
                       <span className="text-4xl font-bold text-primary">{plan.price}€</span>
                       <span className="text-muted-foreground ml-2">/{plan.period}</span>
@@ -199,9 +201,9 @@ export const Pricing = () => {
         {/* Options supplémentaires */}
         <div className="mb-16">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-foreground mb-4">Services d'accompagnement</h2>
+            <h2 className="text-3xl font-bold text-foreground mb-4">{t('pricing.services_title')}</h2>
             <p className="text-xl text-muted-foreground">
-              Accélérez votre transition carbone avec nos experts
+              {t('pricing.services_subtitle')}
             </p>
           </div>
           
@@ -219,7 +221,7 @@ export const Pricing = () => {
                 </div>
                 <p className="text-muted-foreground text-sm mb-4">{addon.description}</p>
                 <Button variant="outline" size="sm" onClick={() => alert("Contactez-nous pour ce service")}>
-                  Commander
+                  {t('pricing.order')}
                 </Button>
               </Card>
             ))}
@@ -229,9 +231,9 @@ export const Pricing = () => {
         {/* FAQ */}
         <div>
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-foreground mb-4">Questions fréquentes</h2>
+            <h2 className="text-3xl font-bold text-foreground mb-4">{t('pricing.faq_title')}</h2>
             <p className="text-xl text-muted-foreground">
-              Tout ce que vous devez savoir sur nos tarifs
+              {t('pricing.faq_subtitle')}
             </p>
           </div>
           
@@ -248,28 +250,28 @@ export const Pricing = () => {
         {/* ROI et bénéfices business */}
         <div className="mb-16">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-foreground mb-4">Retour sur investissement garanti</h2>
+            <h2 className="text-3xl font-bold text-foreground mb-4">{t('pricing.roi_title')}</h2>
             <p className="text-xl text-muted-foreground">
-              Nos clients récupèrent leur investissement en moins de 6 mois
+              {t('pricing.roi_subtitle')}
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <Card className="p-6 bg-gradient-card border shadow-card text-center">
               <div className="text-3xl font-bold text-primary mb-2">6 mois</div>
-              <div className="text-sm text-muted-foreground">ROI moyen</div>
+              <div className="text-sm text-muted-foreground">{t('pricing.roi_average')}</div>
             </Card>
             <Card className="p-6 bg-gradient-card border shadow-card text-center">
               <div className="text-3xl font-bold text-primary mb-2">€35k</div>
-              <div className="text-sm text-muted-foreground">Économies moyennes/an</div>
+              <div className="text-sm text-muted-foreground">{t('pricing.average_savings')}</div>
             </Card>
             <Card className="p-6 bg-gradient-card border shadow-card text-center">
               <div className="text-3xl font-bold text-primary mb-2">-30%</div>
-              <div className="text-sm text-muted-foreground">Réduction émissions</div>
+              <div className="text-sm text-muted-foreground">{t('pricing.emission_reduction')}</div>
             </Card>
             <Card className="p-6 bg-gradient-card border shadow-card text-center">
               <div className="text-3xl font-bold text-primary mb-2">100%</div>
-              <div className="text-sm text-muted-foreground">Conformité CSRD</div>
+              <div className="text-sm text-muted-foreground">{t('pricing.csrd_compliance')}</div>
             </Card>
           </div>
         </div>
@@ -277,15 +279,15 @@ export const Pricing = () => {
         {/* CTA */}
         <div className="text-center mt-16">
           <Card className="p-8 bg-gradient-primary text-primary-foreground">
-            <h2 className="text-3xl font-bold mb-4">Prêt à commencer ?</h2>
+            <h2 className="text-3xl font-bold mb-4">{t('pricing.ready_title')}</h2>
             <p className="text-xl mb-6 opacity-90">
-              Soyez parmi les premiers à révolutionner votre approche environnementale avec CarbonTrack
+              {t('pricing.ready_subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
               <Button variant="secondary" size="lg" asChild>
                 <Link to="/trial">
                   <Zap className="w-5 h-5 mr-2" />
-                  Essai gratuit 14 jours
+                  {t('pricing.free_trial_14')}
                 </Link>
               </Button>
               <Button 
@@ -299,7 +301,7 @@ export const Pricing = () => {
                   window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                 }}
               >
-                Demander une démo
+                {t('pricing.request_demo')}
               </Button>
             </div>
           </Card>

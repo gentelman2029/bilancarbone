@@ -82,7 +82,7 @@ export const Actions = () => {
     if (!newAction.title || !newAction.description || !newAction.impact || !newAction.cost || !newAction.deadline) {
       toast({
         title: t('common.error'),
-        description: "Veuillez remplir tous les champs obligatoires",
+        description: t('actions.form.required_fields'),
         variant: "destructive"
       });
       return;
@@ -122,7 +122,7 @@ export const Actions = () => {
 
     toast({
       title: t('common.success'),
-      description: "L'action a été ajoutée avec succès"
+      description: t('actions.form.action_added')
     });
   };
 
@@ -135,7 +135,7 @@ export const Actions = () => {
     setSuggestedActions(prev => prev.filter(s => s.title !== suggestion.title));
     toast({
       title: t('common.success'),
-      description: "Action suggérée ajoutée au plan"
+      description: t('actions.form.suggested_added')
     });
   };
 
@@ -147,7 +147,7 @@ export const Actions = () => {
     if (!editingAction.title || !editingAction.description) {
       toast({
         title: t('common.error'),
-        description: "Veuillez remplir tous les champs obligatoires",
+        description: t('actions.form.required_fields'),
         variant: "destructive"
       });
       return;
@@ -158,7 +158,7 @@ export const Actions = () => {
 
     toast({
       title: t('common.success'),
-      description: "L'action a été mise à jour"
+      description: t('actions.form.action_updated')
     });
   };
 
@@ -166,18 +166,18 @@ export const Actions = () => {
     await deleteAction(id);
     toast({
       title: t('common.success'),
-      description: "L'action a été supprimée avec succès"
+      description: t('actions.form.action_deleted')
     });
   };
 
   const handleClearAllActions = async () => {
     if (actions.length === 0) return;
     
-    if (window.confirm(`Êtes-vous sûr de vouloir supprimer toutes les ${actions.length} actions ? Cette action est irréversible.`)) {
+    if (window.confirm(`${t('actions.form.confirm_delete_all')} ${actions.length} actions ? ${t('actions.form.irreversible')}`)) {
       await clearAllActions();
       toast({
         title: t('common.success'),
-        description: "Toutes les actions ont été supprimées"
+        description: t('actions.form.all_deleted')
       });
     }
   };
@@ -234,9 +234,9 @@ export const Actions = () => {
         
         <div className="flex gap-2">
           {actions.length > 0 && (
-            <Button variant="outline" onClick={handleClearAllActions} className="gap-2 text-destructive hover:text-destructive">
+             <Button variant="outline" onClick={handleClearAllActions} className="gap-2 text-destructive hover:text-destructive">
               <RefreshCw className="w-4 h-4" />
-              Réinitialiser tout
+              {t('actions.form.reset_all')}
             </Button>
           )}
           <Button variant="outline" onClick={() => exportToPDF()} className="gap-2">
@@ -256,52 +256,52 @@ export const Actions = () => {
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Créer une nouvelle action</DialogTitle>
+                <DialogTitle>{t('actions.form.create_action')}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="title">Titre*</Label>
+                  <Label htmlFor="title">{t('actions.form.title_label')}</Label>
                   <Input
                     id="title"
                     value={newAction.title}
                     onChange={(e) => setNewAction({...newAction, title: e.target.value})}
-                    placeholder="Nom de l'action"
+                    placeholder={t('actions.form.title_placeholder')}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="description">Description*</Label>
+                  <Label htmlFor="description">{t('actions.form.description_label')}</Label>
                   <Textarea
                     id="description"
                     value={newAction.description}
                     onChange={(e) => setNewAction({...newAction, description: e.target.value})}
-                    placeholder="Description détaillée"
+                    placeholder={t('actions.form.description_placeholder')}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="impact">Impact (tCO2e)*</Label>
+                    <Label htmlFor="impact">{t('actions.form.impact_label')}</Label>
                     <Input
                       id="impact"
                       type="number"
                       value={newAction.impact}
                       onChange={(e) => setNewAction({...newAction, impact: e.target.value})}
-                      placeholder="Ex: 50"
+                      placeholder={t('actions.form.impact_placeholder')}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="cost">Coût (€)*</Label>
+                    <Label htmlFor="cost">{t('actions.form.cost_label')}</Label>
                     <Input
                       id="cost"
                       type="number"
                       value={newAction.cost}
                       onChange={(e) => setNewAction({...newAction, cost: e.target.value})}
-                      placeholder="Ex: 10000"
+                      placeholder={t('actions.form.cost_placeholder')}
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="scope">Scope*</Label>
+                    <Label htmlFor="scope">{t('actions.form.scope_label')}</Label>
                     <Select
                       value={newAction.scope}
                       onValueChange={(value) => setNewAction({...newAction, scope: value})}
@@ -318,7 +318,7 @@ export const Actions = () => {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="deadline">Échéance*</Label>
+                    <Label htmlFor="deadline">{t('actions.form.deadline_label')}</Label>
                     <Input
                       id="deadline"
                       type="date"
@@ -329,7 +329,7 @@ export const Actions = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="priority">Priorité</Label>
+                    <Label htmlFor="priority">{t('actions.form.priority_label')}</Label>
                     <Select
                       value={newAction.priority}
                       onValueChange={(value: any) => setNewAction({...newAction, priority: value})}
@@ -355,16 +355,16 @@ export const Actions = () => {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="category">Catégorie</Label>
+                  <Label htmlFor="category">{t('actions.form.category_label')}</Label>
                   <Input
                     id="category"
                     value={newAction.category}
                     onChange={(e) => setNewAction({...newAction, category: e.target.value})}
-                    placeholder="Ex: Énergie, Transport, etc."
+                    placeholder={t('actions.form.category_placeholder')}
                   />
                 </div>
                 <Button onClick={handleCreateAction} className="w-full">
-                  Créer l'action
+                  {t('actions.form.create_button')}
                 </Button>
               </div>
             </DialogContent>
@@ -400,7 +400,7 @@ export const Actions = () => {
                   className="ml-4"
                 >
                   <Plus className="w-3 h-3 mr-1" />
-                  Ajouter
+                  {t('actions.form.add_button')}
                 </Button>
               </div>
             ))}
@@ -415,7 +415,7 @@ export const Actions = () => {
             <Target className="w-8 h-8 text-primary" />
             <div>
               <p className="text-2xl font-bold text-foreground">{totalImpact.toFixed(1)} tCO2e</p>
-              <p className="text-sm text-muted-foreground">Potentiel total</p>
+              <p className="text-sm text-muted-foreground">{t('actions.form.potential_total')}</p>
             </div>
           </div>
         </Card>
@@ -425,7 +425,7 @@ export const Actions = () => {
             <TrendingDown className="w-8 h-8 text-primary" />
             <div>
               <p className="text-2xl font-bold text-foreground">{completedImpact.toFixed(1)} tCO2e</p>
-              <p className="text-sm text-muted-foreground">Déjà réalisé</p>
+              <p className="text-sm text-muted-foreground">{t('actions.form.already_done')}</p>
             </div>
           </div>
         </Card>
@@ -437,7 +437,7 @@ export const Actions = () => {
               <p className="text-2xl font-bold text-foreground">
                 {totalImpact > 0 ? Math.round((completedImpact / totalImpact) * 100) : 0}%
               </p>
-              <p className="text-sm text-muted-foreground">Progression</p>
+              <p className="text-sm text-muted-foreground">{t('actions.form.progress_label')}</p>
             </div>
           </div>
         </Card>

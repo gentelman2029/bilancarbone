@@ -237,8 +237,8 @@ export const DataCollection = () => {
     
     if (totalEmissions === 0) {
       toast({
-        title: "Données manquantes",
-        description: "Veuillez remplir au moins une source d'émission Scope 1",
+        title: t('data_collection.missing_data'),
+        description: t('data_collection.scope1_missing'),
         variant: "destructive"
       });
       return;
@@ -247,8 +247,8 @@ export const DataCollection = () => {
     updateEmissions({ scope1: totalEmissions });
     
     toast({
-      title: "Émissions Scope 1 calculées",
-      description: `${details.join('\n')}\nTotal: ${totalEmissions.toFixed(2)} kg CO2e`,
+      title: t('data_collection.scope1_calculated'),
+      description: `${details.join('\n')}\n${t('data_collection.total_emissions_label')}: ${totalEmissions.toFixed(2)} kg CO2e`,
       variant: "default"
     });
   };
@@ -304,8 +304,8 @@ export const DataCollection = () => {
     
     if (totalEmissions === 0) {
       toast({
-        title: "Données manquantes",
-        description: "Veuillez remplir au moins une source d'énergie achetée",
+        title: t('data_collection.missing_data'),
+        description: t('data_collection.scope2_missing'),
         variant: "destructive"
       });
       return;
@@ -314,8 +314,8 @@ export const DataCollection = () => {
     updateEmissions({ scope2: totalEmissions });
     
     toast({
-      title: "Émissions Scope 2 calculées",
-      description: `${details.join('\n')}\nTotal: ${totalEmissions.toFixed(2)} kg CO2e`,
+      title: t('data_collection.scope2_calculated'),
+      description: `${details.join('\n')}\n${t('data_collection.total_emissions_label')}: ${totalEmissions.toFixed(2)} kg CO2e`,
       variant: "default"
     });
   };
@@ -421,8 +421,8 @@ export const DataCollection = () => {
     
     if (totalEmissions === 0) {
       toast({
-        title: "Données manquantes",
-        description: "Veuillez remplir au moins une catégorie Scope 3",
+        title: t('data_collection.missing_data'),
+        description: t('data_collection.scope3_missing'),
         variant: "destructive"
       });
       return;
@@ -431,8 +431,8 @@ export const DataCollection = () => {
     updateEmissions({ scope3: totalEmissions });
     
     toast({
-      title: "Émissions Scope 3 calculées",
-      description: `${details.join('\n')}\nTotal: ${totalEmissions.toFixed(2)} kg CO2e`,
+      title: t('data_collection.scope3_calculated'),
+      description: `${details.join('\n')}\n${t('data_collection.total_emissions_label')}: ${totalEmissions.toFixed(2)} kg CO2e`,
       variant: "default"
     });
   };
@@ -442,8 +442,8 @@ export const DataCollection = () => {
     
     if (total === 0) {
       toast({
-        title: "Aucune donnée",
-        description: "Veuillez calculer les émissions par scope d'abord",
+        title: t('data_collection.no_data'),
+        description: t('data_collection.calculate_first'),
         variant: "destructive"
       });
       return;
@@ -484,8 +484,8 @@ export const DataCollection = () => {
     }
     
     toast({
-      title: "Score global calculé et sauvegardé",
-      description: `Total des émissions: ${total.toFixed(2)} kg CO2e\nScope 1: ${emissions.scope1.toFixed(2)} kg CO2e (${((emissions.scope1/total)*100).toFixed(1)}%)\nScope 2: ${emissions.scope2.toFixed(2)} kg CO2e (${((emissions.scope2/total)*100).toFixed(1)}%)\nScope 3: ${emissions.scope3.toFixed(2)} kg CO2e (${((emissions.scope3/total)*100).toFixed(1)}%)`,
+      title: t('data_collection.global_calculated'),
+      description: `${t('data_collection.total_emissions_label')}: ${total.toFixed(2)} kg CO2e\nScope 1: ${emissions.scope1.toFixed(2)} kg CO2e (${((emissions.scope1/total)*100).toFixed(1)}%)\nScope 2: ${emissions.scope2.toFixed(2)} kg CO2e (${((emissions.scope2/total)*100).toFixed(1)}%)\nScope 3: ${emissions.scope3.toFixed(2)} kg CO2e (${((emissions.scope3/total)*100).toFixed(1)}%)`,
       variant: "default"
     });
   };

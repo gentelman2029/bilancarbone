@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Upload, Calculator, FileSpreadsheet, Zap, Car, Trash2, Building, Factory, TrendingUp, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -491,11 +492,12 @@ export const DataCollection = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">{t('data_collection.title')}</h1>
-        <p className="text-muted-foreground">{t('data_collection.subtitle')}</p>
-      </div>
+    <ScrollArea className="h-[calc(100vh-4rem)]">
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">{t('data_collection.title')}</h1>
+          <p className="text-muted-foreground">{t('data_collection.subtitle')}</p>
+        </div>
 
       {/* Score global */}
       {hasEmissions && (
@@ -1181,6 +1183,7 @@ export const DataCollection = () => {
           <SectorComparison totalEmissions={emissions.total} />
         </div>
       )}
-    </div>
+      </div>
+    </ScrollArea>
   );
 };

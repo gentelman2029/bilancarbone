@@ -492,8 +492,9 @@ export const DataCollection = () => {
   };
 
   return (
-    <ScrollArea className="h-[calc(100vh-4rem)]">
-      <div className="container mx-auto px-4 py-8">
+    <div className="h-[calc(100vh-4rem)]">
+      <ScrollArea className="h-full w-full">
+        <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">{t('data_collection.title')}</h1>
           <p className="text-muted-foreground">{t('data_collection.subtitle')}</p>
@@ -1183,7 +1184,8 @@ export const DataCollection = () => {
           <SectorComparison totalEmissions={emissions.total} />
         </div>
       )}
-      </div>
-    </ScrollArea>
+        </div>
+      </ScrollArea>
+    </div>
   );
 };

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { Calculator, Download, RotateCcw, Factory, Car, Zap, Trash2, Building, Plane, Ship, TreePine, Flame, Save, X } from "lucide-react";
 import { useEmissions } from '@/contexts/EmissionsContext';
@@ -1024,109 +1025,113 @@ export const AdvancedGHGCalculator = () => {
 
         {/* SCOPE 2 */}
         <TabsContent value="scope2" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5" />
-                Électricité
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label>Mix électrique</Label>
-                  <Select 
-                    value={scope2Data.electriciteType} 
-                    onValueChange={(value) => setScope2Data(prev => ({...prev, electriciteType: value}))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(baseCarbone.scope2.electricite).map(([key, value]) => (
-                        <SelectItem key={key} value={key}>
-                          {value.description} ({value.unite})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Consommation (kWh)</Label>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={scope2Data.electriciteQuantity}
-                    onChange={(e) => setScope2Data(prev => ({...prev, electriciteQuantity: e.target.value}))}
-                  />
-                </div>
-                <div className="flex items-end">
-                  <Button 
-                    onClick={() => addCalculation('scope2', 'electricite', scope2Data.electriciteType, Number(scope2Data.electriciteQuantity))}
-                    disabled={!scope2Data.electriciteType || !scope2Data.electriciteQuantity}
-                  >
-                    Ajouter
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <ScrollArea className="h-[calc(100vh-20rem)] pr-4">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="h-5 w-5" />
+                    Électricité
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label>Mix électrique</Label>
+                      <Select 
+                        value={scope2Data.electriciteType} 
+                        onValueChange={(value) => setScope2Data(prev => ({...prev, electriciteType: value}))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(baseCarbone.scope2.electricite).map(([key, value]) => (
+                            <SelectItem key={key} value={key}>
+                              {value.description} ({value.unite})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Consommation (kWh)</Label>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        value={scope2Data.electriciteQuantity}
+                        onChange={(e) => setScope2Data(prev => ({...prev, electriciteQuantity: e.target.value}))}
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <Button 
+                        onClick={() => addCalculation('scope2', 'electricite', scope2Data.electriciteType, Number(scope2Data.electriciteQuantity))}
+                        disabled={!scope2Data.electriciteType || !scope2Data.electriciteQuantity}
+                      >
+                        Ajouter
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Vapeur et chaleur</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label>Type d'énergie thermique</Label>
-                  <Select 
-                    value={scope2Data.vapeurType} 
-                    onValueChange={(value) => setScope2Data(prev => ({...prev, vapeurType: value}))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(baseCarbone.scope2.vapeur).map(([key, value]) => (
-                        <SelectItem key={key} value={key}>
-                          {value.description} ({value.unite})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Quantité (kWh)</Label>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={scope2Data.vapeurQuantity}
-                    onChange={(e) => setScope2Data(prev => ({...prev, vapeurQuantity: e.target.value}))}
-                  />
-                </div>
-                <div className="flex items-end">
-                  <Button 
-                    onClick={() => addCalculation('scope2', 'vapeur', scope2Data.vapeurType, Number(scope2Data.vapeurQuantity))}
-                    disabled={!scope2Data.vapeurType || !scope2Data.vapeurQuantity}
-                  >
-                    Ajouter
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Vapeur et chaleur</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label>Type d'énergie thermique</Label>
+                      <Select 
+                        value={scope2Data.vapeurType} 
+                        onValueChange={(value) => setScope2Data(prev => ({...prev, vapeurType: value}))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(baseCarbone.scope2.vapeur).map(([key, value]) => (
+                            <SelectItem key={key} value={key}>
+                              {value.description} ({value.unite})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Quantité (kWh)</Label>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        value={scope2Data.vapeurQuantity}
+                        onChange={(e) => setScope2Data(prev => ({...prev, vapeurQuantity: e.target.value}))}
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <Button 
+                        onClick={() => addCalculation('scope2', 'vapeur', scope2Data.vapeurType, Number(scope2Data.vapeurQuantity))}
+                        disabled={!scope2Data.vapeurType || !scope2Data.vapeurQuantity}
+                      >
+                        Ajouter
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
           
-          {/* Section des détails de calcul Scope 2 */}
-          <CalculationDetailsSection
-            title="Détails des Calculs Scope 2"
-            icon={<Zap className="h-5 w-5" />}
-            details={sectionDetails.scope2}
-            sectionColor="default"
-            onRemoveDetail={(detailId) => removeCalculationDetail('scope2', detailId)}
-            onClearSection={() => clearSectionDetails('scope2')}
-            className="mt-6"
-          />
+              {/* Section des détails de calcul Scope 2 */}
+              <CalculationDetailsSection
+                title="Détails des Calculs Scope 2"
+                icon={<Zap className="h-5 w-5" />}
+                details={sectionDetails.scope2}
+                sectionColor="default"
+                onRemoveDetail={(detailId) => removeCalculationDetail('scope2', detailId)}
+                onClearSection={() => clearSectionDetails('scope2')}
+                className="mt-6"
+              />
+            </div>
+          </ScrollArea>
         </TabsContent>
 
         {/* SCOPE 3 */}

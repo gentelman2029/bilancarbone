@@ -5,18 +5,25 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Upload, Calculator, FileSpreadsheet, Zap, Car, Trash2, Building, Factory, TrendingUp, RotateCcw } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { useEmissions } from "@/contexts/EmissionsContext";
 import { usePersistentForm } from "@/hooks/usePersistentForm";
 import { SectorComparison } from "@/components/SectorComparison";
+import { DataCollectionSidebar } from "@/components/DataCollectionSidebar";
 
 export const DataCollection = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { emissions, updateEmissions, resetEmissions, hasEmissions, saveToSupabase } = useEmissions();
+  const [activeTab, setActiveTab] = useState("scope1");
+  
+  // Références pour le scroll vers les sections
+  const electriciteRef = useRef<HTMLDivElement>(null);
+  const chauffageRef = useRef<HTMLDivElement>(null);
 
   // Formulaires persistants avec localStorage
   const scope1Form = usePersistentForm("emissions-scope1", {
@@ -491,10 +498,38 @@ export const DataCollection = () => {
     });
   };
 
+  const handleNavigate = (section: string) => {
+    if (section === "calculate") {
+      if (activeTab === "scope1") calculateScope1Emissions();
+      else if (activeTab === "scope2") calculateScope2Emissions();
+      else if (activeTab === "scope3") calculateScope3Emissions();
+      return;
+    }
+
+    // Scroll vers la section appropriée
+    if (activeTab === "scope2") {
+      if (section === "electricite" && electriciteRef.current) {
+        electriciteRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else if (section === "chauffage" && chauffageRef.current) {
+        chauffageRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  };
+
   return (
-    <div className="h-[calc(100vh-4rem)]">
-      <ScrollArea className="h-full w-full">
-        <div className="container mx-auto px-4 py-8">
+    <SidebarProvider>
+      <div className="flex min-h-[calc(100vh-4rem)] w-full">
+        <DataCollectionSidebar activeScope={activeTab} onNavigate={handleNavigate} />
+        
+        <div className="flex-1 flex flex-col w-full">
+          <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="flex h-14 items-center px-4">
+              <SidebarTrigger />
+            </div>
+          </div>
+          
+          <ScrollArea className="flex-1">
+            <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">{t('data_collection.title')}</h1>
           <p className="text-muted-foreground">{t('data_collection.subtitle')}</p>
@@ -595,7 +630,7 @@ export const DataCollection = () => {
         </Card>
       )}
 
-      <Tabs defaultValue="scope1" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="scope1" className="flex items-center space-x-2">
             <Zap className="w-4 h-4" />
@@ -792,7 +827,7 @@ export const DataCollection = () => {
         <TabsContent value="scope2">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Électricité */}
-            <Card className="p-6 bg-gradient-card border shadow-card">
+            <Card ref={electriciteRef} className="p-6 bg-gradient-card border shadow-card scroll-mt-4">
               <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center space-x-2">
                 <Zap className="w-5 h-5 text-primary" />
                 <span>Électricité</span>
@@ -840,7 +875,7 @@ export const DataCollection = () => {
             </Card>
 
             {/* Chauffage et refroidissement */}
-            <Card className="p-6 bg-gradient-card border shadow-card">
+            <Card ref={chauffageRef} className="p-6 bg-gradient-card border shadow-card scroll-mt-4">
               <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center space-x-2">
                 <Building className="w-5 h-5 text-primary" />
                 <span>Chauffage/Refroidissement acheté</span>
@@ -1184,8 +1219,10 @@ export const DataCollection = () => {
           <SectorComparison totalEmissions={emissions.total} />
         </div>
       )}
+            </div>
+          </ScrollArea>
         </div>
-      </ScrollArea>
-    </div>
+      </div>
+    </SidebarProvider>
   );
 };

@@ -1025,8 +1025,8 @@ export const AdvancedGHGCalculator = () => {
 
         {/* SCOPE 2 */}
         <TabsContent value="scope2" className="space-y-6">
-          <ScrollArea className="h-[calc(100vh-20rem)] pr-4">
-            <div className="space-y-6">
+          <ScrollArea className="h-[600px] pr-4">
+            <div className="space-y-6 pb-4">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">

@@ -517,18 +517,18 @@ export const DataCollection = () => {
   };
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-[calc(100vh-4rem)] w-full">
         <DataCollectionSidebar activeScope={activeTab} onNavigate={handleNavigate} />
         
-        <div className="flex-1 flex flex-col w-full">
-          <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex-1 flex flex-col w-full overflow-hidden">
+          <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shrink-0">
             <div className="flex h-14 items-center px-4">
               <SidebarTrigger />
             </div>
           </div>
           
-          <ScrollArea className="flex-1">
+          <ScrollArea className="flex-1 h-full">
             <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">{t('data_collection.title')}</h1>

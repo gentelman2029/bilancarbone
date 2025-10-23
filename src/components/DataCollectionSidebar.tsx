@@ -70,7 +70,7 @@ export function DataCollectionSidebar({ activeScope, onNavigate }: DataCollectio
   };
 
   return (
-    <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible="icon">
+    <Sidebar collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>{getScopeLabel()}</SidebarGroupLabel>

@@ -10,7 +10,8 @@ import {
   ShieldCheck, 
   AlertTriangle, 
   LogIn, 
-  UserPlus 
+  UserPlus,
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +52,7 @@ export const Header = () => {
     { path: "/calculator", label: t("navigation.advanced_calculator"), icon: Calculator },
     { path: "/dashboard", label: t("navigation.dashboard"), icon: BarChart3 },
     { path: "/actions", label: t("navigation.actions"), icon: Settings },
+    { path: "/documents", label: "Documents", icon: FileText },
     { path: "/cbam", label: t("navigation.cbam_module"), icon: ShieldCheck },
   ];
 

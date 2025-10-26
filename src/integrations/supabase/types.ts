@@ -85,6 +85,59 @@ export type Database = {
           },
         ]
       }
+      carbon_documents: {
+        Row: {
+          calculation_id: string | null
+          category: string
+          created_at: string | null
+          description: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          id: string
+          mime_type: string
+          updated_at: string | null
+          upload_date: string | null
+          user_id: string
+        }
+        Insert: {
+          calculation_id?: string | null
+          category: string
+          created_at?: string | null
+          description?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: string
+          mime_type: string
+          updated_at?: string | null
+          upload_date?: string | null
+          user_id: string
+        }
+        Update: {
+          calculation_id?: string | null
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          mime_type?: string
+          updated_at?: string | null
+          upload_date?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carbon_documents_calculation_id_fkey"
+            columns: ["calculation_id"]
+            isOneToOne: false
+            referencedRelation: "emissions_calculations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       carbon_reports: {
         Row: {
           calculation_id: string | null
@@ -145,7 +198,7 @@ export type Database = {
         Row: {
           action: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           new_values: Json | null
           old_values: Json | null
           record_id: string
@@ -157,7 +210,7 @@ export type Database = {
         Insert: {
           action: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           record_id: string
@@ -169,7 +222,7 @@ export type Database = {
         Update: {
           action?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           record_id?: string
@@ -633,7 +686,7 @@ export type Database = {
       cbam_installations: {
         Row: {
           address: string
-          coordinates: unknown | null
+          coordinates: unknown
           country_code: string
           created_at: string
           id: string
@@ -647,7 +700,7 @@ export type Database = {
         }
         Insert: {
           address: string
-          coordinates?: unknown | null
+          coordinates?: unknown
           country_code: string
           created_at?: string
           id?: string
@@ -661,7 +714,7 @@ export type Database = {
         }
         Update: {
           address?: string
-          coordinates?: unknown | null
+          coordinates?: unknown
           country_code?: string
           created_at?: string
           id?: string

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,8 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, File, FileText, Image, Download, Trash2, Eye, X } from "lucide-react";
+import { Upload, File, FileText, Image, Download, Trash2, Eye, LogIn } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -36,6 +38,7 @@ const DOCUMENT_CATEGORIES = [
 export function CarbonDocumentsUpload() {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -44,10 +47,24 @@ export function CarbonDocumentsUpload() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewDocument, setPreviewDocument] = useState<Document | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
+    checkAuth();
     loadDocuments();
   }, []);
+
+  const checkAuth = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+    } catch (error) {
+      setIsAuthenticated(false);
+    } finally {
+      setIsCheckingAuth(false);
+    }
+  };
 
   const loadDocuments = async () => {
     try {
@@ -74,6 +91,16 @@ export function CarbonDocumentsUpload() {
 
   const handleFileUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
+    
+    if (!isAuthenticated) {
+      toast({
+        title: "Connexion requise",
+        description: "Vous devez être connecté pour uploader des documents",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!selectedCategory) {
       toast({
         title: "Catégorie requise",
@@ -87,7 +114,15 @@ export function CarbonDocumentsUpload() {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      if (!user) {
+        toast({
+          title: "Connexion requise",
+          description: "Veuillez vous connecter pour continuer",
+          variant: "destructive"
+        });
+        setIsUploading(false);
+        return;
+      }
 
       for (const file of Array.from(files)) {
         // Validate file size (20MB max)
@@ -239,6 +274,19 @@ export function CarbonDocumentsUpload() {
 
   return (
     <div className="space-y-6">
+      {!isAuthenticated && !isCheckingAuth && (
+        <Alert>
+          <LogIn className="h-4 w-4" />
+          <AlertTitle>Connexion requise</AlertTitle>
+          <AlertDescription className="flex items-center justify-between">
+            <span>Vous devez être connecté pour uploader et gérer vos documents justificatifs.</span>
+            <Button onClick={() => navigate("/auth")} size="sm" className="ml-4">
+              Se connecter
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Uploader des documents justificatifs</CardTitle>
@@ -250,7 +298,11 @@ export function CarbonDocumentsUpload() {
           <div className="grid gap-4">
             <div>
               <Label>Catégorie du document</Label>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <Select 
+                value={selectedCategory} 
+                onValueChange={setSelectedCategory}
+                disabled={!isAuthenticated}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner une catégorie" />
                 </SelectTrigger>
@@ -271,19 +323,26 @@ export function CarbonDocumentsUpload() {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Ajoutez une description pour ce document"
                 rows={2}
+                disabled={!isAuthenticated}
               />
             </div>
 
             <div
               className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                isDragging ? "border-primary bg-primary/5" : "border-border"
+                !isAuthenticated 
+                  ? "border-border opacity-50 cursor-not-allowed" 
+                  : isDragging 
+                    ? "border-primary bg-primary/5" 
+                    : "border-border"
               }`}
               onDragOver={(e) => {
+                if (!isAuthenticated) return;
                 e.preventDefault();
                 setIsDragging(true);
               }}
               onDragLeave={() => setIsDragging(false)}
               onDrop={(e) => {
+                if (!isAuthenticated) return;
                 e.preventDefault();
                 setIsDragging(false);
                 handleFileUpload(e.dataTransfer.files);
@@ -291,7 +350,9 @@ export function CarbonDocumentsUpload() {
             >
               <Upload className="h-10 w-10 mx-auto mb-4 text-muted-foreground" />
               <p className="text-sm text-muted-foreground mb-2">
-                Glissez-déposez vos fichiers ici ou
+                {!isAuthenticated 
+                  ? "Connectez-vous pour uploader des documents" 
+                  : "Glissez-déposez vos fichiers ici ou"}
               </p>
               <Input
                 type="file"
@@ -300,9 +361,14 @@ export function CarbonDocumentsUpload() {
                 onChange={(e) => handleFileUpload(e.target.files)}
                 className="hidden"
                 id="file-upload"
+                disabled={!isAuthenticated}
               />
               <Label htmlFor="file-upload">
-                <Button variant="outline" disabled={isUploading || !selectedCategory} asChild>
+                <Button 
+                  variant="outline" 
+                  disabled={isUploading || !selectedCategory || !isAuthenticated} 
+                  asChild={isAuthenticated}
+                >
                   <span>{isUploading ? "Upload en cours..." : "Sélectionner des fichiers"}</span>
                 </Button>
               </Label>

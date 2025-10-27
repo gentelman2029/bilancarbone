@@ -53,13 +53,22 @@ export function CarbonDocumentsUpload() {
   useEffect(() => {
     checkAuth();
     loadDocuments();
+    
+    // Test bucket access
+    const testBucket = async () => {
+      const { data, error } = await supabase.storage.getBucket('carbon-documents');
+      console.log("Bucket test:", { data, error });
+    };
+    testBucket();
   }, []);
 
   const checkAuth = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      console.log("Current user:", user);
       setIsAuthenticated(!!user);
     } catch (error) {
+      console.error("Auth check error:", error);
       setIsAuthenticated(false);
     } finally {
       setIsCheckingAuth(false);
@@ -182,11 +191,19 @@ export function CarbonDocumentsUpload() {
       setSelectedCategory("");
       setDescription("");
       loadDocuments();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error uploading:", error);
+      
+      let errorMessage = "Impossible d'uploader le fichier";
+      if (error?.message) {
+        errorMessage = error.message;
+      } else if (error?.error) {
+        errorMessage = error.error;
+      }
+      
       toast({
-        title: "Erreur",
-        description: "Impossible d'uploader le fichier",
+        title: "Erreur d'upload",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

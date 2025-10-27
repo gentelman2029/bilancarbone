@@ -146,8 +146,28 @@ export function CarbonDocumentsUpload() {
           continue;
         }
 
-        // Upload to storage
-        const filePath = `${user.id}/${Date.now()}_${file.name}`;
+        // Sanitize filename to remove special characters and unicode
+        const sanitizeFilename = (filename: string): string => {
+          const lastDotIndex = filename.lastIndexOf('.');
+          const extension = lastDotIndex !== -1 ? filename.substring(lastDotIndex) : '';
+          const nameWithoutExt = lastDotIndex !== -1 ? filename.substring(0, lastDotIndex) : filename;
+          
+          // Remove all non-ASCII characters and special chars, keep only alphanumeric and basic punctuation
+          const sanitized = nameWithoutExt
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+            .replace(/[^\w\s-]/g, '') // Keep only word chars, spaces, hyphens
+            .replace(/\s+/g, '-') // Replace spaces with hyphens
+            .replace(/-+/g, '-') // Replace multiple hyphens with single
+            .toLowerCase()
+            .substring(0, 100); // Limit length
+          
+          return sanitized + extension.toLowerCase();
+        };
+
+        const timestamp = Date.now();
+        const safeName = sanitizeFilename(file.name);
+        const filePath = `${user.id}/${timestamp}_${safeName}`;
         console.log("Uploading to path:", filePath);
         
         const { error: uploadError, data: uploadData } = await supabase.storage

@@ -125,6 +125,8 @@ export function CarbonDocumentsUpload() {
       }
 
       for (const file of Array.from(files)) {
+        console.log("Uploading file:", file.name, file.type, file.size);
+        
         // Validate file size (20MB max)
         if (file.size > 20 * 1024 * 1024) {
           toast({
@@ -137,14 +139,22 @@ export function CarbonDocumentsUpload() {
 
         // Upload to storage
         const filePath = `${user.id}/${Date.now()}_${file.name}`;
-        const { error: uploadError } = await supabase.storage
+        console.log("Uploading to path:", filePath);
+        
+        const { error: uploadError, data: uploadData } = await supabase.storage
           .from("carbon-documents")
           .upload(filePath, file);
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          throw uploadError;
+        }
+        
+        console.log("Upload successful:", uploadData);
 
         // Save metadata to database
-        const { error: dbError } = await supabase
+        console.log("Saving metadata to database");
+        const { error: dbError, data: dbData } = await supabase
           .from("carbon_documents")
           .insert({
             user_id: user.id,
@@ -156,7 +166,12 @@ export function CarbonDocumentsUpload() {
             description: description || null
           });
 
-        if (dbError) throw dbError;
+        if (dbError) {
+          console.error("Database error:", dbError);
+          throw dbError;
+        }
+        
+        console.log("Database insert successful:", dbData);
       }
 
       toast({

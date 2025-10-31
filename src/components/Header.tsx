@@ -90,22 +90,22 @@ export const Header = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-0.5">
+          <nav className="hidden md:flex items-center gap-1">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center space-x-1.5 px-3 py-2 rounded-lg transition-all duration-200 text-sm ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 text-sm whitespace-nowrap ${
                   location.pathname === item.path
                     ? "bg-gradient-primary text-primary-foreground shadow-eco"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                 }`}
               >
-                <item.icon className="w-4 h-4" />
+                <item.icon className="w-4 h-4 flex-shrink-0" />
                 <span className="font-medium">{item.label}</span>
                 {/* Affichage du badge d'alerte pour CBAM */}
                 {item.path === "/cbam" && criticalOverdueCount > 0 && (
-                  <div className="relative">
+                  <div className="relative flex-shrink-0">
                     <AlertTriangle className="w-4 h-4 text-destructive" />
                     <Badge 
                       variant="destructive" 

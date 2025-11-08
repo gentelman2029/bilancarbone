@@ -90,22 +90,6 @@ export function DataCollectionSidebar({ activeScope, onNavigate }: DataCollectio
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        <SidebarGroup className="mt-auto">
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={() => onNavigate("calculate")}
-                  className="w-full bg-primary/10 hover:bg-primary/20"
-                >
-                  <Calculator className="h-4 w-4" />
-                  {!collapsed && <span>Calculer</span>}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
     </Sidebar>
   );

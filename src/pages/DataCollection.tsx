@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Upload, Calculator, FileSpreadsheet, Zap, Car, Trash2, Building, Factory, TrendingUp, RotateCcw } from "lucide-react";
 import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -13,7 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useEmissions } from "@/contexts/EmissionsContext";
 import { usePersistentForm } from "@/hooks/usePersistentForm";
 import { SectorComparison } from "@/components/SectorComparison";
-import { DataCollectionSidebar } from "@/components/DataCollectionSidebar";
 
 export const DataCollection = () => {
   const { t } = useTranslation();
@@ -517,19 +515,8 @@ export const DataCollection = () => {
   };
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-[calc(100vh-4rem)] w-full">
-        <DataCollectionSidebar activeScope={activeTab} onNavigate={handleNavigate} />
-        
-        <div className="flex-1 flex flex-col w-full overflow-hidden">
-          <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shrink-0">
-            <div className="flex h-14 items-center px-4">
-              <SidebarTrigger />
-            </div>
-          </div>
-          
-          <ScrollArea className="flex-1 h-full">
-            <div className="container mx-auto px-4 py-8">
+    <ScrollArea className="h-[calc(100vh-4rem)]">
+      <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">{t('data_collection.title')}</h1>
           <p className="text-muted-foreground">{t('data_collection.subtitle')}</p>
@@ -1219,10 +1206,7 @@ export const DataCollection = () => {
           <SectorComparison totalEmissions={emissions.total} />
         </div>
       )}
-            </div>
-          </ScrollArea>
-        </div>
       </div>
-    </SidebarProvider>
+    </ScrollArea>
   );
 };

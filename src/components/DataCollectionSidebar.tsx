@@ -73,7 +73,6 @@ export function DataCollectionSidebar({ activeScope, onNavigate }: DataCollectio
     <Sidebar collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>{getScopeLabel()}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (

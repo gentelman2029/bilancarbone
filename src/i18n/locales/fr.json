@@ -154,8 +154,8 @@
     }
   },
   "data_collection": {
-    "title": "Collecte de données GES",
-    "subtitle": "Saisissez vos données d'émissions par scope",
+    "title": "Mesure de votre Empreinte Carbone",
+    "subtitle": "Saisissez vos données d'activité pour calculer vos émissions de gaz à effet de serre",
     "tabs": {
       "scope1": "Scope 1 - Émissions directes",
       "scope2": "Scope 2 - Énergie achetée",

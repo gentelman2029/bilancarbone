@@ -154,8 +154,8 @@
     }
   },
   "data_collection": {
-    "title": "GHG Data Collection",
-    "subtitle": "Enter your emissions data by scope",
+    "title": "Measure Your Carbon Footprint",
+    "subtitle": "Enter your activity data to calculate your greenhouse gas emissions",
     "tabs": {
       "scope1": "Scope 1 - Direct emissions",
       "scope2": "Scope 2 - Purchased energy",

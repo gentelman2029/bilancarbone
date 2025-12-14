@@ -28,6 +28,8 @@ interface CBAMProduct {
   coal?: number;
   heavyFuel?: number;
   diesel?: number;
+  rawMaterials?: any[];
+  documents?: File[];
 }
 
 interface CBAMProductFormProps {
@@ -52,22 +54,22 @@ export const CBAMProductForm = ({ open, onClose, onProductAdd, onProductUpdate, 
     'Hydrogène': 'hydrogen'
   };
 
-  const getInitialFormData = () => ({
-    name: editProduct?.name || '',
-    cnCode: editProduct?.cnCode || '',
-    sector: editProduct?.sector ? (sectorValueMap[editProduct.sector] || editProduct.sector) : '',
-    description: editProduct?.description || '',
-    productionVolume: editProduct?.volume?.toString() || '',
-    exportVolume: editProduct?.exportVolume?.toString() || '',
-    productionMethod: '',
-    electricity: editProduct?.electricity?.toString() || '',
-    naturalGas: editProduct?.naturalGas?.toString() || '',
-    coal: editProduct?.coal?.toString() || '',
-    heavyFuel: editProduct?.heavyFuel?.toString() || '',
-    diesel: editProduct?.diesel?.toString() || '',
-    rawMaterials: [] as any[],
-    documents: [] as File[]
-  });
+const getInitialFormData = () => ({
+  name: editProduct?.name || '',
+  cnCode: editProduct?.cnCode || '',
+  sector: editProduct?.sector ? (sectorValueMap[editProduct.sector] || editProduct.sector) : '',
+  description: editProduct?.description || '',
+  productionVolume: editProduct?.volume?.toString() || '',
+  exportVolume: editProduct?.exportVolume?.toString() || '',
+  productionMethod: '',
+  electricity: editProduct?.electricity?.toString() || '',
+  naturalGas: editProduct?.naturalGas?.toString() || '',
+  coal: editProduct?.coal?.toString() || '',
+  heavyFuel: editProduct?.heavyFuel?.toString() || '',
+  diesel: editProduct?.diesel?.toString() || '',
+  rawMaterials: editProduct?.rawMaterials || ([] as any[]),
+  documents: editProduct?.documents || ([] as File[]),
+});
 
   const [formData, setFormData] = useState(getInitialFormData());
 
@@ -152,7 +154,7 @@ export const CBAMProductForm = ({ open, onClose, onProductAdd, onProductUpdate, 
       sector: sectors.find(s => s.value === formData.sector)?.label || formData.sector,
       description: formData.description,
       volume: parseFloat(formData.productionVolume) || 0,
-      status: editProduct?.status || 'En cours' as const,
+      status: (editProduct?.status || 'En cours') as CBAMProduct['status'],
       emissions: editProduct?.emissions || 0,
       lastUpdate: new Date().toISOString().split('T')[0],
       exportVolume: parseFloat(formData.exportVolume) || 0,
@@ -161,6 +163,8 @@ export const CBAMProductForm = ({ open, onClose, onProductAdd, onProductUpdate, 
       coal: parseFloat(formData.coal) || 0,
       heavyFuel: parseFloat(formData.heavyFuel) || 0,
       diesel: parseFloat(formData.diesel) || 0,
+      rawMaterials: formData.rawMaterials,
+      documents: formData.documents,
     };
 
     if (editProduct) {

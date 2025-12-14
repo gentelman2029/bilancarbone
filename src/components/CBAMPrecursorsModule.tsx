@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Factory, 
   Plus, 
@@ -17,9 +18,19 @@ import {
   CheckCircle,
   Save,
   Pencil,
-  X
+  X,
+  HelpCircle,
+  Info,
+  Lightbulb
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { CBAMHelpTooltip, FormulaExplainer } from './cbam/CBAMHelpTooltip';
 
 interface Precursor {
   id: string;
@@ -299,18 +310,27 @@ export const CBAMPrecursorsModule = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header avec explications */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Factory className="h-5 w-5 text-primary" />
             Module Matières Premières et Précurseurs
-            <Badge variant="secondary">CBAM Scope 3</Badge>
+            <CBAMHelpTooltip term="Scope 3" variant="hovercard" />
           </CardTitle>
           <p className="text-muted-foreground">
             Traçabilité complète des émissions des matières premières utilisées dans votre production
           </p>
         </CardHeader>
+        <CardContent>
+          <Alert className="bg-blue-50 border-blue-200">
+            <Lightbulb className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-800 text-sm">
+              <strong>Qu'est-ce qu'un précurseur ?</strong> C'est une matière première (minerai, charbon, etc.) dont les émissions de production 
+              sont comptabilisées dans votre bilan carbone. Par exemple, le fer que vous achetez a généré du CO₂ lors de son extraction.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
       </Card>
 
       {/* Formulaire d'ajout */}
@@ -387,7 +407,10 @@ export const CBAMPrecursorsModule = () => {
               </Select>
             </div>
             <div>
-              <Label>Facteur d'émission (kgCO₂e/unité)</Label>
+              <Label className="flex items-center gap-1">
+                <CBAMHelpTooltip term="Facteur d'émission" />
+                <span className="text-muted-foreground text-xs">(kgCO₂e/unité)</span>
+              </Label>
               <Input
                 type="number"
                 step="0.001"
@@ -395,6 +418,9 @@ export const CBAMPrecursorsModule = () => {
                 onChange={(e) => setNewPrecursor(prev => ({ ...prev, emission_factor: e.target.value }))}
                 placeholder="0.000"
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                💡 Quantité de CO₂ émise pour produire 1 unité de ce matériau
+              </p>
             </div>
             <div>
               <Label>Certification</Label>
@@ -664,16 +690,36 @@ export const CBAMPrecursorsModule = () => {
               </Card>
             </div>
 
+            {/* Explication de la formule de manière accessible */}
+            <div className="mt-6">
+              <FormulaExplainer
+                title="Comment sont calculées les émissions des précurseurs ?"
+                formula="Émissions = Quantité × Facteur d'émission"
+                variables={[
+                  { symbol: 'Quantité', name: 'Poids ou volume de matière première utilisée', value: `${calculation.total_quantity.toLocaleString()} unités` },
+                  { symbol: 'Facteur', name: 'CO₂ émis pour produire 1 unité de ce matériau', value: `${calculation.average_emission_factor.toFixed(4)} kgCO₂e/unité` },
+                ]}
+                result={`${calculation.total_precursor_emissions.toFixed(3)} tCO₂e`}
+                explanation="Chaque matière première génère des émissions lors de son extraction et transformation. On additionne les émissions de tous les précurseurs pour obtenir le total Scope 3."
+              />
+            </div>
+
             <div className="mt-6 p-4 bg-primary/5 rounded-lg">
               <h4 className="font-semibold mb-2">Analyse de Traçabilité</h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                Plus vous avez de données "Vérifiées", plus votre calcul est fiable et conforme au règlement CBAM.
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                <div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
                   <strong>Données Vérifiées:</strong> {calculation.precursors.filter(p => p.certification === 'Verified').length}
                 </div>
-                <div>
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-orange-600" />
                   <strong>Valeurs par Défaut:</strong> {calculation.precursors.filter(p => p.certification === 'Default').length}
                 </div>
-                <div>
+                <div className="flex items-center gap-2">
+                  <X className="h-4 w-4 text-red-600" />
                   <strong>Données Manquantes:</strong> {calculation.precursors.filter(p => p.certification === 'Missing').length}
                 </div>
               </div>

@@ -86,11 +86,9 @@ export const CBAMDashboard = () => {
 
   // Charger les produits depuis Supabase
   useEffect(() => {
-    const checkAuthAndLoadProducts = async () => {
+    const loadProducts = async (session: any | null) => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setIsAuthenticated(!!session);
-        
+        setIsLoading(true);
         if (session) {
           const response = await cbamService.getProducts();
           if (response.data) {
@@ -98,6 +96,8 @@ export const CBAMDashboard = () => {
           } else if (response.error) {
             console.error('Erreur chargement produits:', response.error);
           }
+        } else {
+          setProducts([]);
         }
       } catch (error) {
         console.error('Erreur lors du chargement:', error);
@@ -106,25 +106,25 @@ export const CBAMDashboard = () => {
       }
     };
 
-    checkAuthAndLoadProducts();
-
-    // Écouter les changements d'auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Écouter les changements d'auth en premier
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setIsAuthenticated(!!session);
-      if (session) {
-        setIsLoading(true);
-        try {
-          const response = await cbamService.getProducts();
-          if (response.data) {
-            setProducts(response.data.map(mapDBProductToUI));
-          }
-        } finally {
-          setIsLoading(false);
-        }
-      } else {
-        setProducts([]);
-      }
+      // Déclencher le chargement des produits en différé pour éviter les blocages
+      setTimeout(() => {
+        loadProducts(session);
+      }, 0);
     });
+
+    // Puis récupérer la session existante au chargement de la page
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setIsAuthenticated(!!session);
+        loadProducts(session);
+      })
+      .catch((error) => {
+        console.error('Erreur lors de la récupération de la session:', error);
+        setIsLoading(false);
+      });
 
     return () => subscription.unsubscribe();
   }, []);

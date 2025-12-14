@@ -59,13 +59,36 @@ interface CBAMProduct {
 // Clé de stockage local pour les détails produits non stockés en base
 const PRODUCT_DETAILS_STORAGE_KEY = 'cbam_product_details_v1';
 
+// Format sérialisé pour le stockage local (on ne peut pas stocker directement des File[])
+type StoredProductDetails = Omit<Partial<CBAMProduct>, 'documents'> & {
+  documents?: { name: string; size: number; type: string; lastModified?: number }[];
+};
+
 // Sauvegarde des détails complémentaires d'un produit dans le localStorage
 const saveProductDetailsToStorage = (productId: string, details: Partial<CBAMProduct>) => {
   if (typeof window === 'undefined') return;
   try {
     const raw = window.localStorage.getItem(PRODUCT_DETAILS_STORAGE_KEY);
-    const all = raw ? (JSON.parse(raw) as Record<string, Partial<CBAMProduct>>) : {};
-    all[productId] = { ...(all[productId] || {}), ...details };
+    const all = raw ? (JSON.parse(raw) as Record<string, StoredProductDetails>) : {};
+
+    const existing = all[productId] || {};
+    const { documents, ...rest } = details;
+
+    const next: StoredProductDetails = {
+      ...existing,
+      ...rest,
+    };
+
+    if (documents) {
+      next.documents = documents.map((file) => ({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: (file as File).lastModified,
+      }));
+    }
+
+    all[productId] = next;
     window.localStorage.setItem(PRODUCT_DETAILS_STORAGE_KEY, JSON.stringify(all));
   } catch (error) {
     console.error('Erreur en sauvegardant les détails produit:', error);
@@ -78,8 +101,26 @@ const getProductDetailsFromStorage = (productId: string): Partial<CBAMProduct> =
   try {
     const raw = window.localStorage.getItem(PRODUCT_DETAILS_STORAGE_KEY);
     if (!raw) return {};
-    const all = JSON.parse(raw) as Record<string, Partial<CBAMProduct>>;
-    return all[productId] || {};
+    const all = JSON.parse(raw) as Record<string, StoredProductDetails>;
+    const stored = all[productId];
+    if (!stored) return {};
+
+    const { documents, ...rest } = stored;
+
+    let rebuiltDocuments: File[] | undefined;
+    if (Array.isArray(documents)) {
+      rebuiltDocuments = documents.map((doc) =>
+        new File([], doc.name, {
+          type: doc.type || 'application/octet-stream',
+          lastModified: doc.lastModified ?? Date.now(),
+        })
+      );
+    }
+
+    return {
+      ...rest,
+      documents: rebuiltDocuments,
+    } as Partial<CBAMProduct>;
   } catch (error) {
     console.error('Erreur en lisant les détails produit:', error);
     return {};
@@ -105,6 +146,8 @@ const mapDBProductToUI = (dbProduct: CBAMProductDB): CBAMProduct => {
     coal: storedDetails.coal,
     heavyFuel: storedDetails.heavyFuel,
     diesel: storedDetails.diesel,
+    rawMaterials: storedDetails.rawMaterials,
+    documents: storedDetails.documents,
   };
 };
 
@@ -285,6 +328,8 @@ export const CBAMDashboard = () => {
         diesel: combinedProduct.diesel,
         status: combinedProduct.status,
         emissions: combinedProduct.emissions,
+        rawMaterials: combinedProduct.rawMaterials,
+        documents: combinedProduct.documents,
       });
 
       setProducts(prev => [...prev, combinedProduct]);
@@ -391,6 +436,8 @@ export const CBAMDashboard = () => {
         diesel: updatedProduct.diesel,
         status: updatedProduct.status,
         emissions: updatedProduct.emissions,
+        rawMaterials: updatedProduct.rawMaterials,
+        documents: updatedProduct.documents,
       });
 
       setProducts(prev => prev.map(p => 

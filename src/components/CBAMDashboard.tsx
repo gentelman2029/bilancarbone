@@ -17,7 +17,9 @@ import {
   CheckCircle,
   AlertCircle,
   Clock,
-  X
+  X,
+  BookOpen,
+  HelpCircle
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { CBAMProductForm } from './CBAMProductForm';
@@ -32,6 +34,7 @@ import { useTranslation } from 'react-i18next';
 import { cbamService } from '@/lib/cbam/supabaseService';
 import { supabase } from '@/integrations/supabase/client';
 import { CBAMProduct as CBAMProductDB, CBAM_SECTORS, CBAMSector } from '@/lib/cbam/types';
+import { CBAMGuidedTutorial, CBAMQuickGlossary } from './cbam/CBAMGuidedTutorial';
 
 interface CBAMProduct {
   id: string;
@@ -178,6 +181,13 @@ export const CBAMDashboard = () => {
   const [products, setProducts] = useState<CBAMProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(() => {
+    // Afficher le tutoriel par défaut pour les nouveaux utilisateurs
+    if (typeof window !== 'undefined') {
+      return !localStorage.getItem('cbam_tutorial_dismissed');
+    }
+    return true;
+  });
 
   // Charger les produits depuis Supabase
   useEffect(() => {
@@ -543,6 +553,18 @@ ${product?.name || productName},${product?.cnCode || ''},${product?.sector || ''
         </div>
         <div className="flex gap-2">
           <Button 
+            variant="outline"
+            onClick={() => {
+              setShowTutorial(!showTutorial);
+              if (!showTutorial) {
+                localStorage.removeItem('cbam_tutorial_dismissed');
+              }
+            }}
+          >
+            <BookOpen className="h-4 w-4 mr-2" />
+            Guide
+          </Button>
+          <Button 
             variant={phaseMode === 'transition' ? 'default' : 'outline'}
             onClick={() => {
               setPhaseMode(phaseMode === 'transition' ? 'operationnel' : 'transition');
@@ -568,6 +590,29 @@ ${product?.name || productName},${product?.cnCode || ''},${product?.sector || ''
           </Button>
         </div>
       </div>
+
+      {/* Guide pas-à-pas et Glossaire */}
+      {showTutorial && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <CBAMGuidedTutorial 
+              onClose={() => {
+                setShowTutorial(false);
+                localStorage.setItem('cbam_tutorial_dismissed', 'true');
+              }}
+              onNavigate={(action) => {
+                // Navigation vers l'action correspondante
+                if (action === 'add_product') {
+                  handleNewProduct();
+                }
+              }}
+            />
+          </div>
+          <div>
+            <CBAMQuickGlossary />
+          </div>
+        </div>
+      )}
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

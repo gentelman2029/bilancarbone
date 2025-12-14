@@ -42,6 +42,13 @@ interface CBAMProduct {
   status: 'Conforme' | 'En cours' | 'À réviser';
   emissions: number;
   lastUpdate: string;
+  // Données détaillées optionnelles pour pré-remplir le formulaire d'édition
+  exportVolume?: number;
+  electricity?: number;
+  naturalGas?: number;
+  coal?: number;
+  heavyFuel?: number;
+  diesel?: number;
 }
 
 // Mapper les produits DB vers les produits UI
@@ -209,7 +216,19 @@ export const CBAMDashboard = () => {
     });
 
     if (response.data) {
-      setProducts(prev => [...prev, mapDBProductToUI(response.data!)]);
+      const dbProduct = mapDBProductToUI(response.data!);
+      // On combine les données retournées par la DB avec les détails saisis dans le formulaire
+      const combinedProduct: CBAMProduct = {
+        ...dbProduct,
+        ...newProduct,
+        id: dbProduct.id,
+        name: dbProduct.name,
+        cnCode: dbProduct.cnCode,
+        sector: dbProduct.sector,
+        lastUpdate: dbProduct.lastUpdate,
+      };
+
+      setProducts(prev => [...prev, combinedProduct]);
       toast({
         title: "Produit ajouté",
         description: `${newProduct.name} a été ajouté à la liste CBAM`
@@ -298,8 +317,21 @@ export const CBAMDashboard = () => {
     });
 
     if (response.data) {
+      const dbProduct = mapDBProductToUI(response.data!);
+
       setProducts(prev => prev.map(p => 
-        p.id === productId ? mapDBProductToUI(response.data!) : p
+        p.id === productId 
+          ? {
+              ...dbProduct,
+              ...p,
+              ...updatedProduct,
+              id: dbProduct.id,
+              name: dbProduct.name,
+              cnCode: dbProduct.cnCode,
+              sector: dbProduct.sector,
+              lastUpdate: dbProduct.lastUpdate,
+            }
+          : p
       ));
       toast({
         title: "Produit modifié",

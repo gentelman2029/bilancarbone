@@ -42,6 +42,7 @@ interface CBAMProduct {
   status: 'Conforme' | 'En cours' | 'À réviser';
   emissions: number;
   lastUpdate: string;
+  description?: string;
   // Données détaillées optionnelles pour pré-remplir le formulaire d'édition
   exportVolume?: number;
   electricity?: number;
@@ -51,17 +52,57 @@ interface CBAMProduct {
   diesel?: number;
 }
 
+// Clé de stockage local pour les détails produits non stockés en base
+const PRODUCT_DETAILS_STORAGE_KEY = 'cbam_product_details_v1';
+
+// Sauvegarde des détails complémentaires d'un produit dans le localStorage
+const saveProductDetailsToStorage = (productId: string, details: Partial<CBAMProduct>) => {
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = window.localStorage.getItem(PRODUCT_DETAILS_STORAGE_KEY);
+    const all = raw ? (JSON.parse(raw) as Record<string, Partial<CBAMProduct>>) : {};
+    all[productId] = { ...(all[productId] || {}), ...details };
+    window.localStorage.setItem(PRODUCT_DETAILS_STORAGE_KEY, JSON.stringify(all));
+  } catch (error) {
+    console.error('Erreur en sauvegardant les détails produit:', error);
+  }
+};
+
+// Lecture des détails complémentaires d'un produit depuis le localStorage
+const getProductDetailsFromStorage = (productId: string): Partial<CBAMProduct> => {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem(PRODUCT_DETAILS_STORAGE_KEY);
+    if (!raw) return {};
+    const all = JSON.parse(raw) as Record<string, Partial<CBAMProduct>>;
+    return all[productId] || {};
+  } catch (error) {
+    console.error('Erreur en lisant les détails produit:', error);
+    return {};
+  }
+};
+
 // Mapper les produits DB vers les produits UI
-const mapDBProductToUI = (dbProduct: CBAMProductDB): CBAMProduct => ({
-  id: dbProduct.id,
-  name: dbProduct.product_name,
-  cnCode: dbProduct.cn8_code,
-  sector: CBAM_SECTORS[dbProduct.sector] || dbProduct.sector,
-  volume: 0, // Volume n'est pas stocké dans la table produits
-  status: 'En cours',
-  emissions: 0,
-  lastUpdate: dbProduct.updated_at.split('T')[0]
-});
+const mapDBProductToUI = (dbProduct: CBAMProductDB): CBAMProduct => {
+  const storedDetails = getProductDetailsFromStorage(dbProduct.id);
+  return {
+    id: dbProduct.id,
+    name: dbProduct.product_name,
+    cnCode: dbProduct.cn8_code,
+    sector: CBAM_SECTORS[dbProduct.sector] || dbProduct.sector,
+    volume: storedDetails.volume ?? 0,
+    status: storedDetails.status || 'En cours',
+    emissions: storedDetails.emissions ?? 0,
+    lastUpdate: dbProduct.updated_at.split('T')[0],
+    description: storedDetails.description ?? dbProduct.description || undefined,
+    exportVolume: storedDetails.exportVolume,
+    electricity: storedDetails.electricity,
+    naturalGas: storedDetails.naturalGas,
+    coal: storedDetails.coal,
+    heavyFuel: storedDetails.heavyFuel,
+    diesel: storedDetails.diesel,
+  };
+};
 
 // Mapper le secteur UI vers le secteur DB
 const mapUISectorToDB = (uiSector: string): CBAMSector => {
@@ -210,7 +251,7 @@ export const CBAMDashboard = () => {
       cn8_code: cn8Code,
       product_name: newProduct.name,
       sector: mapUISectorToDB(newProduct.sector),
-      description: '',
+      description: newProduct.description || '',
       unit_measure: 'tonnes',
       is_precursor: false
     });
@@ -313,7 +354,8 @@ export const CBAMDashboard = () => {
     const response = await cbamService.updateProduct(productId, {
       cn8_code: cn8Code,
       product_name: updatedProduct.name,
-      sector: mapUISectorToDB(updatedProduct.sector)
+      sector: mapUISectorToDB(updatedProduct.sector),
+      description: updatedProduct.description ?? undefined,
     });
 
     if (response.data) {

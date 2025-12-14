@@ -21,6 +21,7 @@ interface CBAMProduct {
   status: 'Conforme' | 'En cours' | 'À réviser';
   emissions: number;
   lastUpdate: string;
+  description?: string;
   exportVolume?: number;
   electricity?: number;
   naturalGas?: number;
@@ -55,7 +56,7 @@ export const CBAMProductForm = ({ open, onClose, onProductAdd, onProductUpdate, 
     name: editProduct?.name || '',
     cnCode: editProduct?.cnCode || '',
     sector: editProduct?.sector ? (sectorValueMap[editProduct.sector] || editProduct.sector) : '',
-    description: '',
+    description: editProduct?.description || '',
     productionVolume: editProduct?.volume?.toString() || '',
     exportVolume: editProduct?.exportVolume?.toString() || '',
     productionMethod: '',
@@ -149,6 +150,7 @@ export const CBAMProductForm = ({ open, onClose, onProductAdd, onProductUpdate, 
       name: formData.name,
       cnCode: formData.cnCode,
       sector: sectors.find(s => s.value === formData.sector)?.label || formData.sector,
+      description: formData.description,
       volume: parseFloat(formData.productionVolume) || 0,
       status: editProduct?.status || 'En cours' as const,
       emissions: editProduct?.emissions || 0,

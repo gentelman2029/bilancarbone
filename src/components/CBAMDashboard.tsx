@@ -50,6 +50,10 @@ interface CBAMProduct {
   coal?: number;
   heavyFuel?: number;
   diesel?: number;
+  // Données avancées du module Matières Premières
+  rawMaterials?: any[];
+  // Documents sélectionnés dans l'étape "Documents" (non stockés en base pour l’instant)
+  documents?: File[];
 }
 
 // Clé de stockage local pour les détails produits non stockés en base

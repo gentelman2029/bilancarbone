@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,8 @@ import {
   Package, 
   TrendingUp,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  Save
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -38,6 +39,40 @@ interface PrecursorCalculation {
   precursors: Precursor[];
 }
 
+const PRECURSORS_STORAGE_KEY = 'cbam_precursors_data';
+const CALCULATION_STORAGE_KEY = 'cbam_precursors_calculation';
+
+// Fonctions de persistance localStorage
+const loadPrecursorsFromStorage = (): Precursor[] => {
+  try {
+    const stored = localStorage.getItem(PRECURSORS_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+const savePrecursorsToStorage = (precursors: Precursor[]) => {
+  localStorage.setItem(PRECURSORS_STORAGE_KEY, JSON.stringify(precursors));
+};
+
+const loadCalculationFromStorage = (): PrecursorCalculation | null => {
+  try {
+    const stored = localStorage.getItem(CALCULATION_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveCalculationToStorage = (calculation: PrecursorCalculation | null) => {
+  if (calculation) {
+    localStorage.setItem(CALCULATION_STORAGE_KEY, JSON.stringify(calculation));
+  } else {
+    localStorage.removeItem(CALCULATION_STORAGE_KEY);
+  }
+};
+
 export const CBAMPrecursorsModule = () => {
   const [precursors, setPrecursors] = useState<Precursor[]>([]);
   const [newPrecursor, setNewPrecursor] = useState({
@@ -51,6 +86,28 @@ export const CBAMPrecursorsModule = () => {
     certification: 'Default' as const
   });
   const [calculation, setCalculation] = useState<PrecursorCalculation | null>(null);
+
+  // Charger les données au montage
+  useEffect(() => {
+    const storedPrecursors = loadPrecursorsFromStorage();
+    const storedCalculation = loadCalculationFromStorage();
+    if (storedPrecursors.length > 0) {
+      setPrecursors(storedPrecursors);
+    }
+    if (storedCalculation) {
+      setCalculation(storedCalculation);
+    }
+  }, []);
+
+  // Sauvegarder automatiquement les précurseurs à chaque modification
+  useEffect(() => {
+    savePrecursorsToStorage(precursors);
+  }, [precursors]);
+
+  // Sauvegarder automatiquement le calcul à chaque modification
+  useEffect(() => {
+    saveCalculationToStorage(calculation);
+  }, [calculation]);
 
   // Catégories de matières premières pour différents secteurs CBAM
   const precursorCategories = {

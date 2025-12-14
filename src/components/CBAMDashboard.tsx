@@ -269,6 +269,20 @@ export const CBAMDashboard = () => {
         lastUpdate: dbProduct.lastUpdate,
       };
 
+      // Sauvegarder les détails complémentaires pour la persistance locale (volumes, énergie, description...)
+      saveProductDetailsToStorage(dbProduct.id, {
+        volume: combinedProduct.volume,
+        description: combinedProduct.description,
+        exportVolume: combinedProduct.exportVolume,
+        electricity: combinedProduct.electricity,
+        naturalGas: combinedProduct.naturalGas,
+        coal: combinedProduct.coal,
+        heavyFuel: combinedProduct.heavyFuel,
+        diesel: combinedProduct.diesel,
+        status: combinedProduct.status,
+        emissions: combinedProduct.emissions,
+      });
+
       setProducts(prev => [...prev, combinedProduct]);
       toast({
         title: "Produit ajouté",
@@ -360,6 +374,20 @@ export const CBAMDashboard = () => {
 
     if (response.data) {
       const dbProduct = mapDBProductToUI(response.data!);
+
+      // Sauvegarder les détails complémentaires mis à jour pour la persistance locale
+      saveProductDetailsToStorage(productId, {
+        volume: updatedProduct.volume,
+        description: updatedProduct.description,
+        exportVolume: updatedProduct.exportVolume,
+        electricity: updatedProduct.electricity,
+        naturalGas: updatedProduct.naturalGas,
+        coal: updatedProduct.coal,
+        heavyFuel: updatedProduct.heavyFuel,
+        diesel: updatedProduct.diesel,
+        status: updatedProduct.status,
+        emissions: updatedProduct.emissions,
+      });
 
       setProducts(prev => prev.map(p => 
         p.id === productId 

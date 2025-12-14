@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,9 @@ import { CBAMBulkImport } from './CBAMBulkImport';
 import { CBAMSectorModels } from './CBAMSectorModels';
 import { useCBAMDeadlines } from '@/hooks/useCBAMDeadlines';
 import { useTranslation } from 'react-i18next';
+import { cbamService } from '@/lib/cbam/supabaseService';
+import { supabase } from '@/integrations/supabase/client';
+import { CBAMProduct as CBAMProductDB, CBAM_SECTORS, CBAMSector } from '@/lib/cbam/types';
 
 interface CBAMProduct {
   id: string;
@@ -41,6 +44,32 @@ interface CBAMProduct {
   lastUpdate: string;
 }
 
+// Mapper les produits DB vers les produits UI
+const mapDBProductToUI = (dbProduct: CBAMProductDB): CBAMProduct => ({
+  id: dbProduct.id,
+  name: dbProduct.product_name,
+  cnCode: dbProduct.cn8_code,
+  sector: CBAM_SECTORS[dbProduct.sector] || dbProduct.sector,
+  volume: 0, // Volume n'est pas stocké dans la table produits
+  status: 'En cours',
+  emissions: 0,
+  lastUpdate: dbProduct.updated_at.split('T')[0]
+});
+
+// Mapper le secteur UI vers le secteur DB
+const mapUISectorToDB = (uiSector: string): CBAMSector => {
+  const sectorMap: Record<string, CBAMSector> = {
+    'Fer et acier': 'iron_steel',
+    'Fer et Acier': 'iron_steel',
+    'Ciment': 'cement',
+    'Aluminium': 'aluminium',
+    'Engrais': 'fertilizers',
+    'Électricité': 'electricity',
+    'Hydrogène': 'hydrogen'
+  };
+  return sectorMap[uiSector] || 'iron_steel';
+};
+
 export const CBAMDashboard = () => {
   const { t } = useTranslation();
   const { deadlines } = useCBAMDeadlines();
@@ -51,28 +80,44 @@ export const CBAMDashboard = () => {
   const [showSectorModels, setShowSectorModels] = useState(false);
   const [phaseMode, setPhaseMode] = useState<'transition' | 'operationnel'>('transition');
   const [reportingFrequency, setReportingFrequency] = useState<'trimestriel' | 'mensuel'>('trimestriel');
-  const [products, setProducts] = useState<CBAMProduct[]>([
-    {
-      id: '1',
-      name: 'Acier laminé à chaud',
-      cnCode: '7208 10',
-      sector: 'Fer et acier',
-      volume: 2500,
-      status: 'Conforme',
-      emissions: 2.1,
-      lastUpdate: '2024-01-15'
-    },
-    {
-      id: '2',
-      name: 'Ciment Portland',
-      cnCode: '2523 29',
-      sector: 'Ciment',
-      volume: 15000,
-      status: 'En cours',
-      emissions: 0.82,
-      lastUpdate: '2024-01-10'
-    }
-  ]);
+  const [products, setProducts] = useState<CBAMProduct[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Charger les produits depuis Supabase
+  useEffect(() => {
+    const checkAuthAndLoadProducts = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+      
+      if (session) {
+        const response = await cbamService.getProducts();
+        if (response.data) {
+          setProducts(response.data.map(mapDBProductToUI));
+        } else if (response.error) {
+          console.error('Erreur chargement produits:', response.error);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    checkAuthAndLoadProducts();
+
+    // Écouter les changements d'auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setIsAuthenticated(!!session);
+      if (session) {
+        const response = await cbamService.getProducts();
+        if (response.data) {
+          setProducts(response.data.map(mapDBProductToUI));
+        }
+      } else {
+        setProducts([]);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Calcul automatique des métriques basées sur les données réelles synchronisées
   const metrics = {
@@ -131,16 +176,47 @@ export const CBAMDashboard = () => {
     setShowProductForm(true);
   };
 
-  const handleAddProduct = (newProduct: Omit<CBAMProduct, 'id'>) => {
-    const product: CBAMProduct = {
-      ...newProduct,
-      id: Date.now().toString()
-    };
-    setProducts(prev => [...prev, product]);
-    toast({
-      title: "Produit ajouté",
-      description: `${newProduct.name} a été ajouté à la liste CBAM`
+  const handleAddProduct = async (newProduct: Omit<CBAMProduct, 'id'>) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Non authentifié",
+        description: "Veuillez vous connecter pour ajouter un produit",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Formater le code CN8 (enlever les espaces)
+    const cn8Code = newProduct.cnCode.replace(/\s/g, '').padEnd(8, '0');
+
+    const response = await cbamService.createProduct({
+      cn8_code: cn8Code,
+      product_name: newProduct.name,
+      sector: mapUISectorToDB(newProduct.sector),
+      description: '',
+      unit_measure: 'tonnes',
+      is_precursor: false
     });
+
+    if (response.data) {
+      setProducts(prev => [...prev, mapDBProductToUI(response.data!)]);
+      toast({
+        title: "Produit ajouté",
+        description: `${newProduct.name} a été ajouté à la liste CBAM`
+      });
+    } else if (response.validationErrors) {
+      toast({
+        title: "Erreur de validation",
+        description: response.validationErrors[0].message,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Erreur",
+        description: response.error || "Impossible d'ajouter le produit",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleImportLot = () => {
@@ -193,19 +269,45 @@ export const CBAMDashboard = () => {
     }
   };
 
-  const handleUpdateProduct = (productId: string, updatedProduct: Omit<CBAMProduct, 'id'>) => {
-    setProducts(prev => prev.map(p => 
-      p.id === productId ? { ...updatedProduct, id: productId } : p
-    ));
-    toast({
-      title: "Produit modifié",
-      description: `${updatedProduct.name} a été mis à jour`
+  const handleUpdateProduct = async (productId: string, updatedProduct: Omit<CBAMProduct, 'id'>) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Non authentifié",
+        description: "Veuillez vous connecter pour modifier un produit",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const cn8Code = updatedProduct.cnCode.replace(/\s/g, '').padEnd(8, '0');
+
+    const response = await cbamService.updateProduct(productId, {
+      cn8_code: cn8Code,
+      product_name: updatedProduct.name,
+      sector: mapUISectorToDB(updatedProduct.sector)
     });
+
+    if (response.data) {
+      setProducts(prev => prev.map(p => 
+        p.id === productId ? mapDBProductToUI(response.data!) : p
+      ));
+      toast({
+        title: "Produit modifié",
+        description: `${updatedProduct.name} a été mis à jour`
+      });
+    } else {
+      toast({
+        title: "Erreur",
+        description: response.error || "Impossible de modifier le produit",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleDownloadProduct = (productId: string, productName: string) => {
+    const product = products.find(p => p.id === productId);
     const csvData = `Nom du Produit,Code CN,Secteur,Volume,Statut,Émissions
-${productName},7208 10,Fer et acier,2500,Conforme,2.1`;
+${product?.name || productName},${product?.cnCode || ''},${product?.sector || ''},${product?.volume || 0},${product?.status || ''},${product?.emissions || 0}`;
 
     const blob = new Blob([csvData], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -220,16 +322,54 @@ ${productName},7208 10,Fer et acier,2500,Conforme,2.1`;
     });
   };
 
-  const handleDeleteProduct = (productId: string) => {
-    setProducts(prev => prev.filter(p => p.id !== productId));
-    toast({
-      title: "Produit supprimé",
-      description: "Le produit a été retiré de la liste"
-    });
+  const handleDeleteProduct = async (productId: string) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Non authentifié",
+        description: "Veuillez vous connecter pour supprimer un produit",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const response = await cbamService.deleteProduct(productId);
+    
+    if (!response.error) {
+      setProducts(prev => prev.filter(p => p.id !== productId));
+      toast({
+        title: "Produit supprimé",
+        description: "Le produit a été retiré de la liste"
+      });
+    } else {
+      toast({
+        title: "Erreur",
+        description: response.error || "Impossible de supprimer le produit",
+        variant: "destructive"
+      });
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-muted-foreground">Chargement des produits...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-6">
+      {/* Message d'authentification */}
+      {!isAuthenticated && (
+        <Card className="border-yellow-200 bg-yellow-50">
+          <CardContent className="pt-6">
+            <p className="text-yellow-800">
+              ⚠️ Vous n'êtes pas connecté. Les produits ne seront pas sauvegardés. 
+              <a href="/auth" className="ml-2 underline font-medium">Se connecter</a>
+            </p>
+          </CardContent>
+        </Card>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

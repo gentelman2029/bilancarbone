@@ -87,18 +87,23 @@ export const CBAMDashboard = () => {
   // Charger les produits depuis Supabase
   useEffect(() => {
     const checkAuthAndLoadProducts = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
-      
-      if (session) {
-        const response = await cbamService.getProducts();
-        if (response.data) {
-          setProducts(response.data.map(mapDBProductToUI));
-        } else if (response.error) {
-          console.error('Erreur chargement produits:', response.error);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setIsAuthenticated(!!session);
+        
+        if (session) {
+          const response = await cbamService.getProducts();
+          if (response.data) {
+            setProducts(response.data.map(mapDBProductToUI));
+          } else if (response.error) {
+            console.error('Erreur chargement produits:', response.error);
+          }
         }
+      } catch (error) {
+        console.error('Erreur lors du chargement:', error);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     checkAuthAndLoadProducts();
@@ -107,9 +112,14 @@ export const CBAMDashboard = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setIsAuthenticated(!!session);
       if (session) {
-        const response = await cbamService.getProducts();
-        if (response.data) {
-          setProducts(response.data.map(mapDBProductToUI));
+        setIsLoading(true);
+        try {
+          const response = await cbamService.getProducts();
+          if (response.data) {
+            setProducts(response.data.map(mapDBProductToUI));
+          }
+        } finally {
+          setIsLoading(false);
         }
       } else {
         setProducts([]);

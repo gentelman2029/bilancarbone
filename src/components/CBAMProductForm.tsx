@@ -21,29 +21,19 @@ interface CBAMProduct {
   status: 'Conforme' | 'En cours' | 'À réviser';
   emissions: number;
   lastUpdate: string;
+  exportVolume?: number;
+  electricity?: number;
+  naturalGas?: number;
+  coal?: number;
+  heavyFuel?: number;
+  diesel?: number;
 }
 
 interface CBAMProductFormProps {
   open: boolean;
   onClose: () => void;
-  onProductAdd?: (product: {
-    name: string;
-    cnCode: string;
-    sector: string;
-    volume: number;
-    status: 'Conforme' | 'En cours' | 'À réviser';
-    emissions: number;
-    lastUpdate: string;
-  }) => void;
-  onProductUpdate?: (productId: string, product: {
-    name: string;
-    cnCode: string;
-    sector: string;
-    volume: number;
-    status: 'Conforme' | 'En cours' | 'À réviser';
-    emissions: number;
-    lastUpdate: string;
-  }) => void;
+  onProductAdd?: (product: Omit<CBAMProduct, 'id'>) => void;
+  onProductUpdate?: (productId: string, product: Omit<CBAMProduct, 'id'>) => void;
   editProduct?: CBAMProduct | null;
 }
 
@@ -67,13 +57,13 @@ export const CBAMProductForm = ({ open, onClose, onProductAdd, onProductUpdate, 
     sector: editProduct?.sector ? (sectorValueMap[editProduct.sector] || editProduct.sector) : '',
     description: '',
     productionVolume: editProduct?.volume?.toString() || '',
-    exportVolume: '',
+    exportVolume: editProduct?.exportVolume?.toString() || '',
     productionMethod: '',
-    electricity: '',
-    naturalGas: '',
-    coal: '',
-    heavyFuel: '',
-    diesel: '',
+    electricity: editProduct?.electricity?.toString() || '',
+    naturalGas: editProduct?.naturalGas?.toString() || '',
+    coal: editProduct?.coal?.toString() || '',
+    heavyFuel: editProduct?.heavyFuel?.toString() || '',
+    diesel: editProduct?.diesel?.toString() || '',
     rawMaterials: [] as any[],
     documents: [] as File[]
   });
@@ -93,7 +83,8 @@ export const CBAMProductForm = ({ open, onClose, onProductAdd, onProductUpdate, 
     { value: 'cement', label: 'Ciment' },
     { value: 'fertilizers', label: 'Engrais' },
     { value: 'aluminium', label: 'Aluminium' },
-    { value: 'electricity', label: 'Électricité' }
+    { value: 'electricity', label: 'Électricité' },
+    { value: 'hydrogen', label: 'Hydrogène' },
   ];
 
   // Listes déroulantes synchronisées (produit <-> code CN8)
@@ -161,7 +152,13 @@ export const CBAMProductForm = ({ open, onClose, onProductAdd, onProductUpdate, 
       volume: parseFloat(formData.productionVolume) || 0,
       status: editProduct?.status || 'En cours' as const,
       emissions: editProduct?.emissions || 0,
-      lastUpdate: new Date().toISOString().split('T')[0]
+      lastUpdate: new Date().toISOString().split('T')[0],
+      exportVolume: parseFloat(formData.exportVolume) || 0,
+      electricity: parseFloat(formData.electricity) || 0,
+      naturalGas: parseFloat(formData.naturalGas) || 0,
+      coal: parseFloat(formData.coal) || 0,
+      heavyFuel: parseFloat(formData.heavyFuel) || 0,
+      diesel: parseFloat(formData.diesel) || 0,
     };
 
     if (editProduct) {

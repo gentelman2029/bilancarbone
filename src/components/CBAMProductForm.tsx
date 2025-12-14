@@ -138,6 +138,23 @@ const getInitialFormData = () => ({
     }
   };
 
+  const handleDownloadFile = (file: File) => {
+    try {
+      const url = URL.createObjectURL(file);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Erreur lors du téléchargement du fichier', error);
+      toast({
+        title: 'Erreur de téléchargement',
+        description: "Impossible de télécharger ce fichier.",
+        variant: 'destructive',
+      });
+    }
+  };
   const handleSubmit = () => {
     if (!formData.name || !formData.cnCode || !formData.sector) {
       toast({
@@ -464,17 +481,26 @@ const getInitialFormData = () => ({
                     <h4 className="font-semibold">Fichiers sélectionnés :</h4>
                     {formData.documents.map((file, index) => (
                       <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                        <span className="text-sm">{file.name}</span>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            const newDocs = formData.documents.filter((_, i) => i !== index);
-                            setFormData(prev => ({ ...prev, documents: newDocs }));
-                          }}
-                        >
-                          Supprimer
-                        </Button>
+                        <span className="text-sm truncate max-w-xs" title={file.name}>{file.name}</span>
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleDownloadFile(file)}
+                          >
+                            Télécharger
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              const newDocs = formData.documents.filter((_, i) => i !== index);
+                              setFormData(prev => ({ ...prev, documents: newDocs }));
+                            }}
+                          >
+                            Supprimer
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>

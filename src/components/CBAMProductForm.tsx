@@ -12,6 +12,17 @@ import { toast } from '@/hooks/use-toast';
 import { CBAM_PRODUCTS_DATABASE } from '@/lib/cbam/products-data';
 import { CBAMPrecursorsModule } from './CBAMPrecursorsModule';
 
+interface CBAMProduct {
+  id: string;
+  name: string;
+  cnCode: string;
+  sector: string;
+  volume: number;
+  status: 'Conforme' | 'En cours' | 'À réviser';
+  emissions: number;
+  lastUpdate: string;
+}
+
 interface CBAMProductFormProps {
   open: boolean;
   onClose: () => void;
@@ -24,31 +35,58 @@ interface CBAMProductFormProps {
     emissions: number;
     lastUpdate: string;
   }) => void;
+  onProductUpdate?: (productId: string, product: {
+    name: string;
+    cnCode: string;
+    sector: string;
+    volume: number;
+    status: 'Conforme' | 'En cours' | 'À réviser';
+    emissions: number;
+    lastUpdate: string;
+  }) => void;
+  editProduct?: CBAMProduct | null;
 }
 
-export const CBAMProductForm = ({ open, onClose, onProductAdd }: CBAMProductFormProps) => {
+export const CBAMProductForm = ({ open, onClose, onProductAdd, onProductUpdate, editProduct }: CBAMProductFormProps) => {
   const [step, setStep] = useState(1);
   const [showPrecursorsModule, setShowPrecursorsModule] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    cnCode: '',
-    sector: '',
+  
+  const sectorValueMap: Record<string, string> = {
+    'Fer et acier': 'iron-steel',
+    'Ciment': 'cement',
+    'Engrais': 'fertilizers',
+    'Aluminium': 'aluminium',
+    'Électricité': 'electricity',
+    'Hydrogène': 'hydrogen'
+  };
+
+  const getInitialFormData = () => ({
+    name: editProduct?.name || '',
+    cnCode: editProduct?.cnCode || '',
+    sector: editProduct?.sector ? (sectorValueMap[editProduct.sector] || editProduct.sector) : '',
     description: '',
-    productionVolume: '',
+    productionVolume: editProduct?.volume?.toString() || '',
     exportVolume: '',
     productionMethod: '',
-    // Energy data
     electricity: '',
     naturalGas: '',
     coal: '',
     heavyFuel: '',
     diesel: '',
-    // Materials data
-    rawMaterials: [],
-    // Documents
-    documents: []
+    rawMaterials: [] as any[],
+    documents: [] as File[]
   });
+
+  const [formData, setFormData] = useState(getInitialFormData());
+
+  // Reset form when editProduct changes
+  React.useEffect(() => {
+    if (open) {
+      setFormData(getInitialFormData());
+      setStep(1);
+    }
+  }, [editProduct, open]);
 
   const sectors = [
     { value: 'iron-steel', label: 'Fer et acier' },
@@ -116,40 +154,29 @@ export const CBAMProductForm = ({ open, onClose, onProductAdd }: CBAMProductForm
       return;
     }
 
-    const newProduct = {
+    const productData = {
       name: formData.name,
       cnCode: formData.cnCode,
       sector: sectors.find(s => s.value === formData.sector)?.label || formData.sector,
       volume: parseFloat(formData.productionVolume) || 0,
-      status: 'En cours' as const,
-      emissions: 0,
+      status: editProduct?.status || 'En cours' as const,
+      emissions: editProduct?.emissions || 0,
       lastUpdate: new Date().toISOString().split('T')[0]
     };
 
-    onProductAdd?.(newProduct);
-    
-    toast({
-      title: "Produit créé",
-      description: "Le nouveau produit CBAM a été ajouté avec succès"
-    });
-    
-    // Reset form
-    setFormData({
-      name: '',
-      cnCode: '',
-      sector: '',
-      description: '',
-      productionVolume: '',
-      exportVolume: '',
-      productionMethod: '',
-      electricity: '',
-      naturalGas: '',
-      coal: '',
-      heavyFuel: '',
-      diesel: '',
-      rawMaterials: [],
-      documents: []
-    });
+    if (editProduct) {
+      onProductUpdate?.(editProduct.id, productData);
+      toast({
+        title: "Produit modifié",
+        description: "Le produit CBAM a été mis à jour avec succès"
+      });
+    } else {
+      onProductAdd?.(productData);
+      toast({
+        title: "Produit créé",
+        description: "Le nouveau produit CBAM a été ajouté avec succès"
+      });
+    }
     
     onClose();
   };
@@ -159,7 +186,7 @@ export const CBAMProductForm = ({ open, onClose, onProductAdd }: CBAMProductForm
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">
-            Nouveau Produit CBAM
+            {editProduct ? 'Modifier le Produit CBAM' : 'Nouveau Produit CBAM'}
           </DialogTitle>
           <div className="w-full bg-muted rounded-full h-2 mt-4">
             <div 

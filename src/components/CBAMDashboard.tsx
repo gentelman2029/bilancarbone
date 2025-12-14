@@ -45,6 +45,7 @@ export const CBAMDashboard = () => {
   const { t } = useTranslation();
   const { deadlines } = useCBAMDeadlines();
   const [showProductForm, setShowProductForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<CBAMProduct | null>(null);
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [showSectorModels, setShowSectorModels] = useState(false);
@@ -126,6 +127,7 @@ export const CBAMDashboard = () => {
   };
 
   const handleNewProduct = () => {
+    setEditingProduct(null);
     setShowProductForm(true);
   };
 
@@ -184,11 +186,21 @@ export const CBAMDashboard = () => {
   };
 
   const handleEditProduct = (productId: string) => {
+    const product = products.find(p => p.id === productId);
+    if (product) {
+      setEditingProduct(product);
+      setShowProductForm(true);
+    }
+  };
+
+  const handleUpdateProduct = (productId: string, updatedProduct: Omit<CBAMProduct, 'id'>) => {
+    setProducts(prev => prev.map(p => 
+      p.id === productId ? { ...updatedProduct, id: productId } : p
+    ));
     toast({
-      title: "Édition produit",
-      description: "Ouverture du formulaire d'édition..."
+      title: "Produit modifié",
+      description: `${updatedProduct.name} a été mis à jour`
     });
-    setShowProductForm(true);
   };
 
   const handleDownloadProduct = (productId: string, productName: string) => {
@@ -457,8 +469,13 @@ ${productName},7208 10,Fer et acier,2500,Conforme,2.1`;
 
       <CBAMProductForm 
         open={showProductForm} 
-        onClose={() => setShowProductForm(false)} 
+        onClose={() => {
+          setShowProductForm(false);
+          setEditingProduct(null);
+        }} 
         onProductAdd={handleAddProduct}
+        onProductUpdate={handleUpdateProduct}
+        editProduct={editingProduct}
       />
 
       {/* Modal d'upload de fichiers */}

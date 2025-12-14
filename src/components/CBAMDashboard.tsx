@@ -94,7 +94,7 @@ const mapDBProductToUI = (dbProduct: CBAMProductDB): CBAMProduct => {
     status: storedDetails.status || 'En cours',
     emissions: storedDetails.emissions ?? 0,
     lastUpdate: dbProduct.updated_at.split('T')[0],
-    description: storedDetails.description ?? dbProduct.description || undefined,
+    description: (storedDetails.description ?? dbProduct.description) || undefined,
     exportVolume: storedDetails.exportVolume,
     electricity: storedDetails.electricity,
     naturalGas: storedDetails.naturalGas,

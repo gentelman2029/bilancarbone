@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,10 +7,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, FileText, Calculator, Zap } from 'lucide-react';
+import { Upload, FileText, Calculator, Zap, Download, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { CBAM_PRODUCTS_DATABASE } from '@/lib/cbam/products-data';
 import { CBAMPrecursorsModule } from './CBAMPrecursorsModule';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  CBAMDocument,
+  uploadCBAMDocument,
+  downloadCBAMDocument,
+  deleteCBAMDocument,
+  getStoredDocuments,
+  addStoredDocument,
+  removeStoredDocument,
+} from '@/lib/cbam/documentService';
 
 interface CBAMProduct {
   id: string;
@@ -44,6 +54,9 @@ export const CBAMProductForm = ({ open, onClose, onProductAdd, onProductUpdate, 
   const [step, setStep] = useState(1);
   const [showPrecursorsModule, setShowPrecursorsModule] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [uploadedDocs, setUploadedDocs] = useState<CBAMDocument[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   
   const sectorValueMap: Record<string, string> = {
     'Fer et acier': 'iron-steel',
@@ -54,27 +67,44 @@ export const CBAMProductForm = ({ open, onClose, onProductAdd, onProductUpdate, 
     'Hydrogène': 'hydrogen'
   };
 
-const getInitialFormData = () => ({
-  name: editProduct?.name || '',
-  cnCode: editProduct?.cnCode || '',
-  sector: editProduct?.sector ? (sectorValueMap[editProduct.sector] || editProduct.sector) : '',
-  description: editProduct?.description || '',
-  productionVolume: editProduct?.volume?.toString() || '',
-  exportVolume: editProduct?.exportVolume?.toString() || '',
-  productionMethod: '',
-  electricity: editProduct?.electricity?.toString() || '',
-  naturalGas: editProduct?.naturalGas?.toString() || '',
-  coal: editProduct?.coal?.toString() || '',
-  heavyFuel: editProduct?.heavyFuel?.toString() || '',
-  diesel: editProduct?.diesel?.toString() || '',
-  rawMaterials: editProduct?.rawMaterials || ([] as any[]),
-  documents: editProduct?.documents || ([] as File[]),
-});
+  const getInitialFormData = () => ({
+    name: editProduct?.name || '',
+    cnCode: editProduct?.cnCode || '',
+    sector: editProduct?.sector ? (sectorValueMap[editProduct.sector] || editProduct.sector) : '',
+    description: editProduct?.description || '',
+    productionVolume: editProduct?.volume?.toString() || '',
+    exportVolume: editProduct?.exportVolume?.toString() || '',
+    productionMethod: '',
+    electricity: editProduct?.electricity?.toString() || '',
+    naturalGas: editProduct?.naturalGas?.toString() || '',
+    coal: editProduct?.coal?.toString() || '',
+    heavyFuel: editProduct?.heavyFuel?.toString() || '',
+    diesel: editProduct?.diesel?.toString() || '',
+    rawMaterials: editProduct?.rawMaterials || ([] as any[]),
+    documents: [] as File[], // Les vrais fichiers sont gérés via uploadedDocs
+  });
 
   const [formData, setFormData] = useState(getInitialFormData());
 
+  // Récupérer l'utilisateur connecté
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id || null);
+    });
+  }, []);
+
+  // Charger les documents existants quand on édite un produit
+  useEffect(() => {
+    if (open && editProduct?.id) {
+      const storedDocs = getStoredDocuments(editProduct.id);
+      setUploadedDocs(storedDocs);
+    } else if (open && !editProduct) {
+      setUploadedDocs([]);
+    }
+  }, [open, editProduct]);
+
   // Reset form when editProduct changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
       setFormData(getInitialFormData());
       setStep(1);
@@ -122,35 +152,85 @@ const getInitialFormData = () => ({
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (files) {
-      const fileArray = Array.from(files);
-      setFormData(prev => ({
-        ...prev,
-        documents: [...prev.documents, ...fileArray]
-      }));
-      
+    if (!files || files.length === 0) return;
+
+    if (!userId) {
       toast({
-        title: "Fichiers ajoutés",
-        description: `${fileArray.length} fichier(s) sélectionné(s) avec succès`
+        title: 'Non connecté',
+        description: 'Veuillez vous connecter pour téléverser des documents.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // On a besoin d'un productId pour stocker les documents. Si on est en création,
+    // on utilise un ID temporaire qu'on mettra à jour après la création.
+    const productId = editProduct?.id || `temp_${Date.now()}`;
+
+    setIsUploading(true);
+    const fileArray = Array.from(files);
+    let uploadedCount = 0;
+
+    for (const file of fileArray) {
+      const { data, error } = await uploadCBAMDocument(file, productId, userId);
+      if (data) {
+        addStoredDocument(productId, data);
+        setUploadedDocs((prev) => [...prev, data]);
+        uploadedCount++;
+      } else {
+        console.error('Erreur upload:', error);
+      }
+    }
+
+    setIsUploading(false);
+
+    if (uploadedCount > 0) {
+      toast({
+        title: 'Documents téléversés',
+        description: `${uploadedCount} fichier(s) envoyé(s) avec succès`,
+      });
+    } else {
+      toast({
+        title: 'Erreur',
+        description: "Aucun fichier n'a pu être téléversé.",
+        variant: 'destructive',
       });
     }
   };
 
-  const handleDownloadFile = (file: File) => {
-    try {
-      const url = URL.createObjectURL(file);
+  const handleDownloadStoredDoc = async (doc: CBAMDocument) => {
+    const { data, error } = await downloadCBAMDocument(doc.path);
+    if (data) {
+      const url = URL.createObjectURL(data);
       const a = document.createElement('a');
       a.href = url;
-      a.download = file.name;
+      a.download = doc.name;
       a.click();
       URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Erreur lors du téléchargement du fichier', error);
+    } else {
       toast({
         title: 'Erreur de téléchargement',
-        description: "Impossible de télécharger ce fichier.",
+        description: error || 'Impossible de télécharger ce fichier.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteStoredDoc = async (doc: CBAMDocument) => {
+    const { error } = await deleteCBAMDocument(doc.path);
+    if (!error) {
+      removeStoredDocument(doc.productId, doc.id);
+      setUploadedDocs((prev) => prev.filter((d) => d.id !== doc.id));
+      toast({
+        title: 'Document supprimé',
+        description: `${doc.name} a été supprimé.`,
+      });
+    } else {
+      toast({
+        title: 'Erreur',
+        description: error,
         variant: 'destructive',
       });
     }
@@ -475,34 +555,39 @@ const getInitialFormData = () => ({
                   onChange={handleFileChange}
                 />
 
-                {/* Liste des fichiers sélectionnés */}
-                {formData.documents.length > 0 && (
+                {/* Liste des documents téléversés (Supabase Storage) */}
+                {uploadedDocs.length > 0 && (
                   <div className="space-y-2">
-                    <h4 className="font-semibold">Fichiers sélectionnés :</h4>
-                    {formData.documents.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                        <span className="text-sm truncate max-w-xs" title={file.name}>{file.name}</span>
+                    <h4 className="font-semibold">Documents téléversés :</h4>
+                    {uploadedDocs.map((doc) => (
+                      <div key={doc.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <span className="text-sm truncate max-w-xs" title={doc.name}>{doc.name}</span>
                         <div className="flex items-center gap-2">
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => handleDownloadFile(file)}
+                            onClick={() => handleDownloadStoredDoc(doc)}
                           >
+                            <Download className="h-4 w-4 mr-1" />
                             Télécharger
                           </Button>
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            onClick={() => {
-                              const newDocs = formData.documents.filter((_, i) => i !== index);
-                              setFormData(prev => ({ ...prev, documents: newDocs }));
-                            }}
+                            onClick={() => handleDeleteStoredDoc(doc)}
                           >
                             Supprimer
                           </Button>
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {isUploading && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Téléversement en cours...
                   </div>
                 )}
 

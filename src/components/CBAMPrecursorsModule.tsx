@@ -15,7 +15,9 @@ import {
   TrendingUp,
   AlertTriangle,
   CheckCircle,
-  Save
+  Save,
+  Pencil,
+  X
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -86,6 +88,8 @@ export const CBAMPrecursorsModule = () => {
     certification: 'Default' as const
   });
   const [calculation, setCalculation] = useState<PrecursorCalculation | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingPrecursor, setEditingPrecursor] = useState<Precursor | null>(null);
 
   // Charger les données au montage
   useEffect(() => {
@@ -197,6 +201,37 @@ export const CBAMPrecursorsModule = () => {
 
   const removePrecursor = (id: string) => {
     setPrecursors(prev => prev.filter(p => p.id !== id));
+  };
+
+  const startEditing = (precursor: Precursor) => {
+    setEditingId(precursor.id);
+    setEditingPrecursor({ ...precursor });
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditingPrecursor(null);
+  };
+
+  const saveEditing = () => {
+    if (!editingPrecursor) return;
+    
+    const emissions = editingPrecursor.quantity * editingPrecursor.emission_factor;
+    const updatedPrecursor = { ...editingPrecursor, emissions };
+    
+    setPrecursors(prev => prev.map(p => p.id === editingId ? updatedPrecursor : p));
+    setEditingId(null);
+    setEditingPrecursor(null);
+    
+    toast({
+      title: "Précurseur modifié",
+      description: `${updatedPrecursor.name} - ${emissions.toFixed(3)} tCO₂e`
+    });
+  };
+
+  const updateEditingField = (field: keyof Precursor, value: string | number) => {
+    if (!editingPrecursor) return;
+    setEditingPrecursor(prev => prev ? { ...prev, [field]: value } : null);
   };
 
   const calculatePrecursorEmissions = () => {
@@ -444,36 +479,139 @@ export const CBAMPrecursorsModule = () => {
                 <tbody>
                   {precursors.map((precursor) => (
                     <tr key={precursor.id} className="border-b">
-                      <td className="p-2 font-medium">{precursor.name}</td>
-                      <td className="p-2 text-sm">{precursor.supplier || '-'}</td>
-                      <td className="p-2 text-sm">
-                        {countries.find(c => c.code === precursor.origin_country)?.name || precursor.origin_country}
-                      </td>
-                      <td className="p-2 text-right text-sm">
-                        {precursor.quantity.toLocaleString()} {precursor.unit}
-                      </td>
-                      <td className="p-2 text-right text-sm">
-                        {precursor.emission_factor.toFixed(3)}
-                      </td>
-                      <td className="p-2 text-right font-semibold">
-                        {precursor.emissions.toFixed(3)} tCO₂e
-                      </td>
-                      <td className="p-2 text-center">
-                        <Badge className={getCertificationColor(precursor.certification)}>
-                          {getCertificationIcon(precursor.certification)}
-                          <span className="ml-1">{precursor.certification}</span>
-                        </Badge>
-                      </td>
-                      <td className="p-2 text-center">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removePrecursor(precursor.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </td>
+                      {editingId === precursor.id && editingPrecursor ? (
+                        <>
+                          <td className="p-2">
+                            <Input
+                              value={editingPrecursor.name}
+                              onChange={(e) => updateEditingField('name', e.target.value)}
+                              className="h-8 text-sm"
+                            />
+                          </td>
+                          <td className="p-2">
+                            <Input
+                              value={editingPrecursor.supplier}
+                              onChange={(e) => updateEditingField('supplier', e.target.value)}
+                              className="h-8 text-sm"
+                            />
+                          </td>
+                          <td className="p-2">
+                            <Select
+                              value={editingPrecursor.origin_country}
+                              onValueChange={(value) => updateEditingField('origin_country', value)}
+                            >
+                              <SelectTrigger className="h-8 text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {countries.map((country) => (
+                                  <SelectItem key={country.code} value={country.code}>
+                                    {country.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </td>
+                          <td className="p-2">
+                            <Input
+                              type="number"
+                              value={editingPrecursor.quantity}
+                              onChange={(e) => updateEditingField('quantity', parseFloat(e.target.value) || 0)}
+                              className="h-8 text-sm w-24"
+                            />
+                          </td>
+                          <td className="p-2">
+                            <Input
+                              type="number"
+                              step="0.001"
+                              value={editingPrecursor.emission_factor}
+                              onChange={(e) => updateEditingField('emission_factor', parseFloat(e.target.value) || 0)}
+                              className="h-8 text-sm w-20"
+                            />
+                          </td>
+                          <td className="p-2 text-right font-semibold text-muted-foreground">
+                            {(editingPrecursor.quantity * editingPrecursor.emission_factor).toFixed(3)} tCO₂e
+                          </td>
+                          <td className="p-2">
+                            <Select
+                              value={editingPrecursor.certification}
+                              onValueChange={(value) => updateEditingField('certification', value as Precursor['certification'])}
+                            >
+                              <SelectTrigger className="h-8 text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Verified">Verified</SelectItem>
+                                <SelectItem value="Default">Default</SelectItem>
+                                <SelectItem value="Missing">Missing</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </td>
+                          <td className="p-2 text-center">
+                            <div className="flex gap-1 justify-center">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={saveEditing}
+                                className="text-green-600 hover:text-green-700"
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={cancelEditing}
+                                className="text-muted-foreground hover:text-foreground"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="p-2 font-medium">{precursor.name}</td>
+                          <td className="p-2 text-sm">{precursor.supplier || '-'}</td>
+                          <td className="p-2 text-sm">
+                            {countries.find(c => c.code === precursor.origin_country)?.name || precursor.origin_country}
+                          </td>
+                          <td className="p-2 text-right text-sm">
+                            {precursor.quantity.toLocaleString()} {precursor.unit}
+                          </td>
+                          <td className="p-2 text-right text-sm">
+                            {precursor.emission_factor.toFixed(3)}
+                          </td>
+                          <td className="p-2 text-right font-semibold">
+                            {precursor.emissions.toFixed(3)} tCO₂e
+                          </td>
+                          <td className="p-2 text-center">
+                            <Badge className={getCertificationColor(precursor.certification)}>
+                              {getCertificationIcon(precursor.certification)}
+                              <span className="ml-1">{precursor.certification}</span>
+                            </Badge>
+                          </td>
+                          <td className="p-2 text-center">
+                            <div className="flex gap-1 justify-center">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => startEditing(precursor)}
+                                className="text-blue-600 hover:text-blue-700"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removePrecursor(precursor.id)}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </>
+                      )}
                     </tr>
                   ))}
                 </tbody>

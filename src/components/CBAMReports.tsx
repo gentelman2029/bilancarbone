@@ -21,7 +21,9 @@ import {
   BarChart3,
   Database,
   Loader,
-  FileDown
+  FileDown,
+  Trash2,
+  RotateCcw
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
@@ -175,6 +177,23 @@ export const CBAMReports = () => {
 
     setShowNewReport(false);
     setNewReport({ product: '', reportType: '', period: '', notes: '' });
+  };
+
+  const deleteReport = (reportId: string) => {
+    const report = reports.find(r => r.id === reportId);
+    setReports(prev => prev.filter(r => r.id !== reportId));
+    toast({
+      title: "Rapport supprimé",
+      description: `Le rapport "${report?.productName}" a été supprimé`
+    });
+  };
+
+  const resetAllReports = () => {
+    setReports([]);
+    toast({
+      title: "Réinitialisation",
+      description: "Tous les rapports ont été supprimés"
+    });
   };
 
   const downloadReport = (reportId: string, productName: string) => {
@@ -360,6 +379,10 @@ Signature électronique: [Hash de validation]
           </p>
         </div>
         <div className="flex gap-2">
+          <Button onClick={resetAllReports} variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Réinitialiser
+          </Button>
           <Button onClick={generateComprehensivePDF} variant="outline">
             <FileDown className="h-4 w-4 mr-2" />
             Rapport Global PDF
@@ -563,6 +586,22 @@ Signature électronique: [Hash de validation]
                             </TooltipTrigger>
                             <TooltipContent>
                               <p>Télécharger le rapport</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => deleteReport(report.id)}
+                                aria-label={`Supprimer le rapport ${report.productName}`}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Supprimer le rapport</p>
                             </TooltipContent>
                           </Tooltip>
                         </div>

@@ -368,30 +368,62 @@ Signature électronique: [Hash de validation]
   };
 
   const calculateDeadlineStatus = () => {
+    // Si aucun rapport, pas d'échéance à afficher
+    if (reports.length === 0) {
+      return {
+        text: 'Aucune',
+        color: 'text-muted-foreground',
+        bgColor: 'text-muted-foreground',
+        icon: <Calendar className="h-8 w-8 text-muted-foreground" />,
+        hasDeadline: false
+      };
+    }
+
+    // Trouver la prochaine échéance parmi les rapports
+    const reportsWithDeadline = reports.filter(r => r.deadline);
+    if (reportsWithDeadline.length === 0) {
+      return {
+        text: 'Aucune',
+        color: 'text-muted-foreground',
+        bgColor: 'text-muted-foreground',
+        icon: <Calendar className="h-8 w-8 text-muted-foreground" />,
+        hasDeadline: false
+      };
+    }
+
     const today = new Date();
-    const q1Deadline = new Date('2024-04-30');
-    const daysDiff = Math.ceil((q1Deadline.getTime() - today.getTime()) / (1000 * 3600 * 24));
+    const nearestDeadline = reportsWithDeadline
+      .map(r => new Date(r.deadline!))
+      .sort((a, b) => a.getTime() - b.getTime())[0];
+    
+    const daysDiff = Math.ceil((nearestDeadline.getTime() - today.getTime()) / (1000 * 3600 * 24));
     
     if (daysDiff < 0) {
       return {
         text: `${Math.abs(daysDiff)}j dépassé`,
         color: 'text-red-600',
         bgColor: 'text-red-600',
-        icon: <AlertCircle className="h-8 w-8 text-red-600" />
+        icon: <AlertCircle className="h-8 w-8 text-red-600" />,
+        hasDeadline: true,
+        deadline: nearestDeadline
       };
     } else if (daysDiff <= 15) {
       return {
         text: `${daysDiff}j`,
         color: 'text-orange-600',
         bgColor: 'text-orange-600',
-        icon: <Calendar className="h-8 w-8 text-orange-600" />
+        icon: <Calendar className="h-8 w-8 text-orange-600" />,
+        hasDeadline: true,
+        deadline: nearestDeadline
       };
     } else {
       return {
         text: `${daysDiff}j`,
         color: 'text-blue-600',
         bgColor: 'text-blue-600',
-        icon: <Calendar className="h-8 w-8 text-blue-600" />
+        icon: <Calendar className="h-8 w-8 text-blue-600" />,
+        hasDeadline: true,
+        deadline: nearestDeadline
       };
     }
   };
@@ -446,12 +478,19 @@ Signature électronique: [Hash de validation]
 
         <Card className="p-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => {
           const deadlineStatus = calculateDeadlineStatus();
+          if (!deadlineStatus.hasDeadline) {
+            toast({
+              title: "Aucune échéance",
+              description: "Il n'y a pas d'échéance définie pour le moment"
+            });
+            return;
+          }
           const isOverdue = deadlineStatus.text.includes('dépassé');
           toast({
             title: isOverdue ? "⚠️ Échéance dépassée" : "Échéance CBAM",
             description: isOverdue 
-              ? "Le rapport trimestriel Q1 2024 devait être soumis avant le 30 avril 2024"
-              : "Rapport trimestriel Q1 2024 à soumettre avant le 30 avril 2024",
+              ? `L'échéance du ${deadlineStatus.deadline?.toLocaleDateString('fr-FR')} est dépassée`
+              : `Prochaine échéance: ${deadlineStatus.deadline?.toLocaleDateString('fr-FR')}`,
             variant: isOverdue ? "destructive" : "default"
           });
         }}>
@@ -460,7 +499,11 @@ Signature électronique: [Hash de validation]
               <div className={`text-2xl font-bold ${calculateDeadlineStatus().color}`}>
                 {calculateDeadlineStatus().text}
               </div>
-              <div className="text-sm text-muted-foreground">Échéance Q1 2024</div>
+              <div className="text-sm text-muted-foreground">
+                {calculateDeadlineStatus().hasDeadline 
+                  ? `Échéance ${calculateDeadlineStatus().deadline?.toLocaleDateString('fr-FR')}`
+                  : 'Prochaine échéance'}
+              </div>
             </div>
             {calculateDeadlineStatus().icon}
           </div>

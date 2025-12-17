@@ -168,11 +168,39 @@ const mapUISectorToDB = (uiSector: string): CBAMSector => {
   return sectorMap[uiSector] || 'iron_steel';
 };
 
+// Fonction pour charger les rapports depuis localStorage
+const loadReportsFromStorage = () => {
+  try {
+    const stored = localStorage.getItem('cbam_reports');
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error('Erreur chargement rapports:', e);
+  }
+  return [];
+};
+
 export const CBAMDashboard = () => {
   const { t } = useTranslation();
   const { deadlines } = useCBAMDeadlines();
+  const [reports, setReports] = useState<any[]>(loadReportsFromStorage);
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<CBAMProduct | null>(null);
+
+  // Recharger les rapports quand le composant se monte ou quand on change d'onglet
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setReports(loadReportsFromStorage());
+    };
+    window.addEventListener('storage', handleStorageChange);
+    // Aussi recharger périodiquement pour capturer les changements internes
+    const interval = setInterval(() => setReports(loadReportsFromStorage()), 1000);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [showSectorModels, setShowSectorModels] = useState(false);
@@ -238,16 +266,16 @@ export const CBAMDashboard = () => {
   const metrics = {
     // Produits: nombre de produits configurés dans le tableau
     totalProducts: products.length,
-    monthlyIncrease: 2, // Basé sur les 2 produits existants
+    monthlyIncrease: products.length,
     
     // Émissions: moyenne réelle des émissions des produits
     avgEmissions: products.length > 0 ? 
       Number((products.reduce((sum, p) => sum + p.emissions, 0) / products.length).toFixed(3)) : 0,
     emissionsChange: -8, // Pourcentage de changement vs trimestre précédent
     
-    // Rapports: basé sur l'interface des rapports (2 générés, 1 en cours)
-    reportsGenerated: 2, // Nombre de rapports générés selon l'interface rapports
-    reportsPending: 1, // Nombre de rapports en cours
+    // Rapports: basé sur les données persistées dans localStorage
+    reportsGenerated: reports.filter((r: any) => r.status === 'Généré').length,
+    reportsPending: reports.filter((r: any) => r.status !== 'Généré').length,
     
     // Échéances: calculé automatiquement depuis les vraies données
     nextReporting: (() => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,42 +40,70 @@ interface CBAMReport {
   deadline?: string;
 }
 
-export const CBAMReports = () => {
-  const [reports, setReports] = useState<CBAMReport[]>([
-    {
-      id: '1',
-      productName: 'Acier laminé à chaud',
-      reportType: 'Passeport Carbone Produit',
-      period: 'Q1 2024',
-      status: 'Généré',
-      createdDate: '2024-03-28',
-      emissions: 2.1,
-      volume: 2500,
-      deadline: '2024-04-30'
-    },
-    {
-      id: '2',
-      productName: 'Ciment Portland',
-      reportType: 'Rapport Trimestriel',
-      period: 'Q1 2024',
-      status: 'En attente de données',
-      createdDate: '2024-03-25',
-      emissions: 0.82,
-      volume: 15000,
-      deadline: '2024-04-30'
-    },
-    {
-      id: '3',
-      productName: 'Acier laminé à chaud',
-      reportType: 'Rapport Trimestriel',
-      period: 'Q3 2025',
-      status: 'Généré',
-      createdDate: '2025-08-26',
-      emissions: 1.93,
-      volume: 3200
-    }
-  ]);
+const REPORTS_STORAGE_KEY = 'cbam_reports';
 
+const defaultReports: CBAMReport[] = [
+  {
+    id: '1',
+    productName: 'Acier laminé à chaud',
+    reportType: 'Passeport Carbone Produit',
+    period: 'Q1 2024',
+    status: 'Généré',
+    createdDate: '2024-03-28',
+    emissions: 2.1,
+    volume: 2500,
+    deadline: '2024-04-30'
+  },
+  {
+    id: '2',
+    productName: 'Ciment Portland',
+    reportType: 'Rapport Trimestriel',
+    period: 'Q1 2024',
+    status: 'En attente de données',
+    createdDate: '2024-03-25',
+    emissions: 0.82,
+    volume: 15000,
+    deadline: '2024-04-30'
+  },
+  {
+    id: '3',
+    productName: 'Acier laminé à chaud',
+    reportType: 'Rapport Trimestriel',
+    period: 'Q3 2025',
+    status: 'Généré',
+    createdDate: '2025-08-26',
+    emissions: 1.93,
+    volume: 3200
+  }
+];
+
+const loadReportsFromStorage = (): CBAMReport[] => {
+  try {
+    const stored = localStorage.getItem(REPORTS_STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error('Erreur chargement rapports:', e);
+  }
+  return defaultReports;
+};
+
+const saveReportsToStorage = (reports: CBAMReport[]) => {
+  try {
+    localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(reports));
+  } catch (e) {
+    console.error('Erreur sauvegarde rapports:', e);
+  }
+};
+
+export const CBAMReports = () => {
+  const [reports, setReports] = useState<CBAMReport[]>(loadReportsFromStorage);
+
+  // Sauvegarder les rapports à chaque modification
+  useEffect(() => {
+    saveReportsToStorage(reports);
+  }, [reports]);
   const [showNewReport, setShowNewReport] = useState(false);
   const [newReport, setNewReport] = useState({
     product: '',

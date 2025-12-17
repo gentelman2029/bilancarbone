@@ -11,49 +11,87 @@ interface CBAMDeadline {
   productIds: string[];
 }
 
-export const useCBAMDeadlines = () => {
-  const [deadlines, setDeadlines] = useState<CBAMDeadline[]>([
-    {
-      id: '1',
-      title: 'Rapport Trimestriel Q1 2024',
-      description: 'Soumission du rapport CBAM pour le premier trimestre',
-      dueDate: '2024-01-31',
-      priority: 'Haute',
-      status: 'En retard',
-      type: 'Rapport',
-      productIds: ['1', '2']
-    },
-    {
-      id: '2',
-      title: 'Formation équipe CBAM',
-      description: 'Formation du personnel sur les nouvelles procédures',
-      dueDate: '2024-02-15',
-      priority: 'Moyenne',
-      status: 'En retard',
-      type: 'Formation',
-      productIds: []
-    },
-    {
-      id: '3',
-      title: 'Audit interne émissions',
-      description: 'Vérification des calculs d\'émissions embarquées',
-      dueDate: '2024-01-20',
-      priority: 'Haute',
-      status: 'En retard',
-      type: 'Audit',
-      productIds: ['1']
-    },
-    {
-      id: '4',
-      title: 'Rapport semestriel',
-      description: 'Rapport complet des émissions du semestre',
-      dueDate: '2025-12-31',
-      priority: 'Haute',
-      status: 'À venir',
-      type: 'Rapport',
-      productIds: ['1', '2', '3']
+const DEADLINES_STORAGE_KEY = 'cbam_deadlines';
+
+const defaultDeadlines: CBAMDeadline[] = [
+  {
+    id: '1',
+    title: 'Rapport Trimestriel Q1 2024',
+    description: 'Soumission du rapport CBAM pour le premier trimestre',
+    dueDate: '2024-01-31',
+    priority: 'Haute',
+    status: 'En retard',
+    type: 'Rapport',
+    productIds: ['1', '2']
+  },
+  {
+    id: '2',
+    title: 'Formation équipe CBAM',
+    description: 'Formation du personnel sur les nouvelles procédures',
+    dueDate: '2024-02-15',
+    priority: 'Moyenne',
+    status: 'En retard',
+    type: 'Formation',
+    productIds: []
+  },
+  {
+    id: '3',
+    title: 'Audit interne émissions',
+    description: 'Vérification des calculs d\'émissions embarquées',
+    dueDate: '2024-01-20',
+    priority: 'Haute',
+    status: 'En retard',
+    type: 'Audit',
+    productIds: ['1']
+  },
+  {
+    id: '4',
+    title: 'Rapport semestriel',
+    description: 'Rapport complet des émissions du semestre',
+    dueDate: '2025-12-31',
+    priority: 'Haute',
+    status: 'À venir',
+    type: 'Rapport',
+    productIds: ['1', '2', '3']
+  }
+];
+
+const loadDeadlinesFromStorage = (): CBAMDeadline[] => {
+  try {
+    const stored = localStorage.getItem(DEADLINES_STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
     }
-  ]);
+  } catch (e) {
+    console.error('Erreur chargement échéances:', e);
+  }
+  return defaultDeadlines;
+};
+
+const saveDeadlinesToStorage = (deadlines: CBAMDeadline[]) => {
+  try {
+    localStorage.setItem(DEADLINES_STORAGE_KEY, JSON.stringify(deadlines));
+  } catch (e) {
+    console.error('Erreur sauvegarde échéances:', e);
+  }
+};
+
+export const useCBAMDeadlines = () => {
+  const [deadlines, setDeadlinesState] = useState<CBAMDeadline[]>(loadDeadlinesFromStorage);
+
+  // Wrapper pour sauvegarder automatiquement
+  const setDeadlines = (updater: CBAMDeadline[] | ((prev: CBAMDeadline[]) => CBAMDeadline[])) => {
+    setDeadlinesState(prev => {
+      const newDeadlines = typeof updater === 'function' ? updater(prev) : updater;
+      saveDeadlinesToStorage(newDeadlines);
+      return newDeadlines;
+    });
+  };
+
+  // Fonction de réinitialisation
+  const resetDeadlines = () => {
+    setDeadlines([]);
+  };
 
   // Mettre à jour automatiquement les statuts selon les dates
   const deadlinesWithUpdatedStatus = useMemo(() => {
@@ -91,6 +129,7 @@ export const useCBAMDeadlines = () => {
     deadlines: deadlinesWithUpdatedStatus,
     criticalOverdueCount,
     totalOverdueCount,
-    setDeadlines
+    setDeadlines,
+    resetDeadlines
   };
 };

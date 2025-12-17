@@ -26,7 +26,8 @@ import {
   AlertCircle,
   XCircle,
   FileText,
-  Download
+  Download,
+  RotateCcw
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useCBAMDeadlines } from '@/hooks/useCBAMDeadlines';
@@ -45,7 +46,7 @@ interface CBAMDeadline {
 }
 
 export const CBAMSchedules = () => {
-  const { deadlines, setDeadlines } = useCBAMDeadlines();
+  const { deadlines, setDeadlines, resetDeadlines } = useCBAMDeadlines();
 
   const [showNewDeadline, setShowNewDeadline] = useState(false);
   const [newDeadline, setNewDeadline] = useState({
@@ -405,6 +406,20 @@ export const CBAMSchedules = () => {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              resetDeadlines();
+              toast({
+                title: "Réinitialisation",
+                description: "Toutes les échéances ont été supprimées"
+              });
+            }}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Réinitialiser
+          </Button>
           <Button variant="outline" onClick={generatePDFReport}>
             <Download className="h-4 w-4 mr-2" />
             Exporter PDF

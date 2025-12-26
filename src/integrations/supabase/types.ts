@@ -194,6 +194,68 @@ export type Database = {
           },
         ]
       }
+      cbam_audit_events: {
+        Row: {
+          entity_id: string | null
+          entity_type: string
+          error_message: string | null
+          event_type: string
+          id: string
+          ip_address: unknown
+          metadata: Json | null
+          new_values: Json | null
+          occurred_at: string
+          organization_id: string | null
+          previous_values: Json | null
+          session_id: string | null
+          status: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          entity_id?: string | null
+          entity_type: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          new_values?: Json | null
+          occurred_at?: string
+          organization_id?: string | null
+          previous_values?: Json | null
+          session_id?: string | null
+          status?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          entity_id?: string | null
+          entity_type?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          new_values?: Json | null
+          occurred_at?: string
+          organization_id?: string | null
+          previous_values?: Json | null
+          session_id?: string | null
+          status?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cbam_audit_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cbam_audit_log: {
         Row: {
           action: string
@@ -232,6 +294,102 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      cbam_calculation_metadata: {
+        Row: {
+          assumptions: Json | null
+          calculation_version: number
+          change_reason: string | null
+          created_at: string
+          data_source: string | null
+          default_factor_source: string | null
+          emission_factor_source: string
+          emission_factor_unit: string | null
+          emission_factor_value: number | null
+          entity_id: string
+          entity_type: string
+          id: string
+          methodology_reference: string | null
+          organization_id: string
+          previous_version_id: string | null
+          regulation_reference: string | null
+          supporting_documents: Json | null
+          uncertainty_method: string | null
+          uncertainty_percent: number | null
+          updated_at: string
+          user_id: string
+          verification_status: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          assumptions?: Json | null
+          calculation_version?: number
+          change_reason?: string | null
+          created_at?: string
+          data_source?: string | null
+          default_factor_source?: string | null
+          emission_factor_source: string
+          emission_factor_unit?: string | null
+          emission_factor_value?: number | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          methodology_reference?: string | null
+          organization_id: string
+          previous_version_id?: string | null
+          regulation_reference?: string | null
+          supporting_documents?: Json | null
+          uncertainty_method?: string | null
+          uncertainty_percent?: number | null
+          updated_at?: string
+          user_id: string
+          verification_status?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          assumptions?: Json | null
+          calculation_version?: number
+          change_reason?: string | null
+          created_at?: string
+          data_source?: string | null
+          default_factor_source?: string | null
+          emission_factor_source?: string
+          emission_factor_unit?: string | null
+          emission_factor_value?: number | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          methodology_reference?: string | null
+          organization_id?: string
+          previous_version_id?: string | null
+          regulation_reference?: string | null
+          supporting_documents?: Json | null
+          uncertainty_method?: string | null
+          uncertainty_percent?: number | null
+          updated_at?: string
+          user_id?: string
+          verification_status?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cbam_calculation_metadata_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cbam_calculation_metadata_previous_version_id_fkey"
+            columns: ["previous_version_id"]
+            isOneToOne: false
+            referencedRelation: "cbam_calculation_metadata"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cbam_carbon_price_origin: {
         Row: {
@@ -307,6 +465,7 @@ export type Database = {
           id: string
           importer_id: string | null
           is_active: boolean
+          organization_id: string | null
           quantity: number
           total_cost_eur: number | null
           transaction_date: string
@@ -325,6 +484,7 @@ export type Database = {
           id?: string
           importer_id?: string | null
           is_active?: boolean
+          organization_id?: string | null
           quantity: number
           total_cost_eur?: number | null
           transaction_date: string
@@ -343,6 +503,7 @@ export type Database = {
           id?: string
           importer_id?: string | null
           is_active?: boolean
+          organization_id?: string | null
           quantity?: number
           total_cost_eur?: number | null
           transaction_date?: string
@@ -366,6 +527,13 @@ export type Database = {
             columns: ["importer_id"]
             isOneToOne: false
             referencedRelation: "cbam_importers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cbam_certificates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -420,6 +588,7 @@ export type Database = {
           created_at: string
           id: string
           importer_id: string | null
+          organization_id: string | null
           status: Database["public"]["Enums"]["cbam_status"]
           submission_deadline: string
           submitted_at: string | null
@@ -433,6 +602,7 @@ export type Database = {
           created_at?: string
           id?: string
           importer_id?: string | null
+          organization_id?: string | null
           status?: Database["public"]["Enums"]["cbam_status"]
           submission_deadline: string
           submitted_at?: string | null
@@ -446,6 +616,7 @@ export type Database = {
           created_at?: string
           id?: string
           importer_id?: string | null
+          organization_id?: string | null
           status?: Database["public"]["Enums"]["cbam_status"]
           submission_deadline?: string
           submitted_at?: string | null
@@ -460,6 +631,13 @@ export type Database = {
             columns: ["importer_id"]
             isOneToOne: false
             referencedRelation: "cbam_importers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cbam_declarations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -522,6 +700,7 @@ export type Database = {
           indirect_verified: boolean
           installation_id: string | null
           measurement_uncertainty: number | null
+          organization_id: string | null
           reporting_period: string
           shipment_item_id: string | null
           supporting_documents: Json | null
@@ -542,6 +721,7 @@ export type Database = {
           indirect_verified?: boolean
           installation_id?: string | null
           measurement_uncertainty?: number | null
+          organization_id?: string | null
           reporting_period: string
           shipment_item_id?: string | null
           supporting_documents?: Json | null
@@ -562,6 +742,7 @@ export type Database = {
           indirect_verified?: boolean
           installation_id?: string | null
           measurement_uncertainty?: number | null
+          organization_id?: string | null
           reporting_period?: string
           shipment_item_id?: string | null
           supporting_documents?: Json | null
@@ -576,6 +757,13 @@ export type Database = {
             columns: ["installation_id"]
             isOneToOne: false
             referencedRelation: "cbam_installations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cbam_emissions_data_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -652,6 +840,7 @@ export type Database = {
           eori_number: string
           id: string
           is_active: boolean
+          organization_id: string | null
           updated_at: string
           user_id: string
         }
@@ -665,6 +854,7 @@ export type Database = {
           eori_number: string
           id?: string
           is_active?: boolean
+          organization_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -678,10 +868,19 @@ export type Database = {
           eori_number?: string
           id?: string
           is_active?: boolean
+          organization_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cbam_importers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cbam_installations: {
         Row: {
@@ -692,6 +891,7 @@ export type Database = {
           id: string
           installation_name: string
           is_verified: boolean
+          organization_id: string | null
           permit_number: string | null
           sector: Database["public"]["Enums"]["cbam_sector"]
           supplier_id: string | null
@@ -706,6 +906,7 @@ export type Database = {
           id?: string
           installation_name: string
           is_verified?: boolean
+          organization_id?: string | null
           permit_number?: string | null
           sector: Database["public"]["Enums"]["cbam_sector"]
           supplier_id?: string | null
@@ -720,6 +921,7 @@ export type Database = {
           id?: string
           installation_name?: string
           is_verified?: boolean
+          organization_id?: string | null
           permit_number?: string | null
           sector?: Database["public"]["Enums"]["cbam_sector"]
           supplier_id?: string | null
@@ -727,6 +929,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "cbam_installations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cbam_installations_supplier_id_fkey"
             columns: ["supplier_id"]
@@ -743,6 +952,7 @@ export type Database = {
           description: string | null
           id: string
           is_precursor: boolean
+          organization_id: string | null
           parent_product_id: string | null
           product_name: string
           sector: Database["public"]["Enums"]["cbam_sector"]
@@ -756,6 +966,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_precursor?: boolean
+          organization_id?: string | null
           parent_product_id?: string | null
           product_name: string
           sector: Database["public"]["Enums"]["cbam_sector"]
@@ -769,6 +980,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_precursor?: boolean
+          organization_id?: string | null
           parent_product_id?: string | null
           product_name?: string
           sector?: Database["public"]["Enums"]["cbam_sector"]
@@ -777,6 +989,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "cbam_products_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cbam_products_parent_product_id_fkey"
             columns: ["parent_product_id"]
@@ -856,6 +1075,7 @@ export type Database = {
           export_generated_at: string | null
           id: string
           importer_id: string | null
+          organization_id: string | null
           phase: Database["public"]["Enums"]["cbam_phase"]
           quarter: number
           status: Database["public"]["Enums"]["cbam_status"]
@@ -875,6 +1095,7 @@ export type Database = {
           export_generated_at?: string | null
           id?: string
           importer_id?: string | null
+          organization_id?: string | null
           phase?: Database["public"]["Enums"]["cbam_phase"]
           quarter: number
           status?: Database["public"]["Enums"]["cbam_status"]
@@ -894,6 +1115,7 @@ export type Database = {
           export_generated_at?: string | null
           id?: string
           importer_id?: string | null
+          organization_id?: string | null
           phase?: Database["public"]["Enums"]["cbam_phase"]
           quarter?: number
           status?: Database["public"]["Enums"]["cbam_status"]
@@ -913,6 +1135,13 @@ export type Database = {
             columns: ["importer_id"]
             isOneToOne: false
             referencedRelation: "cbam_importers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cbam_quarterly_reports_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -982,6 +1211,7 @@ export type Database = {
           import_date: string
           importer_id: string | null
           installation_id: string | null
+          organization_id: string | null
           phase: Database["public"]["Enums"]["cbam_phase"]
           reference_number: string
           status: Database["public"]["Enums"]["cbam_status"]
@@ -1000,6 +1230,7 @@ export type Database = {
           import_date: string
           importer_id?: string | null
           installation_id?: string | null
+          organization_id?: string | null
           phase?: Database["public"]["Enums"]["cbam_phase"]
           reference_number: string
           status?: Database["public"]["Enums"]["cbam_status"]
@@ -1018,6 +1249,7 @@ export type Database = {
           import_date?: string
           importer_id?: string | null
           installation_id?: string | null
+          organization_id?: string | null
           phase?: Database["public"]["Enums"]["cbam_phase"]
           reference_number?: string
           status?: Database["public"]["Enums"]["cbam_status"]
@@ -1042,6 +1274,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cbam_shipments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cbam_shipments_supplier_id_fkey"
             columns: ["supplier_id"]
             isOneToOne: false
@@ -1059,6 +1298,7 @@ export type Database = {
           country_code: string
           created_at: string
           id: string
+          organization_id: string | null
           tax_number: string | null
           updated_at: string
           user_id: string
@@ -1071,6 +1311,7 @@ export type Database = {
           country_code: string
           created_at?: string
           id?: string
+          organization_id?: string | null
           tax_number?: string | null
           updated_at?: string
           user_id: string
@@ -1083,11 +1324,20 @@ export type Database = {
           country_code?: string
           created_at?: string
           id?: string
+          organization_id?: string | null
           tax_number?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cbam_suppliers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       emissions_calculations: {
         Row: {
@@ -1190,6 +1440,104 @@ export type Database = {
           },
         ]
       }
+      organization_members: {
+        Row: {
+          created_at: string
+          id: string
+          invited_at: string | null
+          invited_by: string | null
+          is_active: boolean
+          is_primary: boolean
+          joined_at: string | null
+          organization_id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          is_active?: boolean
+          is_primary?: boolean
+          joined_at?: string | null
+          organization_id: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          is_active?: boolean
+          is_primary?: boolean
+          joined_at?: string | null
+          organization_id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          address: string | null
+          cbam_registration_id: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          country_code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          legal_name: string | null
+          name: string
+          registration_number: string | null
+          settings: Json | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          cbam_registration_id?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          country_code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          legal_name?: string | null
+          name: string
+          registration_number?: string | null
+          settings?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          cbam_registration_id?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          country_code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          legal_name?: string | null
+          name?: string
+          registration_number?: string | null
+          settings?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           company_name: string | null
@@ -1217,6 +1565,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       dashboard_data: {
@@ -1239,9 +1608,25 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      user_has_min_role: {
+        Args: {
+          _min_role: Database["public"]["Enums"]["app_role"]
+          _org_id: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      user_has_org_access: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_org_role: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
     }
     Enums: {
+      app_role: "admin_org" | "supervisor" | "user" | "accountant" | "auditor"
       cbam_phase: "transitional" | "operational"
       cbam_sector:
         | "cement"
@@ -1385,6 +1770,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin_org", "supervisor", "user", "accountant", "auditor"],
       cbam_phase: ["transitional", "operational"],
       cbam_sector: [
         "cement",

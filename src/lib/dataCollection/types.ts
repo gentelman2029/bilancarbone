@@ -74,6 +74,11 @@ export interface ExtractedData {
   ghg_category?: string;
   confidence_score?: number;
   extraction_notes?: string;
+  // Field-level confidence scores
+  field_confidences?: Record<string, number>;
+  // Calculated emissions
+  calculated_co2_kg?: number;
+  co2_equivalent_kg?: number;
 }
 
 export interface ActivityData {

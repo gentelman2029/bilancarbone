@@ -104,14 +104,29 @@ class CalculationMetadataService {
         ? existingVersions[0].calculation_version + 1 
         : 1;
 
+      const insertData = {
+        organization_id: metadata.organization_id,
+        entity_type: metadata.entity_type as string,
+        entity_id: metadata.entity_id,
+        emission_factor_source: metadata.emission_factor_source as string,
+        emission_factor_value: metadata.emission_factor_value,
+        emission_factor_unit: metadata.emission_factor_unit,
+        regulation_reference: metadata.regulation_reference,
+        methodology_reference: metadata.methodology_reference,
+        default_factor_source: metadata.default_factor_source,
+        assumptions: JSON.parse(JSON.stringify(metadata.assumptions)),
+        uncertainty_percent: metadata.uncertainty_percent,
+        uncertainty_method: metadata.uncertainty_method,
+        data_source: metadata.data_source,
+        supporting_documents: JSON.parse(JSON.stringify(metadata.supporting_documents)),
+        user_id: user.id,
+        calculation_version: nextVersion,
+        verification_status: 'unverified'
+      };
+
       const { data, error } = await supabase
         .from('cbam_calculation_metadata')
-        .insert({
-          ...metadata,
-          user_id: user.id,
-          calculation_version: nextVersion,
-          verification_status: 'unverified'
-        })
+        .insert([insertData])
         .select()
         .single();
 
@@ -147,7 +162,7 @@ class CalculationMetadataService {
         .order('calculation_version', { ascending: false });
 
       if (error) throw error;
-      return { data: (data || []) as CalculationMetadata[] };
+      return { data: (data || []) as unknown as CalculationMetadata[] };
     } catch (error) {
       return { error: `Erreur lors de la récupération des métadonnées: ${error}` };
     }
@@ -169,7 +184,7 @@ class CalculationMetadataService {
         .maybeSingle();
 
       if (error) throw error;
-      return { data: data as CalculationMetadata | null };
+      return { data: data as unknown as CalculationMetadata | null };
     } catch (error) {
       return { error: `Erreur lors de la récupération des métadonnées: ${error}` };
     }
@@ -198,27 +213,30 @@ class CalculationMetadataService {
 
       // Créer la nouvelle version
       const newMetadata = {
-        ...previousVersion,
-        ...updates,
-        id: undefined, // Laisser Supabase générer un nouvel ID
+        organization_id: previousVersion.organization_id,
+        entity_type: previousVersion.entity_type,
+        entity_id: previousVersion.entity_id,
+        emission_factor_source: (updates.emission_factor_source || previousVersion.emission_factor_source) as string,
+        emission_factor_value: updates.emission_factor_value ?? previousVersion.emission_factor_value,
+        emission_factor_unit: updates.emission_factor_unit || previousVersion.emission_factor_unit,
+        regulation_reference: updates.regulation_reference ?? previousVersion.regulation_reference,
+        methodology_reference: updates.methodology_reference ?? previousVersion.methodology_reference,
+        default_factor_source: updates.default_factor_source ?? previousVersion.default_factor_source,
+        assumptions: JSON.parse(JSON.stringify(updates.assumptions || previousVersion.assumptions)),
+        uncertainty_percent: updates.uncertainty_percent ?? previousVersion.uncertainty_percent,
+        uncertainty_method: updates.uncertainty_method ?? previousVersion.uncertainty_method,
+        data_source: updates.data_source ?? previousVersion.data_source,
+        supporting_documents: JSON.parse(JSON.stringify(updates.supporting_documents || previousVersion.supporting_documents)),
         user_id: user.id,
         calculation_version: nextVersion,
         previous_version_id: previousVersionId,
         change_reason: changeReason,
-        verification_status: 'unverified',
-        verified_by: null,
-        verified_at: null,
-        created_at: undefined,
-        updated_at: undefined
+        verification_status: 'unverified'
       };
-
-      delete newMetadata.id;
-      delete newMetadata.created_at;
-      delete newMetadata.updated_at;
 
       const { data, error } = await supabase
         .from('cbam_calculation_metadata')
-        .insert(newMetadata)
+        .insert([newMetadata])
         .select()
         .single();
 
@@ -233,7 +251,7 @@ class CalculationMetadataService {
         data.organization_id
       );
 
-      return { data };
+      return { data: data as unknown as CalculationMetadata };
     } catch (error) {
       return { error: `Erreur lors de la création de la nouvelle version: ${error}` };
     }
@@ -269,7 +287,7 @@ class CalculationMetadataService {
         metadata: { status, comments }
       });
 
-      return { data };
+      return { data: data as unknown as CalculationMetadata };
     } catch (error) {
       return { error: `Erreur lors de la vérification: ${error}` };
     }
@@ -337,7 +355,7 @@ class CalculationMetadataService {
         file_name: `calculation_metadata_${dateFrom}_${dateTo}.json`
       }, organizationId);
 
-      return { data: data || [] };
+      return { data: (data || []) as unknown as CalculationMetadata[] };
     } catch (error) {
       return { error: `Erreur lors de l'export: ${error}` };
     }

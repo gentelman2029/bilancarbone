@@ -163,9 +163,20 @@ class OrganizationService {
   // Mettre à jour une organisation
   async updateOrganization(id: string, updates: Partial<Organization>): Promise<ServiceResponse<Organization>> {
     try {
+      const updateData: Record<string, unknown> = {};
+      if (updates.name !== undefined) updateData.name = updates.name;
+      if (updates.legal_name !== undefined) updateData.legal_name = updates.legal_name;
+      if (updates.registration_number !== undefined) updateData.registration_number = updates.registration_number;
+      if (updates.country_code !== undefined) updateData.country_code = updates.country_code;
+      if (updates.address !== undefined) updateData.address = updates.address;
+      if (updates.contact_email !== undefined) updateData.contact_email = updates.contact_email;
+      if (updates.contact_phone !== undefined) updateData.contact_phone = updates.contact_phone;
+      if (updates.cbam_registration_id !== undefined) updateData.cbam_registration_id = updates.cbam_registration_id;
+      if (updates.is_active !== undefined) updateData.is_active = updates.is_active;
+
       const { data, error } = await supabase
         .from('organizations')
-        .update(updates)
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();

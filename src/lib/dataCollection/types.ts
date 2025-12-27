@@ -1,0 +1,190 @@
+// Types pour le module de collecte de données
+
+export type DocumentType = 'electricity_bill' | 'fuel_invoice' | 'transport_invoice' | 'gas_bill' | 'water_bill' | 'other';
+export type OcrStatus = 'pending' | 'processing' | 'processed' | 'failed' | 'manual_required';
+export type ValidationStatus = 'pending' | 'validated' | 'rejected' | 'modified';
+export type GhgScope = 'scope1' | 'scope2' | 'scope3';
+export type SourceType = 'ocr' | 'erp_api' | 'manual' | 'import_csv';
+export type ActivityStatus = 'draft' | 'validated' | 'integrated' | 'archived';
+
+export interface DataCollectionDocument {
+  id: string;
+  user_id: string;
+  organization_id?: string;
+  file_name: string;
+  file_path: string;
+  file_size: number;
+  mime_type: string;
+  document_type: DocumentType;
+  supplier_name?: string;
+  country_code: string;
+  ocr_status: OcrStatus;
+  ocr_processed_at?: string;
+  ocr_raw_result?: Record<string, unknown>;
+  ocr_confidence_score?: number;
+  ocr_error_message?: string;
+  extracted_data: ExtractedData;
+  validation_status: ValidationStatus;
+  validated_by?: string;
+  validated_at?: string;
+  validation_notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExtractedData {
+  document_type?: string;
+  supplier_name?: string;
+  invoice_number?: string;
+  period_start?: string;
+  period_end?: string;
+  quantity?: number;
+  unit?: string;
+  amount_ht?: number;
+  amount_ttc?: number;
+  currency?: string;
+  ghg_scope?: string;
+  ghg_category?: string;
+  confidence_score?: number;
+  extraction_notes?: string;
+}
+
+export interface ActivityData {
+  id: string;
+  user_id: string;
+  organization_id?: string;
+  source_type: SourceType;
+  source_document_id?: string;
+  source_reference?: string;
+  period_start: string;
+  period_end: string;
+  ghg_scope: GhgScope;
+  ghg_category: string;
+  ghg_subcategory?: string;
+  quantity: number;
+  unit: string;
+  amount_ht?: number;
+  amount_ttc?: number;
+  currency_code: string;
+  supplier_name?: string;
+  supplier_country?: string;
+  emission_factor_value?: number;
+  emission_factor_unit?: string;
+  emission_factor_source?: string;
+  co2_equivalent_kg?: number;
+  calculation_metadata_id?: string;
+  status: ActivityStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CarbonCalculation {
+  id: string;
+  user_id: string;
+  organization_id?: string;
+  activity_data_id: string;
+  calculation_date: string;
+  calculation_version: number;
+  input_quantity: number;
+  input_unit: string;
+  emission_factor_value: number;
+  emission_factor_unit: string;
+  emission_factor_source: string;
+  emission_factor_reference?: string;
+  co2_equivalent_kg: number;
+  co2_equivalent_tonnes: number;
+  uncertainty_percent?: number;
+  uncertainty_method?: string;
+  methodology?: string;
+  regulation_reference?: string;
+  previous_calculation_id?: string;
+  change_reason?: string;
+  verification_status: 'unverified' | 'pending' | 'verified' | 'rejected';
+  verified_by?: string;
+  verified_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EmissionFactorLocal {
+  id: string;
+  country_code: string;
+  category: string;
+  subcategory?: string;
+  factor_value: number;
+  factor_unit: string;
+  source_name: string;
+  source_reference?: string;
+  source_url?: string;
+  valid_from: string;
+  valid_to?: string;
+  is_default: boolean;
+  is_active: boolean;
+  notes?: string;
+}
+
+export interface ErpConnection {
+  id: string;
+  user_id: string;
+  organization_id?: string;
+  name: string;
+  erp_type: string;
+  connection_type: 'webhook' | 'api_pull' | 'sftp';
+  api_endpoint?: string;
+  webhook_secret?: string;
+  auth_type?: 'api_key' | 'oauth2' | 'basic';
+  field_mapping: Record<string, string>;
+  is_active: boolean;
+  last_sync_at?: string;
+  last_sync_status?: string;
+  last_sync_records_count?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// GHG Categories mapping
+export const GHG_CATEGORIES = {
+  scope1: [
+    { id: 'gaz_naturel', label: 'Gaz naturel', unit: 'm3' },
+    { id: 'diesel', label: 'Diesel (véhicules)', unit: 'litres' },
+    { id: 'essence', label: 'Essence (véhicules)', unit: 'litres' },
+    { id: 'gpl', label: 'GPL', unit: 'litres' },
+    { id: 'fioul', label: 'Fioul domestique', unit: 'litres' },
+  ],
+  scope2: [
+    { id: 'electricite', label: 'Électricité', unit: 'kWh' },
+    { id: 'chaleur_reseau', label: 'Chaleur réseau', unit: 'kWh' },
+    { id: 'froid_reseau', label: 'Froid réseau', unit: 'kWh' },
+  ],
+  scope3: [
+    { id: 'transport_routier', label: 'Transport routier', unit: 't.km' },
+    { id: 'transport_aerien', label: 'Transport aérien', unit: 't.km' },
+    { id: 'transport_maritime', label: 'Transport maritime', unit: 't.km' },
+    { id: 'dechets', label: 'Déchets', unit: 'tonnes' },
+    { id: 'achats', label: 'Achats de biens', unit: 'EUR' },
+  ],
+};
+
+export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
+  electricity_bill: 'Facture électricité',
+  fuel_invoice: 'Facture carburant',
+  transport_invoice: 'Facture transport',
+  gas_bill: 'Facture gaz',
+  water_bill: 'Facture eau',
+  other: 'Autre document',
+};
+
+export const OCR_STATUS_LABELS: Record<OcrStatus, string> = {
+  pending: 'En attente',
+  processing: 'En cours',
+  processed: 'Traité',
+  failed: 'Échec',
+  manual_required: 'Vérification manuelle',
+};
+
+export const VALIDATION_STATUS_LABELS: Record<ValidationStatus, string> = {
+  pending: 'À valider',
+  validated: 'Validé',
+  rejected: 'Rejeté',
+  modified: 'Modifié',
+};

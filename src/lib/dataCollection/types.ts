@@ -1,6 +1,33 @@
 // Types pour le module de collecte de données
 
-export type DocumentType = 'electricity_bill' | 'fuel_invoice' | 'transport_invoice' | 'gas_bill' | 'water_bill' | 'other';
+// Scope 1 - Émissions directes
+// Scope 2 - Émissions indirectes liées à l'énergie  
+// Scope 3 - Autres émissions indirectes
+export type DocumentType = 
+  // Scope 1 - Combustibles et carburants
+  | 'gas_bill'              // Facture gaz naturel
+  | 'fuel_invoice'          // Facture carburant (diesel, essence)
+  | 'heating_oil_invoice'   // Facture fioul domestique
+  | 'lpg_invoice'           // Facture GPL/propane
+  | 'refrigerant_invoice'   // Facture fluides frigorigènes
+  // Scope 2 - Énergie
+  | 'electricity_bill'      // Facture électricité
+  | 'district_heating'      // Facture chaleur réseau
+  | 'district_cooling'      // Facture froid réseau
+  // Scope 3 - Transport et déplacements
+  | 'transport_invoice'     // Facture transport de marchandises
+  | 'business_travel'       // Note de frais déplacements professionnels
+  | 'employee_commuting'    // Enquête/données déplacements domicile-travail
+  | 'freight_invoice'       // Facture fret (aérien, maritime, routier)
+  // Scope 3 - Achats et déchets
+  | 'purchase_invoice'      // Facture achats biens/services
+  | 'waste_invoice'         // Facture traitement déchets
+  | 'water_bill'            // Facture eau
+  // Scope 3 - Autres
+  | 'asset_invoice'         // Facture immobilisations (équipements, bâtiments)
+  | 'leasing_invoice'       // Contrat leasing/location
+  | 'other';                // Autre document
+
 export type OcrStatus = 'pending' | 'processing' | 'processed' | 'failed' | 'manual_required';
 export type ValidationStatus = 'pending' | 'validated' | 'rejected' | 'modified';
 export type GhgScope = 'scope1' | 'scope2' | 'scope3';
@@ -166,11 +193,28 @@ export const GHG_CATEGORIES = {
 };
 
 export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
+  // Scope 1
+  gas_bill: 'Facture gaz naturel',
+  fuel_invoice: 'Facture carburant (diesel/essence)',
+  heating_oil_invoice: 'Facture fioul domestique',
+  lpg_invoice: 'Facture GPL/propane',
+  refrigerant_invoice: 'Facture fluides frigorigènes',
+  // Scope 2
   electricity_bill: 'Facture électricité',
-  fuel_invoice: 'Facture carburant',
-  transport_invoice: 'Facture transport',
-  gas_bill: 'Facture gaz',
+  district_heating: 'Facture chaleur réseau',
+  district_cooling: 'Facture froid réseau',
+  // Scope 3 - Transport
+  transport_invoice: 'Facture transport marchandises',
+  business_travel: 'Note de frais déplacements pro',
+  employee_commuting: 'Données déplacements domicile-travail',
+  freight_invoice: 'Facture fret (aérien/maritime/routier)',
+  // Scope 3 - Achats et déchets
+  purchase_invoice: 'Facture achats biens/services',
+  waste_invoice: 'Facture traitement déchets',
   water_bill: 'Facture eau',
+  // Scope 3 - Autres
+  asset_invoice: 'Facture immobilisations',
+  leasing_invoice: 'Contrat leasing/location',
   other: 'Autre document',
 };
 

@@ -14,6 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_data: {
+        Row: {
+          amount_ht: number | null
+          amount_ttc: number | null
+          calculation_metadata_id: string | null
+          co2_equivalent_kg: number | null
+          created_at: string
+          currency_code: string | null
+          emission_factor_source: string | null
+          emission_factor_unit: string | null
+          emission_factor_value: number | null
+          ghg_category: string
+          ghg_scope: string
+          ghg_subcategory: string | null
+          id: string
+          organization_id: string | null
+          period_end: string
+          period_start: string
+          quantity: number
+          source_document_id: string | null
+          source_reference: string | null
+          source_type: string
+          status: string
+          supplier_country: string | null
+          supplier_name: string | null
+          unit: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_ht?: number | null
+          amount_ttc?: number | null
+          calculation_metadata_id?: string | null
+          co2_equivalent_kg?: number | null
+          created_at?: string
+          currency_code?: string | null
+          emission_factor_source?: string | null
+          emission_factor_unit?: string | null
+          emission_factor_value?: number | null
+          ghg_category: string
+          ghg_scope: string
+          ghg_subcategory?: string | null
+          id?: string
+          organization_id?: string | null
+          period_end: string
+          period_start: string
+          quantity: number
+          source_document_id?: string | null
+          source_reference?: string | null
+          source_type: string
+          status?: string
+          supplier_country?: string | null
+          supplier_name?: string | null
+          unit: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_ht?: number | null
+          amount_ttc?: number | null
+          calculation_metadata_id?: string | null
+          co2_equivalent_kg?: number | null
+          created_at?: string
+          currency_code?: string | null
+          emission_factor_source?: string | null
+          emission_factor_unit?: string | null
+          emission_factor_value?: number | null
+          ghg_category?: string
+          ghg_scope?: string
+          ghg_subcategory?: string | null
+          id?: string
+          organization_id?: string | null
+          period_end?: string
+          period_start?: string
+          quantity?: number
+          source_document_id?: string | null
+          source_reference?: string | null
+          source_type?: string
+          status?: string
+          supplier_country?: string | null
+          supplier_name?: string | null
+          unit?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_data_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_data_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "data_collection_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       carbon_actions: {
         Row: {
           calculation_id: string | null
@@ -81,6 +183,112 @@ export type Database = {
             columns: ["calculation_id"]
             isOneToOne: false
             referencedRelation: "emissions_calculations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      carbon_calculations_v2: {
+        Row: {
+          activity_data_id: string
+          calculation_date: string
+          calculation_version: number
+          change_reason: string | null
+          co2_equivalent_kg: number
+          co2_equivalent_tonnes: number | null
+          created_at: string
+          emission_factor_reference: string | null
+          emission_factor_source: string
+          emission_factor_unit: string
+          emission_factor_value: number
+          id: string
+          input_quantity: number
+          input_unit: string
+          methodology: string | null
+          organization_id: string | null
+          previous_calculation_id: string | null
+          regulation_reference: string | null
+          uncertainty_method: string | null
+          uncertainty_percent: number | null
+          updated_at: string
+          user_id: string
+          verification_status: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          activity_data_id: string
+          calculation_date?: string
+          calculation_version?: number
+          change_reason?: string | null
+          co2_equivalent_kg: number
+          co2_equivalent_tonnes?: number | null
+          created_at?: string
+          emission_factor_reference?: string | null
+          emission_factor_source: string
+          emission_factor_unit: string
+          emission_factor_value: number
+          id?: string
+          input_quantity: number
+          input_unit: string
+          methodology?: string | null
+          organization_id?: string | null
+          previous_calculation_id?: string | null
+          regulation_reference?: string | null
+          uncertainty_method?: string | null
+          uncertainty_percent?: number | null
+          updated_at?: string
+          user_id: string
+          verification_status?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          activity_data_id?: string
+          calculation_date?: string
+          calculation_version?: number
+          change_reason?: string | null
+          co2_equivalent_kg?: number
+          co2_equivalent_tonnes?: number | null
+          created_at?: string
+          emission_factor_reference?: string | null
+          emission_factor_source?: string
+          emission_factor_unit?: string
+          emission_factor_value?: number
+          id?: string
+          input_quantity?: number
+          input_unit?: string
+          methodology?: string | null
+          organization_id?: string | null
+          previous_calculation_id?: string | null
+          regulation_reference?: string | null
+          uncertainty_method?: string | null
+          uncertainty_percent?: number | null
+          updated_at?: string
+          user_id?: string
+          verification_status?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carbon_calculations_v2_activity_data_id_fkey"
+            columns: ["activity_data_id"]
+            isOneToOne: false
+            referencedRelation: "activity_data"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carbon_calculations_v2_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carbon_calculations_v2_previous_calculation_id_fkey"
+            columns: ["previous_calculation_id"]
+            isOneToOne: false
+            referencedRelation: "carbon_calculations_v2"
             referencedColumns: ["id"]
           },
         ]
@@ -1339,6 +1547,146 @@ export type Database = {
           },
         ]
       }
+      data_collection_documents: {
+        Row: {
+          country_code: string | null
+          created_at: string
+          document_type: string
+          extracted_data: Json | null
+          file_name: string
+          file_path: string
+          file_size: number
+          id: string
+          mime_type: string
+          ocr_confidence_score: number | null
+          ocr_error_message: string | null
+          ocr_processed_at: string | null
+          ocr_raw_result: Json | null
+          ocr_status: string
+          organization_id: string | null
+          supplier_name: string | null
+          updated_at: string
+          user_id: string
+          validated_at: string | null
+          validated_by: string | null
+          validation_notes: string | null
+          validation_status: string
+        }
+        Insert: {
+          country_code?: string | null
+          created_at?: string
+          document_type: string
+          extracted_data?: Json | null
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: string
+          mime_type: string
+          ocr_confidence_score?: number | null
+          ocr_error_message?: string | null
+          ocr_processed_at?: string | null
+          ocr_raw_result?: Json | null
+          ocr_status?: string
+          organization_id?: string | null
+          supplier_name?: string | null
+          updated_at?: string
+          user_id: string
+          validated_at?: string | null
+          validated_by?: string | null
+          validation_notes?: string | null
+          validation_status?: string
+        }
+        Update: {
+          country_code?: string | null
+          created_at?: string
+          document_type?: string
+          extracted_data?: Json | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          mime_type?: string
+          ocr_confidence_score?: number | null
+          ocr_error_message?: string | null
+          ocr_processed_at?: string | null
+          ocr_raw_result?: Json | null
+          ocr_status?: string
+          organization_id?: string | null
+          supplier_name?: string | null
+          updated_at?: string
+          user_id?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          validation_notes?: string | null
+          validation_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_collection_documents_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emission_factors_local: {
+        Row: {
+          category: string
+          country_code: string
+          created_at: string
+          factor_unit: string
+          factor_value: number
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          notes: string | null
+          source_name: string
+          source_reference: string | null
+          source_url: string | null
+          subcategory: string | null
+          updated_at: string
+          valid_from: string
+          valid_to: string | null
+        }
+        Insert: {
+          category: string
+          country_code?: string
+          created_at?: string
+          factor_unit: string
+          factor_value: number
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          notes?: string | null
+          source_name: string
+          source_reference?: string | null
+          source_url?: string | null
+          subcategory?: string | null
+          updated_at?: string
+          valid_from: string
+          valid_to?: string | null
+        }
+        Update: {
+          category?: string
+          country_code?: string
+          created_at?: string
+          factor_unit?: string
+          factor_value?: number
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          notes?: string | null
+          source_name?: string
+          source_reference?: string | null
+          source_url?: string | null
+          subcategory?: string | null
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Relationships: []
+      }
       emissions_calculations: {
         Row: {
           calculation_data: Json | null
@@ -1436,6 +1784,140 @@ export type Database = {
             columns: ["calculation_id"]
             isOneToOne: false
             referencedRelation: "emissions_calculations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      erp_connections: {
+        Row: {
+          api_endpoint: string | null
+          auth_type: string | null
+          connection_type: string
+          created_at: string
+          erp_type: string
+          field_mapping: Json
+          id: string
+          is_active: boolean
+          last_sync_at: string | null
+          last_sync_records_count: number | null
+          last_sync_status: string | null
+          name: string
+          organization_id: string | null
+          updated_at: string
+          user_id: string
+          webhook_secret: string | null
+        }
+        Insert: {
+          api_endpoint?: string | null
+          auth_type?: string | null
+          connection_type: string
+          created_at?: string
+          erp_type: string
+          field_mapping?: Json
+          id?: string
+          is_active?: boolean
+          last_sync_at?: string | null
+          last_sync_records_count?: number | null
+          last_sync_status?: string | null
+          name: string
+          organization_id?: string | null
+          updated_at?: string
+          user_id: string
+          webhook_secret?: string | null
+        }
+        Update: {
+          api_endpoint?: string | null
+          auth_type?: string | null
+          connection_type?: string
+          created_at?: string
+          erp_type?: string
+          field_mapping?: Json
+          id?: string
+          is_active?: boolean
+          last_sync_at?: string | null
+          last_sync_records_count?: number | null
+          last_sync_status?: string | null
+          name?: string
+          organization_id?: string | null
+          updated_at?: string
+          user_id?: string
+          webhook_secret?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "erp_connections_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      erp_import_logs: {
+        Row: {
+          connection_id: string
+          created_at: string
+          error_details: Json | null
+          error_message: string | null
+          id: string
+          import_completed_at: string | null
+          import_started_at: string
+          organization_id: string | null
+          raw_data: Json | null
+          records_failed: number | null
+          records_processed: number | null
+          records_received: number | null
+          records_validated: number | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          connection_id: string
+          created_at?: string
+          error_details?: Json | null
+          error_message?: string | null
+          id?: string
+          import_completed_at?: string | null
+          import_started_at?: string
+          organization_id?: string | null
+          raw_data?: Json | null
+          records_failed?: number | null
+          records_processed?: number | null
+          records_received?: number | null
+          records_validated?: number | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          connection_id?: string
+          created_at?: string
+          error_details?: Json | null
+          error_message?: string | null
+          id?: string
+          import_completed_at?: string | null
+          import_started_at?: string
+          organization_id?: string | null
+          raw_data?: Json | null
+          records_failed?: number | null
+          records_processed?: number | null
+          records_received?: number | null
+          records_validated?: number | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "erp_import_logs_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "erp_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "erp_import_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]

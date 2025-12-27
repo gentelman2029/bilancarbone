@@ -105,12 +105,12 @@ class AuditService {
         user_id: user.id,
         session_id: this.sessionId,
         user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
-        event_type: eventType,
-        entity_type: entityType,
+        event_type: eventType as string,
+        entity_type: entityType as string,
         entity_id: options.entity_id || null,
-        previous_values: options.previous_values || null,
-        new_values: options.new_values || null,
-        metadata: options.metadata || {},
+        previous_values: options.previous_values ? JSON.parse(JSON.stringify(options.previous_values)) : null,
+        new_values: options.new_values ? JSON.parse(JSON.stringify(options.new_values)) : null,
+        metadata: options.metadata ? JSON.parse(JSON.stringify(options.metadata)) : {},
         status: options.status || 'success',
         error_message: options.error_message || null,
         occurred_at: new Date().toISOString()
@@ -118,7 +118,7 @@ class AuditService {
 
       const { data, error } = await supabase
         .from('cbam_audit_events')
-        .insert(auditEvent)
+        .insert([auditEvent])
         .select()
         .single();
 

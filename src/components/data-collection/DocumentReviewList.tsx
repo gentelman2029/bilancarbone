@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { FileText, Check, X, Eye, Loader2, AlertTriangle, Clock } from 'lucide-react';
+import { FileText, Check, X, Eye, Loader2, AlertTriangle, Clock, Trash2, Pencil } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -28,6 +29,9 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
   const [editedData, setEditedData] = useState<ExtractedData>({});
   const [validationNotes, setValidationNotes] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [docToDelete, setDocToDelete] = useState<DataCollectionDocument | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadDocuments = async () => {
     try {
@@ -106,6 +110,31 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
     }
   };
 
+  const handleDeleteClick = (doc: DataCollectionDocument) => {
+    setDocToDelete(doc);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!docToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const result = await documentCollectionService.deleteDocument(docToDelete.id);
+      if (result.error) throw new Error(result.error);
+
+      toast.success('Document supprimé');
+      setDeleteDialogOpen(false);
+      setDocToDelete(null);
+      loadDocuments();
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Erreur lors de la suppression');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const getStatusBadge = (doc: DataCollectionDocument) => {
     if (doc.ocr_status === 'processing') {
       return <Badge variant="secondary"><Loader2 className="h-3 w-3 mr-1 animate-spin" />En traitement</Badge>;
@@ -180,10 +209,18 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
                     {getStatusBadge(doc)}
                     {doc.ocr_status === 'processed' && doc.validation_status === 'pending' && (
                       <Button size="sm" variant="outline" onClick={() => handleReview(doc)}>
-                        <Eye className="h-4 w-4 mr-1" />
+                        <Pencil className="h-4 w-4 mr-1" />
                         Réviser
                       </Button>
                     )}
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => handleDeleteClick(doc)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -191,6 +228,29 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce document ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Le document "{docToDelete?.file_name}" sera définitivement supprimé.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Trash2 className="h-4 w-4 mr-1" />}
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Review Dialog */}
       <Dialog open={!!selectedDoc} onOpenChange={() => setSelectedDoc(null)}>

@@ -213,6 +213,12 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
                         Réviser
                       </Button>
                     )}
+                    {doc.validation_status === 'validated' && (
+                      <Button size="sm" variant="ghost" onClick={() => handleReview(doc)}>
+                        <Pencil className="h-4 w-4 mr-1" />
+                        Éditer
+                      </Button>
+                    )}
                     <Button 
                       size="sm" 
                       variant="ghost" 

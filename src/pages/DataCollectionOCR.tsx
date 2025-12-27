@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DocumentUploadCard } from '@/components/data-collection/DocumentUploadCard';
+import { SmartDocumentUploader } from '@/components/data-collection/SmartDocumentUploader';
 import { DocumentReviewList } from '@/components/data-collection/DocumentReviewList';
 import { ActivityDataTable } from '@/components/data-collection/ActivityDataTable';
-import { Upload, FileCheck, Activity } from 'lucide-react';
+import { Upload, FileCheck, Activity, Sparkles } from 'lucide-react';
 
 export default function DataCollectionOCR() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -15,9 +15,12 @@ export default function DataCollectionOCR() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Collecte automatisée</h1>
+        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+          <Sparkles className="h-8 w-8 text-primary" />
+          Extraction IA Automatisée
+        </h1>
         <p className="text-muted-foreground mt-1">
-          Automatisez la collecte de vos consommations via OCR ou API ERP
+          Téléchargez vos factures et laissez l'IA Vision extraire automatiquement les données carbone
         </p>
       </div>
 
@@ -25,7 +28,7 @@ export default function DataCollectionOCR() {
         <TabsList className="grid w-full max-w-md grid-cols-3">
           <TabsTrigger value="upload" className="flex items-center gap-2">
             <Upload className="h-4 w-4" />
-            <span className="hidden sm:inline">Upload</span>
+            <span className="hidden sm:inline">Upload IA</span>
           </TabsTrigger>
           <TabsTrigger value="review" className="flex items-center gap-2">
             <FileCheck className="h-4 w-4" />
@@ -38,8 +41,7 @@ export default function DataCollectionOCR() {
         </TabsList>
 
         <TabsContent value="upload" className="space-y-6">
-          <DocumentUploadCard onUploadComplete={handleRefresh} />
-          <DocumentReviewList onDataValidated={handleRefresh} />
+          <SmartDocumentUploader onUploadComplete={handleRefresh} />
         </TabsContent>
 
         <TabsContent value="review">

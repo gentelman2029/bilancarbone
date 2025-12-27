@@ -6,47 +6,82 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Prompt système pour l'extraction OCR des factures
-const OCR_SYSTEM_PROMPT = `Tu es un expert en extraction de données de factures pour le calcul d'empreinte carbone.
-Tu dois extraire les informations clés des factures d'énergie et de transport.
+// Enhanced OCR system prompt with all document types and field-level confidence
+const OCR_SYSTEM_PROMPT = `Tu es un expert en extraction de données de factures pour le calcul d'empreinte carbone GHG Protocol.
 
-Types de factures que tu peux traiter:
-- Factures STEG (électricité tunisienne): recherche "STEG", "kWh", période de consommation
-- Factures de carburant (Total, Shell, stations-service): litres de diesel/essence/GPL
-- Factures de gaz naturel: m3 ou kWh
-- Factures de transport/logistique: km parcourus, tonnes transportées
+## Types de documents supportés
 
-IMPORTANT pour les factures STEG tunisiennes:
-- Le montant est en Dinars Tunisiens (TND)
-- Recherche les champs: "Consommation", "Période du...au...", "kWh"
-- Format de date tunisien: JJ/MM/AAAA
+### SCOPE 1 - Émissions directes (combustion sur site)
+- **gas_bill**: Factures gaz naturel (STEG, Engie, etc.) - Cherche: m³, kWh thermiques
+- **fuel_invoice**: Factures carburant véhicules entreprise (diesel, essence) - Cherche: litres
+- **heating_oil_invoice**: Factures fioul domestique - Cherche: litres
+- **lpg_invoice**: Factures GPL/propane - Cherche: kg, litres
+- **refrigerant_invoice**: Factures fluides frigorigènes - Cherche: kg de gaz
 
-Tu DOIS retourner un JSON valide avec cette structure exacte:
+### SCOPE 2 - Énergie indirecte
+- **electricity_bill**: Factures électricité (STEG, EDF, etc.) - Cherche: kWh
+- **district_heating**: Factures chaleur réseau - Cherche: kWh, MWh
+- **district_cooling**: Factures froid réseau - Cherche: kWh, MWh
+
+### SCOPE 3 - Autres émissions indirectes
+- **transport_invoice**: Transport de marchandises - Cherche: km, t.km
+- **business_travel**: Déplacements professionnels - Cherche: km, billets
+- **freight_invoice**: Fret (aérien, maritime, routier) - Cherche: tonnes, km
+- **purchase_invoice**: Achats de biens et services - Cherche: montants
+- **waste_invoice**: Traitement des déchets - Cherche: tonnes
+- **water_bill**: Factures eau - Cherche: m³
+
+## Instructions d'extraction
+
+IMPORTANT - Tunisie:
+- Factures STEG: "Consommation", "Période du...au...", montants en Dinars (TND)
+- Format date: JJ/MM/AAAA
+
+CRITIQUE - Ne confonds PAS:
+- La CONSOMMATION (kWh, litres, m³) avec le PRIX (TND, EUR)
+- La puissance souscrite avec la consommation réelle
+- Les taxes avec les montants HT
+
+## Format de sortie JSON
+
+Tu DOIS retourner un JSON valide avec cette structure:
 {
-  "document_type": "electricity_bill" | "fuel_invoice" | "gas_bill" | "transport_invoice" | "other",
-  "supplier_name": "nom du fournisseur (ex: STEG, Total, Engie)",
-  "invoice_number": "numéro de facture si disponible",
+  "document_type": "electricity_bill|gas_bill|fuel_invoice|heating_oil_invoice|lpg_invoice|refrigerant_invoice|district_heating|district_cooling|transport_invoice|business_travel|freight_invoice|purchase_invoice|waste_invoice|water_bill|other",
+  "supplier_name": "nom du fournisseur",
+  "invoice_number": "numéro de facture",
   "period_start": "YYYY-MM-DD",
-  "period_end": "YYYY-MM-DD", 
-  "quantity": nombre (consommation en kWh, litres, m3, km),
-  "unit": "kWh" | "litres" | "m3" | "km" | "tonnes",
-  "amount_ht": nombre (montant HT si disponible),
-  "amount_ttc": nombre (montant TTC),
-  "currency": "TND" | "EUR" | "USD",
-  "ghg_scope": "scope1" | "scope2" | "scope3",
-  "ghg_category": "electricite" | "gaz_naturel" | "diesel" | "essence" | "gpl" | "transport_routier",
-  "confidence_score": nombre de 0 à 100,
-  "extraction_notes": "notes sur l'extraction, difficultés rencontrées"
+  "period_end": "YYYY-MM-DD",
+  "quantity": nombre (la valeur de CONSOMMATION, pas le prix!),
+  "unit": "kWh|litres|m3|km|tonnes|t.km|kg",
+  "amount_ht": nombre ou null,
+  "amount_ttc": nombre,
+  "currency": "TND|EUR|USD",
+  "ghg_scope": "scope1|scope2|scope3",
+  "ghg_category": "electricite|gaz_naturel|diesel|essence|gpl|fioul|transport_routier|transport_aerien|dechets|achats",
+  "confidence_score": nombre de 0 à 1,
+  "field_confidences": {
+    "supplier_name": 0.0-1.0,
+    "quantity": 0.0-1.0,
+    "unit": 0.0-1.0,
+    "period_start": 0.0-1.0,
+    "period_end": 0.0-1.0,
+    "amount_ttc": 0.0-1.0,
+    "ghg_category": 0.0-1.0
+  },
+  "extraction_notes": "notes sur difficultés ou incertitudes"
 }
 
-Règles de mapping GHG Protocol:
+## Règles de mapping GHG Protocol
 - Électricité achetée → Scope 2, catégorie "electricite"
-- Gaz naturel brûlé sur site → Scope 1, catégorie "gaz_naturel"  
+- Gaz naturel brûlé sur site → Scope 1, catégorie "gaz_naturel"
 - Carburant véhicules entreprise → Scope 1, catégorie "diesel/essence/gpl"
+- Fioul chauffage → Scope 1, catégorie "fioul"
+- Fluides frigorigènes → Scope 1, catégorie "refrigerants"
 - Transport marchandises sous-traité → Scope 3, catégorie "transport_routier"
+- Déchets → Scope 3, catégorie "dechets"
+- Eau → Scope 3, catégorie "eau"
 
-Si tu ne peux pas extraire certaines informations, utilise null pour ces champs.
-Retourne UNIQUEMENT le JSON, sans texte additionnel.`;
+RETOURNE UNIQUEMENT le JSON, sans texte additionnel ni markdown.`;
 
 interface ExtractedData {
   document_type: string;
@@ -62,6 +97,7 @@ interface ExtractedData {
   ghg_scope: string;
   ghg_category: string;
   confidence_score: number;
+  field_confidences: Record<string, number>;
   extraction_notes: string;
 }
 
@@ -93,7 +129,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Mettre à jour le statut du document en "processing"
+    // Update document status to processing
     await supabase
       .from('data_collection_documents')
       .update({ ocr_status: 'processing' })
@@ -101,15 +137,15 @@ serve(async (req) => {
 
     console.log('Processing document:', document_id);
 
-    // Préparer le contenu pour l'IA
+    // Prepare content for AI
     let userContent: any[] = [
       {
         type: "text",
-        text: "Analyse cette facture et extrait les informations de consommation d'énergie ou de transport. Retourne uniquement le JSON structuré."
+        text: "Analyse cette facture et extrais les informations de consommation d'énergie. IMPORTANT: Extrait la CONSOMMATION (kWh, litres, m³), PAS le montant en devises. Retourne uniquement le JSON structuré."
       }
     ];
 
-    // Si on a une image en base64, l'ajouter
+    // Add image content
     if (image_base64) {
       userContent.push({
         type: "image_url",
@@ -118,7 +154,7 @@ serve(async (req) => {
         }
       });
     } else if (file_url) {
-      // Télécharger le fichier depuis le storage
+      // Download file from storage
       const { data: fileData, error: downloadError } = await supabase.storage
         .from('data-collection-documents')
         .download(file_url);
@@ -138,7 +174,8 @@ serve(async (req) => {
       });
     }
 
-    // Appeler l'API Lovable AI avec vision
+    // Call Lovable AI with vision
+    console.log('Calling Lovable AI Vision...');
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -151,8 +188,7 @@ serve(async (req) => {
           { role: 'system', content: OCR_SYSTEM_PROMPT },
           { role: 'user', content: userContent }
         ],
-        temperature: 0.1,
-        max_tokens: 2000
+        max_tokens: 3000
       }),
     });
 
@@ -175,19 +211,34 @@ serve(async (req) => {
         );
       }
 
+      if (aiResponse.status === 402) {
+        await supabase
+          .from('data_collection_documents')
+          .update({ 
+            ocr_status: 'failed',
+            ocr_error_message: 'AI credits exhausted'
+          })
+          .eq('id', document_id);
+        
+        return new Response(
+          JSON.stringify({ success: false, error: 'AI credits exhausted' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       throw new Error(`AI API error: ${aiResponse.status}`);
     }
 
     const aiData = await aiResponse.json();
     const rawContent = aiData.choices?.[0]?.message?.content || '';
     
-    console.log('AI response:', rawContent);
+    console.log('AI response received, length:', rawContent.length);
 
-    // Parser le JSON de la réponse
+    // Parse JSON response
     let extractedData: ExtractedData;
     try {
-      // Nettoyer la réponse (enlever les backticks markdown si présents)
       let cleanedContent = rawContent.trim();
+      // Remove markdown code blocks if present
       if (cleanedContent.startsWith('```json')) {
         cleanedContent = cleanedContent.slice(7);
       }
@@ -198,8 +249,22 @@ serve(async (req) => {
         cleanedContent = cleanedContent.slice(0, -3);
       }
       extractedData = JSON.parse(cleanedContent.trim());
+      
+      // Ensure field_confidences exists
+      if (!extractedData.field_confidences) {
+        extractedData.field_confidences = {
+          supplier_name: extractedData.confidence_score || 0.7,
+          quantity: extractedData.confidence_score || 0.7,
+          unit: extractedData.confidence_score || 0.7,
+          period_start: (extractedData.confidence_score || 0.7) * 0.9,
+          period_end: (extractedData.confidence_score || 0.7) * 0.9,
+          amount_ttc: (extractedData.confidence_score || 0.7) * 0.85,
+          ghg_category: (extractedData.confidence_score || 0.7) * 0.9
+        };
+      }
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError);
+      console.error('Raw content:', rawContent);
       
       await supabase
         .from('data_collection_documents')
@@ -220,11 +285,14 @@ serve(async (req) => {
       );
     }
 
-    // Mettre à jour le document avec les données extraites
+    // Determine OCR status based on confidence
+    const ocrStatus = extractedData.confidence_score >= 0.5 ? 'processed' : 'manual_required';
+
+    // Update document with extracted data
     const { error: updateError } = await supabase
       .from('data_collection_documents')
       .update({
-        ocr_status: 'processed',
+        ocr_status: ocrStatus,
         ocr_processed_at: new Date().toISOString(),
         ocr_raw_result: { 
           ai_response: aiData,
@@ -242,13 +310,14 @@ serve(async (req) => {
       throw updateError;
     }
 
-    console.log('Document processed successfully:', document_id);
+    console.log('Document processed successfully:', document_id, 'Status:', ocrStatus);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         data: extractedData,
-        document_id: document_id
+        document_id: document_id,
+        status: ocrStatus
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

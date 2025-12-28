@@ -339,10 +339,10 @@ export function DocumentExtractionReview({
               </Label>
               <Input 
                 type="number"
-                value={editedData.quantity || ''} 
-                onChange={(e) => setEditedData({...editedData, quantity: parseFloat(e.target.value) || undefined})}
+                value={editedData.quantity ?? ''} 
+                onChange={(e) => setEditedData({...editedData, quantity: e.target.value ? parseFloat(e.target.value) : undefined})}
                 className={`text-lg font-medium ${getConfidenceColor(fieldConfidences.quantity || 0.8)}`}
-                placeholder="5022"
+                placeholder="Quantité consommée"
               />
             </div>
             <div className="space-y-2">

@@ -42,10 +42,12 @@ TRÈS IMPORTANT - Utilise ces LABELS EXACTS pour extraire les données:
    - La DATE DE FIN (period_end) est la date à GAUCHE avant "إلى"
    - Exemple: "2025-11-12 إلى : 2024-05-15" → period_start=2024-05-15, period_end=2025-11-12
    
-2. **CONSOMMATION (quantity)**:
-   - Cherche le label "الكمية" (Al-Kamiya = Quantité en arabe) ou "Quantité"
-   - La valeur numérique associée est la CONSOMMATION en kWh
-   - C'est la QUANTITÉ d'énergie, PAS le prix!
+2. **CONSOMMATION (quantity)** - TRÈS IMPORTANT:
+   - Il y a DEUX colonnes différentes: "Consommation" et "الكمية Quantité"
+   - Tu dois extraire la valeur de "الكمية Quantité" (colonne de droite), PAS "Consommation" (colonne de gauche)
+   - "الكمية" = "Al-Kamiya" = Quantité en arabe
+   - Exemple: si "Consommation" = 182 et "الكمية Quantité" = 5022 → quantity = 5022
+   - La valeur de "الكمية Quantité" représente les kWh consommés
    - L'unité est TOUJOURS "kWh" pour l'électricité STEG
 
 3. **MONTANT À PAYER (amount_ttc)**:

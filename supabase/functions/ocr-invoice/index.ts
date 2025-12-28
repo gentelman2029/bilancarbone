@@ -42,12 +42,14 @@ TRÈS IMPORTANT - Utilise ces LABELS EXACTS pour extraire les données:
    - La DATE DE FIN (period_end) est la date à GAUCHE avant "إلى"
    - Exemple: "2025-11-12 إلى : 2024-05-15" → period_start=2024-05-15, period_end=2025-11-12
    
-2. **CONSOMMATION (quantity)** - TRÈS IMPORTANT:
-   - Il y a DEUX colonnes différentes: "Consommation" et "الكمية Quantité"
-   - Tu dois extraire la valeur de "الكمية Quantité" (colonne de droite), PAS "Consommation" (colonne de gauche)
-   - "الكمية" = "Al-Kamiya" = Quantité en arabe
-   - Exemple: si "Consommation" = 182 et "الكمية Quantité" = 5022 → quantity = 5022
-   - La valeur de "الكمية Quantité" représente les kWh consommés
+2. **CONSOMMATION (quantity)** - RÈGLE CRITIQUE ABSOLUE:
+   - Dans la facture STEG, il y a DEUX valeurs différentes dans le tableau:
+     * Colonne "Consommation" à gauche (ex: 182) → IGNORER CETTE VALEUR!
+     * Colonne "الكمية Quantité" à droite (ex: 502, 5022) → C'EST CETTE VALEUR QUE TU DOIS EXTRAIRE!
+   - La VRAIE consommation électrique en kWh est dans la colonne "الكمية Quantité" (الكمية = quantité en arabe)
+   - EXEMPLE CONCRET: Si tu vois "Consommation: 182" et "الكمية Quantité: 502" → quantity = 502
+   - JAMAIS utiliser la valeur de la colonne "Consommation" (gauche)
+   - TOUJOURS utiliser la valeur de la colonne "الكمية Quantité" (droite)
    - L'unité est TOUJOURS "kWh" pour l'électricité STEG
 
 3. **MONTANT À PAYER (amount_ttc)**:

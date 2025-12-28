@@ -31,6 +31,7 @@ export function SmartDocumentUploader({ onUploadComplete }: SmartDocumentUploade
   const [processingMessage, setProcessingMessage] = useState('');
   const [processedDocument, setProcessedDocument] = useState<ProcessedDocument | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedDocumentType, setSelectedDocumentType] = useState<DocumentType | null>(null);
 
   // Cleanup preview URL on unmount
   useEffect(() => {
@@ -43,6 +44,12 @@ export function SmartDocumentUploader({ onUploadComplete }: SmartDocumentUploade
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
+    if (!selectedDocumentType) {
+      toast.error('Type de document requis', {
+        description: 'Veuillez sélectionner un type de document avant de télécharger.'
+      });
+      return;
+    }
 
     const file = acceptedFiles[0];
     
@@ -64,8 +71,8 @@ export function SmartDocumentUploader({ onUploadComplete }: SmartDocumentUploade
         setProgress(prev => Math.min(prev + 10, 30));
       }, 100);
 
-      // Upload document
-      const result = await documentCollectionService.uploadDocument(file, 'other' as DocumentType);
+      // Upload document with selected type
+      const result = await documentCollectionService.uploadDocument(file, selectedDocumentType);
       
       clearInterval(progressInterval);
       
@@ -144,13 +151,14 @@ export function SmartDocumentUploader({ onUploadComplete }: SmartDocumentUploade
         description: error instanceof Error ? error.message : 'Veuillez réessayer'
       });
     }
-  }, []);
+  }, [selectedDocumentType]);
 
   const handleValidationComplete = () => {
     setUploadState('idle');
     setProgress(0);
     setProcessedDocument(null);
     setPreviewUrl(null);
+    setSelectedDocumentType(null);
     onUploadComplete?.();
   };
 
@@ -158,11 +166,19 @@ export function SmartDocumentUploader({ onUploadComplete }: SmartDocumentUploade
     setUploadState('idle');
     setProgress(0);
     setProcessedDocument(null);
+    setSelectedDocumentType(null);
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
     }
   };
+
+  const documentTypes: { type: DocumentType; label: string; icon: string }[] = [
+    { type: 'electricity_bill', label: 'Électricité', icon: '⚡' },
+    { type: 'fuel_invoice', label: 'Carburant', icon: '⛽' },
+    { type: 'gas_bill', label: 'Gaz', icon: '🔥' },
+    { type: 'transport_invoice', label: 'Transport', icon: '🚚' },
+  ];
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -172,7 +188,7 @@ export function SmartDocumentUploader({ onUploadComplete }: SmartDocumentUploade
       'image/png': ['.png']
     },
     maxFiles: 1,
-    disabled: uploadState !== 'idle'
+    disabled: uploadState !== 'idle' || !selectedDocumentType
   });
 
   // Show comparison view when document is processed
@@ -192,57 +208,76 @@ export function SmartDocumentUploader({ onUploadComplete }: SmartDocumentUploade
       <CardContent className="p-0">
         {/* Upload States */}
         {uploadState === 'idle' && (
-          <div
-            {...getRootProps()}
-            className={`
-              relative p-12 text-center cursor-pointer transition-all duration-300 border-2 border-dashed rounded-lg m-4
-              ${isDragActive 
-                ? 'border-primary bg-primary/5 scale-[1.02]' 
-                : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/50'}
-            `}
-          >
-            <input {...getInputProps()} />
-            
-            <div className="flex flex-col items-center gap-4">
-              <div className={`
-                relative p-6 rounded-full transition-all duration-300
-                ${isDragActive ? 'bg-primary/20' : 'bg-muted'}
-              `}>
-                <Upload className={`h-12 w-12 transition-colors ${isDragActive ? 'text-primary' : 'text-muted-foreground'}`} />
-                <Sparkles className="absolute -top-1 -right-1 h-6 w-6 text-amber-500 animate-pulse" />
+          <div className="p-6 space-y-6">
+            {/* Document Type Selection */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-center">
+                1. Sélectionnez le type de document
+              </h3>
+              <div className="flex flex-wrap justify-center gap-2">
+                {documentTypes.map(({ type, label, icon }) => (
+                  <Button
+                    key={type}
+                    variant={selectedDocumentType === type ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedDocumentType(type)}
+                    className={`flex items-center gap-2 ${
+                      selectedDocumentType === type 
+                        ? 'ring-2 ring-primary ring-offset-2' 
+                        : ''
+                    }`}
+                  >
+                    <span>{icon}</span>
+                    {label}
+                  </Button>
+                ))}
               </div>
+            </div>
+
+            {/* Upload Zone */}
+            <div
+              {...getRootProps()}
+              className={`
+                relative p-8 text-center transition-all duration-300 border-2 border-dashed rounded-lg
+                ${!selectedDocumentType 
+                  ? 'border-muted-foreground/15 bg-muted/30 cursor-not-allowed opacity-60' 
+                  : isDragActive 
+                    ? 'border-primary bg-primary/5 scale-[1.02] cursor-pointer' 
+                    : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/50 cursor-pointer'}
+              `}
+            >
+              <input {...getInputProps()} />
               
-              <div className="space-y-2">
-                <h3 className="text-xl font-semibold">
-                  {isDragActive ? 'Déposez votre document ici' : 'Extraction IA Automatisée'}
-                </h3>
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  Glissez-déposez une facture (PDF, JPG, PNG) pour extraction automatique des données carbone via Vision IA
+              <div className="flex flex-col items-center gap-4">
+                <div className={`
+                  relative p-5 rounded-full transition-all duration-300
+                  ${isDragActive ? 'bg-primary/20' : 'bg-muted'}
+                `}>
+                  <Upload className={`h-10 w-10 transition-colors ${isDragActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                  {selectedDocumentType && (
+                    <Sparkles className="absolute -top-1 -right-1 h-5 w-5 text-amber-500 animate-pulse" />
+                  )}
+                </div>
+                
+                <div className="space-y-1">
+                  <h3 className="text-lg font-semibold">
+                    {!selectedDocumentType 
+                      ? '2. Déposez votre document' 
+                      : isDragActive 
+                        ? 'Déposez votre document ici' 
+                        : '2. Glissez-déposez votre document'}
+                  </h3>
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                    {!selectedDocumentType 
+                      ? 'Sélectionnez d\'abord un type de document ci-dessus'
+                      : `Téléchargez votre facture ${documentTypes.find(d => d.type === selectedDocumentType)?.label || ''} pour extraction automatique`}
+                  </p>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  PDF, JPG, PNG (max 10 MB)
                 </p>
               </div>
-
-              <div className="flex flex-wrap justify-center gap-2 mt-4">
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <Zap className="h-3 w-3" />
-                  Électricité
-                </Badge>
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <Zap className="h-3 w-3" />
-                  Carburant
-                </Badge>
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <Zap className="h-3 w-3" />
-                  Gaz
-                </Badge>
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <Zap className="h-3 w-3" />
-                  Transport
-                </Badge>
-              </div>
-
-              <p className="text-xs text-muted-foreground mt-4">
-                PDF, JPG, PNG (max 10 MB)
-              </p>
             </div>
           </div>
         )}

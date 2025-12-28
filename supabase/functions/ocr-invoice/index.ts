@@ -51,11 +51,13 @@ TRÈS IMPORTANT - Utilise ces LABELS EXACTS pour extraire les données:
    - EXEMPLE: Si "الكمية Quantité (1)" = 5022 → quantity = 5022
    - L'unité est TOUJOURS "kWh" pour l'électricité STEG
 
-3. **MONTANT À PAYER (amount_ttc)**:
-   - Cherche le label "المبلغ المطلوب" (Al-Mablagh Al-Matloub = Montant demandé)
-   - OU cherche "Montant à payer"
-   - Montant en Dinars Tunisiens (TND)
-   - Attention au format: 302.000 signifie 302 TND (le point est séparateur de milliers)
+3. **MONTANT À PAYER (amount_ttc)** - CHAMP IMPORTANT:
+   - Le champ s'appelle "المبلغ المطلوب(19)" en arabe + "Montant à payer" en français
+   - Ce champ est encadré en rouge sur la facture
+   - EXTRAIT LA VALEUR NUMÉRIQUE (ex: 302.000)
+   - ATTENTION au format tunisien: 302.000 = 302 TND (le point est séparateur de milliers, PAS décimales)
+   - Donc 302.000 → amount_ttc = 302
+   - Currency: "TND" (Dinars Tunisiens)
 
 4. **Supplier**: Toujours "STEG" pour ces factures tunisiennes d'électricité
 

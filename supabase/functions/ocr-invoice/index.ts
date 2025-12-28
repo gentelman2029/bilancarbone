@@ -31,11 +31,26 @@ const OCR_SYSTEM_PROMPT = `Tu es un expert en extraction de données de factures
 - **waste_invoice**: Traitement des déchets - Cherche: tonnes
 - **water_bill**: Factures eau - Cherche: m³
 
-## Instructions d'extraction
+## Instructions SPÉCIFIQUES pour factures STEG (Tunisie)
 
-IMPORTANT - Tunisie:
-- Factures STEG: "Consommation", "Période du...au...", montants en Dinars (TND)
-- Format date: JJ/MM/AAAA
+TRÈS IMPORTANT pour les factures STEG électricité:
+1. **PÉRIODE DE FACTURATION**:
+   - Cherche la section "FACTURE ESTIMEE" ou "FACTURE REELLE"
+   - La DATE DE FIN de période est à GAUCHE (ex: "30/11/2024")
+   - La DATE DE DÉBUT de période est à DROITE (ex: "01/10/2024")
+   
+2. **CONSOMMATION (quantity)**:
+   - La valeur en kWh se trouve dans la ligne "Consommation" 
+   - C'est la QUANTITÉ d'énergie consommée, PAS le prix
+   - L'unité est TOUJOURS "kWh" pour l'électricité STEG
+
+3. **MONTANT À PAYER (amount_ttc)**:
+   - Se trouve dans la zone "MONTANT À PAYER" ou "NET À PAYER"
+   - Montant en Dinars Tunisiens (TND)
+
+4. **Supplier**: Toujours "STEG" pour ces factures
+
+## Instructions générales d'extraction
 
 CRITIQUE - Ne confonds PAS:
 - La CONSOMMATION (kWh, litres, m³) avec le PRIX (TND, EUR)
@@ -47,14 +62,14 @@ CRITIQUE - Ne confonds PAS:
 Tu DOIS retourner un JSON valide avec cette structure:
 {
   "document_type": "electricity_bill|gas_bill|fuel_invoice|heating_oil_invoice|lpg_invoice|refrigerant_invoice|district_heating|district_cooling|transport_invoice|business_travel|freight_invoice|purchase_invoice|waste_invoice|water_bill|other",
-  "supplier_name": "nom du fournisseur",
+  "supplier_name": "nom du fournisseur (STEG pour factures tunisiennes)",
   "invoice_number": "numéro de facture",
-  "period_start": "YYYY-MM-DD",
-  "period_end": "YYYY-MM-DD",
-  "quantity": nombre (la valeur de CONSOMMATION, pas le prix!),
+  "period_start": "YYYY-MM-DD (pour STEG: la date à DROITE sous FACTURE ESTIMEE)",
+  "period_end": "YYYY-MM-DD (pour STEG: la date à GAUCHE sous FACTURE ESTIMEE)",
+  "quantity": nombre (la valeur de CONSOMMATION en kWh, litres, m³ - PAS le prix!),
   "unit": "kWh|litres|m3|km|tonnes|t.km|kg",
   "amount_ht": nombre ou null,
-  "amount_ttc": nombre,
+  "amount_ttc": nombre (MONTANT À PAYER),
   "currency": "TND|EUR|USD",
   "ghg_scope": "scope1|scope2|scope3",
   "ghg_category": "electricite|gaz_naturel|diesel|essence|gpl|fioul|transport_routier|transport_aerien|dechets|achats",

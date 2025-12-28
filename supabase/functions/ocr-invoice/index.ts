@@ -142,7 +142,7 @@ serve(async (req) => {
   }
 
   try {
-    const { document_id, image_base64, file_url } = await req.json();
+    const { document_id, image_base64, file_url, document_type } = await req.json();
     
     if (!document_id) {
       return new Response(
@@ -170,13 +170,40 @@ serve(async (req) => {
       .update({ ocr_status: 'processing' })
       .eq('id', document_id);
 
-    console.log('Processing document:', document_id);
+    console.log('Processing document:', document_id, 'Type:', document_type);
+
+    // Build extraction instruction based on document type
+    let extractionInstruction = "Analyse cette facture et extrais les informations de consommation d'énergie.";
+    
+    if (document_type === 'gas_bill') {
+      extractionInstruction = `IMPORTANT: Ce document est une FACTURE DE GAZ (gas_bill).
+Extrais UNIQUEMENT les données de la section "Total Gaz" / "إجمالي الغاز":
+- La quantité de gaz consommée en thermies (cherche la valeur dans la colonne Quantité de la section Gaz)
+- NE PAS extraire les données électricité
+- NE PAS extraire le montant à payer (amount_ttc doit être null)
+- ghg_scope doit être "scope1"
+- ghg_category doit être "gaz_naturel"
+- unit doit être "thermies"
+Retourne uniquement le JSON structuré.`;
+    } else if (document_type === 'electricity_bill') {
+      extractionInstruction = `IMPORTANT: Ce document est une FACTURE D'ÉLECTRICITÉ (electricity_bill).
+Extrais UNIQUEMENT les données de la section "Total Électricité" / "إجمالي الكهرباء":
+- La quantité d'électricité consommée en kWh
+- Le montant à payer en TND
+- NE PAS extraire les données gaz
+- ghg_scope doit être "scope2"
+- ghg_category doit être "electricite"
+- unit doit être "kWh"
+Retourne uniquement le JSON structuré.`;
+    } else {
+      extractionInstruction = "Analyse cette facture et extrais les informations de consommation d'énergie. IMPORTANT: Extrait la CONSOMMATION (kWh, thermies, litres, m³), PAS le montant en devises. Retourne uniquement le JSON structuré.";
+    }
 
     // Prepare content for AI
     let userContent: any[] = [
       {
         type: "text",
-        text: "Analyse cette facture et extrais les informations de consommation d'énergie. IMPORTANT: Extrait la CONSOMMATION (kWh, litres, m³), PAS le montant en devises. Retourne uniquement le JSON structuré."
+        text: extractionInstruction
       }
     ];
 

@@ -33,22 +33,28 @@ const OCR_SYSTEM_PROMPT = `Tu es un expert en extraction de données de factures
 
 ## Instructions SPÉCIFIQUES pour factures STEG (Tunisie)
 
-TRÈS IMPORTANT pour les factures STEG électricité:
+TRÈS IMPORTANT - Utilise ces LABELS EXACTS pour extraire les données:
+
 1. **PÉRIODE DE FACTURATION**:
-   - Cherche la section "FACTURE ESTIMEE" ou "FACTURE REELLE"
-   - La DATE DE FIN de période est à GAUCHE (ex: "30/11/2024")
-   - La DATE DE DÉBUT de période est à DROITE (ex: "01/10/2024")
+   - Cherche le format: "YYYY-MM-DD إلى : YYYY-MM-DD" (date إلى date)
+   - "إلى" signifie "à" en arabe
+   - La DATE DE DÉBUT (period_start) est la date à DROITE après "إلى :"
+   - La DATE DE FIN (period_end) est la date à GAUCHE avant "إلى"
+   - Exemple: "2025-11-12 إلى : 2024-05-15" → period_start=2024-05-15, period_end=2025-11-12
    
 2. **CONSOMMATION (quantity)**:
-   - La valeur en kWh se trouve dans la ligne "Consommation" 
-   - C'est la QUANTITÉ d'énergie consommée, PAS le prix
+   - Cherche le label "الكمية" (Al-Kamiya = Quantité en arabe) ou "Quantité"
+   - La valeur numérique associée est la CONSOMMATION en kWh
+   - C'est la QUANTITÉ d'énergie, PAS le prix!
    - L'unité est TOUJOURS "kWh" pour l'électricité STEG
 
 3. **MONTANT À PAYER (amount_ttc)**:
-   - Se trouve dans la zone "MONTANT À PAYER" ou "NET À PAYER"
+   - Cherche le label "المبلغ المطلوب" (Al-Mablagh Al-Matloub = Montant demandé)
+   - OU cherche "Montant à payer"
    - Montant en Dinars Tunisiens (TND)
+   - Attention au format: 302.000 signifie 302 TND (le point est séparateur de milliers)
 
-4. **Supplier**: Toujours "STEG" pour ces factures
+4. **Supplier**: Toujours "STEG" pour ces factures tunisiennes d'électricité
 
 ## Instructions générales d'extraction
 

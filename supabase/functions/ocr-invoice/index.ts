@@ -31,6 +31,35 @@ const OCR_SYSTEM_PROMPT = `Tu es un expert en extraction de données de factures
 - **waste_invoice**: Traitement des déchets - Cherche: tonnes
 - **water_bill**: Factures eau - Cherche: m³
 
+## ========== INSTRUCTIONS SPÉCIFIQUES FACTURES CARBURANT (TotalEnergies, Shell, etc.) ==========
+
+TRÈS IMPORTANT pour les factures de CARBURANT multi-produits:
+
+1. **EXTRACTION MULTI-LIGNES**: Analyse le tableau "Produits et services consommés" ligne par ligne
+
+2. **PRODUITS À EXTRAIRE** (carburants UNIQUEMENT):
+   - "GASOIL" → facteur d'émission 2.67 kg CO2e/L
+   - "GASOIL SS" (sans soufre) → facteur d'émission 2.64 kg CO2e/L
+   - "GO SS" ou "GO SS EXC" → facteur d'émission 2.64 kg CO2e/L
+   
+3. **PRODUITS À IGNORER** (services):
+   - "Lavage", "Timbre Fiscal", "Abonnement Carte", "Prestation", "SERVICES"
+
+4. **POUR CHAQUE LIGNE DE CARBURANT, EXTRAIS**:
+   - product_name: nom exact du produit
+   - quantity: la quantité en litres (colonne "Quantité")
+   - ghg_category: "diesel" pour tous les gasoils
+   - emission_factor: 2.67 pour GASOIL standard, 2.64 pour variantes SS
+
+5. **MÉTADONNÉES À EXTRAIRE**:
+   - invoice_number: numéro de facture (ex: FA23/288495)
+   - invoice_date: date du document (ex: 31/10/2023)
+   - client_name: nom du client (ex: SOHATRAM)
+   - supplier_name: nom du fournisseur (ex: TotalEnergies)
+
+6. **FORMAT DE SORTIE MULTI-LIGNES**:
+   Retourne un JSON avec un tableau "fuel_items" contenant une entrée par type de carburant.
+
 ## ========== INSTRUCTIONS SPÉCIFIQUES FACTURES GAZ STEG (Tunisie) ==========
 
 TRÈS IMPORTANT pour les factures de GAZ tunisiennes:
@@ -82,20 +111,61 @@ CRITIQUE - Ne confonds PAS:
 
 ## Format de sortie JSON
 
-Tu DOIS retourner un JSON valide avec cette structure:
+### Pour factures CARBURANT (fuel_invoice) - FORMAT MULTI-LIGNES:
 {
-  "document_type": "electricity_bill|gas_bill|fuel_invoice|heating_oil_invoice|lpg_invoice|refrigerant_invoice|district_heating|district_cooling|transport_invoice|business_travel|freight_invoice|purchase_invoice|waste_invoice|water_bill|other",
-  "supplier_name": "nom du fournisseur (STEG pour factures tunisiennes)",
+  "document_type": "fuel_invoice",
+  "supplier_name": "TotalEnergies",
+  "invoice_number": "FA23/288495",
+  "invoice_date": "2023-10-31",
+  "client_name": "SOHATRAM",
+  "period_start": "2023-10-01",
+  "period_end": "2023-10-31",
+  "fuel_items": [
+    {
+      "product_name": "GASOIL",
+      "quantity": 80553.22,
+      "unit": "litres",
+      "ghg_category": "diesel",
+      "emission_factor": 2.67,
+      "co2_kg": 215076.10
+    },
+    {
+      "product_name": "GASOIL SS",
+      "quantity": 882.72,
+      "unit": "litres",
+      "ghg_category": "diesel",
+      "emission_factor": 2.64,
+      "co2_kg": 2330.38
+    },
+    {
+      "product_name": "GO SS EXC",
+      "quantity": 98.83,
+      "unit": "litres",
+      "ghg_category": "diesel",
+      "emission_factor": 2.64,
+      "co2_kg": 260.91
+    }
+  ],
+  "total_quantity": 81534.77,
+  "total_co2_kg": 217667.39,
+  "confidence_score": 0.9,
+  "extraction_notes": "3 types de carburant extraits du tableau Produits et services consommés"
+}
+
+### Pour autres factures - FORMAT SIMPLE:
+{
+  "document_type": "electricity_bill|gas_bill|...",
+  "supplier_name": "nom du fournisseur",
   "invoice_number": "numéro de facture",
   "period_start": "YYYY-MM-DD",
   "period_end": "YYYY-MM-DD",
-  "quantity": nombre (la valeur de CONSOMMATION - 536 pour gaz, kWh pour électricité),
+  "quantity": nombre,
   "unit": "thermies|kWh|litres|m3|km|tonnes|t.km|kg",
   "amount_ht": nombre ou null,
-  "amount_ttc": nombre ou null (null pour factures gaz),
+  "amount_ttc": nombre ou null,
   "currency": "TND|EUR|USD",
   "ghg_scope": "scope1|scope2|scope3",
-  "ghg_category": "electricite|gaz_naturel|diesel|essence|gpl|fioul|transport_routier|transport_aerien|dechets|achats",
+  "ghg_category": "electricite|gaz_naturel|diesel|essence|gpl|fioul|transport_routier",
   "confidence_score": nombre de 0 à 1,
   "field_confidences": {
     "supplier_name": 0.0-1.0,
@@ -175,7 +245,27 @@ serve(async (req) => {
     // Build extraction instruction based on document type
     let extractionInstruction = "Analyse cette facture et extrais les informations de consommation d'énergie.";
     
-    if (document_type === 'gas_bill') {
+    if (document_type === 'fuel_invoice') {
+      extractionInstruction = `IMPORTANT: Ce document est une FACTURE DE CARBURANT (fuel_invoice) - Relevé TotalEnergies ou similaire.
+
+EXTRACTION MULTI-LIGNES OBLIGATOIRE:
+1. Analyse le tableau "Produits et services consommés" LIGNE PAR LIGNE
+2. EXTRAIS UNIQUEMENT les lignes de carburant:
+   - GASOIL → facteur 2.67 kg CO2e/L
+   - GASOIL SS (Sans Soufre) → facteur 2.64 kg CO2e/L
+   - GO SS ou GO SS EXC → facteur 2.64 kg CO2e/L
+3. IGNORE les services: Lavage, Timbre Fiscal, Abonnement Carte, Prestation
+4. Pour chaque carburant, extrais la Quantité (en litres)
+
+MÉTADONNÉES À EXTRAIRE:
+- Numéro de facture (ex: FA23/288495)
+- Date de facture
+- Nom du client (ex: SOHATRAM)
+- Fournisseur (ex: TotalEnergies)
+
+Retourne un JSON avec le tableau "fuel_items" contenant une entrée par type de carburant trouvé.
+Calcule co2_kg = quantity * emission_factor pour chaque ligne.`;
+    } else if (document_type === 'gas_bill') {
       extractionInstruction = `IMPORTANT: Ce document est une FACTURE DE GAZ (gas_bill).
 Extrais UNIQUEMENT les données de la section "Total Gaz" / "إجمالي الغاز":
 - La quantité de gaz consommée en thermies (cherche la valeur dans la colonne Quantité de la section Gaz)

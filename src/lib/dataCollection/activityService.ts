@@ -7,6 +7,16 @@ interface ServiceResponse<T> {
   error?: string;
 }
 
+// Interface pour les items de carburant multi-lignes
+interface FuelItem {
+  product_name: string;
+  quantity: number;
+  unit: string;
+  ghg_category: string;
+  emission_factor: number;
+  co2_kg: number;
+}
+
 class ActivityDataService {
 
   // Créer une donnée d'activité à partir des données extraites
@@ -62,6 +72,53 @@ class ActivityDataService {
       return { data: data as unknown as ActivityData };
     } catch (error) {
       return { error: `Erreur lors de la création: ${error}` };
+    }
+  }
+
+  // Créer plusieurs données d'activité à partir des items de carburant multi-lignes
+  async createMultipleFuelActivities(
+    documentId: string,
+    extractedData: ExtractedData,
+    fuelItems: FuelItem[],
+    organizationId?: string
+  ): Promise<ServiceResponse<ActivityData[]>> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Utilisateur non authentifié');
+
+      const activitiesToInsert = fuelItems.map((item) => ({
+        user_id: user.id,
+        organization_id: organizationId || null,
+        source_type: 'ocr' as SourceType,
+        source_document_id: documentId,
+        source_reference: `${extractedData.invoice_number} - ${item.product_name}`,
+        period_start: extractedData.period_start,
+        period_end: extractedData.period_end,
+        ghg_scope: 'scope1' as GhgScope,
+        ghg_category: item.ghg_category || 'diesel',
+        ghg_subcategory: item.product_name,
+        quantity: item.quantity || 0,
+        unit: item.unit || 'litres',
+        amount_ht: null,
+        amount_ttc: null,
+        currency_code: extractedData.currency || 'TND',
+        supplier_name: extractedData.supplier_name,
+        emission_factor_value: item.emission_factor,
+        emission_factor_unit: 'kgCO2e/L',
+        emission_factor_source: 'ADEME Base Carbone - Carburants',
+        co2_equivalent_kg: item.co2_kg,
+        status: 'draft'
+      }));
+
+      const { data, error } = await supabase
+        .from('activity_data')
+        .insert(activitiesToInsert)
+        .select();
+
+      if (error) throw error;
+      return { data: (data || []) as unknown as ActivityData[] };
+    } catch (error) {
+      return { error: `Erreur lors de la création des activités carburant: ${error}` };
     }
   }
 

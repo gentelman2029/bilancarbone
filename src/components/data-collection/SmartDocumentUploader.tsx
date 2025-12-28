@@ -109,7 +109,7 @@ export function SmartDocumentUploader({ onUploadComplete }: SmartDocumentUploade
           });
         }
 
-        const ocrResult = await documentCollectionService.processOCR(result.data.id, imageBase64);
+        const ocrResult = await documentCollectionService.processOCR(result.data.id, imageBase64, selectedDocumentType);
         
         clearInterval(ocrProgressInterval);
 

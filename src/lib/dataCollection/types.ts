@@ -177,7 +177,7 @@ export interface ErpConnection {
 // GHG Categories mapping
 export const GHG_CATEGORIES = {
   scope1: [
-    { id: 'gaz_naturel', label: 'Gaz naturel', unit: 'm3' },
+    { id: 'gaz_naturel', label: 'Gaz naturel', unit: 'thermies' },
     { id: 'diesel', label: 'Diesel (véhicules)', unit: 'litres' },
     { id: 'essence', label: 'Essence (véhicules)', unit: 'litres' },
     { id: 'gpl', label: 'GPL', unit: 'litres' },

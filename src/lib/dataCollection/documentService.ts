@@ -58,12 +58,13 @@ class DocumentCollectionService {
   }
 
   // Lancer l'OCR sur un document
-  async processOCR(documentId: string, imageBase64?: string): Promise<ServiceResponse<ExtractedData>> {
+  async processOCR(documentId: string, imageBase64?: string, documentType?: DocumentType): Promise<ServiceResponse<ExtractedData>> {
     try {
       const { data, error } = await supabase.functions.invoke('ocr-invoice', {
         body: { 
           document_id: documentId,
-          image_base64: imageBase64
+          image_base64: imageBase64,
+          document_type: documentType
         }
       });
 

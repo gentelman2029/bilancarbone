@@ -359,6 +359,7 @@ export function DocumentExtractionReview({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="kWh">kWh</SelectItem>
+                  <SelectItem value="thermies">Thermies</SelectItem>
                   <SelectItem value="litres">Litres</SelectItem>
                   <SelectItem value="m3">m³</SelectItem>
                   <SelectItem value="km">km</SelectItem>

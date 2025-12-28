@@ -59,10 +59,21 @@ export interface DataCollectionDocument {
   updated_at: string;
 }
 
+export interface FuelItem {
+  product_name: string;
+  quantity: number;
+  unit: string;
+  ghg_category: string;
+  emission_factor: number;
+  co2_kg: number;
+}
+
 export interface ExtractedData {
   document_type?: string;
   supplier_name?: string;
   invoice_number?: string;
+  invoice_date?: string;
+  client_name?: string;
   period_start?: string;
   period_end?: string;
   quantity?: number;
@@ -79,6 +90,10 @@ export interface ExtractedData {
   // Calculated emissions
   calculated_co2_kg?: number;
   co2_equivalent_kg?: number;
+  // Multi-line fuel items (for fuel_invoice)
+  fuel_items?: FuelItem[];
+  total_quantity?: number;
+  total_co2_kg?: number;
 }
 
 export interface ActivityData {

@@ -13,6 +13,7 @@ import { documentCollectionService } from '@/lib/dataCollection/documentService'
 import { activityDataService } from '@/lib/dataCollection/activityService';
 import { 
   ExtractedData,
+  FuelItem,
   DOCUMENT_TYPE_LABELS,
   GHG_CATEGORIES,
   DocumentType
@@ -52,12 +53,16 @@ export function DocumentExtractionReview({
   onReject 
 }: DocumentExtractionReviewProps) {
   const [editedData, setEditedData] = useState<ExtractedData>(document.extracted_data);
+  const [editedFuelItems, setEditedFuelItems] = useState<FuelItem[]>(document.extracted_data.fuel_items || []);
   const [validationNotes, setValidationNotes] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [fieldConfidences, setFieldConfidences] = useState<FieldConfidence>({});
   const [calculatedEmissions, setCalculatedEmissions] = useState<number | null>(null);
   const [emissionFactor, setEmissionFactor] = useState<EmissionFactor | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  
+  // Check if this is a multi-line fuel invoice
+  const isFuelInvoice = editedData.document_type === 'fuel_invoice' && editedFuelItems.length > 0;
 
   // Parse field confidences from extracted data or generate based on overall score
   useEffect(() => {
@@ -78,9 +83,17 @@ export function DocumentExtractionReview({
     }
   }, [document]);
 
-  // Calculate emissions when quantity or category changes
+  // Calculate emissions when quantity or category changes (for single-line documents)
   useEffect(() => {
     const calculateEmissions = async () => {
+      // For fuel invoices with multi-line items, use the sum from fuel_items
+      if (isFuelInvoice) {
+        const totalCo2 = editedFuelItems.reduce((sum, item) => sum + (item.co2_kg || 0), 0);
+        setCalculatedEmissions(totalCo2);
+        setEmissionFactor(null);
+        return;
+      }
+      
       if (!editedData.quantity || !editedData.ghg_category) {
         setCalculatedEmissions(null);
         return;
@@ -133,7 +146,24 @@ export function DocumentExtractionReview({
     };
 
     calculateEmissions();
-  }, [editedData.quantity, editedData.ghg_category]);
+  }, [editedData.quantity, editedData.ghg_category, isFuelInvoice, editedFuelItems]);
+  
+  // Update fuel item quantity and recalculate CO2
+  const updateFuelItem = (index: number, field: keyof FuelItem, value: number | string) => {
+    setEditedFuelItems(prev => {
+      const updated = [...prev];
+      if (field === 'quantity' && typeof value === 'number') {
+        updated[index] = {
+          ...updated[index],
+          quantity: value,
+          co2_kg: value * updated[index].emission_factor
+        };
+      } else {
+        updated[index] = { ...updated[index], [field]: value };
+      }
+      return updated;
+    });
+  };
 
   const getConfidenceColor = (confidence: number) => {
     if (confidence >= 0.8) return 'border-green-500';
@@ -157,20 +187,34 @@ export function DocumentExtractionReview({
       // Update document with validated data
       await documentCollectionService.updateExtractedData(
         document.id, 
-        { ...editedData, calculated_co2_kg: calculatedEmissions },
+        { ...editedData, fuel_items: editedFuelItems, calculated_co2_kg: calculatedEmissions },
         'validated', 
         validationNotes || undefined
       );
       
-      // Create activity data with calculated emissions
-      await activityDataService.createFromExtractedData(document.id, {
-        ...editedData,
-        co2_equivalent_kg: calculatedEmissions
-      });
+      // Create activity data - different logic for fuel invoices with multi-line items
+      if (isFuelInvoice && editedFuelItems.length > 0) {
+        // Create multiple activity entries for each fuel type
+        await activityDataService.createMultipleFuelActivities(
+          document.id, 
+          editedData, 
+          editedFuelItems
+        );
+        
+        toast.success('Facture carburant validée', {
+          description: `${editedFuelItems.length} lignes de carburant créées. Total: ${calculatedEmissions?.toFixed(2)} kg CO2e`
+        });
+      } else {
+        // Single activity for other document types
+        await activityDataService.createFromExtractedData(document.id, {
+          ...editedData,
+          co2_equivalent_kg: calculatedEmissions
+        });
 
-      toast.success('Document validé', {
-        description: `${calculatedEmissions?.toFixed(2)} kg CO2e calculé et intégré aux données d'activité.`
-      });
+        toast.success('Document validé', {
+          description: `${calculatedEmissions?.toFixed(2)} kg CO2e calculé et intégré aux données d'activité.`
+        });
+      }
 
       onValidate();
     } catch (error) {
@@ -330,45 +374,91 @@ export function DocumentExtractionReview({
             </div>
           </div>
 
-          {/* Consumption Value - CRITICAL FIELD */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="flex items-center font-semibold text-primary">
-                🔢 Consommation
-                {getConfidenceBadge(fieldConfidences.quantity || 0.8)}
+          {/* Multi-line Fuel Items Table (for fuel invoices) */}
+          {isFuelInvoice && editedFuelItems.length > 0 && (
+            <div className="space-y-3">
+              <Label className="font-semibold text-primary flex items-center gap-2">
+                ⛽ Détail des carburants ({editedFuelItems.length} lignes)
               </Label>
-              <Input 
-                type="number"
-                value={editedData.quantity ?? ''} 
-                onChange={(e) => setEditedData({...editedData, quantity: e.target.value ? parseFloat(e.target.value) : undefined})}
-                className={`text-lg font-medium ${getConfidenceColor(fieldConfidences.quantity || 0.8)}`}
-                placeholder="Quantité consommée"
-              />
+              <div className="rounded-lg border overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="px-3 py-2 text-left">Produit</th>
+                      <th className="px-3 py-2 text-right">Quantité (L)</th>
+                      <th className="px-3 py-2 text-right">Facteur</th>
+                      <th className="px-3 py-2 text-right">CO₂ (kg)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {editedFuelItems.map((item, idx) => (
+                      <tr key={idx} className="border-t">
+                        <td className="px-3 py-2 font-medium">{item.product_name}</td>
+                        <td className="px-3 py-2 text-right">
+                          <Input 
+                            type="number"
+                            value={item.quantity}
+                            onChange={(e) => updateFuelItem(idx, 'quantity', parseFloat(e.target.value) || 0)}
+                            className="w-28 h-8 text-right ml-auto"
+                          />
+                        </td>
+                        <td className="px-3 py-2 text-right text-muted-foreground">{item.emission_factor}</td>
+                        <td className="px-3 py-2 text-right font-medium text-green-600">{item.co2_kg.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                    <tr className="border-t bg-green-500/10 font-bold">
+                      <td className="px-3 py-2">TOTAL</td>
+                      <td className="px-3 py-2 text-right">{editedFuelItems.reduce((s, i) => s + i.quantity, 0).toLocaleString()}</td>
+                      <td className="px-3 py-2"></td>
+                      <td className="px-3 py-2 text-right text-green-600">{editedFuelItems.reduce((s, i) => s + i.co2_kg, 0).toFixed(2)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label className="flex items-center">
-                Unité
-                {getConfidenceBadge(fieldConfidences.unit || 0.8)}
-              </Label>
-              <Select 
-                value={editedData.unit || ''} 
-                onValueChange={(v) => setEditedData({...editedData, unit: v})}
-              >
-                <SelectTrigger className={getConfidenceColor(fieldConfidences.unit || 0.8)}>
-                  <SelectValue placeholder="Sélectionner..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="kWh">kWh</SelectItem>
-                  <SelectItem value="thermies">Thermies</SelectItem>
-                  <SelectItem value="litres">Litres</SelectItem>
-                  <SelectItem value="m3">m³</SelectItem>
-                  <SelectItem value="km">km</SelectItem>
-                  <SelectItem value="tonnes">Tonnes</SelectItem>
-                  <SelectItem value="t.km">Tonnes.km</SelectItem>
-                </SelectContent>
-              </Select>
+          )}
+
+          {/* Consumption Value - SINGLE LINE (hide for fuel invoices) */}
+          {!isFuelInvoice && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="flex items-center font-semibold text-primary">
+                  🔢 Consommation
+                  {getConfidenceBadge(fieldConfidences.quantity || 0.8)}
+                </Label>
+                <Input 
+                  type="number"
+                  value={editedData.quantity ?? ''} 
+                  onChange={(e) => setEditedData({...editedData, quantity: e.target.value ? parseFloat(e.target.value) : undefined})}
+                  className={`text-lg font-medium ${getConfidenceColor(fieldConfidences.quantity || 0.8)}`}
+                  placeholder="Quantité consommée"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center">
+                  Unité
+                  {getConfidenceBadge(fieldConfidences.unit || 0.8)}
+                </Label>
+                <Select 
+                  value={editedData.unit || ''} 
+                  onValueChange={(v) => setEditedData({...editedData, unit: v})}
+                >
+                  <SelectTrigger className={getConfidenceColor(fieldConfidences.unit || 0.8)}>
+                    <SelectValue placeholder="Sélectionner..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="kWh">kWh</SelectItem>
+                    <SelectItem value="thermies">Thermies</SelectItem>
+                    <SelectItem value="litres">Litres</SelectItem>
+                    <SelectItem value="m3">m³</SelectItem>
+                    <SelectItem value="km">km</SelectItem>
+                    <SelectItem value="tonnes">Tonnes</SelectItem>
+                    <SelectItem value="t.km">Tonnes.km</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* GHG Scope & Category */}
           <div className="grid grid-cols-2 gap-4">

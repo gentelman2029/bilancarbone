@@ -592,7 +592,7 @@ export function DocumentExtractionReview({
             </Button>
             <Button 
               onClick={handleValidate}
-              disabled={isProcessing || !editedData.quantity || !calculatedEmissions}
+              disabled={isProcessing || (!isFuelInvoice && !editedData.quantity) || !calculatedEmissions}
               className="flex-1 bg-green-600 hover:bg-green-700"
             >
               {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}

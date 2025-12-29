@@ -192,63 +192,66 @@ serve(async (req) => {
     // Build extraction instruction based on document type
     let extractionInstruction = "Analyse cette facture et extrais les informations de consommation d'énergie.";
     
-    if (document_type === 'fuel_invoice') {
-      extractionInstruction = `IMPORTANT: FACTURE DE CARBURANT - TotalEnergies, Agil, OLA Energy, Shell.
+if (document_type === 'fuel_invoice') {
+      extractionInstruction = `FACTURE DE CARBURANT - EXTRACTION PRÉCISE
 
-=== RÈGLE CRITIQUE N°1 - QUANTITÉ EXACTE ===
-Tu DOIS extraire la VALEUR EXACTE de la colonne "Quantité" ou "Quant./ Base" du tableau.
-NE PAS arrondir. NE PAS estimer. NE PAS inventer.
+=== RÈGLE N°1 - QUANTITÉ EXACTE (CRITIQUE) ===
+Extrais la VALEUR EXACTE de la colonne "Quant./ Base" ou "Quantité".
+NE PAS arrondir. NE PAS estimer.
 
-EXEMPLES:
-- Facture Agil: Gasoil | 304,811 → quantity = 304.811
-- Facture OLA Energy: 182,177 → quantity = 182.177
-- Facture TotalEnergies: 80 553,22 → quantity = 80553.22
-
-CONVERSIONS:
+CONVERSIONS obligatoires:
 - Virgule française → Point décimal: "182,177" → 182.177
 - Espaces milliers supprimés: "80 553,22" → 80553.22
+- "304,811" → 304.811
 
-=== RÈGLE N°2 - DÉTECTION FORMAT ===
-FORMAT OLA ENERGY: 
-- N° Facture: Cherche "Facture n°:" (ex: CCIN120769)
-- Date: Cherche "Tunis le:" (ex: 30/04/2025 → 2025-04-30)
-- Section "Consommation Carburant" avec colonnes Produit | Quant./ Base
-- Produit typique: "O'ptimium ECO PLUS Gasoil Sans Soufre"
-- IGNORER: "Prestation", "Conso Carburant et Prestation", "Timbre Fiscal"
-
-FORMAT AGIL: 
-- Colonnes "Libellé Produit" et "Quantité"
-- Exemple ligne: Gasoil | 304,811 | 13,00 | ...
-
-FORMAT TOTALENERGIES: 
-- Tableau "Produits et services consommés"
-- Colonnes: Produit | Quantité | Montant
-
-=== RÈGLE N°3 - IDENTITÉ (obligatoire) ===
-- invoice_number: Cherche "Facture n°:", "N° BLF" ou "Facture N°"
-- invoice_date: Date au format YYYY-MM-DD (30/04/2025 → 2025-04-30)
+=== RÈGLE N°2 - CHAMPS À EXTRAIRE ===
+OBLIGATOIRES:
+- invoice_number: Cherche "Facture n°:" (ex: CCIN120769) ou "N° BLF"
+- invoice_date: Format YYYY-MM-DD (ex: "30/04/2025" → "2025-04-30")
+  - OLA Energy: Cherche après "Tunis le:"
 - supplier_name: OLA Energy, Agil, TotalEnergies, Shell...
-- NE PAS extraire: client_name, period_start, period_end
+
+NE PAS EXTRAIRE:
+- client_name (nom du client)
+- period_start (début de période)
+- period_end (fin de période)
+
+=== RÈGLE N°3 - PRODUITS CARBURANT ===
+EXTRAIRE uniquement les lignes carburant:
+- "O'ptimium ECO PLUS Gasoil Sans Soufre" → emission_factor: 2.64
+- "GASOIL SS" / "GO SS" / "Gasoil Sans Soufre" → emission_factor: 2.64
+- "GASOIL" / "Gasoil" standard → emission_factor: 2.67
+
+IGNORER ces lignes:
+- "Prestation"
+- "Conso Carburant et Prestation" (ligne récapitulative)
+- "Timbre Fiscal"
+- "Lavage", "Abonnement", "TAG", "SERVICES"
+- Lignes TVA, taxes
 
 === RÈGLE N°4 - CALCUL CO2 ===
-Pour CHAQUE produit carburant:
-- GASOIL/Gasoil standard → emission_factor: 2.67
-- GASOIL SS/Sans Soufre/O'ptimium ECO PLUS → emission_factor: 2.64
-- co2_kg = quantity × emission_factor (ex: 182.177 × 2.64 = 480.95)
-
-IGNORER: Prestation, Lavage, Timbre, Abonnement, TAG, TVA, services
+co2_kg = quantity × emission_factor
+Exemple: 182.177 × 2.64 = 480.95
 
 === FORMAT JSON OBLIGATOIRE ===
 {
   "document_type": "fuel_invoice",
+  "supplier_name": "OLA Energy",
   "invoice_number": "CCIN120769",
   "invoice_date": "2025-04-30",
-  "supplier_name": "OLA Energy",
   "fuel_items": [
-    {"product_name": "O'ptimium ECO PLUS Gasoil Sans Soufre", "quantity": 182.177, "emission_factor": 2.64, "co2_kg": 480.95}
+    {
+      "product_name": "O'ptimium ECO PLUS Gasoil Sans Soufre",
+      "quantity": 182.177,
+      "unit": "litres",
+      "ghg_category": "diesel",
+      "emission_factor": 2.64,
+      "co2_kg": 480.95
+    }
   ],
   "total_quantity": 182.177,
-  "total_co2_kg": 480.95
+  "total_co2_kg": 480.95,
+  "confidence_score": 0.9
 }`;
     } else if (document_type === 'gas_bill') {
       extractionInstruction = `IMPORTANT: Ce document est une FACTURE DE GAZ (gas_bill).

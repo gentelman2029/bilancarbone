@@ -81,16 +81,21 @@ TRÈS IMPORTANT pour les factures de CARBURANT - Supporte plusieurs formats:
 - Cherche le type de carburant (ex: "SUPER SANS PLOMB", "GASOIL")
 - Cherche la date de validité (ex: "Validité 31/12/2024")
 
+### TABLE DE RÉFÉRENCE DES PRIX (OBLIGATOIRE):
+| Carburant | Prix TND/L | Facteur CO2 (kg/L) |
+|-----------|------------|-------------------|
+| Essence Sans Plomb (SUPER) | 2.525 | 2.31 |
+| Essence Sans Plomb Premier | 2.855 | 2.31 |
+| Gasoil Sans Soufre (Gasoil 50) | 2.205 | 2.68 |
+| Gasoil Sans Soufre Super | 2.550 | 2.68 |
+| Gasoil (Normal) | 1.985 | 2.68 |
+
 ### CALCUL DE QUANTITÉ pour Bons Carburant:
 Puisque la quantité n'est pas indiquée, CALCULE-LA à partir du montant:
-- Prix de référence Sans Plomb (SUPER): 2.525 TND/L
-- Prix de référence Gasoil: 2.235 TND/L
-
 Formule: quantity = amount_value / prix_unitaire
+ARRONDIR à 3 décimales.
 
-### Facteurs d'émission Bons Carburant:
-- SUPER SANS PLOMB → emission_factor: 2.30 kg CO2e/L (essence)
-- GASOIL → emission_factor: 2.67 kg CO2e/L (diesel)
+Exemple: 30 TND / 2.525 = 11.881 L (pas 11.88)
 
 ### FORMAT JSON pour Bon Carburant:
 {
@@ -105,17 +110,17 @@ Formule: quantity = amount_value / prix_unitaire
       "product_name": "SUPER SANS PLOMB",
       "amount_tnd": 30,
       "unit_price_tnd": 2.525,
-      "quantity": 11.88,
+      "quantity": 11.881,
       "unit": "litres",
       "ghg_category": "essence",
-      "emission_factor": 2.30,
-      "co2_kg": 27.32
+      "emission_factor": 2.31,
+      "co2_kg": 27.45
     }
   ],
-  "total_quantity": 11.88,
-  "total_co2_kg": 27.32,
+  "total_quantity": 11.881,
+  "total_co2_kg": 27.45,
   "confidence_score": 0.85,
-  "extraction_notes": "Bon carburant - quantité calculée à partir du montant"
+  "extraction_notes": "Bon carburant - quantité calculée à partir du montant (3 décimales)"
 }
 
 ### POUR CHAQUE LIGNE DE CARBURANT:
@@ -246,28 +251,36 @@ Ce document est un BON CARBURANT (ticket prépayé), PAS une facture.
 - document_type DOIT être "fuel_voucher"
 - Cherche le numéro du bon (ex: "8320-210801")
 - Cherche la date de validité (ex: "31/12/2024" → "2024-12-31")
+- NE PAS extraire: client_name, period_start, period_end
 
 === RÈGLE N°2 - MONTANT ===
 Extrais le montant en gros caractères (ex: "30 D" = 30 TND).
 - Le montant est en DINARS TUNISIENS (TND)
 - Convertis "D" en TND
 
-=== RÈGLE N°3 - TYPE DE CARBURANT ===
-Identifie le type de carburant:
-- "SUPER SANS PLOMB" → essence, emission_factor: 2.30
-- "GASOIL" → diesel, emission_factor: 2.67
+=== RÈGLE N°3 - TABLE DE PRIX DE RÉFÉRENCE (OBLIGATOIRE) ===
+| Carburant | Prix TND/L | Facteur CO2 |
+|-----------|------------|-------------|
+| Essence Sans Plomb (SUPER) | 2.525 | 2.31 |
+| Essence Sans Plomb Premier | 2.855 | 2.31 |
+| Gasoil Sans Soufre (Gasoil 50) | 2.205 | 2.68 |
+| Gasoil Sans Soufre Super | 2.550 | 2.68 |
+| Gasoil (Normal) | 1.985 | 2.68 |
 
-=== RÈGLE N°4 - CALCUL DE QUANTITÉ ===
-CALCULE la quantité à partir du montant:
-- Prix Sans Plomb: 2.525 TND/L
-- Prix Gasoil: 2.235 TND/L
+=== RÈGLE N°4 - IDENTIFICATION CARBURANT ===
+- "SUPER SANS PLOMB" / "SUPER" → essence, prix: 2.525, emission_factor: 2.31
+- "SANS PLOMB PREMIER" → essence, prix: 2.855, emission_factor: 2.31
+- "GASOIL 50" / "GASOIL SS" / "GASOIL SANS SOUFRE" → diesel, prix: 2.205, emission_factor: 2.68
+- "GASOIL SS SUPER" → diesel, prix: 2.550, emission_factor: 2.68
+- "GASOIL" (normal) → diesel, prix: 1.985, emission_factor: 2.68
 
+=== RÈGLE N°5 - CALCUL DE QUANTITÉ (3 décimales) ===
 quantity = amount_value / prix_unitaire
-Exemple: 30 TND / 2.525 = 11.88 L
+Exemple: 30 TND / 2.525 = 11.881 L (PAS 11.88)
 
-=== RÈGLE N°5 - CALCUL CO2 ===
+=== RÈGLE N°6 - CALCUL CO2 ===
 co2_kg = quantity × emission_factor
-Exemple: 11.88 × 2.30 = 27.32 kg CO2
+Exemple: 11.881 × 2.31 = 27.44 kg CO2
 
 === FORMAT JSON OBLIGATOIRE ===
 {
@@ -282,15 +295,15 @@ Exemple: 11.88 × 2.30 = 27.32 kg CO2
       "product_name": "SUPER SANS PLOMB",
       "amount_tnd": 30,
       "unit_price_tnd": 2.525,
-      "quantity": 11.88,
+      "quantity": 11.881,
       "unit": "litres",
       "ghg_category": "essence",
-      "emission_factor": 2.30,
-      "co2_kg": 27.32
+      "emission_factor": 2.31,
+      "co2_kg": 27.45
     }
   ],
-  "total_quantity": 11.88,
-  "total_co2_kg": 27.32,
+  "total_quantity": 11.881,
+  "total_co2_kg": 27.45,
   "confidence_score": 0.85,
   "extraction_notes": "Bon carburant - quantité calculée à partir du montant"
 }`;

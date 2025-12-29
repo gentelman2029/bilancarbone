@@ -7,6 +7,7 @@ export type DocumentType =
   // Scope 1 - Combustibles et carburants
   | 'gas_bill'              // Facture gaz naturel
   | 'fuel_invoice'          // Facture carburant (diesel, essence)
+  | 'fuel_voucher'          // Bon carburant (ticket prépayé)
   | 'heating_oil_invoice'   // Facture fioul domestique
   | 'lpg_invoice'           // Facture GPL/propane
   | 'refrigerant_invoice'   // Facture fluides frigorigènes
@@ -216,6 +217,7 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   // Scope 1
   gas_bill: 'Facture gaz naturel',
   fuel_invoice: 'Facture carburant (diesel/essence)',
+  fuel_voucher: 'Bon carburant',
   heating_oil_invoice: 'Facture fioul domestique',
   lpg_invoice: 'Facture GPL/propane',
   refrigerant_invoice: 'Facture fluides frigorigènes',

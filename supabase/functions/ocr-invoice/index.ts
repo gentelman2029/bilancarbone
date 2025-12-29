@@ -72,6 +72,52 @@ TRÈS IMPORTANT pour les factures de CARBURANT - Supporte plusieurs formats:
 - SERVICES, Achat TAG, Frais de gestion
 - TVA, taxes, "Conso Carburant et Prestation" (ligne récap)
 
+## ========== BONS CARBURANT (Tickets prépayés) ==========
+
+### FORMAT 4: Bon Carburant Agil / Shell / OLA Energy
+- Document de type "fuel_voucher" (pas fuel_invoice)
+- Caractéristiques: Pas de quantité en litres, seulement un MONTANT en gros caractères
+- Cherche le montant en DINARS (ex: "30 D" = 30 TND)
+- Cherche le type de carburant (ex: "SUPER SANS PLOMB", "GASOIL")
+- Cherche la date de validité (ex: "Validité 31/12/2024")
+
+### CALCUL DE QUANTITÉ pour Bons Carburant:
+Puisque la quantité n'est pas indiquée, CALCULE-LA à partir du montant:
+- Prix de référence Sans Plomb (SUPER): 2.525 TND/L
+- Prix de référence Gasoil: 2.235 TND/L
+
+Formule: quantity = amount_value / prix_unitaire
+
+### Facteurs d'émission Bons Carburant:
+- SUPER SANS PLOMB → emission_factor: 2.30 kg CO2e/L (essence)
+- GASOIL → emission_factor: 2.67 kg CO2e/L (diesel)
+
+### FORMAT JSON pour Bon Carburant:
+{
+  "document_type": "fuel_voucher",
+  "supplier_name": "Agil",
+  "voucher_number": "8320-210801",
+  "validity_date": "2024-12-31",
+  "amount_value": 30,
+  "currency": "TND",
+  "fuel_items": [
+    {
+      "product_name": "SUPER SANS PLOMB",
+      "amount_tnd": 30,
+      "unit_price_tnd": 2.525,
+      "quantity": 11.88,
+      "unit": "litres",
+      "ghg_category": "essence",
+      "emission_factor": 2.30,
+      "co2_kg": 27.32
+    }
+  ],
+  "total_quantity": 11.88,
+  "total_co2_kg": 27.32,
+  "confidence_score": 0.85,
+  "extraction_notes": "Bon carburant - quantité calculée à partir du montant"
+}
+
 ### POUR CHAQUE LIGNE DE CARBURANT:
 - product_name: nom exact du produit
 - quantity: la valeur numérique EXACTE en litres (ex: 182.177, PAS 182 ou 200)
@@ -192,7 +238,63 @@ serve(async (req) => {
     // Build extraction instruction based on document type
     let extractionInstruction = "Analyse cette facture et extrais les informations de consommation d'énergie.";
     
-if (document_type === 'fuel_invoice') {
+if (document_type === 'fuel_voucher') {
+      extractionInstruction = `BON CARBURANT (Ticket prépayé) - EXTRACTION
+
+=== RÈGLE N°1 - IDENTIFICATION ===
+Ce document est un BON CARBURANT (ticket prépayé), PAS une facture.
+- document_type DOIT être "fuel_voucher"
+- Cherche le numéro du bon (ex: "8320-210801")
+- Cherche la date de validité (ex: "31/12/2024" → "2024-12-31")
+
+=== RÈGLE N°2 - MONTANT ===
+Extrais le montant en gros caractères (ex: "30 D" = 30 TND).
+- Le montant est en DINARS TUNISIENS (TND)
+- Convertis "D" en TND
+
+=== RÈGLE N°3 - TYPE DE CARBURANT ===
+Identifie le type de carburant:
+- "SUPER SANS PLOMB" → essence, emission_factor: 2.30
+- "GASOIL" → diesel, emission_factor: 2.67
+
+=== RÈGLE N°4 - CALCUL DE QUANTITÉ ===
+CALCULE la quantité à partir du montant:
+- Prix Sans Plomb: 2.525 TND/L
+- Prix Gasoil: 2.235 TND/L
+
+quantity = amount_value / prix_unitaire
+Exemple: 30 TND / 2.525 = 11.88 L
+
+=== RÈGLE N°5 - CALCUL CO2 ===
+co2_kg = quantity × emission_factor
+Exemple: 11.88 × 2.30 = 27.32 kg CO2
+
+=== FORMAT JSON OBLIGATOIRE ===
+{
+  "document_type": "fuel_voucher",
+  "supplier_name": "Agil",
+  "voucher_number": "8320-210801",
+  "validity_date": "2024-12-31",
+  "amount_value": 30,
+  "currency": "TND",
+  "fuel_items": [
+    {
+      "product_name": "SUPER SANS PLOMB",
+      "amount_tnd": 30,
+      "unit_price_tnd": 2.525,
+      "quantity": 11.88,
+      "unit": "litres",
+      "ghg_category": "essence",
+      "emission_factor": 2.30,
+      "co2_kg": 27.32
+    }
+  ],
+  "total_quantity": 11.88,
+  "total_co2_kg": 27.32,
+  "confidence_score": 0.85,
+  "extraction_notes": "Bon carburant - quantité calculée à partir du montant"
+}`;
+    } else if (document_type === 'fuel_invoice') {
       extractionInstruction = `FACTURE DE CARBURANT - EXTRACTION PRÉCISE
 
 === RÈGLE N°1 - QUANTITÉ EXACTE (CRITIQUE) ===

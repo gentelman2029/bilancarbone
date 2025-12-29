@@ -196,42 +196,52 @@ serve(async (req) => {
     let extractionInstruction = "Analyse cette facture et extrais les informations de consommation d'énergie.";
     
     if (document_type === 'fuel_invoice') {
-      extractionInstruction = `IMPORTANT: Ce document est une FACTURE DE CARBURANT (fuel_invoice) - TotalEnergies, Agil, Shell, ou autre.
+      extractionInstruction = `IMPORTANT: FACTURE DE CARBURANT - TotalEnergies, Agil, Shell.
 
-=== RÈGLE CRITIQUE - QUANTITÉ EXACTE ===
-EXTRAIS LA VALEUR BRUTE EXACTE de la colonne "Quantité" SANS arrondir ni modifier.
-Exemples de valeurs à extraire exactement comme affichées:
-- "304,811" → quantity: 304.811 (utilise un POINT comme séparateur décimal)
-- "80 553,22" → quantity: 80553.22 (supprime les espaces, utilise un POINT)
-- "1234,56" → quantity: 1234.56
+=== RÈGLE CRITIQUE N°1 - QUANTITÉ EXACTE ===
+Tu DOIS extraire la VALEUR EXACTE de la colonne "Quantité" du tableau.
+NE PAS arrondir. NE PAS estimer. NE PAS inventer.
 
-=== DÉTECTION DU FORMAT ===
-1. FORMAT TotalEnergies: Tableau vertical "Produits et services consommés"
-2. FORMAT Agil: Tableau horizontal avec colonnes "Libellé Produit"|"Quantité"
-   - La quantité est dans la 2ème colonne après "Libellé Produit"
-   - Ex: Gasoil | 304,811 → extrais 304.811
+EXEMPLE FACTURE AGIL:
+Si le tableau affiche: Gasoil | 304,811 | 13,00 | 1,688496 | ...
+Alors quantity = 304.811 (EXACTEMENT)
 
-=== IDENTITÉ DU DOCUMENT (obligatoire) ===
-- client_name: Nom du client/entreprise (ex: SOHATRAM, STE MECA C)
-- invoice_number: Numéro de facture (cherche "Facture N°", "N° BLF", ou numéros)
-- invoice_date: Date du document au format YYYY-MM-DD
-- supplier_name: Fournisseur (TotalEnergies, Agil, Shell...)
+CONVERSIONS:
+- Virgule française → Point décimal: "304,811" → 304.811
+- Espaces milliers supprimés: "80 553,22" → 80553.22
 
-=== EXTRACTION MULTI-LIGNES ===
-Pour CHAQUE ligne de carburant détectée:
-- GASOIL/Gasoil → emission_factor: 2.67 kg CO2e/L
-- GASOIL SS/GO SS/GO SS EXC (Sans Soufre/Excellium) → emission_factor: 2.64 kg CO2e/L
+=== RÈGLE N°2 - DÉTECTION FORMAT ===
+FORMAT AGIL: Cherche le tableau avec colonnes "Libellé Produit" et "Quantité"
+- La quantité est la 2ème colonne numérique après le nom du produit
+- Exemple ligne: Gasoil | 304,811 | 13,00 | ...
 
-IGNORER: Lavage, Timbre Fiscal, Abonnement, SERVICES, TAG, TVA, frais
+FORMAT TOTALENERGIES: Tableau "Produits et services consommés"
+- Colonnes: Produit | Quantité | Montant
 
-=== FORMAT DE SORTIE ===
-Retourne un JSON avec:
-- client_name, invoice_number, invoice_date obligatoires
-- fuel_items: tableau avec une entrée par type de carburant
-- Chaque item: product_name, quantity (valeur décimale exacte en litres), emission_factor, co2_kg
-- total_quantity et total_co2_kg calculés
+=== RÈGLE N°3 - IDENTITÉ (obligatoire) ===
+- invoice_number: Cherche "N° BLF" ou "Facture N°" (ex: 8924029525)
+- invoice_date: Date au format YYYY-MM-DD (17-10-24 → 2024-10-17)
+- supplier_name: Agil, TotalEnergies, Shell...
 
-Calcule co2_kg = quantity * emission_factor pour chaque ligne.`;
+=== RÈGLE N°4 - CALCUL CO2 ===
+Pour CHAQUE produit carburant:
+- GASOIL/Gasoil standard → emission_factor: 2.67
+- GASOIL SS/GO SS EXC (Sans Soufre) → emission_factor: 2.64
+- co2_kg = quantity × emission_factor
+
+IGNORER: Lavage, Timbre, Abonnement, TAG, TVA, services
+
+=== FORMAT JSON OBLIGATOIRE ===
+{
+  "invoice_number": "8924029525",
+  "invoice_date": "2024-10-17",
+  "supplier_name": "Agil",
+  "fuel_items": [
+    {"product_name": "Gasoil", "quantity": 304.811, "emission_factor": 2.67, "co2_kg": 813.85}
+  ],
+  "total_quantity": 304.811,
+  "total_co2_kg": 813.85
+}`;
     } else if (document_type === 'gas_bill') {
       extractionInstruction = `IMPORTANT: Ce document est une FACTURE DE GAZ (gas_bill).
 Extrais UNIQUEMENT les données de la section "Total Gaz" / "إجمالي الغاز":

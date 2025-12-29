@@ -312,19 +312,9 @@ export function DocumentExtractionReview({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Document Identity Section for Fuel Invoices */}
+          {/* Document Identity Section for Fuel Invoices - Simplified */}
           {isFuelInvoice && (
-            <div className="grid grid-cols-3 gap-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
-              <div className="space-y-2">
-                <Label className="flex items-center text-blue-700 font-medium">
-                  👤 Client
-                </Label>
-                <Input 
-                  value={editedData.client_name || ''} 
-                  onChange={(e) => setEditedData({...editedData, client_name: e.target.value})}
-                  placeholder="Nom entreprise"
-                />
-              </div>
+            <div className="grid grid-cols-2 gap-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
               <div className="space-y-2">
                 <Label className="flex items-center text-blue-700 font-medium">
                   📄 N° Facture
@@ -332,12 +322,12 @@ export function DocumentExtractionReview({
                 <Input 
                   value={editedData.invoice_number || ''} 
                   onChange={(e) => setEditedData({...editedData, invoice_number: e.target.value})}
-                  placeholder="Numéro"
+                  placeholder="N° BLF ou Facture"
                 />
               </div>
               <div className="space-y-2">
                 <Label className="flex items-center text-blue-700 font-medium">
-                  📅 Date
+                  📅 Date de facture
                 </Label>
                 <Input 
                   type="date"
@@ -382,7 +372,8 @@ export function DocumentExtractionReview({
             </div>
           </div>
 
-          {/* Period */}
+          {/* Period - Hidden for Fuel Invoices */}
+          {!isFuelInvoice && (
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="flex items-center">
@@ -409,6 +400,7 @@ export function DocumentExtractionReview({
               />
             </div>
           </div>
+          )}
 
           {/* Multi-line Fuel Items Table (for fuel invoices) */}
           {isFuelInvoice && editedFuelItems.length > 0 && (

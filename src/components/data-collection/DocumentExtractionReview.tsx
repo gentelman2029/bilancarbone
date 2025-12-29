@@ -61,8 +61,10 @@ export function DocumentExtractionReview({
   const [emissionFactor, setEmissionFactor] = useState<EmissionFactor | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   
-  // Check if this is a multi-line fuel invoice
+  // Check if this is a multi-line fuel document (invoice or voucher)
   const isFuelInvoice = editedData.document_type === 'fuel_invoice' && editedFuelItems.length > 0;
+  const isFuelVoucher = editedData.document_type === 'fuel_voucher' && editedFuelItems.length > 0;
+  const isFuelDocument = isFuelInvoice || isFuelVoucher;
 
   // Parse field confidences from extracted data or generate based on overall score
   useEffect(() => {
@@ -86,8 +88,8 @@ export function DocumentExtractionReview({
   // Calculate emissions when quantity or category changes (for single-line documents)
   useEffect(() => {
     const calculateEmissions = async () => {
-      // For fuel invoices with multi-line items, use the sum from fuel_items
-      if (isFuelInvoice) {
+      // For fuel documents with multi-line items, use the sum from fuel_items
+      if (isFuelDocument) {
         const totalCo2 = editedFuelItems.reduce((sum, item) => sum + (item.co2_kg || 0), 0);
         setCalculatedEmissions(totalCo2);
         setEmissionFactor(null);
@@ -146,7 +148,7 @@ export function DocumentExtractionReview({
     };
 
     calculateEmissions();
-  }, [editedData.quantity, editedData.ghg_category, isFuelInvoice, editedFuelItems]);
+  }, [editedData.quantity, editedData.ghg_category, isFuelDocument, editedFuelItems]);
   
   // Update fuel item quantity and recalculate CO2
   const updateFuelItem = (index: number, field: keyof FuelItem, value: number | string) => {
@@ -192,8 +194,8 @@ export function DocumentExtractionReview({
         validationNotes || undefined
       );
       
-      // Create activity data - different logic for fuel invoices with multi-line items
-      if (isFuelInvoice && editedFuelItems.length > 0) {
+      // Create activity data - different logic for fuel documents with multi-line items
+      if (isFuelDocument && editedFuelItems.length > 0) {
         // Create multiple activity entries for each fuel type
         await activityDataService.createMultipleFuelActivities(
           document.id, 
@@ -201,7 +203,8 @@ export function DocumentExtractionReview({
           editedFuelItems
         );
         
-        toast.success('Facture carburant validée', {
+        const docTypeLabel = isFuelVoucher ? 'Bon carburant' : 'Facture carburant';
+        toast.success(`${docTypeLabel} validé`, {
           description: `${editedFuelItems.length} lignes de carburant créées. Total: ${calculatedEmissions?.toFixed(2)} kg CO2e`
         });
       } else {
@@ -338,6 +341,32 @@ export function DocumentExtractionReview({
             </div>
           )}
 
+          {/* Document Identity Section for Fuel Vouchers */}
+          {isFuelVoucher && (
+            <div className="grid grid-cols-2 gap-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+              <div className="space-y-2">
+                <Label className="flex items-center text-amber-700 font-medium">
+                  🎫 N° Bon
+                </Label>
+                <Input 
+                  value={(editedData as any).voucher_number || editedData.invoice_number || ''} 
+                  onChange={(e) => setEditedData({...editedData, invoice_number: e.target.value})}
+                  placeholder="N° du bon carburant"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center text-amber-700 font-medium">
+                  📅 Date de validité
+                </Label>
+                <Input 
+                  type="date"
+                  value={(editedData as any).validity_date || editedData.invoice_date || ''} 
+                  onChange={(e) => setEditedData({...editedData, invoice_date: e.target.value})}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Document Type & Supplier */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -372,8 +401,8 @@ export function DocumentExtractionReview({
             </div>
           </div>
 
-          {/* Period - Hidden for Fuel Invoices */}
-          {!isFuelInvoice && (
+          {/* Period - Hidden for Fuel Documents */}
+          {!isFuelDocument && (
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="flex items-center">
@@ -402,17 +431,18 @@ export function DocumentExtractionReview({
           </div>
           )}
 
-          {/* Multi-line Fuel Items Table (for fuel invoices) */}
-          {isFuelInvoice && editedFuelItems.length > 0 && (
+          {/* Multi-line Fuel Items Table (for fuel invoices and vouchers) */}
+          {isFuelDocument && editedFuelItems.length > 0 && (
             <div className="space-y-3">
               <Label className="font-semibold text-primary flex items-center gap-2">
-                ⛽ Détail des carburants ({editedFuelItems.length} lignes)
+                {isFuelVoucher ? '🎫' : '⛽'} Détail des carburants ({editedFuelItems.length} ligne{editedFuelItems.length > 1 ? 's' : ''})
               </Label>
               <div className="rounded-lg border overflow-hidden">
                 <table className="w-full text-sm">
                   <thead className="bg-muted">
                     <tr>
                       <th className="px-3 py-2 text-left">Produit</th>
+                      {isFuelVoucher && <th className="px-3 py-2 text-right">Montant (TND)</th>}
                       <th className="px-3 py-2 text-right">Quantité (L)</th>
                       <th className="px-3 py-2 text-right">Facteur</th>
                       <th className="px-3 py-2 text-right">CO₂ (kg)</th>
@@ -422,9 +452,15 @@ export function DocumentExtractionReview({
                     {editedFuelItems.map((item, idx) => (
                       <tr key={idx} className="border-t">
                         <td className="px-3 py-2 font-medium">{item.product_name}</td>
+                        {isFuelVoucher && (
+                          <td className="px-3 py-2 text-right text-muted-foreground">
+                            {(item as any).amount_tnd?.toFixed(2) || '-'}
+                          </td>
+                        )}
                         <td className="px-3 py-2 text-right">
                           <Input 
                             type="number"
+                            step="0.01"
                             value={item.quantity}
                             onChange={(e) => updateFuelItem(idx, 'quantity', parseFloat(e.target.value) || 0)}
                             className="w-28 h-8 text-right ml-auto"
@@ -436,18 +472,24 @@ export function DocumentExtractionReview({
                     ))}
                     <tr className="border-t bg-green-500/10 font-bold">
                       <td className="px-3 py-2">TOTAL</td>
-                      <td className="px-3 py-2 text-right">{editedFuelItems.reduce((s, i) => s + i.quantity, 0).toLocaleString()}</td>
+                      {isFuelVoucher && <td className="px-3 py-2"></td>}
+                      <td className="px-3 py-2 text-right">{editedFuelItems.reduce((s, i) => s + i.quantity, 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 })}</td>
                       <td className="px-3 py-2"></td>
                       <td className="px-3 py-2 text-right text-green-600">{editedFuelItems.reduce((s, i) => s + i.co2_kg, 0).toFixed(2)}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
+              {isFuelVoucher && (
+                <p className="text-xs text-muted-foreground italic">
+                  ℹ️ Quantité calculée à partir du montant et du prix unitaire de référence
+                </p>
+              )}
             </div>
           )}
 
-          {/* Consumption Value - SINGLE LINE (hide for fuel invoices) */}
-          {!isFuelInvoice && (
+          {/* Consumption Value - SINGLE LINE (hide for fuel documents) */}
+          {!isFuelDocument && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="flex items-center font-semibold text-primary">

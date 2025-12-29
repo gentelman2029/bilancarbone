@@ -312,6 +312,42 @@ export function DocumentExtractionReview({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Document Identity Section for Fuel Invoices */}
+          {isFuelInvoice && (
+            <div className="grid grid-cols-3 gap-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+              <div className="space-y-2">
+                <Label className="flex items-center text-blue-700 font-medium">
+                  👤 Client
+                </Label>
+                <Input 
+                  value={editedData.client_name || ''} 
+                  onChange={(e) => setEditedData({...editedData, client_name: e.target.value})}
+                  placeholder="Nom entreprise"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center text-blue-700 font-medium">
+                  📄 N° Facture
+                </Label>
+                <Input 
+                  value={editedData.invoice_number || ''} 
+                  onChange={(e) => setEditedData({...editedData, invoice_number: e.target.value})}
+                  placeholder="Numéro"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center text-blue-700 font-medium">
+                  📅 Date
+                </Label>
+                <Input 
+                  type="date"
+                  value={editedData.invoice_date || ''} 
+                  onChange={(e) => setEditedData({...editedData, invoice_date: e.target.value})}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Document Type & Supplier */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

@@ -198,9 +198,18 @@ serve(async (req) => {
     if (document_type === 'fuel_invoice') {
       extractionInstruction = `IMPORTANT: Ce document est une FACTURE DE CARBURANT (fuel_invoice) - TotalEnergies, Agil, Shell, ou autre.
 
+=== RÈGLE CRITIQUE - QUANTITÉ EXACTE ===
+EXTRAIS LA VALEUR BRUTE EXACTE de la colonne "Quantité" SANS arrondir ni modifier.
+Exemples de valeurs à extraire exactement comme affichées:
+- "304,811" → quantity: 304.811 (utilise un POINT comme séparateur décimal)
+- "80 553,22" → quantity: 80553.22 (supprime les espaces, utilise un POINT)
+- "1234,56" → quantity: 1234.56
+
 === DÉTECTION DU FORMAT ===
-1. FORMAT TotalEnergies: Tableau vertical "Produits et services consommés" avec colonnes Produit|Quantité|Montant
-2. FORMAT Agil: Tableau horizontal avec colonnes "Libellé Produit"|"Quantité"|"Montant TTC"
+1. FORMAT TotalEnergies: Tableau vertical "Produits et services consommés"
+2. FORMAT Agil: Tableau horizontal avec colonnes "Libellé Produit"|"Quantité"
+   - La quantité est dans la 2ème colonne après "Libellé Produit"
+   - Ex: Gasoil | 304,811 → extrais 304.811
 
 === IDENTITÉ DU DOCUMENT (obligatoire) ===
 - client_name: Nom du client/entreprise (ex: SOHATRAM, STE MECA C)
@@ -217,8 +226,9 @@ IGNORER: Lavage, Timbre Fiscal, Abonnement, SERVICES, TAG, TVA, frais
 
 === FORMAT DE SORTIE ===
 Retourne un JSON avec:
+- client_name, invoice_number, invoice_date obligatoires
 - fuel_items: tableau avec une entrée par type de carburant
-- Chaque item: product_name, quantity (litres), emission_factor, co2_kg (quantity×factor)
+- Chaque item: product_name, quantity (valeur décimale exacte en litres), emission_factor, co2_kg
 - total_quantity et total_co2_kg calculés
 
 Calcule co2_kg = quantity * emission_factor pour chaque ligne.`;

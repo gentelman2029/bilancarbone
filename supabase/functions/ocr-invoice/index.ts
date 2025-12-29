@@ -45,10 +45,19 @@ TRÈS IMPORTANT pour les factures de CARBURANT - Supporte plusieurs formats:
 - Les données sont sur une ligne horizontale
 - Cherche "Gasoil" dans la colonne "Libellé Produit" et la quantité correspondante
 
+### FORMAT 3: OLA Energy Tunisie
+- Cherche "Facture n°:" pour le numéro de facture (ex: CCIN120769)
+- Cherche "Tunis le:" pour la date de facture (ex: 30/04/2025)
+- Section "Consommation Carburant" contient les produits
+- Colonnes: Produit | Quant./ Base | PU/ | TVA | Total HT | Montant TVA | Total TTC
+- Produit typique: "O'ptimium ECO PLUS Gasoil Sans Soufre"
+- La quantité est dans la colonne "Quant./ Base" (ex: 182,177)
+- IGNORER: ligne "Prestation", "Conso Carburant et Prestation", "Timbre Fiscal", TVA
+
 ### IDENTITÉ DU DOCUMENT (obligatoire):
-1. **Client**: Nom de l'entreprise client (ex: "SOHATRAM", "STE MECA C")
-2. **Numéro de Facture**: Cherche "Facture N°", "N° BLF", ou numéros similaires
-3. **Date**: Date d'émission au format YYYY-MM-DD
+1. **Numéro de Facture**: Cherche "Facture N°", "N° BLF", "Facture n°:" ou numéros similaires
+2. **Date de facture**: Date d'émission au format YYYY-MM-DD (cherche après "Tunis le:" pour OLA)
+3. **NE PAS extraire**: Nom du client, dates de début/fin de période
 
 ### PRODUITS À EXTRAIRE (carburants UNIQUEMENT):
 | Produit | Facteur d'émission | Catégorie |
@@ -56,50 +65,40 @@ TRÈS IMPORTANT pour les factures de CARBURANT - Supporte plusieurs formats:
 | GASOIL, Gasoil | 2.67 kg CO2e/L | diesel |
 | GASOIL SS (Sans Soufre) | 2.64 kg CO2e/L | diesel |
 | GO SS, GO SS EXC (Excellium) | 2.64 kg CO2e/L | diesel |
+| O'ptimium ECO PLUS Gasoil Sans Soufre | 2.64 kg CO2e/L | diesel |
 
 ### PRODUITS À IGNORER (services):
-- Lavage, Timbre Fiscal, Abonnement Carte, Prestation
+- Prestation, Lavage, Timbre Fiscal, Abonnement Carte
 - SERVICES, Achat TAG, Frais de gestion
-- TVA, taxes
+- TVA, taxes, "Conso Carburant et Prestation" (ligne récap)
 
 ### POUR CHAQUE LIGNE DE CARBURANT:
 - product_name: nom exact du produit
-- quantity: la valeur numérique en litres
+- quantity: la valeur numérique EXACTE en litres (ex: 182.177, PAS 182 ou 200)
 - ghg_category: "diesel" pour tous les gasoils
-- emission_factor: 2.67 pour GASOIL standard, 2.64 pour variantes SS/Excellium
+- emission_factor: 2.67 pour GASOIL standard, 2.64 pour variantes SS/Sans Soufre/Excellium
 - co2_kg: quantity × emission_factor
 
 ### FORMAT DE SORTIE MULTI-LIGNES:
 {
   "document_type": "fuel_invoice",
-  "supplier_name": "TotalEnergies|Agil|Shell|...",
-  "invoice_number": "FA23/288495|8924029525",
-  "invoice_date": "2023-10-31",
-  "client_name": "SOHATRAM|STE MECA C",
-  "period_start": "YYYY-MM-DD",
-  "period_end": "YYYY-MM-DD",
+  "supplier_name": "TotalEnergies|Agil|OLA Energy|Shell|...",
+  "invoice_number": "CCIN120769|FA23/288495|8924029525",
+  "invoice_date": "2025-04-30",
   "fuel_items": [
     {
-      "product_name": "GASOIL",
-      "quantity": 80553.22,
-      "unit": "litres",
-      "ghg_category": "diesel",
-      "emission_factor": 2.67,
-      "co2_kg": 215076.10
-    },
-    {
-      "product_name": "GASOIL SS",
-      "quantity": 882.72,
+      "product_name": "O'ptimium ECO PLUS Gasoil Sans Soufre",
+      "quantity": 182.177,
       "unit": "litres",
       "ghg_category": "diesel",
       "emission_factor": 2.64,
-      "co2_kg": 2330.38
+      "co2_kg": 480.95
     }
   ],
-  "total_quantity": 81435.94,
-  "total_co2_kg": 217406.48,
+  "total_quantity": 182.177,
+  "total_co2_kg": 480.95,
   "confidence_score": 0.9,
-  "extraction_notes": "Format TotalEnergies - 2 types de carburant extraits"
+  "extraction_notes": "Format OLA Energy - 1 type de carburant extrait"
 }
 
 ### Pour autres factures - FORMAT SIMPLE:
@@ -107,8 +106,7 @@ TRÈS IMPORTANT pour les factures de CARBURANT - Supporte plusieurs formats:
   "document_type": "electricity_bill|gas_bill|...",
   "supplier_name": "nom du fournisseur",
   "invoice_number": "numéro de facture",
-  "period_start": "YYYY-MM-DD",
-  "period_end": "YYYY-MM-DD",
+  "invoice_date": "YYYY-MM-DD",
   "quantity": nombre,
   "unit": "thermies|kWh|litres|m3|km|tonnes|t.km|kg",
   "amount_ht": nombre ou null,
@@ -121,8 +119,7 @@ TRÈS IMPORTANT pour les factures de CARBURANT - Supporte plusieurs formats:
     "supplier_name": 0.0-1.0,
     "quantity": 0.0-1.0,
     "unit": 0.0-1.0,
-    "period_start": 0.0-1.0,
-    "period_end": 0.0-1.0,
+    "invoice_date": 0.0-1.0,
     "amount_ttc": 0.0-1.0,
     "ghg_category": 0.0-1.0
   },
@@ -196,51 +193,62 @@ serve(async (req) => {
     let extractionInstruction = "Analyse cette facture et extrais les informations de consommation d'énergie.";
     
     if (document_type === 'fuel_invoice') {
-      extractionInstruction = `IMPORTANT: FACTURE DE CARBURANT - TotalEnergies, Agil, Shell.
+      extractionInstruction = `IMPORTANT: FACTURE DE CARBURANT - TotalEnergies, Agil, OLA Energy, Shell.
 
 === RÈGLE CRITIQUE N°1 - QUANTITÉ EXACTE ===
-Tu DOIS extraire la VALEUR EXACTE de la colonne "Quantité" du tableau.
+Tu DOIS extraire la VALEUR EXACTE de la colonne "Quantité" ou "Quant./ Base" du tableau.
 NE PAS arrondir. NE PAS estimer. NE PAS inventer.
 
-EXEMPLE FACTURE AGIL:
-Si le tableau affiche: Gasoil | 304,811 | 13,00 | 1,688496 | ...
-Alors quantity = 304.811 (EXACTEMENT)
+EXEMPLES:
+- Facture Agil: Gasoil | 304,811 → quantity = 304.811
+- Facture OLA Energy: 182,177 → quantity = 182.177
+- Facture TotalEnergies: 80 553,22 → quantity = 80553.22
 
 CONVERSIONS:
-- Virgule française → Point décimal: "304,811" → 304.811
+- Virgule française → Point décimal: "182,177" → 182.177
 - Espaces milliers supprimés: "80 553,22" → 80553.22
 
 === RÈGLE N°2 - DÉTECTION FORMAT ===
-FORMAT AGIL: Cherche le tableau avec colonnes "Libellé Produit" et "Quantité"
-- La quantité est la 2ème colonne numérique après le nom du produit
+FORMAT OLA ENERGY: 
+- N° Facture: Cherche "Facture n°:" (ex: CCIN120769)
+- Date: Cherche "Tunis le:" (ex: 30/04/2025 → 2025-04-30)
+- Section "Consommation Carburant" avec colonnes Produit | Quant./ Base
+- Produit typique: "O'ptimium ECO PLUS Gasoil Sans Soufre"
+- IGNORER: "Prestation", "Conso Carburant et Prestation", "Timbre Fiscal"
+
+FORMAT AGIL: 
+- Colonnes "Libellé Produit" et "Quantité"
 - Exemple ligne: Gasoil | 304,811 | 13,00 | ...
 
-FORMAT TOTALENERGIES: Tableau "Produits et services consommés"
+FORMAT TOTALENERGIES: 
+- Tableau "Produits et services consommés"
 - Colonnes: Produit | Quantité | Montant
 
 === RÈGLE N°3 - IDENTITÉ (obligatoire) ===
-- invoice_number: Cherche "N° BLF" ou "Facture N°" (ex: 8924029525)
-- invoice_date: Date au format YYYY-MM-DD (17-10-24 → 2024-10-17)
-- supplier_name: Agil, TotalEnergies, Shell...
+- invoice_number: Cherche "Facture n°:", "N° BLF" ou "Facture N°"
+- invoice_date: Date au format YYYY-MM-DD (30/04/2025 → 2025-04-30)
+- supplier_name: OLA Energy, Agil, TotalEnergies, Shell...
+- NE PAS extraire: client_name, period_start, period_end
 
 === RÈGLE N°4 - CALCUL CO2 ===
 Pour CHAQUE produit carburant:
 - GASOIL/Gasoil standard → emission_factor: 2.67
-- GASOIL SS/GO SS EXC (Sans Soufre) → emission_factor: 2.64
-- co2_kg = quantity × emission_factor
+- GASOIL SS/Sans Soufre/O'ptimium ECO PLUS → emission_factor: 2.64
+- co2_kg = quantity × emission_factor (ex: 182.177 × 2.64 = 480.95)
 
-IGNORER: Lavage, Timbre, Abonnement, TAG, TVA, services
+IGNORER: Prestation, Lavage, Timbre, Abonnement, TAG, TVA, services
 
 === FORMAT JSON OBLIGATOIRE ===
 {
-  "invoice_number": "8924029525",
-  "invoice_date": "2024-10-17",
-  "supplier_name": "Agil",
+  "document_type": "fuel_invoice",
+  "invoice_number": "CCIN120769",
+  "invoice_date": "2025-04-30",
+  "supplier_name": "OLA Energy",
   "fuel_items": [
-    {"product_name": "Gasoil", "quantity": 304.811, "emission_factor": 2.67, "co2_kg": 813.85}
+    {"product_name": "O'ptimium ECO PLUS Gasoil Sans Soufre", "quantity": 182.177, "emission_factor": 2.64, "co2_kg": 480.95}
   ],
-  "total_quantity": 304.811,
-  "total_co2_kg": 813.85
+  "total_quantity": 182.177,
+  "total_co2_kg": 480.95
 }`;
     } else if (document_type === 'gas_bill') {
       extractionInstruction = `IMPORTANT: Ce document est une FACTURE DE GAZ (gas_bill).

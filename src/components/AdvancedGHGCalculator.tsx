@@ -8,14 +8,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Calculator, Download, RotateCcw, Factory, Car, Zap, Trash2, Building, Plane, Ship, TreePine, Flame, Save, X } from "lucide-react";
+import { Calculator, Download, RotateCcw, Factory, Car, Zap, Trash2, Building, Plane, Ship, TreePine, Flame, Save, X, CheckCircle2, Sparkles } from "lucide-react";
 import { useEmissions } from '@/contexts/EmissionsContext';
 import { useCarbonReports } from '@/hooks/useCarbonReports';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useCalculationDetails } from '@/hooks/useCalculationDetails';
 import { CalculationDetailsSection } from '@/components/CalculationDetailsSection';
+import { Scope3AdvancedModule } from '@/components/scope3/Scope3AdvancedModule';
 
 
 // Base Carbone® ADEME - Facteurs d'émissions complets (kg CO2e par unité)
@@ -180,6 +182,11 @@ export const AdvancedGHGCalculator = () => {
   const [calculations, setCalculations] = useState<CalculationResult[]>([]);
   const [activeTab, setActiveTab] = useState("scope1");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdvancedMode, setIsAdvancedMode] = useState(() => {
+    const saved = localStorage.getItem('calculator-advanced-mode');
+    return saved ? JSON.parse(saved) : false;
+  });
+  const [scope3AdvancedTotal, setScope3AdvancedTotal] = useState(0);
   
   // Hook pour les détails de calcul par section
   const { 
@@ -291,6 +298,11 @@ export const AdvancedGHGCalculator = () => {
       setCalculations(JSON.parse(savedCalculations));
     }
   }, []);
+
+  // Sauvegarder le mode avancé
+  useEffect(() => {
+    localStorage.setItem('calculator-advanced-mode', JSON.stringify(isAdvancedMode));
+  }, [isAdvancedMode]);
 
   // Sauvegarder les formulaires
   useEffect(() => {
@@ -597,14 +609,41 @@ export const AdvancedGHGCalculator = () => {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold text-foreground">
-          Calculateur GES Avancé - Base Carbone® ADEME
-        </h1>
-        <p className="text-muted-foreground max-w-3xl mx-auto">
-          Calculateur complet basé sur les facteurs d'émissions officiels de la Base Carbone® de l'ADEME.
-          Couvre tous les scopes et catégories d'émissions GES.
-        </p>
+      {/* Header with mode toggle */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="text-center md:text-left space-y-2">
+          <h1 className="text-3xl font-bold text-foreground">
+            Calculateur GES {isAdvancedMode ? 'Avancé' : 'Standard'} - Base Carbone® ADEME
+          </h1>
+          <p className="text-muted-foreground max-w-2xl">
+            {isAdvancedMode 
+              ? 'Calculateur expert avec 15 catégories Scope 3 conformes au GHG Protocol.'
+              : 'Calculateur basé sur les facteurs d\'émissions officiels de la Base Carbone® ADEME.'
+            }
+          </p>
+        </div>
+
+        {/* Mode Toggle */}
+        <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg border">
+          <div className="flex items-center gap-2">
+            <Calculator className="h-5 w-5 text-muted-foreground" />
+            <span className="text-sm font-medium">Standard</span>
+          </div>
+          <Switch
+            checked={isAdvancedMode}
+            onCheckedChange={setIsAdvancedMode}
+          />
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            <span className="text-sm font-medium">Avancé</span>
+          </div>
+          {isAdvancedMode && (
+            <Badge className="bg-green-600 hover:bg-green-700 text-white ml-2">
+              <CheckCircle2 className="h-3 w-3 mr-1" />
+              GHG Protocol
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Métriques principales */}
@@ -1136,249 +1175,280 @@ export const AdvancedGHGCalculator = () => {
 
         {/* SCOPE 3 */}
         <TabsContent value="scope3" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Transport */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Plane className="h-5 w-5" />
-                  Transport
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div>
-                    <Label>Mode de transport</Label>
-                    <Select 
-                      value={scope3Data.transportType} 
-                      onValueChange={(value) => setScope3Data(prev => ({...prev, transportType: value}))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(baseCarbone.scope3.transport).map(([key, value]) => (
-                          <SelectItem key={key} value={key}>
-                            {value.description} ({value.unite})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Quantité</Label>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      value={scope3Data.transportQuantity}
-                      onChange={(e) => setScope3Data(prev => ({...prev, transportQuantity: e.target.value}))}
-                    />
-                  </div>
-                  <Button 
-                    onClick={() => addCalculation('scope3', 'transport', scope3Data.transportType, Number(scope3Data.transportQuantity))}
-                    disabled={!scope3Data.transportType || !scope3Data.transportQuantity}
-                    className="w-full"
-                  >
-                    Ajouter
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+          {isAdvancedMode ? (
+            /* Mode Avancé: 15 catégories GHG Protocol */
+            <Scope3AdvancedModule 
+              onTotalChange={setScope3AdvancedTotal}
+            />
+          ) : (
+            /* Mode Standard: catégories simplifiées */
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Transport */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Plane className="h-5 w-5" />
+                      Transport
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div>
+                        <Label>Mode de transport</Label>
+                        <Select 
+                          value={scope3Data.transportType} 
+                          onValueChange={(value) => setScope3Data(prev => ({...prev, transportType: value}))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(baseCarbone.scope3.transport).map(([key, value]) => (
+                              <SelectItem key={key} value={key}>
+                                {value.description} ({value.unite})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Quantité</Label>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={scope3Data.transportQuantity}
+                          onChange={(e) => setScope3Data(prev => ({...prev, transportQuantity: e.target.value}))}
+                        />
+                      </div>
+                      <Button 
+                        onClick={() => addCalculation('scope3', 'transport', scope3Data.transportType, Number(scope3Data.transportQuantity))}
+                        disabled={!scope3Data.transportType || !scope3Data.transportQuantity}
+                        className="w-full"
+                      >
+                        Ajouter
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            {/* Matériaux */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Matériaux</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div>
-                    <Label>Type de matériau</Label>
-                    <Select 
-                      value={scope3Data.materiauType} 
-                      onValueChange={(value) => setScope3Data(prev => ({...prev, materiauType: value}))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(baseCarbone.scope3.materiaux).map(([key, value]) => (
-                          <SelectItem key={key} value={key}>
-                            {value.description} ({value.unite})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Quantité (kg)</Label>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      value={scope3Data.materiauQuantity}
-                      onChange={(e) => setScope3Data(prev => ({...prev, materiauQuantity: e.target.value}))}
-                    />
-                  </div>
-                  <Button 
-                    onClick={() => addCalculation('scope3', 'materiaux', scope3Data.materiauType, Number(scope3Data.materiauQuantity))}
-                    disabled={!scope3Data.materiauType || !scope3Data.materiauQuantity}
-                    className="w-full"
-                  >
-                    Ajouter
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                {/* Matériaux */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Matériaux</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div>
+                        <Label>Type de matériau</Label>
+                        <Select 
+                          value={scope3Data.materiauType} 
+                          onValueChange={(value) => setScope3Data(prev => ({...prev, materiauType: value}))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(baseCarbone.scope3.materiaux).map(([key, value]) => (
+                              <SelectItem key={key} value={key}>
+                                {value.description} ({value.unite})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Quantité (kg)</Label>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={scope3Data.materiauQuantity}
+                          onChange={(e) => setScope3Data(prev => ({...prev, materiauQuantity: e.target.value}))}
+                        />
+                      </div>
+                      <Button 
+                        onClick={() => addCalculation('scope3', 'materiaux', scope3Data.materiauType, Number(scope3Data.materiauQuantity))}
+                        disabled={!scope3Data.materiauType || !scope3Data.materiauQuantity}
+                        className="w-full"
+                      >
+                        Ajouter
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            {/* Déchets */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trash2 className="h-5 w-5" />
-                  Déchets
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div>
-                    <Label>Mode de traitement</Label>
-                    <Select 
-                      value={scope3Data.dechetType} 
-                      onValueChange={(value) => setScope3Data(prev => ({...prev, dechetType: value}))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(baseCarbone.scope3.dechets).map(([key, value]) => (
-                          <SelectItem key={key} value={key}>
-                            {value.description} ({value.unite})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Quantité (kg)</Label>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      value={scope3Data.dechetQuantity}
-                      onChange={(e) => setScope3Data(prev => ({...prev, dechetQuantity: e.target.value}))}
-                    />
-                  </div>
-                  <Button 
-                    onClick={() => addCalculation('scope3', 'dechets', scope3Data.dechetType, Number(scope3Data.dechetQuantity))}
-                    disabled={!scope3Data.dechetType || !scope3Data.dechetQuantity}
-                    className="w-full"
-                  >
-                    Ajouter
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                {/* Déchets */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Trash2 className="h-5 w-5" />
+                      Déchets
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div>
+                        <Label>Mode de traitement</Label>
+                        <Select 
+                          value={scope3Data.dechetType} 
+                          onValueChange={(value) => setScope3Data(prev => ({...prev, dechetType: value}))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(baseCarbone.scope3.dechets).map(([key, value]) => (
+                              <SelectItem key={key} value={key}>
+                                {value.description} ({value.unite})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Quantité (kg)</Label>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={scope3Data.dechetQuantity}
+                          onChange={(e) => setScope3Data(prev => ({...prev, dechetQuantity: e.target.value}))}
+                        />
+                      </div>
+                      <Button 
+                        onClick={() => addCalculation('scope3', 'dechets', scope3Data.dechetType, Number(scope3Data.dechetQuantity))}
+                        disabled={!scope3Data.dechetType || !scope3Data.dechetQuantity}
+                        className="w-full"
+                      >
+                        Ajouter
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            {/* Alimentation */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Alimentation</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div>
-                    <Label>Produit alimentaire</Label>
-                    <Select 
-                      value={scope3Data.alimentationType} 
-                      onValueChange={(value) => setScope3Data(prev => ({...prev, alimentationType: value}))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(baseCarbone.scope3.alimentation).map(([key, value]) => (
-                          <SelectItem key={key} value={key}>
-                            {value.description} ({value.unite})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Quantité</Label>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      value={scope3Data.alimentationQuantity}
-                      onChange={(e) => setScope3Data(prev => ({...prev, alimentationQuantity: e.target.value}))}
-                    />
-                  </div>
-                  <Button 
-                    onClick={() => addCalculation('scope3', 'alimentation', scope3Data.alimentationType, Number(scope3Data.alimentationQuantity))}
-                    disabled={!scope3Data.alimentationType || !scope3Data.alimentationQuantity}
-                    className="w-full"
-                  >
-                    Ajouter
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                {/* Alimentation */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Alimentation</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div>
+                        <Label>Produit alimentaire</Label>
+                        <Select 
+                          value={scope3Data.alimentationType} 
+                          onValueChange={(value) => setScope3Data(prev => ({...prev, alimentationType: value}))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(baseCarbone.scope3.alimentation).map(([key, value]) => (
+                              <SelectItem key={key} value={key}>
+                                {value.description} ({value.unite})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Quantité</Label>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={scope3Data.alimentationQuantity}
+                          onChange={(e) => setScope3Data(prev => ({...prev, alimentationQuantity: e.target.value}))}
+                        />
+                      </div>
+                      <Button 
+                        onClick={() => addCalculation('scope3', 'alimentation', scope3Data.alimentationType, Number(scope3Data.alimentationQuantity))}
+                        disabled={!scope3Data.alimentationType || !scope3Data.alimentationQuantity}
+                        className="w-full"
+                      >
+                        Ajouter
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            {/* Numérique */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Services numériques</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div>
-                    <Label>Service numérique</Label>
-                    <Select 
-                      value={scope3Data.numeriqueType} 
-                      onValueChange={(value) => setScope3Data(prev => ({...prev, numeriqueType: value}))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(baseCarbone.scope3.numerique).map(([key, value]) => (
-                          <SelectItem key={key} value={key}>
-                            {value.description} ({value.unite})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                {/* Numérique */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Services numériques</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div>
+                        <Label>Service numérique</Label>
+                        <Select 
+                          value={scope3Data.numeriqueType} 
+                          onValueChange={(value) => setScope3Data(prev => ({...prev, numeriqueType: value}))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(baseCarbone.scope3.numerique).map(([key, value]) => (
+                              <SelectItem key={key} value={key}>
+                                {value.description} ({value.unite})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Quantité</Label>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={scope3Data.numeriqueQuantity}
+                          onChange={(e) => setScope3Data(prev => ({...prev, numeriqueQuantity: e.target.value}))}
+                        />
+                      </div>
+                      <Button 
+                        onClick={() => addCalculation('scope3', 'numerique', scope3Data.numeriqueType, Number(scope3Data.numeriqueQuantity))}
+                        disabled={!scope3Data.numeriqueType || !scope3Data.numeriqueQuantity}
+                        className="w-full"
+                      >
+                        Ajouter
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              {/* Invitation vers mode avancé */}
+              <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
+                <CardContent className="py-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <Sparkles className="h-8 w-8 text-primary" />
+                      <div>
+                        <h3 className="font-semibold">Besoin d'une couverture complète Scope 3 ?</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Activez le mode avancé pour accéder aux 15 catégories du GHG Protocol
+                        </p>
+                      </div>
+                    </div>
+                    <Button onClick={() => setIsAdvancedMode(true)} variant="default">
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Activer le mode avancé
+                    </Button>
                   </div>
-                  <div>
-                    <Label>Quantité</Label>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      value={scope3Data.numeriqueQuantity}
-                      onChange={(e) => setScope3Data(prev => ({...prev, numeriqueQuantity: e.target.value}))}
-                    />
-                  </div>
-                  <Button 
-                    onClick={() => addCalculation('scope3', 'numerique', scope3Data.numeriqueType, Number(scope3Data.numeriqueQuantity))}
-                    disabled={!scope3Data.numeriqueType || !scope3Data.numeriqueQuantity}
-                    className="w-full"
-                  >
-                    Ajouter
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          {/* Section des détails de calcul Scope 3 */}
-          <CalculationDetailsSection
-            title="Détails des Calculs Scope 3"
-            icon={<Building className="h-5 w-5" />}
-            details={sectionDetails.scope3}
-            sectionColor="secondary"
-            onRemoveDetail={(detailId) => removeCalculationDetail('scope3', detailId)}
-            onClearSection={() => clearSectionDetails('scope3')}
-            className="mt-6"
-          />
+                </CardContent>
+              </Card>
+              
+              {/* Section des détails de calcul Scope 3 */}
+              <CalculationDetailsSection
+                title="Détails des Calculs Scope 3"
+                icon={<Building className="h-5 w-5" />}
+                details={sectionDetails.scope3}
+                sectionColor="secondary"
+                onRemoveDetail={(detailId) => removeCalculationDetail('scope3', detailId)}
+                onClearSection={() => clearSectionDetails('scope3')}
+                className="mt-6"
+              />
+            </>
+          )}
         </TabsContent>
       </Tabs>
 

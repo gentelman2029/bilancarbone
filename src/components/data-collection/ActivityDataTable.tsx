@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Activity, TrendingUp, Calculator, Loader2, FileCheck } from 'lucide-react';
+import { Activity, TrendingUp, Calculator, Loader2, FileCheck, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { activityDataService } from '@/lib/dataCollection/activityService';
 import { ActivityData, GHG_CATEGORIES } from '@/lib/dataCollection/types';
+import { DocumentPreviewButton } from './DocumentPreviewButton';
 
 interface ActivityDataTableProps {
   refreshTrigger?: number;
@@ -92,6 +94,35 @@ export function ActivityDataTable({ refreshTrigger }: ActivityDataTableProps) {
     }
   };
 
+  const getUncertaintyBadge = (activity: ActivityData) => {
+    const uncertainty = (activity as any).uncertainty_percent;
+    if (!uncertainty) return null;
+    
+    const color = uncertainty <= 10 ? 'text-green-600 border-green-500/30' :
+                  uncertainty <= 20 ? 'text-amber-600 border-amber-500/30' :
+                  'text-red-600 border-red-500/30';
+    
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <Badge variant="outline" className={`text-xs ${color}`}>
+              ±{uncertainty}%
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Incertitude: {uncertainty}%</p>
+            <p className="text-xs text-muted-foreground">
+              {uncertainty <= 10 ? 'Donnée fiable (facture)' :
+               uncertainty <= 20 ? 'Estimation modérée' :
+               'Ratio monétaire (estimation)'}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  };
+
   const getCategoryLabel = (scope: string, category: string) => {
     const scopeCategories = GHG_CATEGORIES[scope as keyof typeof GHG_CATEGORIES] || [];
     const found = scopeCategories.find(c => c.id === category);
@@ -129,7 +160,7 @@ export function ActivityDataTable({ refreshTrigger }: ActivityDataTableProps) {
           </div>
         </CardTitle>
         <CardDescription>
-          Consommations collectées et leurs émissions calculées
+          Consommations collectées avec traçabilité et incertitudes
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -147,7 +178,8 @@ export function ActivityDataTable({ refreshTrigger }: ActivityDataTableProps) {
                   <TableHead>Catégorie</TableHead>
                   <TableHead>Quantité</TableHead>
                   <TableHead>Émissions</TableHead>
-                  <TableHead>Source</TableHead>
+                  <TableHead>Incertitude</TableHead>
+                  <TableHead>Justificatif</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -175,11 +207,17 @@ export function ActivityDataTable({ refreshTrigger }: ActivityDataTableProps) {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="text-xs">
-                        {activity.source_type === 'ocr' ? 'OCR' : 
-                         activity.source_type === 'manual' ? 'Manuel' : 
-                         activity.source_type}
-                      </Badge>
+                      {getUncertaintyBadge(activity) || (
+                        <Badge variant="outline" className="text-xs text-green-600 border-green-500/30">
+                          ±5%
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <DocumentPreviewButton 
+                        documentId={activity.source_document_id}
+                        compact
+                      />
                     </TableCell>
                     <TableCell>{getStatusBadge(activity.status)}</TableCell>
                     <TableCell className="text-right">

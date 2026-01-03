@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FileText, Check, X, Eye, Loader2, AlertTriangle, Clock, Trash2, Pencil } from 'lucide-react';
+import { FileText, Check, X, Eye, Loader2, AlertTriangle, Clock, Trash2, Pencil, MessageSquare } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +32,12 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [docToDelete, setDocToDelete] = useState<DataCollectionDocument | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Nouveau state pour le workflow de rejet
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [docToReject, setDocToReject] = useState<DataCollectionDocument | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [isRejecting, setIsRejecting] = useState(false);
 
   const loadDocuments = async () => {
     try {
@@ -87,26 +93,37 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
     }
   };
 
-  const handleReject = async () => {
-    if (!selectedDoc) return;
+  const handleRejectClick = (doc: DataCollectionDocument) => {
+    setDocToReject(doc);
+    setRejectReason('');
+    setRejectDialogOpen(true);
+  };
 
-    setIsProcessing(true);
+  const handleRejectConfirm = async () => {
+    if (!docToReject) return;
+
+    setIsRejecting(true);
     try {
       await documentCollectionService.updateExtractedData(
-        selectedDoc.id, 
-        editedData, 
+        docToReject.id, 
+        docToReject.extracted_data || {}, 
         'rejected', 
-        validationNotes || 'Rejeté par l\'utilisateur'
+        rejectReason || 'Rejeté par l\'utilisateur'
       );
       
-      toast.info('Document rejeté');
-      setSelectedDoc(null);
+      toast.info('Document rejeté', {
+        description: 'L\'extraction a été marquée comme erronée.'
+      });
+      
+      setRejectDialogOpen(false);
+      setDocToReject(null);
+      setRejectReason('');
       loadDocuments();
     } catch (error) {
       console.error('Rejection error:', error);
       toast.error('Erreur lors du rejet');
     } finally {
-      setIsProcessing(false);
+      setIsRejecting(false);
     }
   };
 
@@ -208,10 +225,21 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
                   <div className="flex items-center gap-2">
                     {getStatusBadge(doc)}
                     {doc.ocr_status === 'processed' && doc.validation_status === 'pending' && (
-                      <Button size="sm" variant="outline" onClick={() => handleReview(doc)}>
-                        <Pencil className="h-4 w-4 mr-1" />
-                        Réviser
-                      </Button>
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => handleReview(doc)}>
+                          <Pencil className="h-4 w-4 mr-1" />
+                          Réviser
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleRejectClick(doc)}
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Rejeter
+                        </Button>
+                      </>
                     )}
                     {doc.validation_status === 'validated' && (
                       <Button size="sm" variant="ghost" onClick={() => handleReview(doc)}>
@@ -234,6 +262,40 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
           )}
         </CardContent>
       </Card>
+
+      {/* Reject Dialog */}
+      <AlertDialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              Rejeter l'extraction
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Indiquez la raison du rejet pour aider à améliorer l'extraction.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <Textarea
+              placeholder="Ex: Données incorrectes, document illisible, mauvais type de document..."
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              rows={3}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isRejecting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleRejectConfirm}
+              disabled={isRejecting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isRejecting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <X className="h-4 w-4 mr-1" />}
+              Confirmer le rejet
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -372,12 +434,11 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
 
           <DialogFooter className="gap-2">
             <Button 
-              variant="destructive" 
-              onClick={handleReject}
+              variant="outline" 
+              onClick={() => setSelectedDoc(null)}
               disabled={isProcessing}
             >
-              {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4 mr-1" />}
-              Rejeter
+              Annuler
             </Button>
             <Button 
               onClick={handleValidate}

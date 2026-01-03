@@ -39,6 +39,8 @@ export type Database = {
           status: string
           supplier_country: string | null
           supplier_name: string | null
+          uncertainty_percent: number | null
+          uncertainty_source: string | null
           unit: string
           updated_at: string
           user_id: string
@@ -67,6 +69,8 @@ export type Database = {
           status?: string
           supplier_country?: string | null
           supplier_name?: string | null
+          uncertainty_percent?: number | null
+          uncertainty_source?: string | null
           unit: string
           updated_at?: string
           user_id: string
@@ -95,6 +99,8 @@ export type Database = {
           status?: string
           supplier_country?: string | null
           supplier_name?: string | null
+          uncertainty_percent?: number | null
+          uncertainty_source?: string | null
           unit?: string
           updated_at?: string
           user_id?: string
@@ -1564,6 +1570,7 @@ export type Database = {
           ocr_raw_result: Json | null
           ocr_status: string
           organization_id: string | null
+          rejection_reason: string | null
           supplier_name: string | null
           updated_at: string
           user_id: string
@@ -1588,6 +1595,7 @@ export type Database = {
           ocr_raw_result?: Json | null
           ocr_status?: string
           organization_id?: string | null
+          rejection_reason?: string | null
           supplier_name?: string | null
           updated_at?: string
           user_id: string
@@ -1612,6 +1620,7 @@ export type Database = {
           ocr_raw_result?: Json | null
           ocr_status?: string
           organization_id?: string | null
+          rejection_reason?: string | null
           supplier_name?: string | null
           updated_at?: string
           user_id?: string
@@ -2085,6 +2094,17 @@ export type Database = {
           total_co2e: number | null
           updated_at: string | null
           user_id: string | null
+        }
+        Relationships: []
+      }
+      scope_completion_stats: {
+        Row: {
+          completion_percent: number | null
+          ghg_scope: string | null
+          total_activities: number | null
+          total_co2_kg: number | null
+          user_id: string | null
+          validated_count: number | null
         }
         Relationships: []
       }

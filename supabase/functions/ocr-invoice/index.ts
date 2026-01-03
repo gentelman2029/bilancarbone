@@ -388,10 +388,102 @@ Extrais UNIQUEMENT les données de la section "Total Électricité" / "إجما�
 - ghg_category doit être "electricite"
 - unit doit être "kWh"
 Retourne uniquement le JSON structuré.`;
+    } else if (document_type === 'transport_invoice' || document_type === 'freight_invoice') {
+      extractionInstruction = `FACTURE DE TRANSPORT / FRET - EXTRACTION PRÉCISE
+
+=== RÈGLE N°1 - IDENTIFICATION ===
+- document_type: "transport_invoice" ou "freight_invoice"
+- Extrais: numéro de facture, date, nom du transporteur
+
+=== RÈGLE N°2 - DONNÉES DE TRANSPORT ===
+CHERCHE les tonnes-kilomètres (t.km ou tkm):
+- Poids transporté en tonnes
+- Distance parcourue en km
+- OU directement les t.km si indiqués
+
+CALCUL si non fourni: t.km = poids (tonnes) × distance (km)
+
+=== RÈGLE N°3 - TYPE DE TRANSPORT ===
+| Type | Facteur CO2 (kgCO2e/t.km) | ghg_category |
+|------|---------------------------|--------------|
+| Routier (camion) | 0.0612 | fret_routier |
+| Maritime (conteneur) | 0.0162 | fret_maritime |
+| Aérien (cargo) | 1.131 | fret_aerien |
+| Ferroviaire | 0.0225 | fret_ferroviaire |
+
+=== RÈGLE N°4 - FORMAT JSON ===
+{
+  "document_type": "freight_invoice",
+  "supplier_name": "DHL",
+  "invoice_number": "INV-2024-001",
+  "invoice_date": "2024-03-15",
+  "transport_type": "routier",
+  "weight_tonnes": 5.5,
+  "distance_km": 450,
+  "quantity": 2475,
+  "unit": "t.km",
+  "ghg_scope": "scope3",
+  "ghg_category": "fret_routier",
+  "emission_factor": 0.0612,
+  "calculated_co2_kg": 151.47,
+  "confidence_score": 0.85,
+  "extraction_notes": "Transport routier - 5.5t × 450km = 2475 t.km"
+}`;
+    } else if (document_type === 'refrigerant_invoice') {
+      extractionInstruction = `FACTURE FLUIDES FRIGORIGÈNES / CLIMATISATION - EXTRACTION PRÉCISE
+
+=== RÈGLE N°1 - IDENTIFICATION ===
+- document_type: "refrigerant_invoice"
+- Scope 1 (émissions directes de fuites)
+- Extrais: numéro de facture, date, nom de l'entreprise de maintenance
+
+=== RÈGLE N°2 - CODES GAZ FRIGORIGÈNES ===
+CHERCHE les codes de gaz (kg rechargés = fuites estimées):
+| Code Gaz | GWP (PRG) | Facteur CO2 (kgCO2e/kg) |
+|----------|-----------|-------------------------|
+| R-410A | 2088 | 2088 |
+| R-32 | 675 | 675 |
+| R-134a | 1430 | 1430 |
+| R-404A | 3922 | 3922 |
+| R-407C | 1774 | 1774 |
+| R-22 (HCFC) | 1810 | 1810 |
+| R-290 (propane) | 3 | 3 |
+| R-744 (CO2) | 1 | 1 |
+
+=== RÈGLE N°3 - EXTRACTION ===
+- Cherche "recharge", "rechargement", "complément"
+- La quantité rechargée = quantité de fuites (Scope 1)
+- Unité: kg
+
+=== RÈGLE N°4 - FORMAT JSON ===
+{
+  "document_type": "refrigerant_invoice",
+  "supplier_name": "Clima Services",
+  "invoice_number": "CS-2024-0123",
+  "invoice_date": "2024-06-20",
+  "refrigerant_items": [
+    {
+      "gas_code": "R-410A",
+      "gas_name": "R-410A HFC",
+      "quantity_kg": 2.5,
+      "gwp": 2088,
+      "co2_kg": 5220
+    }
+  ],
+  "total_quantity": 2.5,
+  "quantity": 2.5,
+  "unit": "kg",
+  "ghg_scope": "scope1",
+  "ghg_category": "fluides_frigorigenes",
+  "emission_factor": 2088,
+  "total_co2_kg": 5220,
+  "calculated_co2_kg": 5220,
+  "confidence_score": 0.9,
+  "extraction_notes": "Recharge R-410A - 2.5 kg × GWP 2088 = 5220 kg CO2e"
+}`;
     } else {
       extractionInstruction = "Analyse cette facture et extrais les informations de consommation d'énergie. IMPORTANT: Extrait la CONSOMMATION (kWh, thermies, litres, m³), PAS le montant en devises. Retourne uniquement le JSON structuré.";
     }
-
     // Prepare content for AI
     let userContent: any[] = [
       {

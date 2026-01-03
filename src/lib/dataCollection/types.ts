@@ -27,6 +27,8 @@ export type DocumentType =
   // Scope 3 - Autres
   | 'asset_invoice'         // Facture immobilisations (équipements, bâtiments)
   | 'leasing_invoice'       // Contrat leasing/location
+  | 'csv_import'            // Import CSV comptable
+  | 'accounting_entries'    // Écritures comptables
   | 'other';                // Autre document
 
 export type OcrStatus = 'pending' | 'processing' | 'processed' | 'failed' | 'manual_required';
@@ -122,6 +124,9 @@ export interface ActivityData {
   co2_equivalent_kg?: number;
   calculation_metadata_id?: string;
   status: ActivityStatus;
+  // Audit trail fields
+  uncertainty_percent?: number;
+  uncertainty_source?: 'invoice' | 'estimate' | 'monetary_ratio';
   created_at: string;
   updated_at: string;
 }
@@ -209,7 +214,11 @@ export const GHG_CATEGORIES = {
     { id: 'transport_aerien', label: 'Transport aérien', unit: 't.km' },
     { id: 'transport_maritime', label: 'Transport maritime', unit: 't.km' },
     { id: 'dechets', label: 'Déchets', unit: 'tonnes' },
-    { id: 'achats', label: 'Achats de biens', unit: 'EUR' },
+    { id: 'achats_biens', label: 'Achats de biens', unit: 'EUR' },
+    { id: 'achats_services', label: 'Achats de services', unit: 'EUR' },
+    { id: 'fret_routier', label: 'Fret routier', unit: 't.km' },
+    { id: 'fret_maritime', label: 'Fret maritime', unit: 't.km' },
+    { id: 'fret_aerien', label: 'Fret aérien', unit: 't.km' },
   ],
 };
 
@@ -237,6 +246,8 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   // Scope 3 - Autres
   asset_invoice: 'Facture immobilisations',
   leasing_invoice: 'Contrat leasing/location',
+  csv_import: 'Import CSV comptable',
+  accounting_entries: 'Écritures comptables',
   other: 'Autre document',
 };
 

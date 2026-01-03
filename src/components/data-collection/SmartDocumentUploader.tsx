@@ -173,11 +173,18 @@ export function SmartDocumentUploader({ onUploadComplete }: SmartDocumentUploade
     }
   };
 
-  const documentTypes: { type: DocumentType; label: string; icon: string }[] = [
-    { type: 'electricity_bill', label: 'Électricité', icon: '⚡' },
-    { type: 'fuel_invoice', label: 'Carburant', icon: '⛽' },
-    { type: 'gas_bill', label: 'Gaz', icon: '🔥' },
-    { type: 'transport_invoice', label: 'Transport', icon: '🚚' },
+  const documentTypes: { type: DocumentType; label: string; icon: string; scope: string }[] = [
+    // Scope 1
+    { type: 'gas_bill', label: 'Gaz', icon: '🔥', scope: '1' },
+    { type: 'fuel_invoice', label: 'Carburant', icon: '⛽', scope: '1' },
+    { type: 'fuel_voucher', label: 'Bon Carburant', icon: '🎫', scope: '1' },
+    { type: 'refrigerant_invoice', label: 'Fluides frigorigènes', icon: '❄️', scope: '1' },
+    // Scope 2
+    { type: 'electricity_bill', label: 'Électricité', icon: '⚡', scope: '2' },
+    // Scope 3
+    { type: 'transport_invoice', label: 'Transport', icon: '🚚', scope: '3' },
+    { type: 'freight_invoice', label: 'Fret', icon: '📦', scope: '3' },
+    { type: 'purchase_invoice', label: 'Achats/Services', icon: '🛒', scope: '3' },
   ];
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -215,7 +222,7 @@ export function SmartDocumentUploader({ onUploadComplete }: SmartDocumentUploade
                 1. Sélectionnez le type de document
               </h3>
               <div className="flex flex-wrap justify-center gap-2">
-                {documentTypes.map(({ type, label, icon }) => (
+                {documentTypes.map(({ type, label, icon, scope }) => (
                   <Button
                     key={type}
                     variant={selectedDocumentType === type ? 'default' : 'outline'}
@@ -228,7 +235,14 @@ export function SmartDocumentUploader({ onUploadComplete }: SmartDocumentUploade
                     }`}
                   >
                     <span>{icon}</span>
-                    {label}
+                    <span>{label}</span>
+                    <span className={`text-[10px] px-1 rounded ${
+                      scope === '1' ? 'bg-red-500/20 text-red-600' :
+                      scope === '2' ? 'bg-amber-500/20 text-amber-600' :
+                      'bg-blue-500/20 text-blue-600'
+                    }`}>
+                      S{scope}
+                    </span>
                   </Button>
                 ))}
               </div>

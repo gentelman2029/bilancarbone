@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Calculator, Download, RotateCcw, Factory, Car, Zap, Trash2, Building, Plane, Ship, TreePine, Flame, Save, X, CheckCircle2, Sparkles } from "lucide-react";
+import { Calculator, Download, RotateCcw, Factory, Car, Zap, Trash2, Building, Plane, Ship, TreePine, Flame, Save, X, CheckCircle2, Sparkles, TrendingUp, Globe } from "lucide-react";
 import { useEmissions } from '@/contexts/EmissionsContext';
 import { useCarbonReports } from '@/hooks/useCarbonReports';
 import { useTranslation } from 'react-i18next';
@@ -606,9 +606,149 @@ export const AdvancedGHGCalculator = () => {
   };
 
   const emissions = getEmissionsByScope();
+  
+  // Calcul du total global incluant Scope 3 avancé
+  const scope3TotalWithAdvanced = isAdvancedMode 
+    ? (emissions.scope3 + scope3AdvancedTotal) 
+    : emissions.scope3;
+  const totalGlobal = emissions.scope1 + emissions.scope2 + scope3TotalWithAdvanced;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      {/* Dashboard Global - Toujours visible en premier */}
+      <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-background to-accent/5">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              Résultat Global des Émissions GES
+            </CardTitle>
+            {isAdvancedMode && (
+              <Badge className="bg-green-600 hover:bg-green-700 text-white">
+                <CheckCircle2 className="h-3 w-3 mr-1" />
+                GHG Protocol - 15 catégories
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {/* Scope 1 */}
+            <Card className="p-4 bg-red-500/10 border-red-500/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Flame className="h-4 w-4 text-red-500" />
+                <span className="text-sm font-medium text-muted-foreground">Scope 1</span>
+              </div>
+              <div className="text-2xl font-bold text-red-600">
+                {(emissions.scope1 / 1000).toFixed(2)}
+              </div>
+              <div className="text-xs text-muted-foreground">tCO₂e</div>
+            </Card>
+
+            {/* Scope 2 */}
+            <Card className="p-4 bg-amber-500/10 border-amber-500/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Zap className="h-4 w-4 text-amber-500" />
+                <span className="text-sm font-medium text-muted-foreground">Scope 2</span>
+              </div>
+              <div className="text-2xl font-bold text-amber-600">
+                {(emissions.scope2 / 1000).toFixed(2)}
+              </div>
+              <div className="text-xs text-muted-foreground">tCO₂e</div>
+            </Card>
+
+            {/* Scope 3 */}
+            <Card className="p-4 bg-blue-500/10 border-blue-500/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Globe className="h-4 w-4 text-blue-500" />
+                <span className="text-sm font-medium text-muted-foreground">Scope 3</span>
+              </div>
+              <div className="text-2xl font-bold text-blue-600">
+                {(scope3TotalWithAdvanced / 1000).toFixed(2)}
+              </div>
+              <div className="text-xs text-muted-foreground">tCO₂e</div>
+            </Card>
+
+            {/* Séparateur visuel */}
+            <div className="hidden md:flex items-center justify-center">
+              <div className="text-3xl font-bold text-muted-foreground">=</div>
+            </div>
+
+            {/* Total Global */}
+            <Card className="p-4 bg-gradient-to-br from-primary/20 to-accent/20 border-primary/50 col-span-2 md:col-span-1">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                <span className="text-sm font-bold text-foreground">TOTAL</span>
+              </div>
+              <div className="text-3xl font-bold text-primary">
+                {(totalGlobal / 1000).toFixed(2)}
+              </div>
+              <div className="text-xs text-muted-foreground">tCO₂e</div>
+            </Card>
+          </div>
+
+          {/* Barre de répartition */}
+          {totalGlobal > 0 && (
+            <div className="mt-4 space-y-2">
+              <div className="flex h-4 rounded-full overflow-hidden bg-muted">
+                <div 
+                  className="bg-red-500 transition-all duration-500"
+                  style={{ width: `${(emissions.scope1 / totalGlobal) * 100}%` }}
+                />
+                <div 
+                  className="bg-amber-500 transition-all duration-500"
+                  style={{ width: `${(emissions.scope2 / totalGlobal) * 100}%` }}
+                />
+                <div 
+                  className="bg-blue-500 transition-all duration-500"
+                  style={{ width: `${(scope3TotalWithAdvanced / totalGlobal) * 100}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-red-500" />
+                  Scope 1: {((emissions.scope1 / totalGlobal) * 100).toFixed(1)}%
+                </span>
+                <span className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-amber-500" />
+                  Scope 2: {((emissions.scope2 / totalGlobal) * 100).toFixed(1)}%
+                </span>
+                <span className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                  Scope 3: {((scope3TotalWithAdvanced / totalGlobal) * 100).toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Intensité carbone et CA */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-border/50">
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <span className="text-sm text-muted-foreground">Intensité carbone</span>
+              <span className="text-lg font-bold text-destructive">
+                {chiffreAffaires > 0 ? (totalGlobal / 1000 / chiffreAffaires).toFixed(3) : '0.000'} tCO₂e/k€
+              </span>
+            </div>
+            <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+              <span className="text-sm text-muted-foreground">CA:</span>
+              <Input
+                type="number"
+                value={chiffreAffaires}
+                onChange={(e) => setChiffreAffaires(Number(e.target.value) || 1000)}
+                className="w-24 text-center font-bold h-8"
+              />
+              <span className="text-sm font-medium">k€</span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <span className="text-sm text-muted-foreground">Par employé</span>
+              <span className="text-lg font-bold">
+                {nombrePersonnels > 0 ? (totalGlobal / 1000 / nombrePersonnels).toFixed(2) : '0.00'} tCO₂e
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Header with mode toggle */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="text-center md:text-left space-y-2">
@@ -637,54 +777,12 @@ export const AdvancedGHGCalculator = () => {
             <Sparkles className="h-5 w-5 text-primary" />
             <span className="text-sm font-medium">Avancé</span>
           </div>
-          {isAdvancedMode && (
-            <Badge className="bg-green-600 hover:bg-green-700 text-white ml-2">
-              <CheckCircle2 className="h-3 w-3 mr-1" />
-              GHG Protocol
-            </Badge>
-          )}
         </div>
       </div>
 
-      {/* Métriques principales */}
+      {/* Anciens métriques masquées - remplacées par le dashboard global */}
       {calculations.length > 0 && (
         <div>
-          {/* Métriques principales */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <Card className="p-6 bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/20">
-            <div className="text-center space-y-2">
-              <div className="text-3xl font-bold text-primary">
-                {(getTotalEmissions() / 1000).toFixed(1)}
-              </div>
-              <div className="text-sm text-muted-foreground">Total tCO2e</div>
-            </div>
-          </Card>
-          
-          <Card className="p-6 bg-gradient-to-br from-secondary/5 to-accent/5 border border-secondary/20">
-            <div className="text-center space-y-2">
-              <div className="text-lg text-muted-foreground mb-2">Intensité carbone</div>
-              <div className="text-3xl font-bold text-destructive">
-                {(getTotalEmissions() / 1000 / chiffreAffaires).toFixed(3)}
-              </div>
-              <div className="text-sm text-muted-foreground">tCO2e/k€ CA</div>
-            </div>
-          </Card>
-          
-          <Card className="p-6 bg-gradient-to-br from-accent/5 to-primary/5 border border-accent/20">
-            <div className="text-center space-y-2">
-              <div className="text-lg text-muted-foreground mb-2">Chiffre d'affaires</div>
-              <div className="flex items-center justify-center gap-2">
-                <Input
-                  type="number"
-                  value={chiffreAffaires}
-                  onChange={(e) => setChiffreAffaires(Number(e.target.value) || 1000)}
-                  className="w-24 text-center text-2xl font-bold border-accent/30"
-                />
-                <span className="text-2xl font-bold text-accent">k€</span>
-              </div>
-            </div>
-          </Card>
-        </div>
 
         {/* Nouveaux champs d'entreprise */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">

@@ -186,7 +186,19 @@ export const AdvancedGHGCalculator = () => {
     const saved = localStorage.getItem('calculator-advanced-mode');
     return saved ? JSON.parse(saved) : false;
   });
-  const [scope3AdvancedTotal, setScope3AdvancedTotal] = useState(0);
+  // Charger le total Scope 3 avancé depuis localStorage au démarrage
+  const [scope3AdvancedTotal, setScope3AdvancedTotal] = useState(() => {
+    const savedCalculations = localStorage.getItem('scope3-advanced-calculations');
+    if (savedCalculations) {
+      try {
+        const calculations = JSON.parse(savedCalculations);
+        return calculations.reduce((sum: number, c: any) => sum + (c.emissions || 0), 0);
+      } catch {
+        return 0;
+      }
+    }
+    return 0;
+  });
   
   // Hook pour les détails de calcul par section
   const { 
@@ -364,16 +376,19 @@ export const AdvancedGHGCalculator = () => {
     updateEmissions({ positionClassement });
   }, [positionClassement, updateEmissions]);
 
-  // Sauvegarder les calculs et mettre à jour le contexte
+  // Sauvegarder les calculs et mettre à jour le contexte (incluant Scope 3 avancé)
   useEffect(() => {
     localStorage.setItem('calculator-calculations', JSON.stringify(calculations));
     const emissionsByScope = getEmissionsByScope();
+    const scope3Total = isAdvancedMode 
+      ? emissionsByScope.scope3 + scope3AdvancedTotal 
+      : emissionsByScope.scope3;
     updateEmissions({
       scope1: emissionsByScope.scope1,
       scope2: emissionsByScope.scope2,
-      scope3: emissionsByScope.scope3
+      scope3: scope3Total
     });
-  }, [calculations]);
+  }, [calculations, scope3AdvancedTotal, isAdvancedMode]);
 
   const addCalculation = (scope: string, category: string, subcategory: string, quantity: number) => {
     const scopeData = baseCarbone[scope as keyof typeof baseCarbone] as any;

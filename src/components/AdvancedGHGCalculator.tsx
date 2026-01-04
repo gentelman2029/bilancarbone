@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCalculationDetails } from '@/hooks/useCalculationDetails';
 import { CalculationDetailsSection } from '@/components/CalculationDetailsSection';
 import { Scope3AdvancedModule } from '@/components/scope3/Scope3AdvancedModule';
-
+import { ScopeDetailModal } from '@/components/ScopeDetailModal';
 
 // Base Carbone® ADEME - Facteurs d'émissions complets (kg CO2e par unité)
 const baseCarbone = {
@@ -187,6 +187,10 @@ export const AdvancedGHGCalculator = () => {
     const saved = localStorage.getItem('calculator-advanced-mode');
     return saved ? JSON.parse(saved) : false;
   });
+  
+  // États pour les modales de détail des scopes
+  const [openScopeModal, setOpenScopeModal] = useState<1 | 2 | 3 | null>(null);
+  
   // Charger le total Scope 3 avancé depuis localStorage au démarrage
   const [scope3AdvancedTotal, setScope3AdvancedTotal] = useState(() => {
     const savedCalculations = localStorage.getItem('scope3-advanced-calculations');
@@ -210,6 +214,47 @@ export const AdvancedGHGCalculator = () => {
     clearAllDetails,
     getTotalEmissionsBySection 
   } = useCalculationDetails();
+
+  // Convertir les calculs en entrées pour les modales
+  const getScopeEntries = (scopeNumber: 1 | 2 | 3) => {
+    const scopeKey = `scope${scopeNumber}`;
+    return calculations
+      .filter(c => c.category === scopeKey)
+      .map((c, index) => ({
+        id: `${scopeKey}-${index}-${c.subcategory}`,
+        source: c.description,
+        quantity: c.quantity,
+        unit: c.unit,
+        emissionFactor: c.emissionFactor,
+        total: c.emissions
+      }));
+  };
+
+  // Mettre à jour les calculs depuis les entrées modifiées dans la modale
+  const handleScopeEntriesChange = (scopeNumber: 1 | 2 | 3, entries: { id: string; source: string; quantity: number; unit: string; emissionFactor: number; total: number }[]) => {
+    const scopeKey = `scope${scopeNumber}`;
+    
+    // Supprimer les anciens calculs de ce scope
+    const otherCalculations = calculations.filter(c => c.category !== scopeKey);
+    
+    // Convertir les entrées en CalculationResult
+    const newCalculations: CalculationResult[] = entries.map(entry => ({
+      category: scopeKey,
+      subcategory: entry.source.toLowerCase().replace(/\s+/g, '-'),
+      quantity: entry.quantity,
+      unit: entry.unit,
+      emissionFactor: entry.emissionFactor,
+      emissions: entry.total,
+      description: entry.source
+    }));
+    
+    setCalculations([...otherCalculations, ...newCalculations]);
+    
+    toast({
+      title: "Dashboard mis à jour",
+      description: `Le Scope ${scopeNumber} a été recalculé`,
+    });
+  };
 
   // États pour les formulaires avec persistance
   const [scope1Data, setScope1Data] = useState(() => {
@@ -690,8 +735,11 @@ export const AdvancedGHGCalculator = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {/* Scope 1 */}
-            <Card className="p-4 bg-red-500/10 border-red-500/30">
+            {/* Scope 1 - Cliquable */}
+            <Card 
+              className="p-4 bg-red-500/10 border-red-500/30 cursor-pointer hover:bg-red-500/20 hover:border-red-500/50 transition-all duration-200 hover:shadow-md"
+              onClick={() => setOpenScopeModal(1)}
+            >
               <div className="flex items-center gap-2 mb-2">
                 <Flame className="h-4 w-4 text-red-500" />
                 <span className="text-sm font-medium text-muted-foreground">Scope 1</span>
@@ -702,8 +750,11 @@ export const AdvancedGHGCalculator = () => {
               <div className="text-xs text-muted-foreground">tCO₂e</div>
             </Card>
 
-            {/* Scope 2 */}
-            <Card className="p-4 bg-amber-500/10 border-amber-500/30">
+            {/* Scope 2 - Cliquable */}
+            <Card 
+              className="p-4 bg-amber-500/10 border-amber-500/30 cursor-pointer hover:bg-amber-500/20 hover:border-amber-500/50 transition-all duration-200 hover:shadow-md"
+              onClick={() => setOpenScopeModal(2)}
+            >
               <div className="flex items-center gap-2 mb-2">
                 <Zap className="h-4 w-4 text-amber-500" />
                 <span className="text-sm font-medium text-muted-foreground">Scope 2</span>
@@ -714,8 +765,11 @@ export const AdvancedGHGCalculator = () => {
               <div className="text-xs text-muted-foreground">tCO₂e</div>
             </Card>
 
-            {/* Scope 3 */}
-            <Card className="p-4 bg-blue-500/10 border-blue-500/30">
+            {/* Scope 3 - Cliquable */}
+            <Card 
+              className="p-4 bg-blue-500/10 border-blue-500/30 cursor-pointer hover:bg-blue-500/20 hover:border-blue-500/50 transition-all duration-200 hover:shadow-md"
+              onClick={() => setOpenScopeModal(3)}
+            >
               <div className="flex items-center gap-2 mb-2">
                 <Globe className="h-4 w-4 text-blue-500" />
                 <span className="text-sm font-medium text-muted-foreground">Scope 3</span>
@@ -1880,6 +1934,32 @@ export const AdvancedGHGCalculator = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Modales de détail des scopes */}
+      <ScopeDetailModal
+        isOpen={openScopeModal === 1}
+        onClose={() => setOpenScopeModal(null)}
+        scopeNumber={1}
+        scopeTitle="Scope 1"
+        entries={getScopeEntries(1)}
+        onEntriesChange={(entries) => handleScopeEntriesChange(1, entries)}
+      />
+      <ScopeDetailModal
+        isOpen={openScopeModal === 2}
+        onClose={() => setOpenScopeModal(null)}
+        scopeNumber={2}
+        scopeTitle="Scope 2"
+        entries={getScopeEntries(2)}
+        onEntriesChange={(entries) => handleScopeEntriesChange(2, entries)}
+      />
+      <ScopeDetailModal
+        isOpen={openScopeModal === 3}
+        onClose={() => setOpenScopeModal(null)}
+        scopeNumber={3}
+        scopeTitle="Scope 3"
+        entries={getScopeEntries(3)}
+        onEntriesChange={(entries) => handleScopeEntriesChange(3, entries)}
+      />
 
     </div>
   );

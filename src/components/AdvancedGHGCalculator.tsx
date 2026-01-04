@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Calculator, Download, RotateCcw, Factory, Car, Zap, Trash2, Building, Plane, Ship, TreePine, Flame, Save, X, CheckCircle2, Sparkles, TrendingUp, Globe } from "lucide-react";
+import { Calculator, Download, RotateCcw, Factory, Car, Zap, Trash2, Building, Plane, Ship, TreePine, Flame, Save, X, CheckCircle2, Sparkles, TrendingUp, Globe, ArrowDown, ArrowUp, Calendar } from "lucide-react";
 import { useEmissions } from '@/contexts/EmissionsContext';
 import { useCarbonReports } from '@/hooks/useCarbonReports';
 import { useTranslation } from 'react-i18next';
@@ -619,10 +619,41 @@ export const AdvancedGHGCalculator = () => {
       <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-background to-accent/5">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-xl flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              Résultat Global des Émissions GES
-            </CardTitle>
+            <div className="flex items-center gap-3">
+              <CardTitle className="text-xl flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                Résultat Global des Émissions GES
+              </CardTitle>
+              <Badge variant="outline" className="text-sm font-medium">
+                <Calendar className="h-3 w-3 mr-1" />
+                Année 2025
+              </Badge>
+              {/* Indicateur de variation par rapport à l'année précédente */}
+              {emissionsAnneePrecedente > 0 && totalGlobal > 0 && (
+                (() => {
+                  const currentTotal = totalGlobal / 1000;
+                  const variation = ((currentTotal - emissionsAnneePrecedente) / emissionsAnneePrecedente) * 100;
+                  const isReduction = variation < 0;
+                  return (
+                    <Badge 
+                      className={`flex items-center gap-1 ${
+                        isReduction 
+                          ? 'bg-red-100 text-red-700 hover:bg-red-200 border-red-300' 
+                          : 'bg-green-100 text-green-700 hover:bg-green-200 border-green-300'
+                      }`}
+                      variant="outline"
+                    >
+                      {isReduction ? (
+                        <ArrowDown className="h-3 w-3" />
+                      ) : (
+                        <ArrowUp className="h-3 w-3" />
+                      )}
+                      {Math.abs(variation).toFixed(1)}% vs 2024
+                    </Badge>
+                  );
+                })()
+              )}
+            </div>
             {isAdvancedMode && (
               <Badge className="bg-green-600 hover:bg-green-700 text-white">
                 <CheckCircle2 className="h-3 w-3 mr-1" />
@@ -956,13 +987,18 @@ export const AdvancedGHGCalculator = () => {
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-500">
-                  {(emissions.scope3 / 1000).toFixed(1)}
+                  {(scope3TotalWithAdvanced / 1000).toFixed(1)}
                 </div>
                 <div className="text-sm text-muted-foreground">Scope 3 (tCO2e)</div>
+                {isAdvancedMode && scope3AdvancedTotal > 0 && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    (incl. {(scope3AdvancedTotal / 1000).toFixed(1)}t avancé)
+                  </div>
+                )}
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-primary">
-                  {(getTotalEmissions() / 1000).toFixed(1)}
+                  {(totalGlobal / 1000).toFixed(1)}
                 </div>
                 <div className="text-sm text-muted-foreground">Total (tCO2e)</div>
               </div>

@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Calculator, Download, RotateCcw, Factory, Car, Zap, Trash2, Building, Plane, Ship, TreePine, Flame, Save, X, CheckCircle2, Sparkles, TrendingUp, Globe, ArrowDown, ArrowUp, Calendar } from "lucide-react";
+import { Calculator, Download, RotateCcw, Factory, Car, Zap, Trash2, Building, Plane, Ship, TreePine, Flame, Save, X, CheckCircle2, Sparkles, TrendingUp, Globe, ArrowDown, ArrowUp, Calendar, FileText } from "lucide-react";
 import { useEmissions } from '@/contexts/EmissionsContext';
 import { useCarbonReports } from '@/hooks/useCarbonReports';
 import { useTranslation } from 'react-i18next';
@@ -834,7 +834,7 @@ export const AdvancedGHGCalculator = () => {
 
           <Card className="p-6">
             <div className="text-center space-y-2">
-              <div className="text-lg text-muted-foreground mb-2">Émissions année précédente (2023)</div>
+              <div className="text-lg text-muted-foreground mb-2">Émissions année précédente (2024)</div>
               <div className="flex items-center justify-center gap-2">
                 <Input
                   type="number"
@@ -850,7 +850,7 @@ export const AdvancedGHGCalculator = () => {
 
           <Card className="p-6">
             <div className="text-center space-y-2">
-              <div className="text-lg text-muted-foreground mb-2">Émissions Réelles (2024)</div>
+              <div className="text-lg text-muted-foreground mb-2">Émissions Réelles (2025)</div>
               <div className="flex items-center justify-center gap-2">
                 <Input
                   type="number"
@@ -1023,7 +1023,7 @@ export const AdvancedGHGCalculator = () => {
 
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="scope1" className="flex items-center gap-2">
             <Factory className="h-4 w-4" />
             Scope 1
@@ -1035,6 +1035,10 @@ export const AdvancedGHGCalculator = () => {
           <TabsTrigger value="scope3" className="flex items-center gap-2">
             <Building className="h-4 w-4" />
             Scope 3
+          </TabsTrigger>
+          <TabsTrigger value="details" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Détails calcul
           </TabsTrigger>
         </TabsList>
 
@@ -1183,17 +1187,6 @@ export const AdvancedGHGCalculator = () => {
               </div>
             </CardContent>
           </Card>
-          
-          {/* Section des détails de calcul Scope 1 */}
-          <CalculationDetailsSection
-            title="Détails des Calculs Scope 1"
-            icon={<Flame className="h-5 w-5" />}
-            details={sectionDetails.scope1}
-            sectionColor="destructive"
-            onRemoveDetail={(detailId) => removeCalculationDetail('scope1', detailId)}
-            onClearSection={() => clearSectionDetails('scope1')}
-            className="mt-6"
-          />
         </TabsContent>
 
         {/* SCOPE 2 */}
@@ -1292,17 +1285,6 @@ export const AdvancedGHGCalculator = () => {
                   </div>
                 </CardContent>
               </Card>
-          
-              {/* Section des détails de calcul Scope 2 */}
-              <CalculationDetailsSection
-                title="Détails des Calculs Scope 2"
-                icon={<Zap className="h-5 w-5" />}
-                details={sectionDetails.scope2}
-                sectionColor="default"
-                onRemoveDetail={(detailId) => removeCalculationDetail('scope2', detailId)}
-                onClearSection={() => clearSectionDetails('scope2')}
-                className="mt-6"
-              />
             </div>
           </ScrollArea>
         </TabsContent>
@@ -1570,85 +1552,181 @@ export const AdvancedGHGCalculator = () => {
                   </div>
                 </CardContent>
               </Card>
-              
-              {/* Section des détails de calcul Scope 3 */}
-              <CalculationDetailsSection
-                title="Détails des Calculs Scope 3"
-                icon={<Building className="h-5 w-5" />}
-                details={sectionDetails.scope3}
-                sectionColor="secondary"
-                onRemoveDetail={(detailId) => removeCalculationDetail('scope3', detailId)}
-                onClearSection={() => clearSectionDetails('scope3')}
-                className="mt-6"
-              />
             </>
           )}
         </TabsContent>
+
+        {/* DÉTAILS DE CALCUL - Onglet unifié pour les 3 scopes */}
+        <TabsContent value="details" className="space-y-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Détail des Calculs - Année 2025
+                </CardTitle>
+                <div className="flex items-center gap-3">
+                  <Badge variant="outline" className="text-sm">
+                    <Calculator className="h-3 w-3 mr-1" />
+                    {calculations.length} calcul{calculations.length > 1 ? 's' : ''} enregistré{calculations.length > 1 ? 's' : ''}
+                  </Badge>
+                  <Button 
+                    onClick={resetCalculations} 
+                    variant="outline" 
+                    size="sm"
+                    className="h-8"
+                    disabled={calculations.length === 0}
+                  >
+                    <RotateCcw className="h-4 w-4 mr-1" />
+                    Réinitialiser tout
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {/* Résumé des totaux */}
+              <div className="grid grid-cols-4 gap-4 mb-6 p-4 bg-muted/30 rounded-lg">
+                <div className="text-center border-r border-border/50">
+                  <div className="text-sm text-muted-foreground">Scope 1</div>
+                  <div className="text-xl font-bold text-red-600">{(emissions.scope1 / 1000).toFixed(2)} tCO₂e</div>
+                </div>
+                <div className="text-center border-r border-border/50">
+                  <div className="text-sm text-muted-foreground">Scope 2</div>
+                  <div className="text-xl font-bold text-amber-600">{(emissions.scope2 / 1000).toFixed(2)} tCO₂e</div>
+                </div>
+                <div className="text-center border-r border-border/50">
+                  <div className="text-sm text-muted-foreground">Scope 3</div>
+                  <div className="text-xl font-bold text-blue-600">{(scope3TotalWithAdvanced / 1000).toFixed(2)} tCO₂e</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm font-medium text-foreground">TOTAL</div>
+                  <div className="text-xl font-bold text-primary">{(totalGlobal / 1000).toFixed(2)} tCO₂e</div>
+                </div>
+              </div>
+
+              {/* Sections de détails par scope */}
+              <div className="space-y-6">
+                {/* Scope 1 */}
+                <CalculationDetailsSection
+                  title="Scope 1 - Émissions Directes"
+                  icon={<Flame className="h-5 w-5 text-red-500" />}
+                  details={sectionDetails.scope1}
+                  sectionColor="destructive"
+                  onRemoveDetail={(detailId) => removeCalculationDetail('scope1', detailId)}
+                  onClearSection={() => clearSectionDetails('scope1')}
+                />
+
+                {/* Scope 2 */}
+                <CalculationDetailsSection
+                  title="Scope 2 - Émissions Indirectes Énergie"
+                  icon={<Zap className="h-5 w-5 text-amber-500" />}
+                  details={sectionDetails.scope2}
+                  sectionColor="default"
+                  onRemoveDetail={(detailId) => removeCalculationDetail('scope2', detailId)}
+                  onClearSection={() => clearSectionDetails('scope2')}
+                />
+
+                {/* Scope 3 */}
+                <CalculationDetailsSection
+                  title="Scope 3 - Autres Émissions Indirectes"
+                  icon={<Globe className="h-5 w-5 text-blue-500" />}
+                  details={sectionDetails.scope3}
+                  sectionColor="secondary"
+                  onRemoveDetail={(detailId) => removeCalculationDetail('scope3', detailId)}
+                  onClearSection={() => clearSectionDetails('scope3')}
+                />
+
+                {/* Message si aucun détail */}
+                {sectionDetails.scope1.length === 0 && sectionDetails.scope2.length === 0 && sectionDetails.scope3.length === 0 && calculations.length === 0 && (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Calculator className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p className="text-lg font-medium">Aucun calcul enregistré</p>
+                    <p className="text-sm">Ajoutez des données dans les onglets Scope 1, 2 ou 3 pour voir les détails ici</p>
+                  </div>
+                )}
+
+                {/* Tableau récapitulatif si calculs présents */}
+                {calculations.length > 0 && (
+                  <Card className="border-primary/20">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Calculator className="h-5 w-5" />
+                        Tableau Récapitulatif
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="overflow-x-auto">
+                        <table className="w-full border-collapse">
+                          <thead>
+                            <tr className="border-b bg-muted/50">
+                              <th className="text-left p-3 font-medium">Scope</th>
+                              <th className="text-left p-3 font-medium">Description</th>
+                              <th className="text-right p-3 font-medium">Quantité</th>
+                              <th className="text-right p-3 font-medium">Facteur d'émission</th>
+                              <th className="text-right p-3 font-medium">Émissions (kg CO₂e)</th>
+                              <th className="text-center p-3 font-medium">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {calculations.map((calc, index) => (
+                              <tr key={index} className="border-b hover:bg-muted/30">
+                                <td className="p-3">
+                                  <Badge variant={calc.category === 'scope1' ? 'destructive' : calc.category === 'scope2' ? 'default' : 'secondary'}>
+                                    {calc.category.toUpperCase()}
+                                  </Badge>
+                                </td>
+                                <td className="p-3">{calc.description}</td>
+                                <td className="text-right p-3">{calc.quantity.toLocaleString('fr-FR')} {calc.unit}</td>
+                                <td className="text-right p-3 text-muted-foreground">{calc.emissionFactor} kg CO₂e/{calc.unit}</td>
+                                <td className="text-right p-3 font-semibold">{calc.emissions.toLocaleString('fr-FR', { maximumFractionDigits: 2 })}</td>
+                                <td className="text-center p-3">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      const newCalculations = calculations.filter((_, i) => i !== index);
+                                      setCalculations(newCalculations);
+                                    }}
+                                    className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                          <tfoot>
+                            <tr className="bg-primary/5 font-bold">
+                              <td className="p-3" colSpan={4}>TOTAL GÉNÉRAL (Année 2025)</td>
+                              <td className="text-right p-3 text-primary">{totalGlobal.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} kg CO₂e</td>
+                              <td></td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {/* Actions d'export */}
+              {calculations.length > 0 && (
+                <div className="flex gap-3 mt-6 pt-4 border-t">
+                  <Button onClick={saveToDatabase} variant="default">
+                    <Save className="h-4 w-4 mr-2" />
+                    {isAuthenticated ? "Sauvegarder au Dashboard" : "Connexion requise"}
+                  </Button>
+                  <Button onClick={exportToCSV} variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    Exporter CSV
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
-      {/* Tableau des calculs */}
-      {calculations.length > 0 && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Détail des calculs</CardTitle>
-              <Button 
-                onClick={resetCalculations} 
-                variant="outline" 
-                size="sm"
-                className="h-8"
-              >
-                <RotateCcw className="h-4 w-4 mr-1" />
-                Réinitialiser
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                 <thead>
-                   <tr className="border-b">
-                     <th className="text-left p-2">Scope</th>
-                     <th className="text-left p-2">Description</th>
-                     <th className="text-right p-2">Quantité</th>
-                     <th className="text-right p-2">Facteur</th>
-                     <th className="text-right p-2">Émissions</th>
-                     <th className="text-center p-2">Actions</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                   {calculations.map((calc, index) => (
-                     <tr key={index} className="border-b">
-                       <td className="p-2">
-                         <Badge variant={calc.category === 'scope1' ? 'destructive' : calc.category === 'scope2' ? 'default' : 'secondary'}>
-                           {calc.category.toUpperCase()}
-                         </Badge>
-                       </td>
-                       <td className="p-2">{calc.description}</td>
-                       <td className="text-right p-2">{calc.quantity} {calc.unit}</td>
-                       <td className="text-right p-2">{calc.emissionFactor} kg CO2e/{calc.unit}</td>
-                       <td className="text-right p-2 font-semibold">{calc.emissions.toFixed(2)} kg CO2e</td>
-                       <td className="text-center p-2">
-                         <Button
-                           variant="ghost"
-                           size="sm"
-                           onClick={() => {
-                             const newCalculations = calculations.filter((_, i) => i !== index);
-                             setCalculations(newCalculations);
-                           }}
-                           className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                         >
-                           <X className="h-4 w-4" />
-                         </Button>
-                       </td>
-                     </tr>
-                   ))}
-                 </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

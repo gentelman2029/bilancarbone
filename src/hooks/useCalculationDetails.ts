@@ -64,6 +64,39 @@ export const useCalculationDetails = () => {
     });
   }, []);
 
+  const updateCalculationDetail = useCallback((
+    section: keyof SectionDetails,
+    detailId: string,
+    updates: Partial<Omit<CalculationDetail, 'id' | 'timestamp'>>
+  ) => {
+    setSectionDetails(prev => {
+      const updated = {
+        ...prev,
+        [section]: prev[section].map(detail => 
+          detail.id === detailId 
+            ? { ...detail, ...updates, emissions: (updates.quantity ?? detail.quantity) * (updates.emissionFactor ?? detail.emissionFactor) }
+            : detail
+        )
+      };
+      localStorage.setItem('calculation-section-details', JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  const setSectionDetailsDirectly = useCallback((
+    section: keyof SectionDetails,
+    details: CalculationDetail[]
+  ) => {
+    setSectionDetails(prev => {
+      const updated = {
+        ...prev,
+        [section]: details
+      };
+      localStorage.setItem('calculation-section-details', JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
   const clearSectionDetails = useCallback((section: keyof SectionDetails) => {
     setSectionDetails(prev => {
       const updated = {
@@ -91,8 +124,10 @@ export const useCalculationDetails = () => {
 
   return {
     sectionDetails,
+    setSectionDetails: setSectionDetailsDirectly,
     addCalculationDetail,
     removeCalculationDetail,
+    updateCalculationDetail,
     clearSectionDetails,
     clearAllDetails,
     getTotalEmissionsBySection

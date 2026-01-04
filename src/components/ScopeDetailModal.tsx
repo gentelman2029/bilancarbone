@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -56,15 +56,16 @@ export const ScopeDetailModal: React.FC<ScopeDetailModalProps> = ({
     emissionFactor: 0
   });
 
-  // Reset local state when modal opens with new entries
+  // Sync local entries when modal opens or entries prop changes
   useEffect(() => {
     if (isOpen) {
       setLocalEntries([...entries]);
       setEditingId(null);
       setEditData({});
       setIsAdding(false);
+      setNewEntry({ source: '', quantity: 0, unit: '', emissionFactor: 0 });
     }
-  }, [isOpen, entries]);
+  }, [isOpen, JSON.stringify(entries)]);
 
   const calculateTotal = () => {
     return localEntries.reduce((sum, entry) => sum + entry.total, 0);
@@ -75,6 +76,11 @@ export const ScopeDetailModal: React.FC<ScopeDetailModalProps> = ({
     setEditingId(entry.id);
     setEditData({ ...entry });
   };
+
+  // Auto-save entries on any change to update dashboard in real-time
+  const saveEntries = useCallback((entriesToSave: ScopeEntry[]) => {
+    onEntriesChange(entriesToSave);
+  }, [onEntriesChange]);
 
   const handleSaveEdit = () => {
     if (!editingId || !editData) return;
@@ -92,12 +98,13 @@ export const ScopeDetailModal: React.FC<ScopeDetailModalProps> = ({
     });
     
     setLocalEntries(updatedEntries);
+    saveEntries(updatedEntries); // Auto-save to update dashboard
     setEditingId(null);
     setEditData({});
     
     toast({
       title: "Ligne modifiée",
-      description: "Les modifications ont été enregistrées",
+      description: "Le total a été recalculé automatiquement",
     });
   };
 
@@ -107,22 +114,21 @@ export const ScopeDetailModal: React.FC<ScopeDetailModalProps> = ({
   };
 
   const handleDelete = (id: string) => {
-    console.log('Deleting entry:', id);
     const updatedEntries = localEntries.filter(entry => entry.id !== id);
-    console.log('Updated entries after delete:', updatedEntries);
     setLocalEntries(updatedEntries);
+    saveEntries(updatedEntries); // Auto-save to update dashboard
     
     toast({
       title: "Ligne supprimée",
-      description: "La ligne a été supprimée du calcul",
+      description: "Le total a été recalculé automatiquement",
     });
   };
 
   const handleAddEntry = () => {
-    if (!newEntry.source || newEntry.quantity === 0) {
+    if (!newEntry.source.trim()) {
       toast({
         title: "Champs requis",
-        description: "Veuillez remplir la source et la quantité",
+        description: "Veuillez remplir la source",
         variant: "destructive"
       });
       return;
@@ -130,12 +136,14 @@ export const ScopeDetailModal: React.FC<ScopeDetailModalProps> = ({
     
     const total = newEntry.quantity * newEntry.emissionFactor;
     const entry: ScopeEntry = {
-      id: `scope${scopeNumber}-${Date.now()}`,
+      id: `scope${scopeNumber}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       ...newEntry,
       total
     };
     
-    setLocalEntries([...localEntries, entry]);
+    const updatedEntries = [...localEntries, entry];
+    setLocalEntries(updatedEntries);
+    saveEntries(updatedEntries); // Auto-save to update dashboard
     setNewEntry({ source: '', quantity: 0, unit: '', emissionFactor: 0 });
     setIsAdding(false);
     
@@ -146,13 +154,8 @@ export const ScopeDetailModal: React.FC<ScopeDetailModalProps> = ({
   };
 
   const handleSaveAndClose = () => {
-    onEntriesChange(localEntries);
+    // Entries are already saved on each action, just close
     onClose();
-    
-    toast({
-      title: "Modifications sauvegardées",
-      description: "Le Dashboard a été mis à jour",
-    });
   };
 
   const scopeColors = {

@@ -9,8 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { Calculator, Download, RotateCcw, Factory, Car, Zap, Trash2, Building, Plane, Ship, TreePine, Flame, Save, X, CheckCircle2, Sparkles, TrendingUp, Globe, ArrowDown, ArrowUp, Calendar, FileText } from "lucide-react";
+import { Calculator, Download, RotateCcw, Factory, Car, Zap, Trash2, Building, Plane, Ship, TreePine, Flame, Save, X, CheckCircle2, Sparkles, TrendingUp, Globe, ArrowDown, ArrowUp, Calendar, FileText, AlertTriangle } from "lucide-react";
 import { useEmissions } from '@/contexts/EmissionsContext';
 import { useCarbonReports } from '@/hooks/useCarbonReports';
 import { useTranslation } from 'react-i18next';
@@ -216,10 +217,13 @@ export const AdvancedGHGCalculator = () => {
     return saved ? JSON.parse(saved) : {
       combustibleType: "",
       combustibleQuantity: "",
+      combustibleUnit: "kg", // kg ou tonne
       refrigerantType: "",
       refrigerantQuantity: "",
+      refrigerantUnit: "kg",
       vehiculeType: "",
-      vehiculeQuantity: ""
+      vehiculeQuantity: "",
+      vehiculeUnit: "km" // km ou 1000km
     };
   });
 
@@ -228,8 +232,10 @@ export const AdvancedGHGCalculator = () => {
     return saved ? JSON.parse(saved) : {
       electriciteType: "",
       electriciteQuantity: "",
+      electriciteUnit: "kWh", // kWh ou MWh
       vapeurType: "",
-      vapeurQuantity: ""
+      vapeurQuantity: "",
+      vapeurUnit: "kWh"
     };
   });
 
@@ -454,17 +460,22 @@ export const AdvancedGHGCalculator = () => {
     const initialScope1 = {
       combustibleType: "",
       combustibleQuantity: "",
+      combustibleUnit: "kg",
       refrigerantType: "",
       refrigerantQuantity: "",
+      refrigerantUnit: "kg",
       vehiculeType: "",
-      vehiculeQuantity: ""
+      vehiculeQuantity: "",
+      vehiculeUnit: "km"
     };
     
     const initialScope2 = {
       electriciteType: "",
       electriciteQuantity: "",
+      electriciteUnit: "kWh",
       vapeurType: "",
-      vapeurQuantity: ""
+      vapeurQuantity: "",
+      vapeurUnit: "kWh"
     };
     
     const initialScope3 = {
@@ -795,6 +806,21 @@ export const AdvancedGHGCalculator = () => {
         </CardContent>
       </Card>
 
+      {/* Alerte Sanity Check - si Scope 1 > 500 tonnes */}
+      {emissions.scope1 / 1000 > 500 && (
+        <Alert variant="destructive" className="border-2 border-destructive/50 bg-destructive/10">
+          <AlertTriangle className="h-5 w-5" />
+          <AlertTitle className="text-lg font-bold">Attention - Valeur anormalement élevée</AlertTitle>
+          <AlertDescription className="text-base">
+            Le Scope 1 affiche <strong>{(emissions.scope1 / 1000).toFixed(1)} tCO₂e</strong>, ce qui semble très élevé.
+            <br />
+            <strong>Avez-vous saisi des kg au lieu de tonnes ?</strong> Les facteurs d'émission Base Carbone® sont en <strong>kg CO₂e par unité</strong>.
+            <br />
+            Vérifiez vos quantités saisies ou utilisez le sélecteur d'unité approprié dans les formulaires.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Header with mode toggle */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="text-center md:text-left space-y-2">
@@ -1059,6 +1085,15 @@ export const AdvancedGHGCalculator = () => {
 
         {/* SCOPE 1 */}
         <TabsContent value="scope1" className="space-y-6">
+          {/* Info sur les unités */}
+          <Alert className="border-blue-200 bg-blue-50">
+            <AlertTriangle className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-800">
+              <strong>Important :</strong> Les facteurs d'émission Base Carbone® ADEME sont en <strong>kg CO₂e</strong> par unité.
+              Les résultats sont automatiquement convertis en tonnes (tCO₂e) pour l'affichage dans le dashboard.
+            </AlertDescription>
+          </Alert>
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -1070,7 +1105,7 @@ export const AdvancedGHGCalculator = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <Label>Type de combustible</Label>
                   <Select 
@@ -1098,9 +1133,28 @@ export const AdvancedGHGCalculator = () => {
                     onChange={(e) => setScope1Data(prev => ({...prev, combustibleQuantity: e.target.value}))}
                   />
                 </div>
+                <div>
+                  <Label>Unité saisie</Label>
+                  <Select 
+                    value={scope1Data.combustibleUnit || "standard"} 
+                    onValueChange={(value) => setScope1Data(prev => ({...prev, combustibleUnit: value}))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Unité..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">Unité standard (facteur ADEME)</SelectItem>
+                      <SelectItem value="tonne">Tonne → auto-conversion ×1000</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="flex items-end">
                   <Button 
-                    onClick={() => addCalculation('scope1', 'combustibles', scope1Data.combustibleType, Number(scope1Data.combustibleQuantity))}
+                    onClick={() => {
+                      const qty = Number(scope1Data.combustibleQuantity);
+                      const finalQty = scope1Data.combustibleUnit === "tonne" ? qty * 1000 : qty;
+                      addCalculation('scope1', 'combustibles', scope1Data.combustibleType, finalQty);
+                    }}
                     disabled={!scope1Data.combustibleType || !scope1Data.combustibleQuantity}
                   >
                     Ajouter
@@ -1118,7 +1172,7 @@ export const AdvancedGHGCalculator = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <Label>Type de véhicule</Label>
                   <Select 
@@ -1138,7 +1192,7 @@ export const AdvancedGHGCalculator = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label>Quantité</Label>
+                  <Label>Distance/Quantité</Label>
                   <Input
                     type="number"
                     placeholder="0"
@@ -1146,9 +1200,28 @@ export const AdvancedGHGCalculator = () => {
                     onChange={(e) => setScope1Data(prev => ({...prev, vehiculeQuantity: e.target.value}))}
                   />
                 </div>
+                <div>
+                  <Label>Unité saisie</Label>
+                  <Select 
+                    value={scope1Data.vehiculeUnit || "km"} 
+                    onValueChange={(value) => setScope1Data(prev => ({...prev, vehiculeUnit: value}))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Unité..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="km">Kilomètres (km)</SelectItem>
+                      <SelectItem value="1000km">Milliers km → ×1000</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="flex items-end">
                   <Button 
-                    onClick={() => addCalculation('scope1', 'vehicules', scope1Data.vehiculeType, Number(scope1Data.vehiculeQuantity))}
+                    onClick={() => {
+                      const qty = Number(scope1Data.vehiculeQuantity);
+                      const finalQty = scope1Data.vehiculeUnit === "1000km" ? qty * 1000 : qty;
+                      addCalculation('scope1', 'vehicules', scope1Data.vehiculeType, finalQty);
+                    }}
                     disabled={!scope1Data.vehiculeType || !scope1Data.vehiculeQuantity}
                   >
                     Ajouter
@@ -1163,7 +1236,7 @@ export const AdvancedGHGCalculator = () => {
               <CardTitle>Réfrigérants</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <Label>Type de réfrigérant</Label>
                   <Select 
@@ -1183,7 +1256,7 @@ export const AdvancedGHGCalculator = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label>Quantité (kg)</Label>
+                  <Label>Quantité</Label>
                   <Input
                     type="number"
                     placeholder="0"
@@ -1191,9 +1264,28 @@ export const AdvancedGHGCalculator = () => {
                     onChange={(e) => setScope1Data(prev => ({...prev, refrigerantQuantity: e.target.value}))}
                   />
                 </div>
+                <div>
+                  <Label>Unité saisie</Label>
+                  <Select 
+                    value={scope1Data.refrigerantUnit || "kg"} 
+                    onValueChange={(value) => setScope1Data(prev => ({...prev, refrigerantUnit: value}))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Unité..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="kg">Kilogrammes (kg)</SelectItem>
+                      <SelectItem value="tonne">Tonnes → ×1000 kg</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="flex items-end">
                   <Button 
-                    onClick={() => addCalculation('scope1', 'refrigerants', scope1Data.refrigerantType, Number(scope1Data.refrigerantQuantity))}
+                    onClick={() => {
+                      const qty = Number(scope1Data.refrigerantQuantity);
+                      const finalQty = scope1Data.refrigerantUnit === "tonne" ? qty * 1000 : qty;
+                      addCalculation('scope1', 'refrigerants', scope1Data.refrigerantType, finalQty);
+                    }}
                     disabled={!scope1Data.refrigerantType || !scope1Data.refrigerantQuantity}
                   >
                     Ajouter
@@ -1208,6 +1300,15 @@ export const AdvancedGHGCalculator = () => {
         <TabsContent value="scope2" className="space-y-6">
           <ScrollArea className="h-[600px] pr-4">
             <div className="space-y-6 pb-4">
+              {/* Info sur les unités */}
+              <Alert className="border-blue-200 bg-blue-50">
+                <AlertTriangle className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-800">
+                  <strong>Important :</strong> Les facteurs d'émission sont en kg CO₂e par kWh. 
+                  Si vous avez des MWh, utilisez le sélecteur d'unité pour une conversion automatique (×1000).
+                </AlertDescription>
+              </Alert>
+
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -1216,7 +1317,7 @@ export const AdvancedGHGCalculator = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                       <Label>Mix électrique</Label>
                       <Select 
@@ -1236,7 +1337,7 @@ export const AdvancedGHGCalculator = () => {
                       </Select>
                     </div>
                     <div>
-                      <Label>Consommation (kWh)</Label>
+                      <Label>Consommation</Label>
                       <Input
                         type="number"
                         placeholder="0"
@@ -1244,9 +1345,28 @@ export const AdvancedGHGCalculator = () => {
                         onChange={(e) => setScope2Data(prev => ({...prev, electriciteQuantity: e.target.value}))}
                       />
                     </div>
+                    <div>
+                      <Label>Unité saisie</Label>
+                      <Select 
+                        value={scope2Data.electriciteUnit || "kWh"} 
+                        onValueChange={(value) => setScope2Data(prev => ({...prev, electriciteUnit: value}))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Unité..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="kWh">Kilowattheure (kWh)</SelectItem>
+                          <SelectItem value="MWh">Mégawattheure (MWh) → ×1000</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <div className="flex items-end">
                       <Button 
-                        onClick={() => addCalculation('scope2', 'electricite', scope2Data.electriciteType, Number(scope2Data.electriciteQuantity))}
+                        onClick={() => {
+                          const qty = Number(scope2Data.electriciteQuantity);
+                          const finalQty = scope2Data.electriciteUnit === "MWh" ? qty * 1000 : qty;
+                          addCalculation('scope2', 'electricite', scope2Data.electriciteType, finalQty);
+                        }}
                         disabled={!scope2Data.electriciteType || !scope2Data.electriciteQuantity}
                       >
                         Ajouter
@@ -1261,7 +1381,7 @@ export const AdvancedGHGCalculator = () => {
                   <CardTitle>Vapeur et chaleur</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                       <Label>Type d'énergie thermique</Label>
                       <Select 
@@ -1281,7 +1401,7 @@ export const AdvancedGHGCalculator = () => {
                       </Select>
                     </div>
                     <div>
-                      <Label>Quantité (kWh)</Label>
+                      <Label>Quantité</Label>
                       <Input
                         type="number"
                         placeholder="0"
@@ -1289,9 +1409,28 @@ export const AdvancedGHGCalculator = () => {
                         onChange={(e) => setScope2Data(prev => ({...prev, vapeurQuantity: e.target.value}))}
                       />
                     </div>
+                    <div>
+                      <Label>Unité saisie</Label>
+                      <Select 
+                        value={scope2Data.vapeurUnit || "kWh"} 
+                        onValueChange={(value) => setScope2Data(prev => ({...prev, vapeurUnit: value}))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Unité..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="kWh">Kilowattheure (kWh)</SelectItem>
+                          <SelectItem value="MWh">Mégawattheure (MWh) → ×1000</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <div className="flex items-end">
                       <Button 
-                        onClick={() => addCalculation('scope2', 'vapeur', scope2Data.vapeurType, Number(scope2Data.vapeurQuantity))}
+                        onClick={() => {
+                          const qty = Number(scope2Data.vapeurQuantity);
+                          const finalQty = scope2Data.vapeurUnit === "MWh" ? qty * 1000 : qty;
+                          addCalculation('scope2', 'vapeur', scope2Data.vapeurType, finalQty);
+                        }}
                         disabled={!scope2Data.vapeurType || !scope2Data.vapeurQuantity}
                       >
                         Ajouter

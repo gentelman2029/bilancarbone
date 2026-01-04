@@ -45,7 +45,7 @@ export const ScopeDetailModal: React.FC<ScopeDetailModalProps> = ({
   onEntriesChange
 }) => {
   const { toast } = useToast();
-  const [localEntries, setLocalEntries] = useState<ScopeEntry[]>(entries);
+  const [localEntries, setLocalEntries] = useState<ScopeEntry[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<ScopeEntry>>({});
   const [isAdding, setIsAdding] = useState(false);
@@ -56,15 +56,22 @@ export const ScopeDetailModal: React.FC<ScopeDetailModalProps> = ({
     emissionFactor: 0
   });
 
+  // Reset local state when modal opens with new entries
   useEffect(() => {
-    setLocalEntries(entries);
-  }, [entries]);
+    if (isOpen) {
+      setLocalEntries([...entries]);
+      setEditingId(null);
+      setEditData({});
+      setIsAdding(false);
+    }
+  }, [isOpen, entries]);
 
   const calculateTotal = () => {
     return localEntries.reduce((sum, entry) => sum + entry.total, 0);
   };
 
   const handleEdit = (entry: ScopeEntry) => {
+    console.log('Editing entry:', entry);
     setEditingId(entry.id);
     setEditData({ ...entry });
   };
@@ -100,7 +107,9 @@ export const ScopeDetailModal: React.FC<ScopeDetailModalProps> = ({
   };
 
   const handleDelete = (id: string) => {
+    console.log('Deleting entry:', id);
     const updatedEntries = localEntries.filter(entry => entry.id !== id);
+    console.log('Updated entries after delete:', updatedEntries);
     setLocalEntries(updatedEntries);
     
     toast({
@@ -315,18 +324,28 @@ export const ScopeDetailModal: React.FC<ScopeDetailModalProps> = ({
                           <TableCell>
                             <div className="flex justify-center gap-1">
                               <Button 
+                                type="button"
                                 size="icon" 
                                 variant="ghost" 
-                                className="h-7 w-7"
-                                onClick={() => handleEdit(entry)}
+                                className="h-7 w-7 hover:bg-blue-100"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleEdit(entry);
+                                }}
                               >
                                 <Pencil className="h-4 w-4 text-blue-600" />
                               </Button>
                               <Button 
+                                type="button"
                                 size="icon" 
                                 variant="ghost" 
-                                className="h-7 w-7"
-                                onClick={() => handleDelete(entry.id)}
+                                className="h-7 w-7 hover:bg-red-100"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleDelete(entry.id);
+                                }}
                               >
                                 <Trash2 className="h-4 w-4 text-red-600" />
                               </Button>

@@ -208,6 +208,7 @@ export const AdvancedGHGCalculator = () => {
   // Hook pour les détails de calcul par section
   const { 
     sectionDetails, 
+    setSectionDetails,
     addCalculationDetail, 
     removeCalculationDetail, 
     clearSectionDetails, 
@@ -215,44 +216,44 @@ export const AdvancedGHGCalculator = () => {
     getTotalEmissionsBySection 
   } = useCalculationDetails();
 
-  // Convertir les calculs en entrées pour les modales
+  // Convertir les sectionDetails en entrées pour les modales
   const getScopeEntries = (scopeNumber: 1 | 2 | 3) => {
-    const scopeKey = `scope${scopeNumber}`;
-    return calculations
-      .filter(c => c.category === scopeKey)
-      .map((c, index) => ({
-        id: `${scopeKey}-${index}-${c.subcategory}`,
-        source: c.description,
-        quantity: c.quantity,
-        unit: c.unit,
-        emissionFactor: c.emissionFactor,
-        total: c.emissions
-      }));
+    const scopeKey = `scope${scopeNumber}` as keyof typeof sectionDetails;
+    const details = sectionDetails[scopeKey];
+    
+    return details.map(detail => ({
+      id: detail.id,
+      source: detail.description,
+      quantity: detail.quantity,
+      unit: detail.unit,
+      emissionFactor: detail.emissionFactor,
+      total: detail.emissions
+    }));
   };
 
-  // Mettre à jour les calculs depuis les entrées modifiées dans la modale
+  // Mettre à jour les sectionDetails depuis les entrées modifiées dans la modale
   const handleScopeEntriesChange = (scopeNumber: 1 | 2 | 3, entries: { id: string; source: string; quantity: number; unit: string; emissionFactor: number; total: number }[]) => {
-    const scopeKey = `scope${scopeNumber}`;
+    const scopeKey = `scope${scopeNumber}` as 'scope1' | 'scope2' | 'scope3';
     
-    // Supprimer les anciens calculs de ce scope
-    const otherCalculations = calculations.filter(c => c.category !== scopeKey);
-    
-    // Convertir les entrées en CalculationResult
-    const newCalculations: CalculationResult[] = entries.map(entry => ({
-      category: scopeKey,
-      subcategory: entry.source.toLowerCase().replace(/\s+/g, '-'),
+    // Convertir les entrées en CalculationDetail
+    const newDetails = entries.map(entry => ({
+      id: entry.id,
+      type: entry.source.toLowerCase().replace(/\s+/g, '-'),
+      description: entry.source,
       quantity: entry.quantity,
       unit: entry.unit,
       emissionFactor: entry.emissionFactor,
       emissions: entry.total,
-      description: entry.source
+      timestamp: new Date().toLocaleString('fr-FR'),
+      formuleDetail: `${entry.quantity} ${entry.unit} × ${entry.emissionFactor} kg CO₂e/${entry.unit}`
     }));
     
-    setCalculations([...otherCalculations, ...newCalculations]);
+    // Mettre à jour via le hook
+    setSectionDetails(scopeKey, newDetails);
     
     toast({
       title: "Dashboard mis à jour",
-      description: `Le Scope ${scopeNumber} a été recalculé`,
+      description: `Le Scope ${scopeNumber} a été recalculé avec ${entries.length} entrée(s)`,
     });
   };
 
@@ -439,7 +440,7 @@ export const AdvancedGHGCalculator = () => {
       scope2: emissionsByScope.scope2,
       scope3: scope3Total
     });
-  }, [calculations, scope3AdvancedTotal, isAdvancedMode]);
+  }, [calculations, scope3AdvancedTotal, isAdvancedMode, sectionDetails]);
 
   const addCalculation = (scope: string, category: string, subcategory: string, quantity: number) => {
     const scopeData = baseCarbone[scope as keyof typeof baseCarbone] as any;
@@ -489,9 +490,16 @@ export const AdvancedGHGCalculator = () => {
   };
 
   const getEmissionsByScope = () => {
-    const scope1 = calculations.filter(c => c.category === 'scope1').reduce((sum, c) => sum + c.emissions, 0);
-    const scope2 = calculations.filter(c => c.category === 'scope2').reduce((sum, c) => sum + c.emissions, 0);
-    const scope3 = calculations.filter(c => c.category === 'scope3').reduce((sum, c) => sum + c.emissions, 0);
+    // Priorité aux sectionDetails (modifiables via modale), fallback sur calculations
+    const scope1 = sectionDetails.scope1.length > 0 
+      ? sectionDetails.scope1.reduce((sum, d) => sum + d.emissions, 0)
+      : calculations.filter(c => c.category === 'scope1').reduce((sum, c) => sum + c.emissions, 0);
+    const scope2 = sectionDetails.scope2.length > 0 
+      ? sectionDetails.scope2.reduce((sum, d) => sum + d.emissions, 0)
+      : calculations.filter(c => c.category === 'scope2').reduce((sum, c) => sum + c.emissions, 0);
+    const scope3 = sectionDetails.scope3.length > 0 
+      ? sectionDetails.scope3.reduce((sum, d) => sum + d.emissions, 0)
+      : calculations.filter(c => c.category === 'scope3').reduce((sum, c) => sum + c.emissions, 0);
     return { scope1, scope2, scope3 };
   };
 

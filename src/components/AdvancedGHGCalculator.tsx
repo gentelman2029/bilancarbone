@@ -996,15 +996,14 @@ export const AdvancedGHGCalculator = () => {
             <div className="text-center space-y-2">
               <div className="text-lg text-muted-foreground mb-2">Émissions Réelles (2025)</div>
               <div className="flex items-center justify-center gap-2">
-                <Input
-                  type="number"
-                  value={emissionsReelles}
-                  onChange={(e) => setEmissionsReelles(Number(e.target.value) || 0)}
-                  className="w-24 text-center text-2xl font-bold"
-                  step="0.1"
-                />
-                <span className="text-lg font-medium">tCO2e</span>
+                <span className="text-3xl font-bold text-primary">
+                  {(totalGlobal / 1000).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+                <span className="text-lg font-medium">tCO₂e</span>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Calculé automatiquement (Scope 1 + 2 + 3)
+              </p>
             </div>
           </Card>
         </div>

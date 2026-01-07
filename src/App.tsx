@@ -18,6 +18,7 @@ import Trial from "./pages/Trial";
 import Pricing from "./pages/Pricing";
 import CBAM from "./pages/CBAM";
 import Documents from "./pages/Documents";
+import ESGDashboard from "./pages/ESGDashboard";
 import { EmissionsProvider } from "./contexts/EmissionsContext";
 import { ActionsProvider } from "./contexts/ActionsContext";
 
@@ -45,6 +46,7 @@ const App = () => (
                 <Route path="actions" element={<Actions />} />
                 <Route path="cbam" element={<CBAM />} />
                 <Route path="documents" element={<Documents />} />
+                <Route path="esg" element={<ESGDashboard />} />
                 <Route path="contact" element={<Contact />} />
               </Route>
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

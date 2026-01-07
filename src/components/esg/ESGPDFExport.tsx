@@ -171,7 +171,54 @@ export const ESGPDFExport: React.FC<ESGPDFExportProps> = ({
       yPos += 6;
     });
 
+    // Methodology Summary Section
+    if (yPos > 200) {
+      doc.addPage();
+      yPos = 20;
+    }
+
+    yPos += 10;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Méthodologie de Calcul', 14, yPos);
+    yPos += 8;
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Score Global = (Environnement × 0,40) + (Social × 0,30) + (Gouvernance × 0,30)', 14, yPos);
+    yPos += 6;
+    doc.text('Basé sur les 32 indicateurs du Guide BVMT et la Loi RSE 2018-35.', 14, yPos);
+    yPos += 10;
+
+    // Grade Scale
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Échelle des Grades ESG:', 14, yPos);
+    yPos += 6;
+
+    const gradeData = [
+      ['Grade', 'Score', 'Niveau', 'Signification'],
+      ['A', '75-100', 'Excellence', 'Conforme aux standards export UE'],
+      ['B', '50-74', 'Transition', 'Performance solide, améliorations possibles'],
+      ['C', '<50', 'Risque', 'Action requise pour conformité'],
+    ];
+
+    autoTable(doc, {
+      startY: yPos,
+      head: [gradeData[0]],
+      body: gradeData.slice(1),
+      theme: 'striped',
+      headStyles: { fillColor: [16, 185, 129], textColor: 255, fontSize: 8 },
+      styles: { fontSize: 8, cellPadding: 2 },
+      columnStyles: {
+        0: { fontStyle: 'bold', halign: 'center' },
+        1: { halign: 'center' },
+        2: { halign: 'center' },
+      },
+    });
+
     // Footer
+    const footerY = (doc as any).lastAutoTable.finalY + 15;
     doc.setFillColor(241, 245, 249);
     doc.rect(0, 280, pageWidth, 17, 'F');
     doc.setFontSize(8);

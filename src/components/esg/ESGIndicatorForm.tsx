@@ -9,6 +9,18 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Leaf, Users, Building2, HelpCircle, Calculator } from 'lucide-react';
 import { ESGCategory, ESGIndicator } from '@/lib/esg/types';
 
+// Formulas for calculated KPIs
+const CALCULATED_KPI_FORMULAS: Record<string, { formula: string; explanation: string }> = {
+  E2: {
+    formula: 'E1 / Chiffre d\'Affaires',
+    explanation: 'Intensité Énergétique = Consommation totale d\'énergie (kWh) ÷ Chiffre d\'affaires (TND). Mesure l\'efficacité énergétique par Dinar Tunisien généré.'
+  },
+  E8: {
+    formula: '(E6 + E7) / (CA / 1 000 000)',
+    explanation: 'Intensité Carbone = (Scope 1 + Scope 2) ÷ CA en millions TND. Indicateur clé pour le MACF européen.'
+  }
+};
+
 interface ESGIndicatorFormProps {
   categories: ESGCategory[];
   revenue: number;
@@ -44,6 +56,7 @@ const IndicatorInput: React.FC<{
   }
 
   if (indicator.type === 'calculated') {
+    const formulaInfo = CALCULATED_KPI_FORMULAS[indicator.id];
     return (
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-md">
@@ -56,6 +69,20 @@ const IndicatorInput: React.FC<{
           <span className="text-xs text-muted-foreground">{indicator.unit}</span>
         </div>
         <Badge variant="secondary" className="text-xs">Auto</Badge>
+        {formulaInfo && (
+          <Tooltip>
+            <TooltipTrigger>
+              <HelpCircle className="h-4 w-4 text-blue-500 cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent side="left" className="max-w-sm">
+              <div className="space-y-2">
+                <p className="font-medium text-xs">Formule :</p>
+                <code className="text-xs bg-muted px-2 py-1 rounded block">{formulaInfo.formula}</code>
+                <p className="text-xs text-muted-foreground">{formulaInfo.explanation}</p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        )}
       </div>
     );
   }

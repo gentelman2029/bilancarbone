@@ -15,8 +15,11 @@ import {
   AlertTriangle,
   Target,
   TrendingUp,
-  Droplets
+  Droplets,
+  BookOpen,
+  RotateCcw
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 import { Layout } from '@/components/Layout';
 import { ESGIndicatorForm } from '@/components/esg/ESGIndicatorForm';
@@ -25,7 +28,7 @@ import { ESGMaterialityMatrix } from '@/components/esg/ESGMaterialityMatrix';
 import { ESGComplianceAlerts } from '@/components/esg/ESGComplianceAlerts';
 import { ESGSectorBenchmark } from '@/components/esg/ESGSectorBenchmark';
 import { ESGPDFExport } from '@/components/esg/ESGPDFExport';
-
+import { ESGMethodologyGuide } from '@/components/esg/ESGMethodologyGuide';
 import { 
   ESGData, 
   ESGCategory, 
@@ -75,6 +78,13 @@ const ESGDashboard: React.FC = () => {
       categories: JSON.parse(JSON.stringify(BVMT_ESG_SCHEMA)),
     };
   }
+
+  const handleReset = useCallback(() => {
+    if (window.confirm('Êtes-vous sûr de vouloir réinitialiser toutes les données ESG ?')) {
+      setEsgData(getInitialData());
+      localStorage.removeItem('esg-dashboard-data');
+    }
+  }, []);
 
   // Persist data to localStorage
   useEffect(() => {
@@ -141,7 +151,7 @@ const ESGDashboard: React.FC = () => {
               Conforme au Guide BVMT, Loi RSE 2018-35, CSRD & MACF
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Badge variant="outline" className="text-xs">
               <Droplets className="h-3 w-3 mr-1 text-blue-500" />
               Stress Hydrique TN
@@ -154,6 +164,15 @@ const ESGDashboard: React.FC = () => {
               <TrendingUp className="h-3 w-3 mr-1" />
               Édition 2025
             </Badge>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleReset}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <RotateCcw className="h-4 w-4 mr-1" />
+              Réinitialiser
+            </Button>
           </div>
         </div>
 
@@ -234,7 +253,7 @@ const ESGDashboard: React.FC = () => {
 
         {/* Main Dashboard Tabs */}
         <Tabs defaultValue="scoring" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
             <TabsTrigger value="scoring" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Scoring</span>
@@ -250,6 +269,10 @@ const ESGDashboard: React.FC = () => {
             <TabsTrigger value="compliance" className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4" />
               <span className="hidden sm:inline">Conformité</span>
+            </TabsTrigger>
+            <TabsTrigger value="methodology" className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              <span className="hidden sm:inline">Méthodologie</span>
             </TabsTrigger>
           </TabsList>
 
@@ -410,6 +433,11 @@ const ESGDashboard: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Methodology Tab */}
+          <TabsContent value="methodology">
+            <ESGMethodologyGuide />
           </TabsContent>
         </Tabs>
       </div>

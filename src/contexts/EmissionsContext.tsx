@@ -41,22 +41,27 @@ const initialEmissions: EmissionsData = {
 const loadFromLocalStorage = (): EmissionsData | null => {
   try {
     const sectionDetails = localStorage.getItem('calculation-section-details');
+    const isAdvancedMode = localStorage.getItem('calculator-advanced-mode');
+    const advancedModeEnabled = isAdvancedMode ? JSON.parse(isAdvancedMode) : false;
+    
     if (sectionDetails) {
       const details = JSON.parse(sectionDetails);
       const scope1 = (details.scope1 || []).reduce((sum: number, d: any) => sum + (d.emissions || 0), 0);
       const scope2 = (details.scope2 || []).reduce((sum: number, d: any) => sum + (d.emissions || 0), 0);
-      let scope3FromSections = (details.scope3 || []).reduce((sum: number, d: any) => sum + (d.emissions || 0), 0);
       
-      // Ajouter le Scope 3 avancé (15 catégories GHG Protocol) - TOUJOURS additionner
-      let scope3AdvancedTotal = 0;
-      const scope3Advanced = localStorage.getItem('scope3-advanced-calculations');
-      if (scope3Advanced) {
-        const advCalcs = JSON.parse(scope3Advanced);
-        scope3AdvancedTotal = advCalcs.reduce((sum: number, c: any) => sum + (c.emissions || 0), 0);
+      // Calculer Scope 3 selon le mode actif
+      let scope3 = 0;
+      if (advancedModeEnabled) {
+        // Mode avancé : seulement les calculs du module avancé
+        const scope3Advanced = localStorage.getItem('scope3-advanced-calculations');
+        if (scope3Advanced) {
+          const advCalcs = JSON.parse(scope3Advanced);
+          scope3 = advCalcs.reduce((sum: number, c: any) => sum + (c.emissions || 0), 0);
+        }
+      } else {
+        // Mode standard : seulement les sectionDetails
+        scope3 = (details.scope3 || []).reduce((sum: number, d: any) => sum + (d.emissions || 0), 0);
       }
-      
-      // Total Scope 3 = sections standard + module avancé
-      const scope3 = scope3FromSections + scope3AdvancedTotal;
       
       if (scope1 > 0 || scope2 > 0 || scope3 > 0) {
         // Charger aussi les autres données d'entreprise

@@ -45,14 +45,18 @@ const loadFromLocalStorage = (): EmissionsData | null => {
       const details = JSON.parse(sectionDetails);
       const scope1 = (details.scope1 || []).reduce((sum: number, d: any) => sum + (d.emissions || 0), 0);
       const scope2 = (details.scope2 || []).reduce((sum: number, d: any) => sum + (d.emissions || 0), 0);
-      let scope3 = (details.scope3 || []).reduce((sum: number, d: any) => sum + (d.emissions || 0), 0);
+      let scope3FromSections = (details.scope3 || []).reduce((sum: number, d: any) => sum + (d.emissions || 0), 0);
       
-      // Ajouter aussi le Scope 3 avancé si disponible
+      // Ajouter le Scope 3 avancé (15 catégories GHG Protocol) - TOUJOURS additionner
+      let scope3AdvancedTotal = 0;
       const scope3Advanced = localStorage.getItem('scope3-advanced-calculations');
       if (scope3Advanced) {
         const advCalcs = JSON.parse(scope3Advanced);
-        scope3 += advCalcs.reduce((sum: number, c: any) => sum + (c.emissions || 0), 0);
+        scope3AdvancedTotal = advCalcs.reduce((sum: number, c: any) => sum + (c.emissions || 0), 0);
       }
+      
+      // Total Scope 3 = sections standard + module avancé
+      const scope3 = scope3FromSections + scope3AdvancedTotal;
       
       if (scope1 > 0 || scope2 > 0 || scope3 > 0) {
         // Charger aussi les autres données d'entreprise
@@ -101,20 +105,35 @@ export const EmissionsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   
   // Synchroniser les émissions avec localStorage quand elles changent
   useEffect(() => {
-    // Écouter les changements du localStorage (pour sync multi-pages)
+    // Écouter les changements du localStorage (pour sync multi-pages ET même page)
     const handleStorageChange = () => {
       const localData = loadFromLocalStorage();
-      if (localData && (localData.scope1 > 0 || localData.scope2 > 0 || localData.scope3 > 0)) {
-        setEmissions(prev => ({
-          ...prev,
-          ...localData,
-          total: localData.scope1 + localData.scope2 + localData.scope3
-        }));
+      if (localData) {
+        setEmissions(prev => {
+          // Ne mettre à jour que si les valeurs ont changé
+          if (prev.scope1 !== localData.scope1 || 
+              prev.scope2 !== localData.scope2 || 
+              prev.scope3 !== localData.scope3) {
+            return {
+              ...prev,
+              ...localData,
+              total: localData.scope1 + localData.scope2 + localData.scope3
+            };
+          }
+          return prev;
+        });
       }
     };
     
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    
+    // Vérifier périodiquement pour les changements dans la même page
+    const interval = setInterval(handleStorageChange, 500);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
   }, []);
 
   const loadFromSupabase = async () => {

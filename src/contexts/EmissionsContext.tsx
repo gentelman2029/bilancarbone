@@ -49,18 +49,18 @@ const loadFromLocalStorage = (): EmissionsData | null => {
       const scope1 = (details.scope1 || []).reduce((sum: number, d: any) => sum + (d.emissions || 0), 0);
       const scope2 = (details.scope2 || []).reduce((sum: number, d: any) => sum + (d.emissions || 0), 0);
       
-      // Calculer Scope 3 selon le mode actif
-      let scope3 = 0;
+      // Calculer Scope 3 : toujours inclure les sectionDetails, + module avancé si activé
+      // Cette logique est synchronisée avec scope3TotalCalculated dans AdvancedGHGCalculator
+      let scope3 = (details.scope3 || []).reduce((sum: number, d: any) => sum + (d.emissions || 0), 0);
+      
       if (advancedModeEnabled) {
-        // Mode avancé : seulement les calculs du module avancé
+        // Mode avancé : ajouter les calculs du module avancé aux sectionDetails
         const scope3Advanced = localStorage.getItem('scope3-advanced-calculations');
         if (scope3Advanced) {
           const advCalcs = JSON.parse(scope3Advanced);
-          scope3 = advCalcs.reduce((sum: number, c: any) => sum + (c.emissions || 0), 0);
+          const advancedTotal = advCalcs.reduce((sum: number, c: any) => sum + (c.emissions || 0), 0);
+          scope3 += advancedTotal;
         }
-      } else {
-        // Mode standard : seulement les sectionDetails
-        scope3 = (details.scope3 || []).reduce((sum: number, d: any) => sum + (d.emissions || 0), 0);
       }
       
       if (scope1 > 0 || scope2 > 0 || scope3 > 0) {

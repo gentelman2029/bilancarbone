@@ -501,16 +501,19 @@ export const AdvancedGHGCalculator = () => {
   }, [positionClassement, updateEmissions]);
 
   // Calculer le total Scope 3 réel
-  // En mode avancé : utiliser UNIQUEMENT le module avancé (15 catégories GHG Protocol)
-  // En mode standard : utiliser les sectionDetails.scope3
+  // Calculer le total Scope 3 en sommant toujours les deux sources (standard + avancé si activé)
+  // Cela garantit la cohérence avec getScope3CombinedDetails()
   const scope3TotalCalculated = useMemo(() => {
+    // Toujours inclure les calculs standard
+    const scope3FromSections = sectionDetails.scope3.reduce((sum, d) => sum + d.emissions, 0);
+    
+    // En mode avancé, ajouter aussi les calculs du module avancé
     if (isAdvancedMode) {
-      // Mode avancé : seulement les calculs du module Scope3AdvancedModule
-      return scope3AdvancedTotal;
-    } else {
-      // Mode standard : seulement les calculs des sectionDetails
-      return sectionDetails.scope3.reduce((sum, d) => sum + d.emissions, 0);
+      return scope3FromSections + scope3AdvancedTotal;
     }
+    
+    // En mode standard, seulement les sectionDetails
+    return scope3FromSections;
   }, [sectionDetails.scope3, scope3AdvancedTotal, isAdvancedMode]);
 
   // Sauvegarder les calculs et mettre à jour le contexte (incluant Scope 3 avancé)

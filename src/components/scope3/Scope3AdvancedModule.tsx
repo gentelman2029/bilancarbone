@@ -83,7 +83,11 @@ export const Scope3AdvancedModule: React.FC<Scope3AdvancedModuleProps> = ({
   useEffect(() => {
     localStorage.setItem('scope3-advanced-calculations', JSON.stringify(calculations));
     onCalculationsChange?.(calculations);
-    onTotalChange?.(getTotalEmissions());
+    const total = getTotalEmissions();
+    onTotalChange?.(total);
+    
+    // Déclencher un événement storage pour notifier les autres composants
+    window.dispatchEvent(new Event('storage'));
   }, [calculations]);
 
   const handleToggleCategory = (categoryId: string, enabled: boolean) => {

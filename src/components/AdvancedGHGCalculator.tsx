@@ -191,8 +191,8 @@ export const AdvancedGHGCalculator = () => {
   // États pour les modales de détail des scopes
   const [openScopeModal, setOpenScopeModal] = useState<1 | 2 | 3 | null>(null);
   
-  // Charger le total Scope 3 avancé depuis localStorage au démarrage
-  const [scope3AdvancedTotal, setScope3AdvancedTotal] = useState(() => {
+  // Fonction pour calculer le total Scope 3 avancé depuis localStorage
+  const getScope3AdvancedTotalFromStorage = (): number => {
     const savedCalculations = localStorage.getItem('scope3-advanced-calculations');
     if (savedCalculations) {
       try {
@@ -203,7 +203,33 @@ export const AdvancedGHGCalculator = () => {
       }
     }
     return 0;
-  });
+  };
+
+  // État Scope 3 avancé avec initialisation depuis localStorage
+  const [scope3AdvancedTotal, setScope3AdvancedTotal] = useState(getScope3AdvancedTotalFromStorage);
+  
+  // Synchroniser le Scope 3 avancé à chaque changement du localStorage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const newTotal = getScope3AdvancedTotalFromStorage();
+      setScope3AdvancedTotal(newTotal);
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Vérifier aussi périodiquement (pour les changements dans la même page)
+    const interval = setInterval(() => {
+      const currentStorageTotal = getScope3AdvancedTotalFromStorage();
+      if (currentStorageTotal !== scope3AdvancedTotal) {
+        setScope3AdvancedTotal(currentStorageTotal);
+      }
+    }, 500);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [scope3AdvancedTotal]);
   
   // Hook pour les détails de calcul par section
   const { 
@@ -474,19 +500,25 @@ export const AdvancedGHGCalculator = () => {
     updateEmissions({ positionClassement });
   }, [positionClassement, updateEmissions]);
 
+  // Calculer le total Scope 3 réel (sectionDetails + module avancé)
+  const scope3TotalCalculated = useMemo(() => {
+    const scope3FromSections = sectionDetails.scope3.reduce((sum, d) => sum + d.emissions, 0);
+    // En mode avancé, additionner les deux sources
+    return isAdvancedMode ? scope3FromSections + scope3AdvancedTotal : scope3FromSections;
+  }, [sectionDetails.scope3, scope3AdvancedTotal, isAdvancedMode]);
+
   // Sauvegarder les calculs et mettre à jour le contexte (incluant Scope 3 avancé)
   useEffect(() => {
     localStorage.setItem('calculator-calculations', JSON.stringify(calculations));
     const emissionsByScope = getEmissionsByScope();
-    const scope3Total = isAdvancedMode 
-      ? emissionsByScope.scope3 + scope3AdvancedTotal 
-      : emissionsByScope.scope3;
+    
+    // Utiliser TOUJOURS le scope3TotalCalculated pour garantir la cohérence
     updateEmissions({
       scope1: emissionsByScope.scope1,
       scope2: emissionsByScope.scope2,
-      scope3: scope3Total
+      scope3: scope3TotalCalculated
     });
-  }, [calculations, scope3AdvancedTotal, isAdvancedMode, sectionDetails]);
+  }, [calculations, scope3TotalCalculated, sectionDetails]);
 
   const addCalculation = (scope: string, category: string, subcategory: string, quantity: number) => {
     const scopeData = baseCarbone[scope as keyof typeof baseCarbone] as any;
@@ -727,10 +759,8 @@ export const AdvancedGHGCalculator = () => {
 
   const emissions = getEmissionsByScope();
   
-  // Calcul du total global incluant Scope 3 avancé
-  const scope3TotalWithAdvanced = isAdvancedMode 
-    ? (emissions.scope3 + scope3AdvancedTotal) 
-    : emissions.scope3;
+  // Utiliser scope3TotalCalculated qui contient déjà la somme correcte (sectionDetails + module avancé)
+  const scope3TotalWithAdvanced = scope3TotalCalculated;
   const totalGlobal = emissions.scope1 + emissions.scope2 + scope3TotalWithAdvanced;
 
   return (

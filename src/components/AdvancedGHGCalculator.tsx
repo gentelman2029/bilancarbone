@@ -16,7 +16,7 @@ import { useEmissions } from '@/contexts/EmissionsContext';
 import { useCarbonReports } from '@/hooks/useCarbonReports';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
-import { useCalculationDetails } from '@/hooks/useCalculationDetails';
+import { useCalculationDetails, CalculationDetail } from '@/hooks/useCalculationDetails';
 import { CalculationDetailsSection } from '@/components/CalculationDetailsSection';
 import { Scope3AdvancedModule } from '@/components/scope3/Scope3AdvancedModule';
 import { ScopeDetailModal } from '@/components/ScopeDetailModal';
@@ -768,6 +768,39 @@ export const AdvancedGHGCalculator = () => {
   // Utiliser scope3TotalCalculated qui contient déjà la somme correcte (sectionDetails + module avancé)
   const scope3TotalWithAdvanced = scope3TotalCalculated;
   const totalGlobal = emissions.scope1 + emissions.scope2 + scope3TotalWithAdvanced;
+
+  // Créer la liste combinée des détails Scope 3 (standard + module avancé)
+  const getScope3CombinedDetails = (): CalculationDetail[] => {
+    const standardDetails = sectionDetails.scope3;
+    
+    // Si mode avancé activé, ajouter les calculs du module avancé
+    if (isAdvancedMode) {
+      try {
+        const savedAdvanced = localStorage.getItem('scope3-advanced-calculations');
+        if (savedAdvanced) {
+          const advancedCalcs = JSON.parse(savedAdvanced);
+          const advancedDetails: CalculationDetail[] = advancedCalcs.map((calc: any) => ({
+            id: calc.id || `scope3-adv-${Date.now()}-${Math.random()}`,
+            type: 'ghg-protocol-advanced',
+            description: `${calc.categoryName || 'Catégorie'} - ${calc.subcategoryName || calc.method || 'Calcul avancé'}`,
+            quantity: calc.quantity || 0,
+            unit: calc.unit || 'unités',
+            emissionFactor: calc.quantity > 0 ? (calc.emissions / calc.quantity) : 0,
+            emissions: calc.emissions || 0,
+            timestamp: new Date().toLocaleString('fr-FR'),
+            formuleDetail: `${calc.quantity || 0} ${calc.unit || 'unités'} × ${calc.quantity > 0 ? (calc.emissions / calc.quantity).toFixed(4) : 0} kg CO₂e/${calc.unit || 'unités'}`
+          }));
+          return [...standardDetails, ...advancedDetails];
+        }
+      } catch (e) {
+        console.error('Erreur lecture Scope3 avancé pour détails:', e);
+      }
+    }
+    
+    return standardDetails;
+  };
+
+  const scope3CombinedDetails = getScope3CombinedDetails();
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -1918,18 +1951,43 @@ export const AdvancedGHGCalculator = () => {
                   onClearSection={() => clearSectionDetails('scope2')}
                 />
 
-                {/* Scope 3 */}
+                {/* Scope 3 - utilise scope3CombinedDetails pour inclure le module avancé */}
                 <CalculationDetailsSection
                   title="Scope 3 - Autres Émissions Indirectes"
                   icon={<Globe className="h-5 w-5 text-blue-500" />}
-                  details={sectionDetails.scope3}
+                  details={scope3CombinedDetails}
                   sectionColor="secondary"
-                  onRemoveDetail={(detailId) => removeCalculationDetail('scope3', detailId)}
-                  onClearSection={() => clearSectionDetails('scope3')}
+                  onRemoveDetail={(detailId) => {
+                    // Si c'est un calcul avancé, le supprimer du localStorage
+                    if (detailId.startsWith('scope3-adv-') || isAdvancedMode) {
+                      try {
+                        const savedAdvanced = localStorage.getItem('scope3-advanced-calculations');
+                        if (savedAdvanced) {
+                          const advancedCalcs = JSON.parse(savedAdvanced);
+                          const filtered = advancedCalcs.filter((calc: any) => calc.id !== detailId);
+                          localStorage.setItem('scope3-advanced-calculations', JSON.stringify(filtered));
+                          setScope3AdvancedTotal(filtered.reduce((sum: number, c: any) => sum + (c.emissions || 0), 0));
+                          window.dispatchEvent(new Event('storage'));
+                        }
+                      } catch (e) {
+                        console.error('Erreur suppression calcul avancé:', e);
+                      }
+                    }
+                    removeCalculationDetail('scope3', detailId);
+                  }}
+                  onClearSection={() => {
+                    clearSectionDetails('scope3');
+                    // Effacer aussi les calculs avancés
+                    if (isAdvancedMode) {
+                      localStorage.setItem('scope3-advanced-calculations', JSON.stringify([]));
+                      setScope3AdvancedTotal(0);
+                      window.dispatchEvent(new Event('storage'));
+                    }
+                  }}
                 />
 
                 {/* Message si aucun détail */}
-                {sectionDetails.scope1.length === 0 && sectionDetails.scope2.length === 0 && sectionDetails.scope3.length === 0 && calculations.length === 0 && (
+                {sectionDetails.scope1.length === 0 && sectionDetails.scope2.length === 0 && scope3CombinedDetails.length === 0 && calculations.length === 0 && (
                   <div className="text-center py-12 text-muted-foreground">
                     <Calculator className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p className="text-lg font-medium">Aucun calcul enregistré</p>

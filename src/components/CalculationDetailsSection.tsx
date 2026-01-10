@@ -26,6 +26,9 @@ export const CalculationDetailsSection: React.FC<CalculationDetailsSectionProps>
   className = ""
 }) => {
   const totalEmissions = details.reduce((sum, detail) => sum + detail.emissions, 0);
+  
+  // Convertir en tonnes CO₂e (diviser par 1000)
+  const formatEmissions = (kgValue: number) => (kgValue / 1000).toFixed(2);
 
   if (details.length === 0) {
     return null;
@@ -50,7 +53,7 @@ export const CalculationDetailsSection: React.FC<CalculationDetailsSectionProps>
             <div className="text-right">
               <div className="text-sm text-muted-foreground">Total Section</div>
               <div className="text-lg font-bold text-primary">
-                {totalEmissions.toFixed(2)} kg CO₂e
+                {formatEmissions(totalEmissions)} tCO₂e
               </div>
             </div>
             <Button
@@ -95,7 +98,7 @@ export const CalculationDetailsSection: React.FC<CalculationDetailsSectionProps>
                 <div className="flex items-center gap-2 ml-4">
                   <div className="text-right">
                     <div className="text-sm font-bold text-primary">
-                      {detail.emissions.toFixed(2)} kg CO₂e
+                      {formatEmissions(detail.emissions)} tCO₂e
                     </div>
                   </div>
                   <Button
@@ -121,7 +124,7 @@ export const CalculationDetailsSection: React.FC<CalculationDetailsSectionProps>
                 <span className="font-medium text-primary">Total {title}</span>
               </div>
               <div className="text-lg font-bold text-primary">
-                {totalEmissions.toFixed(2)} kg CO₂e
+                {formatEmissions(totalEmissions)} tCO₂e
               </div>
             </div>
           </div>

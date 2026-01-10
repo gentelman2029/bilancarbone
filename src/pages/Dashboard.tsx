@@ -29,15 +29,28 @@ export const Dashboard = () => {
   const { exportCurrentData, exportSiteData, exportCategoryData, exportActionsData, exportCompleteData } = useCSVExport();
   
   const latestReport = getLatestReport();
-  const displayEmissions = latestReport ? {
+  
+  // PRIORITÉ: Utiliser les émissions du contexte (temps réel du calculateur) si disponibles
+  // Sinon, utiliser les données du rapport Supabase comme fallback
+  const displayEmissions = hasEmissions ? {
+    total: emissions.total,
+    scope1: emissions.scope1,
+    scope2: emissions.scope2,
+    scope3: emissions.scope3
+  } : latestReport ? {
     total: latestReport.total_co2e * 1000,
     scope1: latestReport.scope1_total * 1000,
     scope2: latestReport.scope2_total * 1000,
     scope3: latestReport.scope3_total * 1000
-  } : emissions;
+  } : {
+    total: 0,
+    scope1: 0,
+    scope2: 0,
+    scope3: 0
+  };
   
   const hasData = hasEmissions || !!latestReport;
-  const currentEmissions = displayEmissions.total / 1000;
+  const currentEmissions = displayEmissions.total / 1000; // En tonnes
 
   // Récupérer les données réelles du calculateur depuis EmissionsContext
   const nombrePersonnels = emissions.nombrePersonnels || 50;
@@ -102,15 +115,80 @@ export const Dashboard = () => {
     "Logistique", "IT", "Achats", "Déchets", "Numérique"
   ];
 
+  // Fonction helper pour attribuer des couleurs aux sources d'émission
+  const getColorForSource = (sourceName: string): string => {
+    // Couleurs pour les gaz réfrigérants (palette violet/magenta)
+    if (sourceName.includes("R-12") || sourceName.includes("CFC-12")) return "#8b5cf6";
+    if (sourceName.includes("R-11") || sourceName.includes("CFC-11")) return "#a855f7";
+    if (sourceName.includes("R-404A")) return "#c084fc";
+    if (sourceName.includes("R-410A")) return "#d946ef";
+    if (sourceName.includes("R-22") || sourceName.includes("HCFC-22")) return "#ec4899";
+    // Couleurs pour les énergies (palette rouge/orange)
+    if (sourceName.includes("Gaz naturel") || sourceName.includes("gaz naturel")) return "#ef4444";
+    if (sourceName.includes("GPL") || sourceName.includes("gpl")) return "#f97316";
+    if (sourceName.includes("diesel") || sourceName.includes("Diesel")) return "#f59e0b";
+    if (sourceName.includes("essence") || sourceName.includes("Essence")) return "#fb923c";
+    if (sourceName.includes("fioul") || sourceName.includes("Fioul")) return "#ea580c";
+    if (sourceName.includes("charbon") || sourceName.includes("Charbon")) return "#dc2626";
+    // Couleurs pour l'électricité (palette verte)
+    if (sourceName.includes("électr") || sourceName.includes("Électr") || sourceName.includes("electr")) return "#22c55e";
+    if (sourceName.includes("chaleur") || sourceName.includes("eau chaude")) return "#16a34a";
+    // Couleurs pour le transport (palette bleue)
+    if (sourceName.includes("transport") || sourceName.includes("Transport")) return "#3b82f6";
+    if (sourceName.includes("avion") || sourceName.includes("Avion")) return "#1d4ed8";
+    // Couleurs pour les matériaux
+    if (sourceName.includes("acier") || sourceName.includes("Acier")) return "#64748b";
+    if (sourceName.includes("aluminium") || sourceName.includes("Aluminium")) return "#06b6d4";
+    return "#94a3b8"; // couleur par défaut
+  };
+
   // Calculer les données dynamiques basées sur les vraies émissions du calculateur
   const getFilteredEmissionsByPost = () => {
     if (!hasData) return [];
     
     // Récupérer les calculs du localStorage pour obtenir les vraies sources d'émission
     const savedCalculations = localStorage.getItem('calculator-calculations');
-    let realData = [];
+    // Récupérer aussi les détails de section (sectionDetails) pour les données en temps réel
+    const savedSectionDetails = localStorage.getItem('calculation-section-details');
     
-    if (savedCalculations) {
+    let realData: { name: string; value: number; emissions: number; color: string }[] = [];
+    
+    // Essayer d'abord les sectionDetails (données en temps réel)
+    if (savedSectionDetails) {
+      try {
+        const sectionDetails = JSON.parse(savedSectionDetails);
+        const allDetails = [
+          ...(sectionDetails.scope1 || []),
+          ...(sectionDetails.scope2 || []),
+          ...(sectionDetails.scope3 || [])
+        ];
+        
+        if (allDetails.length > 0) {
+          // Grouper par description
+          const groupedData: { [key: string]: { emissions: number, color: string } } = {};
+          
+          allDetails.forEach((detail: any) => {
+            const sourceName = detail.description || 'Autre';
+            if (!groupedData[sourceName]) {
+              groupedData[sourceName] = { emissions: 0, color: getColorForSource(sourceName) };
+            }
+            groupedData[sourceName].emissions += detail.emissions || 0;
+          });
+          
+          realData = Object.entries(groupedData).map(([name, data]) => ({
+            name,
+            value: data.emissions / 1000,
+            emissions: data.emissions,
+            color: data.color
+          }));
+        }
+      } catch (e) {
+        console.error('Erreur parsing sectionDetails:', e);
+      }
+    }
+    
+    // Sinon, utiliser calculator-calculations
+    if (realData.length === 0 && savedCalculations) {
       const calculations = JSON.parse(savedCalculations);
       
       // Grouper par description (source d'émission réelle)
@@ -200,11 +278,13 @@ export const Dashboard = () => {
 
       if (others.length > 0) {
         const othersSum = others.reduce((sum, item) => sum + item.value, 0);
+        const othersEmissions = others.reduce((sum, item) => sum + (item.emissions || 0), 0);
         const othersPercentage = others.reduce((sum, item) => sum + item.percentage, 0);
         
         top5.push({
           name: "Autres",
           value: othersSum,
+          emissions: othersEmissions,
           percentage: othersPercentage,
           color: "#78716c" // Couleur gris brun pour "Autres"
         });

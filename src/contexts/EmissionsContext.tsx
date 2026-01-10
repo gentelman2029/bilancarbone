@@ -37,12 +37,84 @@ const initialEmissions: EmissionsData = {
   total: 0
 };
 
-export const EmissionsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [emissions, setEmissions] = useState<EmissionsData>(initialEmissions);
+// Fonction pour charger les émissions depuis localStorage (synchronisé avec le calculateur)
+const loadFromLocalStorage = (): EmissionsData | null => {
+  try {
+    const sectionDetails = localStorage.getItem('calculation-section-details');
+    if (sectionDetails) {
+      const details = JSON.parse(sectionDetails);
+      const scope1 = (details.scope1 || []).reduce((sum: number, d: any) => sum + (d.emissions || 0), 0);
+      const scope2 = (details.scope2 || []).reduce((sum: number, d: any) => sum + (d.emissions || 0), 0);
+      let scope3 = (details.scope3 || []).reduce((sum: number, d: any) => sum + (d.emissions || 0), 0);
+      
+      // Ajouter aussi le Scope 3 avancé si disponible
+      const scope3Advanced = localStorage.getItem('scope3-advanced-calculations');
+      if (scope3Advanced) {
+        const advCalcs = JSON.parse(scope3Advanced);
+        scope3 += advCalcs.reduce((sum: number, c: any) => sum + (c.emissions || 0), 0);
+      }
+      
+      if (scope1 > 0 || scope2 > 0 || scope3 > 0) {
+        // Charger aussi les autres données d'entreprise
+        const chiffreAffaires = localStorage.getItem('calculator-chiffre-affaires');
+        const nombrePersonnels = localStorage.getItem('calculator-nombre-personnels');
+        const emissionsAnneePrecedente = localStorage.getItem('calculator-emissions-annee-precedente');
+        const objectifSBTI = localStorage.getItem('calculator-objectif-sbti');
+        const objectifsSBTParAnnee = localStorage.getItem('calculator-objectifs-sbt-par-annee');
+        const moyenneSectorielle = localStorage.getItem('calculator-moyenne-sectorielle');
+        const leadersSecteur = localStorage.getItem('calculator-leaders-secteur');
+        const positionClassement = localStorage.getItem('calculator-position-classement');
+        
+        return {
+          scope1,
+          scope2,
+          scope3,
+          total: scope1 + scope2 + scope3,
+          chiffreAffaires: chiffreAffaires ? JSON.parse(chiffreAffaires) : 1000,
+          nombrePersonnels: nombrePersonnels ? JSON.parse(nombrePersonnels) : 50,
+          emissionsAnneePrecedente: emissionsAnneePrecedente ? JSON.parse(emissionsAnneePrecedente) : 0,
+          objectifSBTI: objectifSBTI ? JSON.parse(objectifSBTI) : 0,
+          objectifsSBTParAnnee: objectifsSBTParAnnee ? JSON.parse(objectifsSBTParAnnee) : {},
+          moyenneSectorielle: moyenneSectorielle ? JSON.parse(moyenneSectorielle) : 0,
+          leadersSecteur: leadersSecteur ? JSON.parse(leadersSecteur) : 0,
+          positionClassement: positionClassement ? JSON.parse(positionClassement) : 0,
+        };
+      }
+    }
+  } catch (error) {
+    console.error('Erreur lors du chargement localStorage:', error);
+  }
+  return null;
+};
 
-  // Charger les données depuis Supabase au démarrage
+export const EmissionsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Initialiser avec les données localStorage si disponibles
+  const [emissions, setEmissions] = useState<EmissionsData>(() => {
+    const localData = loadFromLocalStorage();
+    return localData || initialEmissions;
+  });
+
+  // Charger les données depuis Supabase au démarrage (pour utilisateurs connectés)
   useEffect(() => {
     loadFromSupabase();
+  }, []);
+  
+  // Synchroniser les émissions avec localStorage quand elles changent
+  useEffect(() => {
+    // Écouter les changements du localStorage (pour sync multi-pages)
+    const handleStorageChange = () => {
+      const localData = loadFromLocalStorage();
+      if (localData && (localData.scope1 > 0 || localData.scope2 > 0 || localData.scope3 > 0)) {
+        setEmissions(prev => ({
+          ...prev,
+          ...localData,
+          total: localData.scope1 + localData.scope2 + localData.scope3
+        }));
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const loadFromSupabase = async () => {
@@ -59,6 +131,13 @@ export const EmissionsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       if (error) {
         console.error('Erreur lors du chargement des émissions:', error);
+        return;
+      }
+
+      // Ne pas écraser les données localStorage si elles existent et sont plus récentes
+      const localData = loadFromLocalStorage();
+      if (localData && (localData.scope1 > 0 || localData.scope2 > 0 || localData.scope3 > 0)) {
+        // Les données localStorage sont prioritaires (temps réel du calculateur)
         return;
       }
 

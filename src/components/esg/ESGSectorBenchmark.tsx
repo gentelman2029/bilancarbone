@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell, ReferenceLine } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { getSectorBenchmarks } from '@/lib/esg/scoringEngine';
 import { TUNISIAN_SECTORS } from '@/lib/esg/types';
+import { BenchmarkConfigModal, BenchmarkConfig, getBenchmarkConfig } from './BenchmarkConfigModal';
 
 interface ESGSectorBenchmarkProps {
   sector: string;
@@ -17,30 +18,67 @@ export const ESGSectorBenchmark: React.FC<ESGSectorBenchmarkProps> = ({
   userScore,
   categoryScores,
 }) => {
-  const benchmarks = getSectorBenchmarks();
-  const sectorBenchmark = benchmarks[sector];
+  const defaultBenchmarks = getSectorBenchmarks();
+  const defaultSectorBenchmark = defaultBenchmarks[sector];
   const sectorLabel = TUNISIAN_SECTORS.find(s => s.value === sector)?.label || sector;
 
-  if (!sectorBenchmark) return null;
+  // Initialize benchmark config from localStorage or defaults
+  const [benchmarkConfig, setBenchmarkConfig] = useState<BenchmarkConfig>(() => {
+    if (!defaultSectorBenchmark) {
+      return {
+        avgScore: 50,
+        topScore: 80,
+        eScore: 50,
+        sScore: 50,
+        gScore: 50,
+        source: '',
+      };
+    }
+    return getBenchmarkConfig(sector, {
+      avgScore: defaultSectorBenchmark.avgScore,
+      topScore: defaultSectorBenchmark.topScore,
+      eScore: defaultSectorBenchmark.eScore,
+      sScore: defaultSectorBenchmark.sScore,
+      gScore: defaultSectorBenchmark.gScore,
+      source: '',
+    });
+  });
 
-  const comparison = userScore - sectorBenchmark.avgScore;
+  // Update config when sector changes
+  useEffect(() => {
+    const defaults = defaultBenchmarks[sector];
+    if (defaults) {
+      setBenchmarkConfig(getBenchmarkConfig(sector, {
+        avgScore: defaults.avgScore,
+        topScore: defaults.topScore,
+        eScore: defaults.eScore,
+        sScore: defaults.sScore,
+        gScore: defaults.gScore,
+        source: '',
+      }));
+    }
+  }, [sector]);
+
+  if (!defaultSectorBenchmark) return null;
+
+  const comparison = userScore - benchmarkConfig.avgScore;
   const isAboveAvg = comparison > 0;
 
   const chartData = [
     {
       name: 'Environnement',
       'Votre Score': categoryScores.E || 0,
-      'Moyenne Secteur': sectorBenchmark.eScore,
+      'Moyenne Secteur': benchmarkConfig.eScore,
     },
     {
       name: 'Social',
       'Votre Score': categoryScores.S || 0,
-      'Moyenne Secteur': sectorBenchmark.sScore,
+      'Moyenne Secteur': benchmarkConfig.sScore,
     },
     {
       name: 'Gouvernance',
       'Votre Score': categoryScores.G || 0,
-      'Moyenne Secteur': sectorBenchmark.gScore,
+      'Moyenne Secteur': benchmarkConfig.gScore,
     },
   ];
 
@@ -52,38 +90,52 @@ export const ESGSectorBenchmark: React.FC<ESGSectorBenchmarkProps> = ({
     },
     {
       name: 'Moyenne Secteur',
-      value: sectorBenchmark.avgScore,
+      value: benchmarkConfig.avgScore,
       fill: 'hsl(var(--muted-foreground))',
     },
     {
       name: 'Top 10% Secteur',
-      value: sectorBenchmark.topScore,
+      value: benchmarkConfig.topScore,
       fill: 'hsl(152, 69%, 41%)',
     },
   ];
 
+  const sourceText = benchmarkConfig.source?.trim() 
+    ? benchmarkConfig.source 
+    : 'Données simulées à titre indicatif';
+
   return (
     <Card className="border-border/50">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Benchmark Sectoriel - {sectorLabel}</span>
-          <Badge 
-            variant={isAboveAvg ? 'default' : 'secondary'}
-            className={`flex items-center gap-1 ${isAboveAvg ? 'bg-emerald-500' : ''}`}
-          >
-            {isAboveAvg ? (
-              <TrendingUp className="h-3 w-3" />
-            ) : comparison < 0 ? (
-              <TrendingDown className="h-3 w-3" />
-            ) : (
-              <Minus className="h-3 w-3" />
-            )}
-            {comparison > 0 ? '+' : ''}{comparison.toFixed(1)} pts vs moyenne
-          </Badge>
-        </CardTitle>
-        <CardDescription>
-          Comparaison avec les entreprises tunisiennes du même secteur
-        </CardDescription>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex-1">
+            <CardTitle className="flex items-center justify-between">
+              <span>Benchmark Sectoriel - {sectorLabel}</span>
+              <Badge 
+                variant={isAboveAvg ? 'default' : 'secondary'}
+                className={`flex items-center gap-1 ${isAboveAvg ? 'bg-emerald-500' : ''}`}
+              >
+                {isAboveAvg ? (
+                  <TrendingUp className="h-3 w-3" />
+                ) : comparison < 0 ? (
+                  <TrendingDown className="h-3 w-3" />
+                ) : (
+                  <Minus className="h-3 w-3" />
+                )}
+                {comparison > 0 ? '+' : ''}{comparison.toFixed(1)} pts vs moyenne
+              </Badge>
+            </CardTitle>
+            <CardDescription>
+              Comparaison avec les entreprises tunisiennes du même secteur
+            </CardDescription>
+          </div>
+          <BenchmarkConfigModal
+            sector={sector}
+            sectorLabel={sectorLabel}
+            currentConfig={benchmarkConfig}
+            onSave={setBenchmarkConfig}
+          />
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Overall Comparison */}
@@ -136,7 +188,7 @@ export const ESGSectorBenchmark: React.FC<ESGSectorBenchmarkProps> = ({
         <div className="grid grid-cols-3 gap-3 pt-2 border-t">
           {['E', 'S', 'G'].map((cat) => {
             const userCatScore = categoryScores[cat] || 0;
-            const benchmarkScore = cat === 'E' ? sectorBenchmark.eScore : cat === 'S' ? sectorBenchmark.sScore : sectorBenchmark.gScore;
+            const benchmarkScore = cat === 'E' ? benchmarkConfig.eScore : cat === 'S' ? benchmarkConfig.sScore : benchmarkConfig.gScore;
             const diff = userCatScore - benchmarkScore;
             return (
               <div key={cat} className="text-center p-2 rounded-lg bg-muted/50">
@@ -150,6 +202,13 @@ export const ESGSectorBenchmark: React.FC<ESGSectorBenchmarkProps> = ({
               </div>
             );
           })}
+        </div>
+
+        {/* Source Attribution */}
+        <div className="pt-2 border-t">
+          <p className="text-xs italic text-muted-foreground/70">
+            Source du benchmark : {sourceText}
+          </p>
         </div>
       </CardContent>
     </Card>

@@ -5,7 +5,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { 
   Leaf, 
   Users, 
@@ -17,11 +16,11 @@ import {
   TrendingUp,
   Droplets,
   BookOpen,
-  RotateCcw
+  RotateCcw,
+  Settings2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-import { Layout } from '@/components/Layout';
 import { ESGIndicatorForm } from '@/components/esg/ESGIndicatorForm';
 import { ESGScoreGauges } from '@/components/esg/ESGScoreGauges';
 import { ESGMaterialityMatrix } from '@/components/esg/ESGMaterialityMatrix';
@@ -29,6 +28,10 @@ import { ESGComplianceAlerts } from '@/components/esg/ESGComplianceAlerts';
 import { ESGSectorBenchmark } from '@/components/esg/ESGSectorBenchmark';
 import { ESGPDFExport } from '@/components/esg/ESGPDFExport';
 import { ESGMethodologyGuide } from '@/components/esg/ESGMethodologyGuide';
+import { ESGWeightingConfig, WeightingConfig } from '@/components/esg/ESGWeightingConfig';
+import { ESGMaterialityTable, MaterialityIssue } from '@/components/esg/ESGMaterialityTable';
+import { ESGMaterialityBubbleChart } from '@/components/esg/ESGMaterialityBubbleChart';
+import { useESGMateriality } from '@/hooks/useESGMateriality';
 import { 
   ESGData, 
   ESGCategory, 
@@ -45,6 +48,17 @@ import {
 } from '@/lib/esg/scoringEngine';
 
 const ESGDashboard: React.FC = () => {
+  // ESG Materiality hook
+  const {
+    issues,
+    weightingConfig,
+    isLoading,
+    addIssue,
+    updateIssue,
+    deleteIssue,
+    saveWeightingConfig,
+  } = useESGMateriality();
+
   // Initialize ESG data state
   const [esgData, setEsgData] = useState<ESGData>(() => {
     const stored = localStorage.getItem('esg-dashboard-data');
@@ -66,7 +80,7 @@ const ESGDashboard: React.FC = () => {
     gradeLabel: string;
   }>({ totalScore: 0, categoryScores: {}, grade: 'CCC', gradeColor: '', gradeLabel: '' });
 
-  const [materialityData, setMaterialityData] = useState<MaterialityPoint[]>([]);
+  const [legacyMaterialityData, setLegacyMaterialityData] = useState<MaterialityPoint[]>([]);
   const [complianceAlerts, setComplianceAlerts] = useState<ComplianceAlert[]>([]);
 
   function getInitialData(): ESGData {
@@ -91,18 +105,25 @@ const ESGDashboard: React.FC = () => {
     localStorage.setItem('esg-dashboard-data', JSON.stringify(esgData));
   }, [esgData]);
 
-  // Recalculate scores when data changes
+  // Recalculate scores when data or weighting changes
   useEffect(() => {
     // Calculate automatic KPIs
     const updatedCategories = calculateAutomaticKPIs(esgData.categories, esgData.revenue);
     
-    // Calculate scores
-    const newScores = calculateTotalScore(updatedCategories, esgData.sector);
+    // Build custom weights from weighting config
+    const customWeights = {
+      e: weightingConfig.environmentWeight,
+      s: weightingConfig.socialWeight,
+      g: weightingConfig.governanceWeight,
+    };
+    
+    // Calculate scores with custom weights
+    const newScores = calculateTotalScore(updatedCategories, esgData.sector, customWeights);
     setScores(newScores);
 
-    // Generate materiality matrix
+    // Generate legacy materiality matrix for BVMT indicators
     const matrixData = generateMaterialityMatrix(updatedCategories);
-    setMaterialityData(matrixData);
+    setLegacyMaterialityData(matrixData);
 
     // Generate compliance alerts
     const alerts = generateComplianceAlerts(
@@ -110,7 +131,7 @@ const ESGDashboard: React.FC = () => {
       newScores.categoryScores
     );
     setComplianceAlerts(alerts);
-  }, [esgData]);
+  }, [esgData, weightingConfig]);
 
   const handleIndicatorChange = useCallback((categoryId: string, indicatorId: string, value: number | boolean) => {
     setEsgData(prev => ({
@@ -253,10 +274,14 @@ const ESGDashboard: React.FC = () => {
 
         {/* Main Dashboard Tabs */}
         <Tabs defaultValue="scoring" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
             <TabsTrigger value="scoring" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Scoring</span>
+            </TabsTrigger>
+            <TabsTrigger value="weighting" className="flex items-center gap-2">
+              <Settings2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Pondérations</span>
             </TabsTrigger>
             <TabsTrigger value="indicators" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
@@ -278,6 +303,32 @@ const ESGDashboard: React.FC = () => {
 
           {/* Scoring Tab */}
           <TabsContent value="scoring" className="space-y-6">
+            {/* Current Weighting Display */}
+            <Card className="border-border/50 bg-muted/20">
+              <CardContent className="pt-4">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-medium text-muted-foreground">Pondération active :</span>
+                    <Badge variant="outline" className="gap-1">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                      E: {weightingConfig.environmentWeight.toFixed(0)}%
+                    </Badge>
+                    <Badge variant="outline" className="gap-1">
+                      <div className="w-2 h-2 rounded-full bg-blue-500" />
+                      S: {weightingConfig.socialWeight.toFixed(0)}%
+                    </Badge>
+                    <Badge variant="outline" className="gap-1">
+                      <div className="w-2 h-2 rounded-full bg-purple-500" />
+                      G: {weightingConfig.governanceWeight.toFixed(0)}%
+                    </Badge>
+                  </div>
+                  <Badge>
+                    Mode: {weightingConfig.mode === 'standard' ? '⚖️ Standard' : weightingConfig.mode === 'sectoriel' ? '🏭 Sectoriel' : '🎯 Expert'}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <ESGScoreGauges
                 eScore={scores.categoryScores.E || 0}
@@ -350,6 +401,54 @@ const ESGDashboard: React.FC = () => {
             </div>
           </TabsContent>
 
+          {/* Weighting Configuration Tab */}
+          <TabsContent value="weighting" className="space-y-6">
+            <ESGWeightingConfig
+              config={weightingConfig}
+              onConfigChange={saveWeightingConfig}
+            />
+            
+            <Card className="border-border/50 bg-muted/30">
+              <CardHeader>
+                <CardTitle className="text-lg">Impact des pondérations sur le score</CardTitle>
+                <CardDescription>
+                  Visualisez comment les pondérations affectent votre score ESG global
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="p-4 rounded-lg bg-emerald-500/10">
+                    <p className="text-sm text-muted-foreground mb-1">Contribution E</p>
+                    <p className="text-2xl font-bold text-emerald-600">
+                      {((scores.categoryScores.E || 0) * weightingConfig.environmentWeight / 100).toFixed(1)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {(scores.categoryScores.E || 0).toFixed(0)} × {weightingConfig.environmentWeight.toFixed(0)}%
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-blue-500/10">
+                    <p className="text-sm text-muted-foreground mb-1">Contribution S</p>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {((scores.categoryScores.S || 0) * weightingConfig.socialWeight / 100).toFixed(1)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {(scores.categoryScores.S || 0).toFixed(0)} × {weightingConfig.socialWeight.toFixed(0)}%
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-purple-500/10">
+                    <p className="text-sm text-muted-foreground mb-1">Contribution G</p>
+                    <p className="text-2xl font-bold text-purple-600">
+                      {((scores.categoryScores.G || 0) * weightingConfig.governanceWeight / 100).toFixed(1)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {(scores.categoryScores.G || 0).toFixed(0)} × {weightingConfig.governanceWeight.toFixed(0)}%
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Indicators Tab */}
           <TabsContent value="indicators">
             <ESGIndicatorForm
@@ -360,9 +459,30 @@ const ESGDashboard: React.FC = () => {
             />
           </TabsContent>
 
-          {/* Materiality Tab */}
+          {/* Materiality Tab - NEW Interactive CRUD */}
           <TabsContent value="materiality" className="space-y-6">
-            <ESGMaterialityMatrix data={materialityData} />
+            <ESGMaterialityTable
+              issues={issues}
+              onAddIssue={addIssue}
+              onUpdateIssue={updateIssue}
+              onDeleteIssue={deleteIssue}
+            />
+            
+            <ESGMaterialityBubbleChart issues={issues} />
+
+            {/* Legacy BVMT Matrix */}
+            {legacyMaterialityData.length > 0 && (
+              <>
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                    <Target className="h-5 w-5 text-muted-foreground" />
+                    Matrice BVMT (32 KPIs standards)
+                  </h3>
+                  <ESGMaterialityMatrix data={legacyMaterialityData} />
+                </div>
+              </>
+            )}
+
             <Card className="border-border/50">
               <CardHeader>
                 <CardTitle>Méthodologie Double Matérialité</CardTitle>
@@ -426,8 +546,9 @@ const ESGDashboard: React.FC = () => {
                     </h4>
                     <ul className="text-sm space-y-1 text-muted-foreground">
                       <li>• GRI Standards (Global Reporting Initiative)</li>
-                      <li>• TCFD (Task Force on Climate-related Disclosures)</li>
-                      <li>• UN SDGs (Objectifs de Développement Durable)</li>
+                      <li>• SASB (Sustainability Accounting Standards)</li>
+                      <li>• TCFD (Task Force on Climate-related Financial Disclosures)</li>
+                      <li>• CDP (Carbon Disclosure Project)</li>
                     </ul>
                   </div>
                 </CardContent>

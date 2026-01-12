@@ -1931,6 +1931,106 @@ export type Database = {
           },
         ]
       }
+      esg_materiality_issues: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          impact_nature: string
+          issue_name: string
+          opportunity: string | null
+          organization_id: string | null
+          probability: number
+          risk_score: number | null
+          severity: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          impact_nature: string
+          issue_name: string
+          opportunity?: string | null
+          organization_id?: string | null
+          probability: number
+          risk_score?: number | null
+          severity: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          impact_nature?: string
+          issue_name?: string
+          opportunity?: string | null
+          organization_id?: string | null
+          probability?: number
+          risk_score?: number | null
+          severity?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "esg_materiality_issues_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      esg_weighting_config: {
+        Row: {
+          created_at: string
+          environment_weight: number
+          governance_weight: number
+          id: string
+          mode: string
+          organization_id: string | null
+          sector: string | null
+          social_weight: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          environment_weight?: number
+          governance_weight?: number
+          id?: string
+          mode: string
+          organization_id?: string | null
+          sector?: string | null
+          social_weight?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          environment_weight?: number
+          governance_weight?: number
+          id?: string
+          mode?: string
+          organization_id?: string | null
+          sector?: string | null
+          social_weight?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "esg_weighting_config_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           created_at: string

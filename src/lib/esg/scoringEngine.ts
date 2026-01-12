@@ -144,9 +144,13 @@ export function calculateCategoryScore(category: ESGCategory, sector: string): n
 }
 
 /**
- * Calculate total ESG score
+ * Calculate total ESG score with custom weights
  */
-export function calculateTotalScore(categories: ESGCategory[], sector: string): {
+export function calculateTotalScore(
+  categories: ESGCategory[], 
+  sector: string,
+  customWeights?: { e: number; s: number; g: number }
+): {
   totalScore: number;
   categoryScores: Record<string, number>;
   grade: string;
@@ -156,10 +160,18 @@ export function calculateTotalScore(categories: ESGCategory[], sector: string): 
   const categoryScores: Record<string, number> = {};
   let totalScore = 0;
 
+  // Use custom weights if provided, otherwise use default from schema
+  const weights: Record<string, number> = customWeights 
+    ? { E: customWeights.e / 100, S: customWeights.s / 100, G: customWeights.g / 100 }
+    : {};
+
   categories.forEach(category => {
     const score = calculateCategoryScore(category, sector);
     categoryScores[category.id] = score;
-    totalScore += score * category.weight;
+    
+    // Use custom weight or default category weight
+    const weight = weights[category.id] !== undefined ? weights[category.id] : category.weight;
+    totalScore += score * weight;
   });
 
   // Determine grade

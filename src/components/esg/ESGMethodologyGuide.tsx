@@ -93,83 +93,138 @@ export const ESGMethodologyGuide: React.FC = () => {
           {/* Main Formula */}
           <div className="p-6 bg-muted/50 rounded-lg border">
             <p className="text-center text-lg font-mono font-semibold mb-4">
-              Score Global = (E × 0,40) + (S × 0,30) + (G × 0,30)
+              Score Global = (E × Poids_E) + (S × Poids_S) + (G × Poids_G)
             </p>
             <p className="text-sm text-muted-foreground text-center">
               Où E = Score Environnement, S = Score Social, G = Score Gouvernance
             </p>
           </div>
 
-          {/* Pillar Weights */}
-          <div className="grid gap-4">
+          {/* Weighting Configuration Modes */}
+          <div className="space-y-4">
             <h4 className="font-medium flex items-center gap-2">
               <Scale className="h-4 w-4" />
-              Pondération des Piliers
+              Configuration des Pondérations (3 Modes)
+            </h4>
+
+            {/* Mode Standard */}
+            <div className="p-4 rounded-lg border bg-muted/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge className="bg-emerald-600">Mode Standard</Badge>
+                <span className="font-medium">Équipondéré</span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-2">
+                Applique automatiquement une répartition égale entre les trois piliers :
+              </p>
+              <div className="p-3 bg-background rounded border font-mono text-sm">
+                E = 33% | S = 33% | G = 33%
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                <strong>Usage :</strong> Recommandé pour les organisations débutant leur démarche ESG ou sans contrainte sectorielle spécifique.
+              </p>
+            </div>
+
+            {/* Mode Sectoriel */}
+            <div className="p-4 rounded-lg border bg-blue-500/10 border-blue-500/20">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge className="bg-blue-600">Mode Sectoriel</Badge>
+                <span className="font-medium">Presets SASB/GRI</span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                Pondérations pré-configurées selon les enjeux de matérialité propres à chaque secteur d'activité :
+              </p>
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between p-2 bg-background rounded border text-sm">
+                  <span className="font-medium">🏦 Banque / Finance</span>
+                  <span className="font-mono text-xs">E: 20% | S: 30% | G: 50%</span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-background rounded border text-sm">
+                  <span className="font-medium">🏭 Industrie / Manufacturier</span>
+                  <span className="font-mono text-xs">E: 50% | S: 30% | G: 20%</span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-background rounded border text-sm">
+                  <span className="font-medium">👔 Textile / Habillement</span>
+                  <span className="font-mono text-xs">E: 40% | S: 45% | G: 15%</span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-background rounded border text-sm">
+                  <span className="font-medium">🌾 Agroalimentaire</span>
+                  <span className="font-mono text-xs">E: 45% | S: 35% | G: 20%</span>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
+                <Info className="h-3 w-3" />
+                Basé sur les standards SASB Materiality Map et GRI Sector Standards.
+              </p>
+            </div>
+
+            {/* Mode Expert */}
+            <div className="p-4 rounded-lg border bg-purple-500/10 border-purple-500/20">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge className="bg-purple-600">Mode Expert</Badge>
+                <span className="font-medium">Personnalisé</span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-2">
+                Configuration libre via curseurs ou champs numériques pour adapter les pondérations à votre matrice de matérialité interne.
+              </p>
+              <div className="p-3 bg-background rounded border text-sm">
+                <p className="mb-2"><strong>Contrainte technique :</strong> Le total des trois pondérations doit obligatoirement être égal à <span className="font-mono bg-red-100 dark:bg-red-900/30 px-1 rounded text-red-700 dark:text-red-400">100%</span></p>
+                <p className="text-xs text-muted-foreground">
+                  Une alerte s'affiche en temps réel si le total est différent de 100%.
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                <strong>Usage :</strong> Pour les entreprises ayant réalisé une analyse de double matérialité CSRD ou disposant d'études internes.
+              </p>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Pillar Description */}
+          <div className="grid gap-4">
+            <h4 className="font-medium flex items-center gap-2">
+              <Leaf className="h-4 w-4" />
+              Description des Piliers
             </h4>
             
             {/* Environment */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded bg-emerald-500/10">
-                    <Leaf className="h-4 w-4 text-emerald-500" />
-                  </div>
-                  <span className="font-medium">Environnement</span>
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded bg-emerald-500/10">
+                  <Leaf className="h-4 w-4 text-emerald-500" />
                 </div>
-                <span className="font-bold text-emerald-600">40%</span>
+                <span className="font-medium">Environnement (E)</span>
               </div>
-              <Progress value={40} className="h-3 [&>div]:bg-emerald-500" />
               <p className="text-xs text-muted-foreground">
-                Priorité renforcée pour le contexte tunisien (stress hydrique) et les exigences MACF
+                Énergie, eau, émissions carbone, déchets, investissements verts. Priorité renforcée pour le contexte tunisien (stress hydrique) et les exigences MACF.
               </p>
             </div>
 
             {/* Social */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded bg-blue-500/10">
-                    <Users className="h-4 w-4 text-blue-500" />
-                  </div>
-                  <span className="font-medium">Social</span>
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded bg-blue-500/10">
+                  <Users className="h-4 w-4 text-blue-500" />
                 </div>
-                <span className="font-bold text-blue-600">30%</span>
+                <span className="font-medium">Social (S)</span>
               </div>
-              <Progress value={30} className="h-3 [&>div]:bg-blue-500" />
               <p className="text-xs text-muted-foreground">
-                Conforme à la Loi RSE 2018-35 et aux exigences du Code du Travail tunisien
+                Emploi, formation, santé-sécurité, égalité H/F, dialogue social. Conforme à la Loi RSE 2018-35 et au Code du Travail tunisien.
               </p>
             </div>
 
             {/* Governance */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded bg-purple-500/10">
-                    <Building2 className="h-4 w-4 text-purple-500" />
-                  </div>
-                  <span className="font-medium">Gouvernance</span>
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded bg-purple-500/10">
+                  <Building2 className="h-4 w-4 text-purple-500" />
                 </div>
-                <span className="font-bold text-purple-600">30%</span>
+                <span className="font-medium">Gouvernance (G)</span>
               </div>
-              <Progress value={30} className="h-3 [&>div]:bg-purple-500" />
               <p className="text-xs text-muted-foreground">
-                Aligné sur le Code de Gouvernance BVMT et les normes anti-corruption
+                Composition du CA, éthique, anti-corruption, transparence fiscale. Aligné sur le Code de Gouvernance BVMT.
               </p>
             </div>
-          </div>
-
-          {/* Sector Adjustment */}
-          <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
-            <h4 className="font-medium flex items-center gap-2 mb-2 text-blue-700 dark:text-blue-400">
-              <Info className="h-4 w-4" />
-              Ajustement Sectoriel
-            </h4>
-            <p className="text-sm text-muted-foreground">
-              Pour les secteurs <strong>Textile</strong> et <strong>Agroalimentaire</strong>, les indicateurs 
-              liés à l'eau (E4, E5) et aux déchets (E9, E10) ont un poids multiplié par <strong>1,5x</strong> 
-              pour refléter leur impact environnemental spécifique.
-            </p>
           </div>
         </CardContent>
       </Card>

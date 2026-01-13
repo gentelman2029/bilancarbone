@@ -69,7 +69,7 @@
       "certification": "Certification"
     },
     "why_choose": {
-      "title": "Pourquoi choisir CarbonTrack ?",
+      "title": "Pourquoi choisir GreenInsight ?",
       "subtitle": "Nous résolvons les défis les plus courants des entreprises en matière de bilan carbone",
       "complexity_title": "Complexité simplifiée",
       "complexity_problem": "Problème :",
@@ -136,10 +136,10 @@
       "q1_answer": "Un calculateur d'empreinte carbone est un outil qui permet de quantifier les émissions de gaz à effet de serre générées par les activités d'une entreprise. Il mesure les émissions directes (Scope 1), indirectes liées à l'énergie (Scope 2) et autres émissions indirectes (Scope 3) selon les standards internationaux comme le GHG Protocol.",
       "q2_title": "Quels sont les avantages d'un logiciel permettant de calculer l'empreinte carbone d'une entreprise ?",
       "q2_answer": "Un logiciel de calcul d'empreinte carbone offre plusieurs avantages : automatisation des calculs, gain de temps considérable, précision des données, suivi en temps réel, génération de rapports conformes aux réglementations, identification des leviers de réduction, et aide à la prise de décision stratégique pour la transition écologique.",
-      "q3_title": "Comment la plateforme de développement durable de Carbontrack aide-t-elle les entreprises à mesurer leurs émissions ?",
-      "q3_answer": "Notre plateforme Carbontrack simplifie la mesure des émissions grâce à une interface intuitive, des facteurs d'émission actualisés automatiquement, l'intégration avec vos systèmes existants, des tableaux de bord personnalisables, et un accompagnement expert pour interpréter les résultats et définir un plan d'action.",
-      "q4_title": "Carbontrack permet-elle de calculer les émissions de scopes 1, 2 et 3 ?",
-      "q4_answer": "Oui, Carbontrack couvre l'intégralité des émissions selon la méthodologie GHG Protocol : Scope 1 (émissions directes), Scope 2 (électricité, chauffage, refroidissement), et Scope 3 (chaîne de valeur complète). Notre plateforme inclut plus de 15 catégories du Scope 3 pour une mesure exhaustive.",
+      "q3_title": "Comment la plateforme de développement durable GreenInsight aide-t-elle les entreprises à mesurer leurs émissions ?",
+      "q3_answer": "Notre plateforme GreenInsight simplifie la mesure des émissions grâce à une interface intuitive, des facteurs d'émission actualisés automatiquement, l'intégration avec vos systèmes existants, des tableaux de bord personnalisables, et un accompagnement expert pour interpréter les résultats et définir un plan d'action.",
+      "q4_title": "GreenInsight permet-elle de calculer les émissions de scopes 1, 2 et 3 ?",
+      "q4_answer": "Oui, GreenInsight couvre l'intégralité des émissions selon la méthodologie GHG Protocol : Scope 1 (émissions directes), Scope 2 (électricité, chauffage, refroidissement), et Scope 3 (chaîne de valeur complète). Notre plateforme inclut plus de 15 catégories du Scope 3 pour une mesure exhaustive.",
       "q5_title": "Quelles sont les principales caractéristiques du logiciel de bilan carbone ?",
       "q5_answer": "Les principales caractéristiques incluent : calcul automatisé selon les normes ISO 14064 et GHG Protocol, interface collaborative multi-utilisateurs, tableaux de bord personnalisables, génération de rapports conformes CSRD, suivi des actions de réduction, alertes et notifications, API pour l'intégration, et support expert inclus.",
       "q6_title": "Pourquoi les entreprises doivent-elles calculer leur empreinte carbone ?",
@@ -147,7 +147,7 @@
     },
     "cta": {
       "title": "Commencez votre transition carbone aujourd'hui",
-      "subtitle": "Rejoignez les entreprises pionnières qui transforment leur impact environnemental avec CarbonTrack",
+      "subtitle": "Rejoignez les entreprises pionnières qui transforment leur impact environnemental avec GreenInsight",
       "trial_button": "Essai gratuit 14 jours",
       "demo_button": "Demander une démo",
       "no_card": "Aucune carte bancaire requise • Configuration en 5 minutes"
@@ -175,7 +175,7 @@
     "register": "Créer un compte",
     "loading": "Chargement...",
     "signout_success": "Déconnexion réussie",
-    "signout_message": "À bientôt sur CarbonTrack !",
+    "signout_message": "À bientôt sur GreenInsight !",
     "signout_error": "Erreur lors de la déconnexion"
   },
   "dashboard": {
@@ -478,7 +478,7 @@
     "emission_reduction": "Réduction émissions",
     "csrd_compliance": "Conformité CSRD",
     "ready_title": "Prêt à commencer ?",
-    "ready_subtitle": "Soyez parmi les premiers à révolutionner votre approche environnementale avec CarbonTrack",
+    "ready_subtitle": "Soyez parmi les premiers à révolutionner votre approche environnementale avec GreenInsight",
     "request_demo": "Demander une démo",
     "free_trial_14": "Essai gratuit 14 jours"
   },

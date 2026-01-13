@@ -17,9 +17,9 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 150 25% 15%;
 
-    --primary: 142 76% 36%;
+    --primary: 152 82% 32%;
     --primary-foreground: 0 0% 98%;
-    --primary-glow: 142 60% 50%;
+    --primary-glow: 152 70% 42%;
 
     --secondary: 120 40% 95%;
     --secondary-foreground: 150 25% 15%;
@@ -27,7 +27,7 @@ All colors MUST be HSL.
     --muted: 120 20% 96%;
     --muted-foreground: 150 15% 45%;
 
-    --accent: 158 64% 52%;
+    --accent: 162 70% 45%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 84% 60%;
@@ -35,7 +35,7 @@ All colors MUST be HSL.
 
     --border: 120 20% 88%;
     --input: 120 20% 94%;
-    --ring: 142 76% 36%;
+    --ring: 152 82% 32%;
 
     /* Gradients écologiques */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));

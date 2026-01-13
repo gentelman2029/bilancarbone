@@ -82,7 +82,7 @@ export const ReportGenerator = () => {
     const targets = getReductionTargets();
     
     let report = `📊 RAPPORT DÉTAILLÉ D'ANALYSE CARBONE\n`;
-    report += `Généré le ${new Date().toLocaleDateString('fr-FR')} par CarbonTrack\n\n`;
+    report += `Généré le ${new Date().toLocaleDateString('fr-FR')} par GreenInsight\n\n`;
     
     report += `═══════════════════════════════════════\n`;
     report += `🎯 SYNTHÈSE EXÉCUTIVE\n`;
@@ -152,7 +152,7 @@ export const ReportGenerator = () => {
   
   const shareReport = () => {
     const report = generateDetailedReport();
-    const subject = "Rapport d'analyse carbone détaillé - CarbonTrack";
+    const subject = "Rapport d'analyse carbone détaillé - GreenInsight";
     const body = encodeURIComponent(report);
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };

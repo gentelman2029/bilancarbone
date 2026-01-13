@@ -217,7 +217,7 @@ const Trial = () => {
                     <Mail className="w-5 h-5 text-primary" />
                     <div>
                       <p className="font-medium text-foreground">Email</p>
-                      <p className="text-sm text-muted-foreground">Carbontrack2025@protonmail.com</p>
+                      <p className="text-sm text-muted-foreground">GreenInsight2025@protonmail.com</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">

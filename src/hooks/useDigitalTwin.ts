@@ -1,18 +1,147 @@
 import { useState, useMemo, useCallback } from "react";
 
-// Constants for calculations
+// =====================================================
+// CONSTANTS & PRICING MODELS
+// =====================================================
+
+// Installation costs
 const COST_PER_KWC = 850; // TND per kWc
 const COST_PER_KWH_BATTERY = 450; // TND per kWh
-const SAVINGS_PER_KWC = 180; // TND annual savings per kWc
-const SAVINGS_PER_KWH_BATTERY = 25; // TND annual savings per kWh battery
+const TRACKER_ADDITIONAL_COST = 120; // TND per kWc for tracker system
+const ANNUAL_OM_PERCENT = 0.015; // 1.5% of CAPEX per year for O&M
+const BATTERY_REPLACEMENT_YEAR = 10;
+const BATTERY_REPLACEMENT_COST_FACTOR = 0.5; // 50% of original battery cost
+
+// System performance
 const TRACKER_BONUS = 1.15; // 15% efficiency boost
 const SUBSIDY_REDUCTION = 0.3; // 30% CAPEX reduction with FTE subsidy
-const CO2_INTENSITY = 0.48; // kg CO2/kWh (STEG mix)
-const CBAM_PRICE_EUR = 0.065; // EUR per kg CO2
 const SOLAR_HOURS_PER_YEAR = 1600; // Average irradiation hours in Tunisia
 const PROJECT_LIFETIME_YEARS = 25;
 const PANEL_DEGRADATION_RATE = 0.007; // 0.7% per year
-const BATTERY_REPLACEMENT_YEAR = 10;
+
+// Emissions
+const CO2_INTENSITY = 0.48; // kg CO2/kWh (STEG mix)
+
+// =====================================================
+// STEG TARIFF STRUCTURE (2024)
+// =====================================================
+interface STEGTariff {
+  peak: number;     // Pointe (18h-22h)
+  day: number;      // Jour (7h-18h)
+  night: number;    // Nuit (22h-7h)
+  peakHours: number;    // Hours per day
+  dayHours: number;
+  nightHours: number;
+}
+
+// TND/kWh for each voltage regime
+const STEG_TARIFFS: Record<'MT' | 'HT', STEGTariff> = {
+  MT: { // Moyenne Tension
+    peak: 0.285,
+    day: 0.195,
+    night: 0.095,
+    peakHours: 4,
+    dayHours: 11,
+    nightHours: 9
+  },
+  HT: { // Haute Tension
+    peak: 0.245,
+    day: 0.175,
+    night: 0.085,
+    peakHours: 4,
+    dayHours: 11,
+    nightHours: 9
+  }
+};
+
+// Energy distribution throughout the day (solar production pattern)
+const SOLAR_PRODUCTION_PROFILE = {
+  peakPercent: 0.15,  // 15% of production during peak (18h-22h, only 18h-sunset)
+  dayPercent: 0.80,   // 80% during day hours (7h-18h)
+  nightPercent: 0.05  // 5% (early morning before 7h)
+};
+
+// With battery, we can shift consumption
+const BATTERY_SHIFT_PROFILE = {
+  peakShiftPercent: 0.6,  // 60% of battery can cover peak consumption
+  nightChargePercent: 0.3 // 30% charging at night rates
+};
+
+// =====================================================
+// CBAM PRICE PROJECTIONS (EUR per tonne CO2)
+// =====================================================
+const CBAM_PRICE_PROJECTIONS: Record<number, number> = {
+  2024: 50,
+  2025: 55,
+  2026: 65,
+  2027: 75,
+  2028: 85,
+  2029: 95,
+  2030: 100,
+  2031: 105,
+  2032: 110,
+  2033: 115,
+  2034: 120,
+  2035: 125,
+  2036: 130
+};
+
+const getCBAMPrice = (year: number): number => {
+  if (year <= 2024) return CBAM_PRICE_PROJECTIONS[2024];
+  if (year >= 2036) return CBAM_PRICE_PROJECTIONS[2036];
+  return CBAM_PRICE_PROJECTIONS[year] || 100;
+};
+
+// =====================================================
+// WEATHER VARIABILITY MODEL
+// =====================================================
+interface WeatherScenario {
+  name: string;
+  productionFactor: number;
+  probability: number;
+}
+
+const WEATHER_SCENARIOS: WeatherScenario[] = [
+  { name: 'excellent', productionFactor: 1.15, probability: 0.1 },
+  { name: 'good', productionFactor: 1.05, probability: 0.25 },
+  { name: 'normal', productionFactor: 1.0, probability: 0.35 },
+  { name: 'below_average', productionFactor: 0.92, probability: 0.20 },
+  { name: 'poor', productionFactor: 0.85, probability: 0.10 }
+];
+
+// Deterministic weather pattern for projection (varies by year for realism)
+const getWeatherFactor = (yearIndex: number): number => {
+  // Create a pseudo-random but deterministic pattern
+  const patterns = [1.0, 1.05, 0.95, 1.08, 0.92, 1.0, 0.98, 1.03, 0.94, 1.02, 1.0];
+  return patterns[yearIndex % patterns.length];
+};
+
+// =====================================================
+// FISCAL AMORTIZATION MODEL (Tunisia)
+// =====================================================
+interface FiscalBenefits {
+  annualDepreciation: number;
+  taxSavings: number;
+  depreciationYears: number;
+}
+
+const CORPORATE_TAX_RATE = 0.15; // 15% corporate tax in Tunisia (reduced rate for renewables)
+const DEPRECIATION_YEARS = 7; // Accelerated depreciation for renewable energy
+
+const calculateFiscalBenefits = (investment: number): FiscalBenefits => {
+  const annualDepreciation = investment / DEPRECIATION_YEARS;
+  const taxSavings = annualDepreciation * CORPORATE_TAX_RATE;
+  
+  return {
+    annualDepreciation,
+    taxSavings,
+    depreciationYears: DEPRECIATION_YEARS
+  };
+};
+
+// =====================================================
+// INTERFACES
+// =====================================================
 
 export interface DigitalTwinConfig {
   solarPower: number;
@@ -20,19 +149,50 @@ export interface DigitalTwinConfig {
   batteryCapacity: number;
   withSubsidy: boolean;
   inflationRate: number;
+  energyPriceEscalation: number; // Separate from general inflation
   voltageRegime: 'MT' | 'HT';
+  includeWeatherVariability: boolean;
+  includeFiscalBenefits: boolean;
 }
 
 export interface DigitalTwinMetrics {
+  // Basic metrics
   effectiveSolar: number;
   annualSavings: number;
   baseInvestment: number;
   investment: number;
   payback: number;
-  cbamSavings: number;
-  lcoe: number;
   co2Avoided: number;
   lifetimeSavings: number;
+  
+  // Advanced metrics
+  lcoe: number; // Including O&M
+  lcoeWithoutOM: number;
+  annualOMCost: number;
+  totalOMCost: number;
+  
+  // CBAM
+  cbamSavingsYear1: number;
+  cbamSavingsLifetime: number;
+  
+  // Tariff breakdown
+  savingsBreakdown: {
+    peakSavings: number;
+    daySavings: number;
+    nightSavings: number;
+    batteryPeakShiftSavings: number;
+  };
+  
+  // Fiscal
+  fiscalBenefits: FiscalBenefits;
+  
+  // Risk
+  weatherAdjustedSavings: number;
+  savingsRange: {
+    pessimistic: number;
+    expected: number;
+    optimistic: number;
+  };
 }
 
 export interface ProjectionDataPoint {
@@ -40,12 +200,20 @@ export interface ProjectionDataPoint {
   cashFlow: number;
   cumulative: number;
   degradation: number;
+  cbamSavings: number;
+  weatherFactor: number;
+  omCost: number;
+  fiscalSavings: number;
 }
 
 export interface ValidationResult {
   isValid: boolean;
   errors: string[];
 }
+
+// =====================================================
+// VALIDATION
+// =====================================================
 
 const validateConfig = (config: DigitalTwinConfig): ValidationResult => {
   const errors: string[] = [];
@@ -62,6 +230,9 @@ const validateConfig = (config: DigitalTwinConfig): ValidationResult => {
   if (config.inflationRate < 0 || config.inflationRate > 20) {
     errors.push("Le taux d'inflation doit être entre 0% et 20%");
   }
+  if (config.energyPriceEscalation < -5 || config.energyPriceEscalation > 15) {
+    errors.push("L'escalade du prix de l'énergie doit être entre -5% et 15%");
+  }
 
   return {
     isValid: errors.length === 0,
@@ -69,35 +240,104 @@ const validateConfig = (config: DigitalTwinConfig): ValidationResult => {
   };
 };
 
+// =====================================================
+// CORE CALCULATIONS
+// =====================================================
+
 const calculateMetrics = (config: DigitalTwinConfig): DigitalTwinMetrics => {
-  const { solarPower, hasTracker, batteryCapacity, withSubsidy, voltageRegime } = config;
+  const { 
+    solarPower, hasTracker, batteryCapacity, withSubsidy, 
+    voltageRegime, includeFiscalBenefits, includeWeatherVariability 
+  } = config;
 
-  // Voltage regime impact on savings (HT = higher savings)
-  const voltageMultiplier = voltageRegime === 'HT' ? 1.12 : 1;
-
+  const tariff = STEG_TARIFFS[voltageRegime];
   const trackerBonus = hasTracker ? TRACKER_BONUS : 1;
   const effectiveSolar = solarPower * trackerBonus;
   
-  const annualSavings = (effectiveSolar * SAVINGS_PER_KWC + batteryCapacity * SAVINGS_PER_KWH_BATTERY) * voltageMultiplier;
-  const baseInvestment = solarPower * COST_PER_KWC + batteryCapacity * COST_PER_KWH_BATTERY;
+  // Annual energy production (kWh)
+  const annualEnergy = effectiveSolar * SOLAR_HOURS_PER_YEAR;
+  
+  // Calculate savings by time-of-use (TOU)
+  const peakProduction = annualEnergy * SOLAR_PRODUCTION_PROFILE.peakPercent;
+  const dayProduction = annualEnergy * SOLAR_PRODUCTION_PROFILE.dayPercent;
+  const nightProduction = annualEnergy * SOLAR_PRODUCTION_PROFILE.nightPercent;
+  
+  const peakSavings = peakProduction * tariff.peak;
+  const daySavings = dayProduction * tariff.day;
+  const nightSavings = nightProduction * tariff.night;
+  
+  // Battery value: shifting cheap night energy to expensive peak
+  const batteryDailyShift = Math.min(batteryCapacity * 0.8, annualEnergy / 365 * 0.3); // 80% DoD, max 30% of daily production
+  const batteryAnnualShift = batteryDailyShift * 365 * BATTERY_SHIFT_PROFILE.peakShiftPercent;
+  const batteryPeakShiftSavings = batteryAnnualShift * (tariff.peak - tariff.night);
+  
+  const savingsBreakdown = {
+    peakSavings,
+    daySavings,
+    nightSavings,
+    batteryPeakShiftSavings
+  };
+  
+  const annualSavings = peakSavings + daySavings + nightSavings + batteryPeakShiftSavings;
+  
+  // Investment calculation
+  const solarCost = solarPower * COST_PER_KWC;
+  const trackerCost = hasTracker ? solarPower * TRACKER_ADDITIONAL_COST : 0;
+  const batteryCost = batteryCapacity * COST_PER_KWH_BATTERY;
+  const baseInvestment = solarCost + trackerCost + batteryCost;
   const investment = withSubsidy ? baseInvestment * (1 - SUBSIDY_REDUCTION) : baseInvestment;
   
-  // Prevent division by zero
-  const payback = annualSavings > 0 ? investment / annualSavings : Infinity;
+  // O&M costs
+  const annualOMCost = baseInvestment * ANNUAL_OM_PERCENT;
+  const totalOMCost = annualOMCost * PROJECT_LIFETIME_YEARS;
   
-  // CBAM savings in EUR per year
-  const annualEnergyProduced = effectiveSolar * SOLAR_HOURS_PER_YEAR;
-  const cbamSavings = annualEnergyProduced * CO2_INTENSITY * CBAM_PRICE_EUR;
+  // Payback (simple, without inflation)
+  const netAnnualCashflow = annualSavings - annualOMCost;
+  const payback = netAnnualCashflow > 0 ? investment / netAnnualCashflow : Infinity;
   
-  // LCOE calculation (TND/kWh)
-  const totalEnergy = effectiveSolar * SOLAR_HOURS_PER_YEAR * PROJECT_LIFETIME_YEARS;
-  const lcoe = totalEnergy > 0 ? (investment / totalEnergy) * 1000 : 0;
+  // LCOE calculation (with and without O&M)
+  const totalLifetimeEnergy = annualEnergy * PROJECT_LIFETIME_YEARS * 0.88; // Average degradation factor
+  const lcoeWithoutOM = totalLifetimeEnergy > 0 ? (investment / totalLifetimeEnergy) * 1000 : 0;
+  const lcoe = totalLifetimeEnergy > 0 ? ((investment + totalOMCost) / totalLifetimeEnergy) * 1000 : 0;
   
   // CO2 avoided per year (tonnes)
-  const co2Avoided = (annualEnergyProduced * CO2_INTENSITY) / 1000;
+  const co2Avoided = (annualEnergy * CO2_INTENSITY) / 1000;
   
-  // Lifetime savings estimate
-  const lifetimeSavings = annualSavings * PROJECT_LIFETIME_YEARS - investment;
+  // CBAM savings (year 1 and lifetime with price escalation)
+  const cbamPriceYear1 = getCBAMPrice(2026) / 1000; // EUR per kg
+  const cbamSavingsYear1 = annualEnergy * CO2_INTENSITY * cbamPriceYear1;
+  
+  let cbamSavingsLifetime = 0;
+  for (let i = 0; i < PROJECT_LIFETIME_YEARS; i++) {
+    const yearDegradation = Math.pow(1 - PANEL_DEGRADATION_RATE, i);
+    const yearEnergy = annualEnergy * yearDegradation;
+    const cbamPrice = getCBAMPrice(2026 + i) / 1000;
+    cbamSavingsLifetime += yearEnergy * CO2_INTENSITY * cbamPrice;
+  }
+  
+  // Fiscal benefits
+  const fiscalBenefits = calculateFiscalBenefits(investment);
+  
+  // Weather risk analysis
+  const expectedProduction = WEATHER_SCENARIOS.reduce(
+    (sum, s) => sum + s.productionFactor * s.probability, 0
+  );
+  const weatherAdjustedSavings = includeWeatherVariability 
+    ? annualSavings * expectedProduction 
+    : annualSavings;
+  
+  const pessimisticFactor = WEATHER_SCENARIOS.find(s => s.name === 'poor')?.productionFactor || 0.85;
+  const optimisticFactor = WEATHER_SCENARIOS.find(s => s.name === 'excellent')?.productionFactor || 1.15;
+  
+  // Lifetime savings (with all adjustments)
+  let lifetimeSavings = -investment;
+  for (let i = 0; i < PROJECT_LIFETIME_YEARS; i++) {
+    const yearDegradation = Math.pow(1 - PANEL_DEGRADATION_RATE, i);
+    const yearSavings = annualSavings * yearDegradation - annualOMCost;
+    const fiscalYear = i < DEPRECIATION_YEARS && includeFiscalBenefits ? fiscalBenefits.taxSavings : 0;
+    const batteryReplacement = i === BATTERY_REPLACEMENT_YEAR ? batteryCapacity * COST_PER_KWH_BATTERY * BATTERY_REPLACEMENT_COST_FACTOR : 0;
+    lifetimeSavings += yearSavings + fiscalYear - batteryReplacement;
+  }
 
   return {
     effectiveSolar,
@@ -105,20 +345,41 @@ const calculateMetrics = (config: DigitalTwinConfig): DigitalTwinMetrics => {
     baseInvestment,
     investment,
     payback,
-    cbamSavings,
-    lcoe,
     co2Avoided,
-    lifetimeSavings
+    lifetimeSavings,
+    lcoe,
+    lcoeWithoutOM,
+    annualOMCost,
+    totalOMCost,
+    cbamSavingsYear1,
+    cbamSavingsLifetime,
+    savingsBreakdown,
+    fiscalBenefits,
+    weatherAdjustedSavings,
+    savingsRange: {
+      pessimistic: annualSavings * pessimisticFactor,
+      expected: annualSavings * expectedProduction,
+      optimistic: annualSavings * optimisticFactor
+    }
   };
 };
+
+// =====================================================
+// PROJECTION DATA GENERATION
+// =====================================================
 
 const generateProjectionData = (
   config: DigitalTwinConfig,
   metrics: DigitalTwinMetrics
 ): ProjectionDataPoint[] => {
-  const { inflationRate, batteryCapacity } = config;
-  const { investment, annualSavings } = metrics;
+  const { 
+    inflationRate, energyPriceEscalation, batteryCapacity, 
+    includeWeatherVariability, includeFiscalBenefits 
+  } = config;
+  const { investment, annualSavings, annualOMCost, fiscalBenefits } = metrics;
+  
   const inflation = inflationRate / 100;
+  const energyEscalation = energyPriceEscalation / 100;
 
   return Array.from({ length: 11 }, (_, i) => {
     const year = 2026 + i;
@@ -126,11 +387,29 @@ const generateProjectionData = (
     // Apply panel degradation
     const degradationFactor = Math.pow(1 - PANEL_DEGRADATION_RATE, i);
     
-    // Apply inflation to savings (energy costs increase = more savings)
-    const inflationFactor = Math.pow(1 + inflation, i);
+    // Weather variability (deterministic for chart consistency)
+    const weatherFactor = includeWeatherVariability ? getWeatherFactor(i) : 1.0;
+    
+    // Energy price escalation (distinct from general inflation)
+    const energyPriceFactor = Math.pow(1 + energyEscalation, i);
+    
+    // O&M cost with inflation
+    const omCostInflated = annualOMCost * Math.pow(1 + inflation, i);
     
     // Battery replacement cost at year 10
-    const batteryReplacementCost = i === BATTERY_REPLACEMENT_YEAR ? batteryCapacity * COST_PER_KWH_BATTERY * 0.5 : 0;
+    const batteryReplacementCost = i === BATTERY_REPLACEMENT_YEAR 
+      ? batteryCapacity * COST_PER_KWH_BATTERY * BATTERY_REPLACEMENT_COST_FACTOR * Math.pow(1 + inflation, i) * 0.7 // Battery costs decrease over time
+      : 0;
+    
+    // Fiscal savings (depreciation)
+    const fiscalSavings = i < DEPRECIATION_YEARS && includeFiscalBenefits 
+      ? fiscalBenefits.taxSavings 
+      : 0;
+    
+    // CBAM savings for this year
+    const cbamPrice = getCBAMPrice(year) / 1000;
+    const yearlyEnergy = metrics.effectiveSolar * SOLAR_HOURS_PER_YEAR * degradationFactor * weatherFactor;
+    const cbamSavings = yearlyEnergy * CO2_INTENSITY * cbamPrice;
     
     // Year 0 is initial investment
     if (i === 0) {
@@ -138,45 +417,75 @@ const generateProjectionData = (
         year: year.toString(),
         cashFlow: Math.round(-investment / 1000),
         cumulative: Math.round(-investment / 1000),
-        degradation: 100
+        degradation: 100,
+        cbamSavings: Math.round(cbamSavings),
+        weatherFactor: Math.round(weatherFactor * 100),
+        omCost: Math.round(omCostInflated / 1000),
+        fiscalSavings: Math.round(fiscalSavings / 1000)
       };
     }
     
-    // Calculate adjusted savings considering degradation and inflation
-    const adjustedSavings = annualSavings * degradationFactor * inflationFactor;
-    const cashFlow = (adjustedSavings - batteryReplacementCost) / 1000;
+    // Calculate adjusted savings
+    const adjustedSavings = annualSavings * degradationFactor * weatherFactor * energyPriceFactor;
+    const netCashFlow = adjustedSavings - omCostInflated - batteryReplacementCost + fiscalSavings + cbamSavings;
+    const cashFlow = netCashFlow / 1000;
     
     // Calculate cumulative (sum of all previous cash flows)
     let cumulative = -investment / 1000;
     for (let j = 1; j <= i; j++) {
       const degFactor = Math.pow(1 - PANEL_DEGRADATION_RATE, j);
-      const inflFactor = Math.pow(1 + inflation, j);
-      const yearSavings = annualSavings * degFactor * inflFactor;
-      const yearBatteryReplacement = j === BATTERY_REPLACEMENT_YEAR ? batteryCapacity * COST_PER_KWH_BATTERY * 0.5 : 0;
-      cumulative += (yearSavings - yearBatteryReplacement) / 1000;
+      const wFactor = includeWeatherVariability ? getWeatherFactor(j) : 1.0;
+      const ePriceFactor = Math.pow(1 + energyEscalation, j);
+      const omCost = annualOMCost * Math.pow(1 + inflation, j);
+      const battReplacement = j === BATTERY_REPLACEMENT_YEAR 
+        ? batteryCapacity * COST_PER_KWH_BATTERY * BATTERY_REPLACEMENT_COST_FACTOR * Math.pow(1 + inflation, j) * 0.7
+        : 0;
+      const fiscal = j < DEPRECIATION_YEARS && includeFiscalBenefits ? fiscalBenefits.taxSavings : 0;
+      const yearCBAM = getCBAMPrice(2026 + j) / 1000 * metrics.effectiveSolar * SOLAR_HOURS_PER_YEAR * degFactor * wFactor * CO2_INTENSITY;
+      
+      const yearSavings = annualSavings * degFactor * wFactor * ePriceFactor;
+      cumulative += (yearSavings - omCost - battReplacement + fiscal + yearCBAM) / 1000;
     }
     
     return {
       year: year.toString(),
       cashFlow: Math.round(cashFlow),
       cumulative: Math.round(cumulative),
-      degradation: Math.round(degradationFactor * 100)
+      degradation: Math.round(degradationFactor * 100),
+      cbamSavings: Math.round(cbamSavings),
+      weatherFactor: Math.round(weatherFactor * 100),
+      omCost: Math.round(omCostInflated / 1000),
+      fiscalSavings: Math.round(fiscalSavings / 1000)
     };
   });
 };
+
+// =====================================================
+// AI RECOMMENDATIONS
+// =====================================================
 
 const generateAIRecommendation = (
   config: DigitalTwinConfig,
   metrics: DigitalTwinMetrics
 ): { type: 'optimization' | 'warning' | 'info'; message: string } => {
-  const { solarPower, batteryCapacity, hasTracker, withSubsidy } = config;
-  const { payback, cbamSavings } = metrics;
+  const { solarPower, batteryCapacity, hasTracker, withSubsidy, voltageRegime } = config;
+  const { payback, cbamSavingsLifetime, savingsBreakdown, lcoe, annualOMCost } = metrics;
+
+  // High peak savings potential without battery
+  if (savingsBreakdown.peakSavings > savingsBreakdown.batteryPeakShiftSavings * 3 && batteryCapacity < solarPower * 0.2) {
+    return {
+      type: 'optimization',
+      message: `Vos économies tarifaires "Pointe" (${Math.round(savingsBreakdown.peakSavings).toLocaleString('fr-FR')} TND/an) pourraient augmenter de 40% avec un stockage de ${Math.round(solarPower * 0.25)} kWh, permettant l'effacement des heures 18h-22h.`
+    };
+  }
 
   // Battery too small relative to solar
   if (solarPower > 1000 && batteryCapacity < solarPower * 0.3) {
+    const additionalBattery = Math.round(solarPower * 0.1);
+    const additionalShiftSavings = additionalBattery * 0.8 * 365 * 0.6 * (STEG_TARIFFS[voltageRegime].peak - STEG_TARIFFS[voltageRegime].night);
     return {
       type: 'optimization',
-      message: `Augmenter le stockage de ${Math.round(solarPower * 0.1)} kWh améliorerait le TRI de 1.2% grâce à l'effacement de pointe (Peak-shaving). Cette configuration permettrait d'éviter les heures de tarif "Pointe" (18h-22h).`
+      message: `Augmenter le stockage de ${additionalBattery} kWh générerait ${Math.round(additionalShiftSavings).toLocaleString('fr-FR')} TND/an supplémentaires via le décalage pointe/nuit (tarif ${voltageRegime}).`
     };
   }
 
@@ -184,7 +493,7 @@ const generateAIRecommendation = (
   if (solarPower > 2000 && !hasTracker) {
     return {
       type: 'optimization',
-      message: `Pour une installation de ${solarPower} kWc, l'ajout d'un système tracker (+15% rendement) réduirait le payback de ${(payback * 0.12).toFixed(1)} années.`
+      message: `Pour ${solarPower} kWc, l'ajout d'un tracker (+15% rendement, +${Math.round(solarPower * TRACKER_ADDITIONAL_COST).toLocaleString('fr-FR')} TND) réduirait le payback de ${(payback * 0.12).toFixed(1)} années et le LCOE à ${(lcoe * 0.87).toFixed(0)} TND/MWh.`
     };
   }
 
@@ -192,24 +501,28 @@ const generateAIRecommendation = (
   if (!withSubsidy && metrics.investment > 500000) {
     return {
       type: 'warning',
-      message: `Vous êtes éligible à la subvention FTE (ANME). Son application réduirait votre CAPEX de ${Math.round(metrics.baseInvestment * 0.3).toLocaleString('fr-FR')} TND.`
+      message: `Subvention FTE disponible : -${Math.round(metrics.baseInvestment * 0.3).toLocaleString('fr-FR')} TND sur le CAPEX. Payback réduit à ${((metrics.investment * 0.7) / (metrics.annualSavings - annualOMCost)).toFixed(1)} ans.`
     };
   }
 
   // CBAM impact info
-  if (cbamSavings > 10000) {
+  if (cbamSavingsLifetime > 50000) {
     return {
       type: 'info',
-      message: `Avec l'entrée en vigueur du CBAM Phase 3 en 2026, votre investissement vous permettra d'éviter ${Math.round(cbamSavings).toLocaleString('fr-FR')} € de taxe carbone annuellement sur vos exportations vers l'UE.`
+      message: `Impact CBAM 2026-2036 : ${Math.round(cbamSavingsLifetime).toLocaleString('fr-FR')} € d'économies sur vos exportations UE, avec un prix carbone passant de 65€ à 130€/tCO2.`
     };
   }
 
-  // Default recommendation
+  // Default recommendation with tariff insight
   return {
     type: 'optimization',
-    message: `Selon les tarifs STEG actuels, augmenter le stockage de 50 kWh améliore le TRI de 1.2% grâce à l'effacement de pointe (Peak-shaving).`
+    message: `Régime ${voltageRegime} : maximisez l'autoconsommation en heures "Jour" (${(STEG_TARIFFS[voltageRegime].day * 1000).toFixed(0)} millimes/kWh) et utilisez le stockage pour éviter la "Pointe" (${(STEG_TARIFFS[voltageRegime].peak * 1000).toFixed(0)} millimes/kWh).`
   };
 };
+
+// =====================================================
+// HOOK EXPORT
+// =====================================================
 
 export const useDigitalTwin = () => {
   // Configuration states
@@ -218,7 +531,10 @@ export const useDigitalTwin = () => {
   const [batteryCapacity, setBatteryCapacity] = useState<number[]>([500]);
   const [withSubsidy, setWithSubsidy] = useState(true);
   const [inflationRate, setInflationRate] = useState("5");
+  const [energyPriceEscalation, setEnergyPriceEscalation] = useState("6");
   const [voltageRegime, setVoltageRegime] = useState<'MT' | 'HT'>('MT');
+  const [includeWeatherVariability, setIncludeWeatherVariability] = useState(true);
+  const [includeFiscalBenefits, setIncludeFiscalBenefits] = useState(true);
   const [isSimulating, setIsSimulating] = useState(false);
 
   // Build config object
@@ -228,8 +544,11 @@ export const useDigitalTwin = () => {
     batteryCapacity: batteryCapacity[0],
     withSubsidy,
     inflationRate: Math.max(0, Math.min(20, Number(inflationRate) || 0)),
-    voltageRegime
-  }), [solarPower, hasTracker, batteryCapacity, withSubsidy, inflationRate, voltageRegime]);
+    energyPriceEscalation: Math.max(-5, Math.min(15, Number(energyPriceEscalation) || 0)),
+    voltageRegime,
+    includeWeatherVariability,
+    includeFiscalBenefits
+  }), [solarPower, hasTracker, batteryCapacity, withSubsidy, inflationRate, energyPriceEscalation, voltageRegime, includeWeatherVariability, includeFiscalBenefits]);
 
   // Validation
   const validation = useMemo(() => validateConfig(config), [config]);
@@ -265,6 +584,13 @@ export const useDigitalTwin = () => {
     }
   }, []);
 
+  const handleEnergyEscalationChange = useCallback((value: string) => {
+    const numValue = Number(value);
+    if (value === '' || (!isNaN(numValue) && numValue >= -5 && numValue <= 15)) {
+      setEnergyPriceEscalation(value);
+    }
+  }, []);
+
   return {
     // State
     solarPower,
@@ -277,8 +603,14 @@ export const useDigitalTwin = () => {
     setWithSubsidy,
     inflationRate,
     setInflationRate: handleInflationChange,
+    energyPriceEscalation,
+    setEnergyPriceEscalation: handleEnergyEscalationChange,
     voltageRegime,
     setVoltageRegime,
+    includeWeatherVariability,
+    setIncludeWeatherVariability,
+    includeFiscalBenefits,
+    setIncludeFiscalBenefits,
     isSimulating,
     
     // Computed
@@ -289,6 +621,10 @@ export const useDigitalTwin = () => {
     aiRecommendation,
     
     // Actions
-    handleSimulation
+    handleSimulation,
+    
+    // Constants for UI
+    STEG_TARIFFS,
+    CBAM_PRICE_PROJECTIONS
   };
 };

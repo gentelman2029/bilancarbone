@@ -21,14 +21,21 @@ const DigitalTwin = () => {
     setWithSubsidy,
     inflationRate,
     setInflationRate,
+    energyPriceEscalation,
+    setEnergyPriceEscalation,
     voltageRegime,
     setVoltageRegime,
+    includeWeatherVariability,
+    setIncludeWeatherVariability,
+    includeFiscalBenefits,
+    setIncludeFiscalBenefits,
     isSimulating,
     validation,
     metrics,
     projectionData,
     aiRecommendation,
-    handleSimulation
+    handleSimulation,
+    STEG_TARIFFS
   } = useDigitalTwin();
 
   return (
@@ -56,11 +63,18 @@ const DigitalTwin = () => {
               setWithSubsidy={setWithSubsidy}
               inflationRate={inflationRate}
               setInflationRate={setInflationRate}
+              energyPriceEscalation={energyPriceEscalation}
+              setEnergyPriceEscalation={setEnergyPriceEscalation}
               voltageRegime={voltageRegime}
               setVoltageRegime={setVoltageRegime}
+              includeWeatherVariability={includeWeatherVariability}
+              setIncludeWeatherVariability={setIncludeWeatherVariability}
+              includeFiscalBenefits={includeFiscalBenefits}
+              setIncludeFiscalBenefits={setIncludeFiscalBenefits}
               isSimulating={isSimulating}
               validation={validation}
               onSimulate={handleSimulation}
+              stegTariffs={STEG_TARIFFS}
             />
 
             {/* Right Column - Results */}

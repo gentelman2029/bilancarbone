@@ -21,6 +21,9 @@ import Documents from "./pages/Documents";
 import ESGDashboard from "./pages/ESGDashboard";
 import RSEPilotage from "./pages/RSEPilotage";
 import DigitalTwin from "./pages/DigitalTwin";
+import DigitalTwinRealTime from "./pages/DigitalTwinRealTime";
+import DigitalTwinReports from "./pages/DigitalTwinReports";
+import DigitalTwinSettings from "./pages/DigitalTwinSettings";
 import { EmissionsProvider } from "./contexts/EmissionsContext";
 import { ActionsProvider } from "./contexts/ActionsContext";
 
@@ -38,7 +41,12 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/trial" element={<Trial />} />
               <Route path="/pricing" element={<Pricing />} />
+              {/* Digital Twin Routes */}
               <Route path="/digital-twin" element={<DigitalTwin />} />
+              <Route path="/digital-twin/simulator" element={<DigitalTwin />} />
+              <Route path="/digital-twin/real-time" element={<DigitalTwinRealTime />} />
+              <Route path="/digital-twin/reports" element={<DigitalTwinReports />} />
+              <Route path="/digital-twin/settings" element={<DigitalTwinSettings />} />
               <Route path="/" element={<Layout />}>
                 <Route index element={<Index />} />
                 <Route path="dashboard" element={<Dashboard />} />

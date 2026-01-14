@@ -16,11 +16,11 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-  { icon: LayoutDashboard, label: "Tableau de bord", path: "/dashboard" },
-  { icon: Activity, label: "Suivi Temps Réel", path: "/data" },
-  { icon: Calculator, label: "Simulateur Investissement", path: "/digital-twin" },
-  { icon: FileText, label: "Rapports Réglementaires", path: "/cbam" },
-  { icon: Settings, label: "Paramètres", path: "/contact" },
+  { icon: LayoutDashboard, label: "Tableau de bord", path: "/digital-twin" },
+  { icon: Activity, label: "Suivi Temps Réel", path: "/digital-twin/real-time" },
+  { icon: Calculator, label: "Simulateur Investissement", path: "/digital-twin/simulator" },
+  { icon: FileText, label: "Rapports Réglementaires", path: "/digital-twin/reports" },
+  { icon: Settings, label: "Paramètres", path: "/digital-twin/settings" },
 ];
 
 export const DigitalTwinSidebar = () => {
@@ -36,7 +36,9 @@ export const DigitalTwinSidebar = () => {
       
       <nav className="flex-1 p-4 space-y-1">
         {menuItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.path || 
+            (item.path === "/digital-twin" && location.pathname === "/digital-twin") ||
+            (item.path !== "/digital-twin" && location.pathname.startsWith(item.path));
           return (
             <Link
               key={item.label}

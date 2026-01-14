@@ -20,6 +20,7 @@ import CBAM from "./pages/CBAM";
 import Documents from "./pages/Documents";
 import ESGDashboard from "./pages/ESGDashboard";
 import RSEPilotage from "./pages/RSEPilotage";
+import DigitalTwin from "./pages/DigitalTwin";
 import { EmissionsProvider } from "./contexts/EmissionsContext";
 import { ActionsProvider } from "./contexts/ActionsContext";
 
@@ -37,6 +38,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/trial" element={<Trial />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/digital-twin" element={<DigitalTwin />} />
               <Route path="/" element={<Layout />}>
                 <Route index element={<Index />} />
                 <Route path="dashboard" element={<Dashboard />} />

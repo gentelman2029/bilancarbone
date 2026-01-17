@@ -19,6 +19,7 @@ import { CarbonActionsTracking } from "@/components/CarbonActionsTracking";
 import { CompletePDFReport } from "@/components/CompletePDFReport";
 import { useTranslation } from "react-i18next";
 import { useActions } from "@/contexts/ActionsContext";
+import { ComplianceScoreWidget } from "@/components/ComplianceScoreWidget";
 import jsPDF from "jspdf";
 
 export const Dashboard = () => {
@@ -901,29 +902,8 @@ export const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Conformité réglementaire */}
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-muted-foreground">{t("dashboard.regulatory_compliance")}</span>
-                  </div>
-                   <div className="text-3xl font-bold text-foreground mb-1">
-                     {hasData ? conformiteReglementaire.toFixed(0) : "95"}% <span className="text-lg">{t("dashboard.complete_compliance")}</span>
-                   </div>
-                   <div className="flex items-center gap-1 text-sm">
-                     <ArrowUp className="w-4 h-4 text-primary" />
-                     <span className="text-primary font-medium">{hasData ? "5.2" : "5.2"}%</span>
-                   </div>
-                   <div className="text-xs text-muted-foreground mt-1">
-                     {t("dashboard.csrd_compliance_progress")}
-                   </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Conformité réglementaire - Score basé sur la complétude des catégories */}
+          <ComplianceScoreWidget />
         </div>
 
         {/* Graphiques principaux */}

@@ -419,6 +419,27 @@ export const AdvancedGHGCalculator = () => {
     const saved = localStorage.getItem('calculator-position-classement');
     return saved ? JSON.parse(saved) : 0;
   });
+  
+  // Nouveaux états pour les benchmarks sectoriels dynamiques (Analyse Comparative)
+  const [benchmarkSectorName, setBenchmarkSectorName] = useState(() => {
+    const saved = localStorage.getItem('calculator-benchmark-sector-name');
+    return saved ? JSON.parse(saved) : '';
+  });
+  
+  const [benchmarkSectorAverage, setBenchmarkSectorAverage] = useState(() => {
+    const saved = localStorage.getItem('calculator-benchmark-sector-average');
+    return saved ? JSON.parse(saved) : 0;
+  });
+  
+  const [benchmarkSectorTop10, setBenchmarkSectorTop10] = useState(() => {
+    const saved = localStorage.getItem('calculator-benchmark-sector-top10');
+    return saved ? JSON.parse(saved) : 0;
+  });
+  
+  const [benchmarkSectorCritical, setBenchmarkSectorCritical] = useState(() => {
+    const saved = localStorage.getItem('calculator-benchmark-sector-critical');
+    return saved ? JSON.parse(saved) : 0;
+  });
 
   // Vérifier l'authentification et charger les calculs sauvegardés
   useEffect(() => {
@@ -499,6 +520,27 @@ export const AdvancedGHGCalculator = () => {
     localStorage.setItem('calculator-position-classement', JSON.stringify(positionClassement));
     updateEmissions({ positionClassement });
   }, [positionClassement, updateEmissions]);
+  
+  // Sauvegarder les nouveaux benchmarks sectoriels dynamiques
+  useEffect(() => {
+    localStorage.setItem('calculator-benchmark-sector-name', JSON.stringify(benchmarkSectorName));
+    updateEmissions({ benchmarkSectorName });
+  }, [benchmarkSectorName, updateEmissions]);
+  
+  useEffect(() => {
+    localStorage.setItem('calculator-benchmark-sector-average', JSON.stringify(benchmarkSectorAverage));
+    updateEmissions({ benchmarkSectorAverage });
+  }, [benchmarkSectorAverage, updateEmissions]);
+  
+  useEffect(() => {
+    localStorage.setItem('calculator-benchmark-sector-top10', JSON.stringify(benchmarkSectorTop10));
+    updateEmissions({ benchmarkSectorTop10 });
+  }, [benchmarkSectorTop10, updateEmissions]);
+  
+  useEffect(() => {
+    localStorage.setItem('calculator-benchmark-sector-critical', JSON.stringify(benchmarkSectorCritical));
+    updateEmissions({ benchmarkSectorCritical });
+  }, [benchmarkSectorCritical, updateEmissions]);
 
   // Calculer le total Scope 3 réel
   // Calculer le total Scope 3 en sommant toujours les deux sources (standard + avancé si activé)
@@ -1118,12 +1160,12 @@ export const AdvancedGHGCalculator = () => {
           </CardContent>
         </Card>
 
-        {/* Champs de benchmarks sectoriels */}
+        {/* Champs de benchmarks sectoriels pour le Dashboard ESG */}
         <Card className="p-6 mb-6">
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl">Benchmarks Sectoriels</CardTitle>
+            <CardTitle className="text-xl">Benchmarks Sectoriels (ESG)</CardTitle>
             <CardDescription>
-              Saisissez les valeurs de référence de votre secteur d'activité (en tCO2e/employé)
+              Valeurs de référence par employé pour le widget "Benchmark Sectoriel"
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -1170,6 +1212,81 @@ export const AdvancedGHGCalculator = () => {
                   />
                   <span className="text-lg font-medium">ème</span>
                 </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Nouveaux champs pour Analyse Comparative Sectorielle (Dashboard) */}
+        <Card className="p-6 mb-6 border-primary/30 bg-primary/5">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl flex items-center gap-2">
+              <Globe className="h-5 w-5 text-primary" />
+              Benchmarks pour l'Analyse Comparative Sectorielle
+            </CardTitle>
+            <CardDescription>
+              Ces valeurs alimentent le graphique "Analyse Comparative Sectorielle" du Tableau de Bord (intensité carbone en tCO₂e/k€)
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Secteur d'activité</Label>
+              <Input
+                type="text"
+                value={benchmarkSectorName}
+                onChange={(e) => setBenchmarkSectorName(e.target.value)}
+                className="max-w-md"
+                placeholder="Ex: Services, Industrie manufacturière, Transport..."
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Moyenne sectorielle</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    value={benchmarkSectorAverage || ''}
+                    onChange={(e) => setBenchmarkSectorAverage(Number(e.target.value) || 0)}
+                    className="text-center text-lg font-bold"
+                    step="0.1"
+                    placeholder="12.5"
+                  />
+                  <span className="text-sm font-medium whitespace-nowrap">tCO₂e/k€</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Intensité carbone moyenne du secteur</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Seuil Top 10% (Best-in-class)</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    value={benchmarkSectorTop10 || ''}
+                    onChange={(e) => setBenchmarkSectorTop10(Number(e.target.value) || 0)}
+                    className="text-center text-lg font-bold"
+                    step="0.1"
+                    placeholder="6.2"
+                  />
+                  <span className="text-sm font-medium whitespace-nowrap">tCO₂e/k€</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Objectif d'excellence sectorielle</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Seuil critique</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    value={benchmarkSectorCritical || ''}
+                    onChange={(e) => setBenchmarkSectorCritical(Number(e.target.value) || 0)}
+                    className="text-center text-lg font-bold"
+                    step="0.1"
+                    placeholder="20.0"
+                  />
+                  <span className="text-sm font-medium whitespace-nowrap">tCO₂e/k€</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Au-delà : performance critique</p>
               </div>
             </div>
           </CardContent>

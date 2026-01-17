@@ -4,11 +4,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { AlertTriangle, CheckCircle, Award, TrendingUp, TrendingDown, Info, BarChart3 } from "lucide-react";
-import { useState } from "react";
+import { AlertTriangle, CheckCircle, Award, TrendingUp, Info, BarChart3 } from "lucide-react";
+import { useState, useMemo } from "react";
+import { useEmissions } from "@/contexts/EmissionsContext";
 
-// Données des benchmarks sectoriels avec des seuils détaillés
-const SECTOR_BENCHMARKS = {
+// Données des benchmarks sectoriels par défaut avec des seuils détaillés
+const DEFAULT_SECTOR_BENCHMARKS = {
   services: {
     name: "Services",
     average: 12.5, // tCO2e/k€
@@ -82,16 +83,36 @@ interface SectorComparativeAnalysisProps {
 
 export const SectorComparativeAnalysis = ({ totalEmissions, annualRevenue = 1000 }: SectorComparativeAnalysisProps) => {
   const [selectedSector, setSelectedSector] = useState<string>("services");
+  const { emissions } = useEmissions();
+  
+  // Utiliser les benchmarks personnalisés du calculateur si disponibles
+  const hasCustomBenchmarks = useMemo(() => {
+    return emissions.benchmarkSectorAverage && emissions.benchmarkSectorAverage > 0;
+  }, [emissions.benchmarkSectorAverage]);
+  
+  // Créer les données du secteur en combinant les benchmarks par défaut et personnalisés
+  const sectorData = useMemo(() => {
+    if (hasCustomBenchmarks) {
+      // Utiliser les valeurs personnalisées du calculateur
+      return {
+        name: emissions.benchmarkSectorName || "Secteur personnalisé",
+        average: emissions.benchmarkSectorAverage || 12.5,
+        topPerformers: emissions.benchmarkSectorTop10 || 6.2,
+        threshold: emissions.benchmarkSectorCritical || 20.0,
+        unit: "tCO2e/k€" as const,
+        description: `Valeurs personnalisées pour ${emissions.benchmarkSectorName || "votre secteur"}`
+      };
+    }
+    // Sinon utiliser les valeurs par défaut du secteur sélectionné
+    return DEFAULT_SECTOR_BENCHMARKS[selectedSector as keyof typeof DEFAULT_SECTOR_BENCHMARKS];
+  }, [hasCustomBenchmarks, emissions.benchmarkSectorName, emissions.benchmarkSectorAverage, emissions.benchmarkSectorTop10, emissions.benchmarkSectorCritical, selectedSector]);
   
   // Calcul de l'intensité carbone de l'entreprise
   const emissionsIntensity = annualRevenue > 0 ? (totalEmissions / 1000) / annualRevenue : 0;
   
-  // Obtenir les données du secteur sélectionné
-  const sectorData = SECTOR_BENCHMARKS[selectedSector as keyof typeof SECTOR_BENCHMARKS];
-  
   // Fonction pour calculer la performance relative
   const getPerformanceAnalysis = () => {
-    if (!sectorData) return { status: "unknown", message: "", color: "gray", icon: Info };
+    if (!sectorData) return { status: "unknown", message: "", color: "gray", icon: Info, recommendations: [] };
     
     const { average, topPerformers, threshold } = sectorData;
     
@@ -147,6 +168,9 @@ export const SectorComparativeAnalysis = ({ totalEmissions, annualRevenue = 1000
   };
   
   const performance = getPerformanceAnalysis();
+  
+  // Calcul de l'écart avec la moyenne sectorielle
+  const gapWithAverage = sectorData ? ((emissionsIntensity - sectorData.average) / sectorData.average * 100) : 0;
   
   // Données pour le graphique comparatif
   const getChartData = () => {
@@ -214,20 +238,27 @@ export const SectorComparativeAnalysis = ({ totalEmissions, annualRevenue = 1000
             <BarChart3 className="w-5 h-5" />
             Analyse Comparative Sectorielle
           </CardTitle>
-          <div className="w-64">
-            <Select value={selectedSector} onValueChange={setSelectedSector}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un secteur" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(SECTOR_BENCHMARKS).map(([key, sector]) => (
-                  <SelectItem key={key} value={key}>
-                    {sector.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {!hasCustomBenchmarks && (
+            <div className="w-64">
+              <Select value={selectedSector} onValueChange={setSelectedSector}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un secteur" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(DEFAULT_SECTOR_BENCHMARKS).map(([key, sector]) => (
+                    <SelectItem key={key} value={key}>
+                      {sector.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {hasCustomBenchmarks && (
+            <Badge variant="outline" className="bg-primary/10 text-primary">
+              {sectorData.name}
+            </Badge>
+          )}
         </div>
         <p className="text-sm text-muted-foreground">
           {sectorData.description} • Intensité carbone en {sectorData.unit}
@@ -316,7 +347,7 @@ export const SectorComparativeAnalysis = ({ totalEmissions, annualRevenue = 1000
                 </Badge>
               </div>
               <div className="text-xs text-muted-foreground">
-                Écart: {((emissionsIntensity - sectorData.average) / sectorData.average * 100).toFixed(1)}%
+                Écart: {gapWithAverage >= 0 ? '+' : ''}{gapWithAverage.toFixed(1)}%
               </div>
             </div>
           </Card>

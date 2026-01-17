@@ -22,6 +22,7 @@ import { useActions } from "@/contexts/ActionsContext";
 import { ComplianceScoreWidget } from "@/components/ComplianceScoreWidget";
 import { DrillDownPieChart } from "@/components/DrillDownPieChart";
 import { DrillDownBarChart } from "@/components/DrillDownBarChart";
+import { ExpertPDFExportButton } from "@/components/ExpertPDFExportButton";
 import jsPDF from "jspdf";
 
 export const Dashboard = () => {
@@ -916,11 +917,12 @@ export const Dashboard = () => {
               <p className="text-sm text-muted-foreground">{t("dashboard.subtitle")}</p>
             </div>
             <div className="flex items-center gap-3">
+              <ExpertPDFExportButton />
               <Button variant="outline" size="sm" onClick={() => exportCompleteData()}>
                 <Download className="w-4 h-4 mr-2" />
                 {t("dashboard.export_csv_complete")}
               </Button>
-              <CompletePDFReport 
+              <CompletePDFReport
                 emissionsData={{
                   scope1: displayEmissions.scope1,
                   scope2: displayEmissions.scope2,

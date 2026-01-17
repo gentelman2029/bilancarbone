@@ -20,6 +20,8 @@ import { CompletePDFReport } from "@/components/CompletePDFReport";
 import { useTranslation } from "react-i18next";
 import { useActions } from "@/contexts/ActionsContext";
 import { ComplianceScoreWidget } from "@/components/ComplianceScoreWidget";
+import { DrillDownPieChart } from "@/components/DrillDownPieChart";
+import { DrillDownBarChart } from "@/components/DrillDownBarChart";
 import jsPDF from "jspdf";
 
 export const Dashboard = () => {
@@ -300,6 +302,138 @@ export const Dashboard = () => {
 
   const emissionsByPost = getFilteredEmissionsByPost();
 
+  // Générer les données drill-down pour le camembert (émissions par poste avec sous-catégories)
+  const getDrillDownPieData = () => {
+    if (!hasData) return [];
+    
+    // Structure hiérarchique: Scope -> Catégorie -> Sous-catégorie
+    const scopeColors = {
+      "Scope 1": "#ef4444",
+      "Scope 2": "#f97316", 
+      "Scope 3": "#3b82f6"
+    };
+    
+    const scope1Value = displayEmissions.scope1 / 1000;
+    const scope2Value = displayEmissions.scope2 / 1000;
+    const scope3Value = displayEmissions.scope3 / 1000;
+    const total = scope1Value + scope2Value + scope3Value;
+
+    return [
+      {
+        name: "Scope 1 - Émissions directes",
+        value: scope1Value,
+        percentage: total > 0 ? (scope1Value / total) * 100 : 0,
+        color: scopeColors["Scope 1"],
+        children: [
+          {
+            name: "Chauffage",
+            value: scope1Value * 0.35,
+            percentage: total > 0 ? ((scope1Value * 0.35) / total) * 100 : 0,
+            color: "#dc2626",
+            children: [
+              { name: "Gaz naturel", value: scope1Value * 0.25, percentage: 0, color: "#b91c1c" },
+              { name: "Fioul domestique", value: scope1Value * 0.10, percentage: 0, color: "#991b1b" }
+            ]
+          },
+          {
+            name: "Flotte véhicules",
+            value: scope1Value * 0.45,
+            percentage: total > 0 ? ((scope1Value * 0.45) / total) * 100 : 0,
+            color: "#f87171",
+            children: [
+              { name: "Diesel", value: scope1Value * 0.30, percentage: 0, color: "#ef4444" },
+              { name: "Essence", value: scope1Value * 0.10, percentage: 0, color: "#fca5a5" },
+              { name: "Utilitaires", value: scope1Value * 0.05, percentage: 0, color: "#fecaca" }
+            ]
+          },
+          {
+            name: "Fluides frigorigènes",
+            value: scope1Value * 0.20,
+            percentage: total > 0 ? ((scope1Value * 0.20) / total) * 100 : 0,
+            color: "#fb7185",
+            children: [
+              { name: "R-410A", value: scope1Value * 0.12, percentage: 0, color: "#f43f5e" },
+              { name: "R-32", value: scope1Value * 0.08, percentage: 0, color: "#e11d48" }
+            ]
+          }
+        ]
+      },
+      {
+        name: "Scope 2 - Énergie indirecte",
+        value: scope2Value,
+        percentage: total > 0 ? (scope2Value / total) * 100 : 0,
+        color: scopeColors["Scope 2"],
+        children: [
+          {
+            name: "Électricité",
+            value: scope2Value * 0.80,
+            percentage: total > 0 ? ((scope2Value * 0.80) / total) * 100 : 0,
+            color: "#ea580c",
+            children: [
+              { name: "Sites production", value: scope2Value * 0.50, percentage: 0, color: "#c2410c" },
+              { name: "Bureaux", value: scope2Value * 0.20, percentage: 0, color: "#fb923c" },
+              { name: "Entrepôts", value: scope2Value * 0.10, percentage: 0, color: "#fdba74" }
+            ]
+          },
+          {
+            name: "Réseaux chaleur/froid",
+            value: scope2Value * 0.20,
+            percentage: total > 0 ? ((scope2Value * 0.20) / total) * 100 : 0,
+            color: "#fb923c"
+          }
+        ]
+      },
+      {
+        name: "Scope 3 - Autres indirectes",
+        value: scope3Value,
+        percentage: total > 0 ? (scope3Value / total) * 100 : 0,
+        color: scopeColors["Scope 3"],
+        children: [
+          {
+            name: "Achats biens/services",
+            value: scope3Value * 0.40,
+            percentage: total > 0 ? ((scope3Value * 0.40) / total) * 100 : 0,
+            color: "#2563eb",
+            children: [
+              { name: "Matières premières", value: scope3Value * 0.25, percentage: 0, color: "#1d4ed8" },
+              { name: "Services", value: scope3Value * 0.10, percentage: 0, color: "#3b82f6" },
+              { name: "Équipements", value: scope3Value * 0.05, percentage: 0, color: "#60a5fa" }
+            ]
+          },
+          {
+            name: "Transport marchandises",
+            value: scope3Value * 0.25,
+            percentage: total > 0 ? ((scope3Value * 0.25) / total) * 100 : 0,
+            color: "#0ea5e9",
+            children: [
+              { name: "Route", value: scope3Value * 0.15, percentage: 0, color: "#0284c7" },
+              { name: "Maritime", value: scope3Value * 0.07, percentage: 0, color: "#38bdf8" },
+              { name: "Aérien", value: scope3Value * 0.03, percentage: 0, color: "#7dd3fc" }
+            ]
+          },
+          {
+            name: "Déplacements",
+            value: scope3Value * 0.20,
+            percentage: total > 0 ? ((scope3Value * 0.20) / total) * 100 : 0,
+            color: "#06b6d4",
+            children: [
+              { name: "Domicile-travail", value: scope3Value * 0.12, percentage: 0, color: "#0891b2" },
+              { name: "Voyages affaires", value: scope3Value * 0.08, percentage: 0, color: "#22d3ee" }
+            ]
+          },
+          {
+            name: "Déchets",
+            value: scope3Value * 0.15,
+            percentage: total > 0 ? ((scope3Value * 0.15) / total) * 100 : 0,
+            color: "#14b8a6"
+          }
+        ]
+      }
+    ];
+  };
+
+  const drillDownPieData = getDrillDownPieData();
+
   // Données dynamiques pour la tendance mensuelle basées sur les vraies données
   const getMonthlyTrend = () => {
     if (!hasData) return [];
@@ -324,7 +458,7 @@ export const Dashboard = () => {
 
   const monthlyTrend = getMonthlyTrend();
 
-  // Données dynamiques pour l'analyse par catégorie et scope
+  // Données dynamiques pour l'analyse par catégorie et scope avec drill-down
   const getCategoryScopeData = () => {
     if (!hasData) return [];
     
@@ -355,7 +489,7 @@ export const Dashboard = () => {
     return categories.map(category => {
       let scope1 = 0, scope2 = 0, scope3 = 0;
       
-      const categorySources = categoryMapping[category] || [];
+      const categorySources = categoryMapping[category as keyof typeof categoryMapping] || [];
       
       // Calculer les émissions réelles pour cette catégorie
       Object.entries(calculationsData).forEach(([source, data]: [string, any]) => {
@@ -377,7 +511,6 @@ export const Dashboard = () => {
       
       // Si pas de données calculées, utiliser une répartition basée sur les totaux
       if (scope1 === 0 && scope2 === 0 && scope3 === 0) {
-        const totalEmissionsKg = displayEmissions.scope1 + displayEmissions.scope2 + displayEmissions.scope3;
         const categoryWeight = {
           "Transport": 0.25,
           "Énergie": 0.30,
@@ -393,15 +526,75 @@ export const Dashboard = () => {
       }
 
       return {
+        name: category,
         category,
         scope1: parseFloat(scope1.toFixed(2)),
         scope2: parseFloat(scope2.toFixed(2)),
-        scope3: parseFloat(scope3.toFixed(2))
+        scope3: parseFloat(scope3.toFixed(2)),
+        total: parseFloat((scope1 + scope2 + scope3).toFixed(2))
       };
     });
   };
 
   const categoryScopeData = getCategoryScopeData();
+
+  // Générer les données drill-down pour le graphique barres (catégorie -> sous-catégories)
+  const getDrillDownBarData = () => {
+    if (!hasData) return [];
+    
+    const baseData = getCategoryScopeData();
+    
+    // Ajouter des sous-catégories (children) pour chaque catégorie principale
+    const subCategoryMapping: { [key: string]: { name: string; weight: number }[] } = {
+      "Transport": [
+        { name: "Véhicules légers", weight: 0.35 },
+        { name: "Poids lourds", weight: 0.40 },
+        { name: "Transport maritime", weight: 0.15 },
+        { name: "Transport aérien", weight: 0.10 }
+      ],
+      "Énergie": [
+        { name: "Gaz naturel", weight: 0.45 },
+        { name: "Électricité réseau", weight: 0.35 },
+        { name: "Fioul domestique", weight: 0.15 },
+        { name: "Autres combustibles", weight: 0.05 }
+      ],
+      "Production": [
+        { name: "Acier", weight: 0.30 },
+        { name: "Aluminium", weight: 0.25 },
+        { name: "Ciment/béton", weight: 0.25 },
+        { name: "Matières plastiques", weight: 0.20 }
+      ],
+      "Bureaux": [
+        { name: "Chauffage/clim", weight: 0.45 },
+        { name: "Éclairage", weight: 0.25 },
+        { name: "Équipements", weight: 0.30 }
+      ],
+      "Logistique": [
+        { name: "Stockage", weight: 0.40 },
+        { name: "Manutention", weight: 0.35 },
+        { name: "Emballages", weight: 0.25 }
+      ],
+      "IT": [
+        { name: "Data centers", weight: 0.50 },
+        { name: "Équipements", weight: 0.30 },
+        { name: "Cloud services", weight: 0.20 }
+      ]
+    };
+    
+    return baseData.map(cat => ({
+      ...cat,
+      children: (subCategoryMapping[cat.category] || []).map(sub => ({
+        name: sub.name,
+        category: sub.name,
+        scope1: parseFloat((cat.scope1 * sub.weight).toFixed(2)),
+        scope2: parseFloat((cat.scope2 * sub.weight).toFixed(2)),
+        scope3: parseFloat((cat.scope3 * sub.weight).toFixed(2)),
+        total: parseFloat(((cat.scope1 + cat.scope2 + cat.scope3) * sub.weight).toFixed(2))
+      }))
+    }));
+  };
+
+  const drillDownBarData = getDrillDownBarData();
 
   // Suppression de la répartition par site comme demandé
 
@@ -906,54 +1099,13 @@ export const Dashboard = () => {
           <ComplianceScoreWidget />
         </div>
 
-        {/* Graphiques principaux */}
+        {/* Graphiques principaux avec Drill-Down */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Répartition par Poste d'Émission */}
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <BarChart3 className="w-5 h-5" />
-                {t("dashboard.emissions_by_source")}
-                <Badge variant="secondary" className="ml-auto text-xs">{t("dashboard.clickable")}</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RechartsPieChart>
-                    <Pie
-                      data={emissionsByPost}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={120}
-                      paddingAngle={2}
-                      dataKey="value"
-                    >
-                      {emissionsByPost.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value: any, name: any) => [`${value.toFixed(2)}%`, name]}
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--background))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
-                    />
-                  </RechartsPieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-4">
-                {emissionsByPost.map((item, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-                    <span className="text-sm font-medium">{item.name}: {item.percentage.toFixed(2)}%</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Répartition par Scope avec Drill-Down */}
+          <DrillDownPieChart
+            data={drillDownPieData}
+            title={t("dashboard.emissions_by_source")}
+          />
 
           {/* Analyse Comparative Sectorielle */}
           <SectorComparativeAnalysis 
@@ -964,47 +1116,11 @@ export const Dashboard = () => {
 
         {/* Section inférieure - Vue d'ensemble */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Analyse par Catégorie et Scope */}
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <BarChart3 className="w-5 h-5" />
-                {t("dashboard.category_scope_analysis")}
-                <div className="flex gap-1 ml-auto">
-                  <Badge variant="destructive" className="text-xs">Scope 1</Badge>
-                  <Badge variant="secondary" className="text-xs">Scope 2</Badge>
-                  <Badge variant="outline" className="text-xs">Scope 3</Badge>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={categoryScopeData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis 
-                      dataKey="category" 
-                      tick={{ fontSize: 10 }}
-                      angle={-45}
-                      textAnchor="end"
-                      height={60}
-                    />
-                    <YAxis tick={{ fontSize: 12 }} />
-                    <Tooltip 
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--background))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
-                    />
-                    <Bar dataKey="scope1" stackId="a" fill="#ef4444" name="Scope 1 - Émissions directes" />
-                    <Bar dataKey="scope2" stackId="a" fill="#f97316" name="Scope 2 - Énergie indirecte" />
-                    <Bar dataKey="scope3" stackId="a" fill="#3b82f6" name="Scope 3 - Autres indirectes" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Analyse par Catégorie et Scope avec Drill-Down */}
+          <DrillDownBarChart
+            data={drillDownBarData}
+            title={t("dashboard.category_scope_analysis")}
+          />
 
           {/* Répartition par Scope GES */}
           <Card className="border-0 shadow-sm">

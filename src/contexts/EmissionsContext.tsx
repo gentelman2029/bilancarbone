@@ -17,6 +17,11 @@ interface EmissionsData {
   moyenneSectorielle?: number;
   leadersSecteur?: number;
   positionClassement?: number;
+  // Nouveaux champs pour les benchmarks sectoriels dynamiques (Analyse Comparative)
+  benchmarkSectorName?: string;
+  benchmarkSectorAverage?: number; // en tCO2e/k€
+  benchmarkSectorTop10?: number; // en tCO2e/k€
+  benchmarkSectorCritical?: number; // en tCO2e/k€
 }
 
 interface EmissionsContextType {
@@ -74,6 +79,12 @@ const loadFromLocalStorage = (): EmissionsData | null => {
         const leadersSecteur = localStorage.getItem('calculator-leaders-secteur');
         const positionClassement = localStorage.getItem('calculator-position-classement');
         
+        // Nouveaux benchmarks sectoriels dynamiques
+        const benchmarkSectorName = localStorage.getItem('calculator-benchmark-sector-name');
+        const benchmarkSectorAverage = localStorage.getItem('calculator-benchmark-sector-average');
+        const benchmarkSectorTop10 = localStorage.getItem('calculator-benchmark-sector-top10');
+        const benchmarkSectorCritical = localStorage.getItem('calculator-benchmark-sector-critical');
+        
         return {
           scope1,
           scope2,
@@ -87,6 +98,10 @@ const loadFromLocalStorage = (): EmissionsData | null => {
           moyenneSectorielle: moyenneSectorielle ? JSON.parse(moyenneSectorielle) : 0,
           leadersSecteur: leadersSecteur ? JSON.parse(leadersSecteur) : 0,
           positionClassement: positionClassement ? JSON.parse(positionClassement) : 0,
+          benchmarkSectorName: benchmarkSectorName ? JSON.parse(benchmarkSectorName) : '',
+          benchmarkSectorAverage: benchmarkSectorAverage ? JSON.parse(benchmarkSectorAverage) : 0,
+          benchmarkSectorTop10: benchmarkSectorTop10 ? JSON.parse(benchmarkSectorTop10) : 0,
+          benchmarkSectorCritical: benchmarkSectorCritical ? JSON.parse(benchmarkSectorCritical) : 0,
         };
       }
     }

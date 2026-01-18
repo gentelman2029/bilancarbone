@@ -22,6 +22,7 @@ import { useActions } from "@/contexts/ActionsContext";
 import { ComplianceScoreWidget } from "@/components/ComplianceScoreWidget";
 import { DrillDownPieChart } from "@/components/DrillDownPieChart";
 import { DrillDownBarChart } from "@/components/DrillDownBarChart";
+import { Top10EmittersChart } from "@/components/Top10EmittersChart";
 import { ExpertPDFExportButton } from "@/components/ExpertPDFExportButton";
 import jsPDF from "jspdf";
 
@@ -1118,11 +1119,8 @@ export const Dashboard = () => {
 
         {/* Section inférieure - Vue d'ensemble */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Analyse par Catégorie et Scope avec Drill-Down */}
-          <DrillDownBarChart
-            data={drillDownBarData}
-            title={t("dashboard.category_scope_analysis")}
-          />
+          {/* Top 10 des Postes les plus Émetteurs */}
+          <Top10EmittersChart totalEmissions={displayEmissions.total} />
 
           {/* Répartition par Scope GES */}
           <Card className="border-0 shadow-sm">

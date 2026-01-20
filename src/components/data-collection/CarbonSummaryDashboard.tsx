@@ -91,17 +91,22 @@ export function CarbonSummaryDashboard({
   const [selectedPeriod, setSelectedPeriod] = useState(period);
   const [objective, setObjective] = useState<number | null>(null); // tCO2e objective
 
-  // Calculate scope totals
+  // CRITICAL: Filter ONLY validated activities for accurate reporting
+  const validatedActivities = activities.filter(
+    a => a.status === 'validated' || a.status === 'integrated'
+  );
+
+  // Calculate scope totals from VALIDATED data only
   const scopeTotals: ScopeTotals = {
-    scope1: activities.filter(a => a.ghg_scope === 'scope1').reduce((sum, a) => sum + (a.co2_equivalent_kg || 0), 0),
-    scope2: activities.filter(a => a.ghg_scope === 'scope2').reduce((sum, a) => sum + (a.co2_equivalent_kg || 0), 0),
-    scope3: activities.filter(a => a.ghg_scope === 'scope3').reduce((sum, a) => sum + (a.co2_equivalent_kg || 0), 0),
-    total: totalEmissions,
+    scope1: validatedActivities.filter(a => a.ghg_scope === 'scope1').reduce((sum, a) => sum + (a.co2_equivalent_kg || 0), 0),
+    scope2: validatedActivities.filter(a => a.ghg_scope === 'scope2').reduce((sum, a) => sum + (a.co2_equivalent_kg || 0), 0),
+    scope3: validatedActivities.filter(a => a.ghg_scope === 'scope3').reduce((sum, a) => sum + (a.co2_equivalent_kg || 0), 0),
+    total: validatedActivities.reduce((sum, a) => sum + (a.co2_equivalent_kg || 0), 0),
   };
 
-  // Calculate category breakdown (top 5)
+  // Calculate category breakdown from VALIDATED data only (top 5)
   const categoryBreakdown: CategoryBreakdown[] = Object.entries(
-    activities.reduce((acc, a) => {
+    validatedActivities.reduce((acc, a) => {
       const key = a.ghg_category;
       if (!acc[key]) {
         acc[key] = { scope: a.ghg_scope, co2Kg: 0 };
@@ -115,7 +120,7 @@ export function CarbonSummaryDashboard({
       label: CATEGORY_LABELS[category] || category,
       scope: data.scope,
       co2Kg: data.co2Kg,
-      percentage: totalEmissions > 0 ? (data.co2Kg / totalEmissions) * 100 : 0,
+      percentage: scopeTotals.total > 0 ? (data.co2Kg / scopeTotals.total) * 100 : 0,
     }))
     .sort((a, b) => b.co2Kg - a.co2Kg)
     .slice(0, 5);
@@ -157,17 +162,43 @@ export function CarbonSummaryDashboard({
     );
   }
 
+  // Empty state when no validated data
+  if (validatedCount === 0) {
+    return (
+      <Card className="p-8 text-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="p-4 rounded-full bg-amber-100">
+            <AlertTriangle className="h-10 w-10 text-amber-600" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-xl font-semibold">En attente de validation</h3>
+            <p className="text-muted-foreground max-w-md">
+              {activities.length > 0 
+                ? `${activities.length} activité(s) en attente de validation. Validez les données dans l'onglet "Activités" pour les inclure dans le bilan.`
+                : 'Aucune donnée collectée. Importez des documents ou répondez aux questionnaires pour commencer.'}
+            </p>
+          </div>
+          {activities.length > 0 && (
+            <Badge variant="outline" className="text-amber-600 border-amber-500">
+              {activities.length} activité(s) non validée(s)
+            </Badge>
+          )}
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header with controls */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Leaf className="h-6 w-6 text-green-600" />
+            <Leaf className="h-6 w-6 text-primary" />
             Bilan Carbone
           </h2>
           <p className="text-sm text-muted-foreground">
-            {activities.length} activités collectées • {validatedCount} validées
+            {validatedCount} activité(s) validée(s) sur {activities.length} collectées
           </p>
         </div>
         

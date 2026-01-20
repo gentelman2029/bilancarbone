@@ -64,24 +64,27 @@ export function useScopeProgress(refreshTrigger?: number): UseScopeProgressRetur
 
       if (!isMountedRef.current) return;
 
-      // Calculate stats per scope
-      const scopeMap = new Map<string, { total: number; validated: number; co2: number }>();
+      // Calculate stats per scope - ONLY count validated emissions for CO2 totals
+      const scopeMap = new Map<string, { total: number; validated: number; co2: number; validatedCo2: number }>();
       
       for (const activity of data || []) {
         const scope = activity.ghg_scope;
         if (!scopeMap.has(scope)) {
-          scopeMap.set(scope, { total: 0, validated: 0, co2: 0 });
+          scopeMap.set(scope, { total: 0, validated: 0, co2: 0, validatedCo2: 0 });
         }
         const current = scopeMap.get(scope)!;
         current.total++;
+        current.co2 += activity.co2_equivalent_kg || 0;
+        
+        // Only count validated/integrated activities for the official CO2 total
         if (activity.status === 'validated' || activity.status === 'integrated') {
           current.validated++;
+          current.validatedCo2 += activity.co2_equivalent_kg || 0;
         }
-        current.co2 += activity.co2_equivalent_kg || 0;
       }
 
       const statsData: ScopeStats[] = SCOPE_CONFIGS.map(config => {
-        const scopeData = scopeMap.get(config.scope) || { total: 0, validated: 0, co2: 0 };
+        const scopeData = scopeMap.get(config.scope) || { total: 0, validated: 0, co2: 0, validatedCo2: 0 };
         return {
           ...config,
           totalActivities: scopeData.total,
@@ -89,7 +92,8 @@ export function useScopeProgress(refreshTrigger?: number): UseScopeProgressRetur
           completionPercent: scopeData.total > 0 
             ? Math.round((scopeData.validated / scopeData.total) * 100) 
             : 0,
-          totalCO2Kg: scopeData.co2
+          // CRITICAL: Only show validated CO2 for audit compliance
+          totalCO2Kg: scopeData.validatedCo2
         };
       });
 

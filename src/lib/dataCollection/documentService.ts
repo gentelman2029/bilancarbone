@@ -190,6 +190,41 @@ class DocumentCollectionService {
     }
   }
 
+  // Supprimer tous les documents
+  async deleteAllDocuments(): Promise<ServiceResponse<{ deleted: number }>> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Utilisateur non authentifié');
+
+      // Récupérer tous les documents de l'utilisateur
+      const { data: docs, error: fetchError } = await supabase
+        .from('data_collection_documents')
+        .select('id, file_path');
+
+      if (fetchError) throw fetchError;
+      if (!docs || docs.length === 0) return { data: { deleted: 0 } };
+
+      // Supprimer tous les fichiers du storage
+      const filePaths = docs.filter(d => d.file_path).map(d => d.file_path);
+      if (filePaths.length > 0) {
+        await supabase.storage
+          .from('data-collection-documents')
+          .remove(filePaths);
+      }
+
+      // Supprimer toutes les entrées de la base
+      const { error } = await supabase
+        .from('data_collection_documents')
+        .delete()
+        .in('id', docs.map(d => d.id));
+
+      if (error) throw error;
+      return { data: { deleted: docs.length } };
+    } catch (error) {
+      return { error: `Erreur lors de la réinitialisation: ${error}` };
+    }
+  }
+
   // Obtenir l'URL de téléchargement d'un document
   async getDocumentUrl(filePath: string): Promise<ServiceResponse<string>> {
     try {

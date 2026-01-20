@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FileText, Check, X, Eye, Loader2, AlertTriangle, Clock, Trash2, Pencil, MessageSquare } from 'lucide-react';
+import { FileText, Check, X, Eye, Loader2, AlertTriangle, Clock, Trash2, Pencil, MessageSquare, RotateCcw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,6 +38,10 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
   const [docToReject, setDocToReject] = useState<DataCollectionDocument | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [isRejecting, setIsRejecting] = useState(false);
+
+  // State pour la réinitialisation complète
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   const loadDocuments = async () => {
     try {
@@ -152,6 +156,26 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
     }
   };
 
+  const handleResetAll = async () => {
+    setIsResetting(true);
+    try {
+      const result = await documentCollectionService.deleteAllDocuments();
+      if (result.error) throw new Error(result.error);
+
+      toast.success(`${result.data?.deleted || 0} document(s) supprimé(s)`, {
+        description: 'Tous les documents ont été réinitialisés.'
+      });
+      setResetDialogOpen(false);
+      setDocuments([]);
+      onDataValidated?.();
+    } catch (error) {
+      console.error('Reset error:', error);
+      toast.error('Erreur lors de la réinitialisation');
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   const getStatusBadge = (doc: DataCollectionDocument) => {
     if (doc.ocr_status === 'processing') {
       return <Badge variant="secondary"><Loader2 className="h-3 w-3 mr-1 animate-spin" />En traitement</Badge>;
@@ -187,15 +211,26 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span className="flex items-center gap-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
               Documents à valider
-            </span>
-            {pendingDocs.length > 0 && (
-              <Badge variant="secondary">{pendingDocs.length} en attente</Badge>
+              {pendingDocs.length > 0 && (
+                <Badge variant="secondary">{pendingDocs.length} en attente</Badge>
+              )}
+            </CardTitle>
+            {documents.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={() => setResetDialogOpen(true)}
+              >
+                <RotateCcw className="h-4 w-4 mr-1" />
+                Tout réinitialiser
+              </Button>
             )}
-          </CardTitle>
+          </div>
           <CardDescription>
             Vérifiez et validez les données extraites avant intégration
           </CardDescription>
@@ -320,7 +355,33 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Review Dialog */}
+      {/* Reset All Confirmation Dialog */}
+      <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <RotateCcw className="h-5 w-5" />
+              Réinitialiser tous les documents ?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Tous les documents ({documents.length}) seront définitivement supprimés, 
+              y compris les fichiers et les données extraites.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isResetting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleResetAll}
+              disabled={isResetting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isResetting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <RotateCcw className="h-4 w-4 mr-1" />}
+              Réinitialiser tout
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Dialog open={!!selectedDoc} onOpenChange={() => setSelectedDoc(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>

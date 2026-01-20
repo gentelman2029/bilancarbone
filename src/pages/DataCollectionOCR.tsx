@@ -8,6 +8,12 @@ import { ScopeProgressBarsV2 } from '@/components/data-collection/ScopeProgressB
 import { Scope3Questionnaires } from '@/components/data-collection/Scope3Questionnaires';
 import { CarbonSummaryDashboard } from '@/components/data-collection/CarbonSummaryDashboard';
 import { ValidationWorkflow } from '@/components/data-collection/ValidationWorkflow';
+import { 
+  UploadResetButton, 
+  CSVResetButton, 
+  QuestionnairesResetButton, 
+  ActivitiesPurgeButton 
+} from '@/components/data-collection/ResetButtons';
 import { Upload, FileCheck, Activity, Sparkles, FileSpreadsheet, ClipboardList, BarChart3, GitBranch } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -111,18 +117,28 @@ export default function DataCollectionOCR() {
         </TabsList>
 
         <TabsContent value="upload" className="space-y-6">
+          <div className="flex justify-end">
+            <UploadResetButton onResetComplete={handleRefresh} />
+          </div>
           <SmartDocumentUploader onUploadComplete={handleRefresh} />
         </TabsContent>
 
         <TabsContent value="csv" className="space-y-6">
+          <div className="flex justify-end">
+            <CSVResetButton onResetComplete={handleRefresh} />
+          </div>
           <CSVAccountingImporter onImportComplete={handleRefresh} />
         </TabsContent>
 
         <TabsContent value="questionnaires" className="space-y-6">
+          <div className="flex justify-end">
+            <QuestionnairesResetButton onResetComplete={handleRefresh} />
+          </div>
           <Scope3Questionnaires onDataSubmitted={handleRefresh} />
         </TabsContent>
 
         <TabsContent value="review">
+          {/* Le bouton "Tout réinitialiser" est déjà dans DocumentReviewList */}
           <DocumentReviewList onDataValidated={handleRefresh} />
         </TabsContent>
 
@@ -131,6 +147,9 @@ export default function DataCollectionOCR() {
         </TabsContent>
 
         <TabsContent value="data">
+          <div className="flex justify-end mb-4">
+            <ActivitiesPurgeButton onResetComplete={handleRefresh} />
+          </div>
           <EnhancedActivityDataTable refreshTrigger={refreshTrigger} onRecalculateComplete={handleRefresh} />
         </TabsContent>
 

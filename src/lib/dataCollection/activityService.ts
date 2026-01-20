@@ -354,6 +354,30 @@ class ActivityDataService {
       return { error: `Erreur lors de la récupération: ${error}` };
     }
   }
+
+  // Supprimer toutes les données d'activité (Purge)
+  async deleteAllActivities(): Promise<ServiceResponse<{ deleted: number }>> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Utilisateur non authentifié');
+
+      // Get count before delete
+      const { count } = await supabase
+        .from('activity_data')
+        .select('*', { count: 'exact', head: true });
+
+      // Delete all activities for this user
+      const { error } = await supabase
+        .from('activity_data')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
+
+      if (error) throw error;
+      return { data: { deleted: count || 0 } };
+    } catch (error) {
+      return { error: `Erreur lors de la suppression: ${error}` };
+    }
+  }
 }
 
 export const activityDataService = new ActivityDataService();

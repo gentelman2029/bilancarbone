@@ -450,7 +450,16 @@ export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplet
                           <span className="font-medium text-primary">
                             {(activity.co2_equivalent_kg / 1000).toFixed(3)}
                           </span>
-                          {activity.confidence_score && activity.confidence_score >= 0.8 && (
+                          {/* Badge IA - À vérifier pour les données non validées */}
+                          {activity.status === 'draft' && (
+                            <Badge 
+                              variant="outline" 
+                              className="text-[10px] px-1 py-0 border-amber-500/50 text-amber-600 bg-amber-500/10"
+                            >
+                              IA - À vérifier
+                            </Badge>
+                          )}
+                          {activity.status !== 'draft' && activity.confidence_score && activity.confidence_score >= 0.8 && (
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger>

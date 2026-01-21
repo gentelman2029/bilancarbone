@@ -35,6 +35,7 @@ import { useNotifications, createNotification } from '@/hooks/useNotifications';
 interface EnhancedActivityDataTableProps {
   refreshTrigger?: number;
   onRecalculateComplete?: () => void;
+  showOnlyValidated?: boolean;
 }
 
 interface EnhancedActivity extends ActivityData {
@@ -45,7 +46,7 @@ interface EnhancedActivity extends ActivityData {
   confidence_score?: number;
 }
 
-export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplete }: EnhancedActivityDataTableProps) {
+export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplete, showOnlyValidated = false }: EnhancedActivityDataTableProps) {
   const [activities, setActivities] = useState<EnhancedActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
@@ -212,8 +213,10 @@ export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplet
     }
   };
 
-  // Filter activities
+  // Filter activities - respect showOnlyValidated prop for Analysis tab
   const filteredActivities = activities.filter(a => {
+    // When showOnlyValidated is true, only show validated or integrated activities
+    if (showOnlyValidated && a.status !== 'validated' && a.status !== 'integrated') return false;
     if (filterScope !== 'all' && a.ghg_scope !== filterScope) return false;
     if (filterStatus !== 'all' && a.status !== filterStatus) return false;
     return true;
@@ -328,57 +331,59 @@ export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplet
             )}
           </div>
         </CardTitle>
-        <CardDescription className="flex items-center justify-between">
-          <span>Consommations collectées avec calculs carbone automatisés</span>
-          <div className="flex items-center gap-2">
-            {/* Filters */}
-            <Select value={filterScope} onValueChange={setFilterScope}>
-              <SelectTrigger className="w-28 h-8 text-xs">
-                <SelectValue placeholder="Scope" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous scopes</SelectItem>
-                <SelectItem value="scope1">Scope 1</SelectItem>
-                <SelectItem value="scope2">Scope 2</SelectItem>
-                <SelectItem value="scope3">Scope 3</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-28 h-8 text-xs">
-                <SelectValue placeholder="Statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous statuts</SelectItem>
-                <SelectItem value="draft">Brouillon</SelectItem>
-                <SelectItem value="validated">Validé</SelectItem>
-                <SelectItem value="integrated">Intégré</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            {/* Batch actions */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" disabled={isBatchProcessing}>
-                  {isBatchProcessing ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4 mr-1" />
-                  )}
-                  Actions
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={handleBatchRecalculate}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Recalculer {selectedIds.size > 0 ? `(${selectedIds.size})` : 'tout'}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={loadActivities}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Actualiser
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+        <CardDescription>
+          <div className="flex items-center justify-between">
+            <span>Consommations collectées avec calculs carbone automatisés</span>
+            <div className="flex items-center gap-2">
+              {/* Filters */}
+              <Select value={filterScope} onValueChange={setFilterScope}>
+                <SelectTrigger className="w-28 h-8 text-xs">
+                  <SelectValue placeholder="Scope" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous scopes</SelectItem>
+                  <SelectItem value="scope1">Scope 1</SelectItem>
+                  <SelectItem value="scope2">Scope 2</SelectItem>
+                  <SelectItem value="scope3">Scope 3</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-28 h-8 text-xs">
+                  <SelectValue placeholder="Statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous statuts</SelectItem>
+                  <SelectItem value="draft">Brouillon</SelectItem>
+                  <SelectItem value="validated">Validé</SelectItem>
+                  <SelectItem value="integrated">Intégré</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {/* Batch actions */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" disabled={isBatchProcessing}>
+                    {isBatchProcessing ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 mr-1" />
+                    )}
+                    Actions
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={handleBatchRecalculate}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Recalculer {selectedIds.size > 0 ? `(${selectedIds.size})` : 'tout'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={loadActivities}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Actualiser
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </CardDescription>
       </CardHeader>
@@ -386,8 +391,16 @@ export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplet
         {filteredActivities.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Aucune donnée d'activité</p>
-            <p className="text-sm">Téléchargez des documents pour commencer</p>
+            <p className="font-medium">
+              {showOnlyValidated 
+                ? 'Aucune donnée validée'
+                : 'Aucune donnée d\'activité'}
+            </p>
+            <p className="text-sm">
+              {showOnlyValidated 
+                ? 'Validez les documents dans l\'onglet "Vérification" pour les voir ici'
+                : 'Téléchargez des documents pour commencer'}
+            </p>
           </div>
         ) : (
           <div className="rounded-lg border overflow-hidden">

@@ -20,6 +20,8 @@ interface FuelItem {
 class ActivityDataService {
 
   // Créer une donnée d'activité à partir des données extraites
+  // Note: Cette méthode crée l'activité en statut 'draft'. 
+  // Pour valider et calculer CO2, appeler validateAndCalculate() après.
   async createFromExtractedData(
     documentId: string,
     extractedData: ExtractedData,
@@ -35,7 +37,7 @@ class ActivityDataService {
         'TN'
       );
 
-      // Calculer les émissions CO2
+      // Pré-calculer les émissions CO2 (sera recalculé lors de la validation)
       let co2Kg: number | null = null;
       if (extractedData.quantity && emissionFactor.data) {
         co2Kg = extractedData.quantity * emissionFactor.data.factor_value;
@@ -63,7 +65,7 @@ class ActivityDataService {
           emission_factor_unit: emissionFactor.data?.factor_unit,
           emission_factor_source: emissionFactor.data?.source_name,
           co2_equivalent_kg: co2Kg,
-          status: 'draft'
+          status: 'draft' // Toujours créer en draft, la validation se fait après
         })
         .select()
         .single();

@@ -262,7 +262,8 @@ export default function DataCollectionOCR() {
               <EnhancedActivityDataTable 
                 key={`activities-${refreshTrigger}`}
                 refreshTrigger={refreshTrigger} 
-                onRecalculateComplete={handleRefresh} 
+                onRecalculateComplete={handleRefresh}
+                showOnlyValidated={true}
               />
             </CardContent>
           </Card>

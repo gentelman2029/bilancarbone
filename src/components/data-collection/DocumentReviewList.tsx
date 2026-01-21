@@ -71,7 +71,7 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
 
     setIsProcessing(true);
     try {
-      // Validate document
+      // 1. Update document status to validated
       await documentCollectionService.updateExtractedData(
         selectedDoc.id, 
         editedData, 
@@ -79,15 +79,23 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
         validationNotes || undefined
       );
       
-      // Create activity data from validated document
-      await activityDataService.createFromExtractedData(selectedDoc.id, editedData);
+      // 2. Create activity with 'validated' status and trigger CO2 calculation
+      const activityResult = await activityDataService.createFromExtractedData(
+        selectedDoc.id, 
+        editedData
+      );
+      
+      // 3. If activity created successfully, validate and calculate CO2
+      if (activityResult.data?.id) {
+        await activityDataService.validateAndCalculate(activityResult.data.id);
+      }
 
-      toast.success('Document validé', {
-        description: 'Les données ont été intégrées aux activités.'
+      toast.success('Document validé et calculé', {
+        description: 'Les données ont été intégrées avec calcul CO₂.'
       });
 
       setSelectedDoc(null);
-      loadDocuments();
+      await loadDocuments();
       onDataValidated?.();
     } catch (error) {
       console.error('Validation error:', error);

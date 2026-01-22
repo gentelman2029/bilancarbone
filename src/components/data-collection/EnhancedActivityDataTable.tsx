@@ -497,10 +497,36 @@ export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplet
                       )}
                     </TableCell>
                     <TableCell>
-                      <DocumentPreviewButton 
-                        documentId={activity.source_document_id}
-                        compact
-                      />
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center gap-1 max-w-[150px]">
+                              <DocumentPreviewButton 
+                                documentId={activity.source_document_id}
+                                compact
+                              />
+                              {activity.source_reference && (
+                                <span className="text-xs text-muted-foreground truncate">
+                                  {activity.source_reference.length > 20 
+                                    ? activity.source_reference.slice(0, 20) + '...'
+                                    : activity.source_reference}
+                                </span>
+                              )}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="left" className="max-w-xs">
+                            <p className="font-medium">Source du calcul</p>
+                            <p className="text-xs text-muted-foreground">
+                              {activity.source_reference || 'Non spécifiée'}
+                            </p>
+                            {activity.emission_factor_source && (
+                              <p className="text-xs mt-1">
+                                Facteur: {activity.emission_factor_source}
+                              </p>
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                     <TableCell>{getStatusBadge(activity.status)}</TableCell>
                     <TableCell className="text-right">

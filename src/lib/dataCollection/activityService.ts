@@ -43,6 +43,12 @@ class ActivityDataService {
         co2Kg = extractedData.quantity * emissionFactor.data.factor_value;
       }
 
+      // Générer des valeurs par défaut pour les dates si non fournies
+      const today = new Date().toISOString().split('T')[0];
+      const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+      const periodStart = extractedData.period_start || firstDayOfMonth;
+      const periodEnd = extractedData.period_end || today;
+
       const { data, error } = await supabase
         .from('activity_data')
         .insert({
@@ -51,8 +57,8 @@ class ActivityDataService {
           source_type: 'ocr' as SourceType,
           source_document_id: documentId,
           source_reference: extractedData.invoice_number,
-          period_start: extractedData.period_start,
-          period_end: extractedData.period_end,
+          period_start: periodStart,
+          period_end: periodEnd,
           ghg_scope: extractedData.ghg_scope as GhgScope || 'scope2',
           ghg_category: extractedData.ghg_category || 'electricite',
           quantity: extractedData.quantity || 0,
@@ -88,14 +94,20 @@ class ActivityDataService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Utilisateur non authentifié');
 
+      // Générer des valeurs par défaut pour les dates si non fournies
+      const today = new Date().toISOString().split('T')[0];
+      const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+      const periodStart = extractedData.period_start || firstDayOfMonth;
+      const periodEnd = extractedData.period_end || today;
+
       const activitiesToInsert = fuelItems.map((item) => ({
         user_id: user.id,
         organization_id: organizationId || null,
         source_type: 'ocr' as SourceType,
         source_document_id: documentId,
         source_reference: `${extractedData.invoice_number} - ${item.product_name}`,
-        period_start: extractedData.period_start,
-        period_end: extractedData.period_end,
+        period_start: periodStart,
+        period_end: periodEnd,
         ghg_scope: 'scope1' as GhgScope,
         ghg_category: item.ghg_category || 'diesel',
         ghg_subcategory: item.product_name,

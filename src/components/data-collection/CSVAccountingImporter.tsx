@@ -101,7 +101,9 @@ export function CSVAccountingImporter({ onImportComplete }: CSVAccountingImporte
 
     try {
       for (const { entry, factor, co2_kg, uncertainty_percent } of selectedEntries) {
-        await activityDataService.createManual({
+        // Utiliser createValidated pour que les données CSV soient directement validées
+        // car le calcul CO2 est déjà effectué via les ratios monétaires
+        await activityDataService.createValidated({
           organization_id: undefined,
           source_type: 'import_csv',
           source_document_id: undefined,
@@ -122,6 +124,7 @@ export function CSVAccountingImporter({ onImportComplete }: CSVAccountingImporte
           emission_factor_unit: 'kgCO2e/€',
           emission_factor_source: factor.source,
           co2_equivalent_kg: co2_kg,
+          uncertainty_percent: uncertainty_percent,
           calculation_metadata_id: undefined
         } as any);
       }

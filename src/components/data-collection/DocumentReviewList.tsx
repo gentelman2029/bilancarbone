@@ -69,6 +69,15 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
   const handleValidate = async () => {
     if (!selectedDoc) return;
 
+    // Prévenir le double comptage - vérifier si déjà validé
+    if (selectedDoc.validation_status === 'validated') {
+      toast.warning('Document déjà validé', {
+        description: 'Ce document a déjà été comptabilisé dans le bilan.'
+      });
+      setSelectedDoc(null);
+      return;
+    }
+
     setIsProcessing(true);
     try {
       // 1. Update document status to validated
@@ -80,9 +89,17 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
       );
       
       // 2. Create activity with 'validated' status and trigger CO2 calculation
+      // Ajouter la source_reference avec le nom du fichier pour la traçabilité
+      const enrichedData = {
+        ...editedData,
+        source_reference: editedData.invoice_number 
+          ? `${editedData.invoice_number} (${selectedDoc.file_name})`
+          : selectedDoc.file_name
+      };
+      
       const activityResult = await activityDataService.createFromExtractedData(
         selectedDoc.id, 
-        editedData
+        enrichedData
       );
       
       // 3. If activity created successfully, validate and calculate CO2
@@ -91,7 +108,7 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
       }
 
       toast.success('Document validé et calculé', {
-        description: 'Les données ont été intégrées avec calcul CO₂.'
+        description: `${selectedDoc.file_name} - Données intégrées avec calcul CO₂.`
       });
 
       setSelectedDoc(null);
@@ -231,8 +248,13 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
               <Button
                 variant="outline"
                 size="sm"
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={() => setResetDialogOpen(true)}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setResetDialogOpen(true);
+                }}
+                type="button"
               >
                 <RotateCcw className="h-4 w-4 mr-1" />
                 Tout réinitialiser
@@ -277,24 +299,31 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
                           size="sm" 
                           variant="outline"
                           className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleRejectClick(doc)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRejectClick(doc);
+                          }}
                         >
                           <X className="h-4 w-4 mr-1" />
                           Rejeter
                         </Button>
                       </>
                     )}
+                    {/* Documents validés sont verrouillés - pas d'édition possible */}
                     {doc.validation_status === 'validated' && (
-                      <Button size="sm" variant="ghost" onClick={() => handleReview(doc)}>
-                        <Pencil className="h-4 w-4 mr-1" />
-                        Éditer
-                      </Button>
+                      <span className="text-xs text-muted-foreground italic flex items-center gap-1">
+                        <Check className="h-3 w-3" />
+                        Verrouillé
+                      </span>
                     )}
                     <Button 
                       size="sm" 
                       variant="ghost" 
                       className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => handleDeleteClick(doc)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteClick(doc);
+                      }}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

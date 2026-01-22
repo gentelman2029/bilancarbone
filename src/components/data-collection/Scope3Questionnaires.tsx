@@ -117,9 +117,10 @@ export function Scope3Questionnaires({ onDataSubmitted }: Scope3QuestionnairesPr
       const effectiveWorkDays = commuting.workDaysPerYear * (1 - commuting.remoteWorkDays / 5);
       const totalKm = commuting.employeeCount * commuting.avgDistance * 2 * effectiveWorkDays;
       
-      await activityDataService.createManual({
+      // Utiliser createValidated pour que les données soient immédiatement validées
+      await activityDataService.createValidated({
         organization_id: undefined,
-        source_type: 'manual',
+        source_type: 'questionnaire',
         source_reference: 'Questionnaire - Déplacements domicile-travail',
         period_start: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0],
         period_end: new Date(new Date().getFullYear(), 11, 31).toISOString().split('T')[0],
@@ -133,8 +134,8 @@ export function Scope3Questionnaires({ onDataSubmitted }: Scope3QuestionnairesPr
         co2_equivalent_kg: emissions,
       } as any);
 
-      toast.success('Données enregistrées', {
-        description: `${(emissions / 1000).toFixed(2)} t CO₂e pour les déplacements domicile-travail`
+      toast.success('Données validées', {
+        description: `${(emissions / 1000).toFixed(2)} t CO₂e ajoutées au Scope 3`
       });
       
       onDataSubmitted?.();
@@ -152,9 +153,10 @@ export function Scope3Questionnaires({ onDataSubmitted }: Scope3QuestionnairesPr
       const emissions = calculateMealEmissions();
       const totalMeals = meals.employeeCount * meals.mealsPerWeek * meals.weeksPerYear;
       
-      await activityDataService.createManual({
+      // Utiliser createValidated pour que les données soient immédiatement validées
+      await activityDataService.createValidated({
         organization_id: undefined,
-        source_type: 'manual',
+        source_type: 'questionnaire',
         source_reference: 'Questionnaire - Repas des salariés',
         period_start: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0],
         period_end: new Date(new Date().getFullYear(), 11, 31).toISOString().split('T')[0],
@@ -168,8 +170,8 @@ export function Scope3Questionnaires({ onDataSubmitted }: Scope3QuestionnairesPr
         co2_equivalent_kg: emissions,
       } as any);
 
-      toast.success('Données enregistrées', {
-        description: `${(emissions / 1000).toFixed(2)} t CO₂e pour les repas`
+      toast.success('Données validées', {
+        description: `${(emissions / 1000).toFixed(2)} t CO₂e ajoutées au Scope 3`
       });
       
       onDataSubmitted?.();
@@ -186,9 +188,10 @@ export function Scope3Questionnaires({ onDataSubmitted }: Scope3QuestionnairesPr
     try {
       const emissions = calculateTravelEmissions();
       
-      await activityDataService.createManual({
+      // Utiliser createValidated pour que les données soient immédiatement validées
+      await activityDataService.createValidated({
         organization_id: undefined,
-        source_type: 'manual',
+        source_type: 'questionnaire',
         source_reference: 'Questionnaire - Déplacements professionnels',
         period_start: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0],
         period_end: new Date(new Date().getFullYear(), 11, 31).toISOString().split('T')[0],
@@ -202,8 +205,8 @@ export function Scope3Questionnaires({ onDataSubmitted }: Scope3QuestionnairesPr
         co2_equivalent_kg: emissions,
       } as any);
 
-      toast.success('Données enregistrées', {
-        description: `${(emissions / 1000).toFixed(2)} t CO₂e pour les déplacements pro`
+      toast.success('Données validées', {
+        description: `${(emissions / 1000).toFixed(2)} t CO₂e ajoutées au Scope 3`
       });
       
       onDataSubmitted?.();

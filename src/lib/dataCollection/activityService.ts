@@ -162,6 +162,31 @@ class ActivityDataService {
     }
   }
 
+  // Créer une activité déjà validée (pour imports CSV avec calculs pré-effectués)
+  async createValidated(
+    activityData: Omit<ActivityData, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'status'>
+  ): Promise<ServiceResponse<ActivityData>> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Utilisateur non authentifié');
+
+      const { data, error } = await supabase
+        .from('activity_data')
+        .insert({
+          ...activityData,
+          user_id: user.id,
+          status: 'validated' // Directement validé car calcul CO2 déjà effectué
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data: data as unknown as ActivityData };
+    } catch (error) {
+      return { error: `Erreur lors de la création: ${error}` };
+    }
+  }
+
   // Récupérer les données d'activité
   async getActivityData(filters?: {
     ghg_scope?: GhgScope;

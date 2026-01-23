@@ -403,17 +403,56 @@ class ActivityDataService {
       // Get count before delete
       const { count } = await supabase
         .from('activity_data')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      // Delete all carbon calculations first (foreign key constraint)
+      await supabase
+        .from('carbon_calculations_v2')
+        .delete()
+        .eq('user_id', user.id);
 
       // Delete all activities for this user
       const { error } = await supabase
         .from('activity_data')
         .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
+        .eq('user_id', user.id);
 
       if (error) throw error;
+      
+      // Clear workflow data from localStorage
+      localStorage.removeItem('workflow-data');
+      
       return { data: { deleted: count || 0 } };
     } catch (error) {
+      console.error('Delete all activities error:', error);
+      return { error: `Erreur lors de la suppression: ${error}` };
+    }
+  }
+
+  // Supprimer une seule activité
+  async deleteActivity(activityId: string): Promise<ServiceResponse<void>> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Utilisateur non authentifié');
+
+      // Delete related carbon calculations first
+      await supabase
+        .from('carbon_calculations_v2')
+        .delete()
+        .eq('activity_data_id', activityId);
+
+      // Delete the activity
+      const { error } = await supabase
+        .from('activity_data')
+        .delete()
+        .eq('id', activityId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      return {};
+    } catch (error) {
+      console.error('Delete activity error:', error);
       return { error: `Erreur lors de la suppression: ${error}` };
     }
   }

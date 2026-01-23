@@ -14,13 +14,16 @@ import {
   ChevronRight,
   Sparkles,
   User,
-  Filter
+  Filter,
+  Trash2,
+  RotateCcw
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -224,6 +227,33 @@ export function ValidationWorkflow({ refreshTrigger, onValidationComplete }: Val
     ));
     
     toast.success('Activité archivée');
+  };
+
+  // Delete activity
+  const deleteActivity = async (activity: WorkflowActivity) => {
+    setIsSubmitting(true);
+    try {
+      const result = await activityDataService.deleteActivity(activity.id);
+      if (result.error) throw new Error(result.error);
+      
+      // Remove from local workflow data
+      const current = JSON.parse(localStorage.getItem('workflow-data') || '{}');
+      delete current[activity.id];
+      localStorage.setItem('workflow-data', JSON.stringify(current));
+      
+      // Remove from state
+      setActivities(prev => prev.filter(a => a.id !== activity.id));
+      
+      toast.success('Activité supprimée', {
+        description: 'Le bilan carbone a été recalculé.'
+      });
+      onValidationComplete?.();
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Erreur lors de la suppression');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Add comment
@@ -458,6 +488,24 @@ export function ValidationWorkflow({ refreshTrigger, onValidationComplete }: Val
                             Archiver
                           </Button>
                         )}
+                        
+                        {/* Delete button - available for all statuses */}
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                size="sm" 
+                                variant="ghost"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => deleteActivity(activity)}
+                                disabled={isSubmitting}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Supprimer et recalculer le bilan</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                         
                         <Button 
                           size="sm" 

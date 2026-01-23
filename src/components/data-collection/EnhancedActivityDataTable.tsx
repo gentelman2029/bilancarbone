@@ -170,6 +170,34 @@ export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplet
     onRecalculateComplete?.();
   };
 
+  // Delete single activity
+  const handleDeleteActivity = async (activity: EnhancedActivity) => {
+    if (!window.confirm(`Supprimer "${getCategoryLabel(activity.ghg_scope, activity.ghg_category)}" ?\nCette action est irréversible et recalculera le bilan.`)) {
+      return;
+    }
+    
+    setProcessingIds(prev => new Set(prev).add(activity.id));
+    try {
+      const result = await activityDataService.deleteActivity(activity.id);
+      if (result.error) throw new Error(result.error);
+      
+      setActivities(prev => prev.filter(a => a.id !== activity.id));
+      toast.success('Donnée supprimée', {
+        description: 'Le bilan carbone a été recalculé.'
+      });
+      onRecalculateComplete?.();
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Erreur lors de la suppression');
+    } finally {
+      setProcessingIds(prev => {
+        const next = new Set(prev);
+        next.delete(activity.id);
+        return next;
+      });
+    }
+  };
+
   // Validate activity
   const handleValidate = async (activity: EnhancedActivity) => {
     setProcessingIds(prev => new Set(prev).add(activity.id));
@@ -573,6 +601,27 @@ export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplet
                             </Tooltip>
                           </TooltipProvider>
                         )}
+                        {/* Delete button */}
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                size="sm" 
+                                variant="ghost"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => handleDeleteActivity(activity)}
+                                disabled={processingIds.has(activity.id)}
+                              >
+                                {processingIds.has(activity.id) ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Supprimer et recalculer</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
                     </TableCell>
                   </TableRow>

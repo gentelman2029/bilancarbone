@@ -190,7 +190,7 @@ class DocumentCollectionService {
     }
   }
 
-  // Supprimer tous les documents
+  // Supprimer tous les documents et les activités associées
   async deleteAllDocuments(): Promise<ServiceResponse<{ deleted: number }>> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -204,23 +204,40 @@ class DocumentCollectionService {
       if (fetchError) throw fetchError;
       if (!docs || docs.length === 0) return { data: { deleted: 0 } };
 
-      // Supprimer tous les fichiers du storage
-      const filePaths = docs.filter(d => d.file_path).map(d => d.file_path);
-      if (filePaths.length > 0) {
-        await supabase.storage
-          .from('data-collection-documents')
-          .remove(filePaths);
+      const docIds = docs.map(d => d.id);
+
+      // 1. Supprimer les activités liées à ces documents (cascade sur les calculs)
+      const { error: activityDeleteError } = await supabase
+        .from('activity_data')
+        .delete()
+        .in('source_document_id', docIds);
+      
+      if (activityDeleteError) {
+        console.warn('Error deleting related activities:', activityDeleteError);
       }
 
-      // Supprimer toutes les entrées de la base
+      // 2. Supprimer tous les fichiers du storage
+      const filePaths = docs.filter(d => d.file_path).map(d => d.file_path);
+      if (filePaths.length > 0) {
+        const { error: storageError } = await supabase.storage
+          .from('data-collection-documents')
+          .remove(filePaths);
+        
+        if (storageError) {
+          console.warn('Storage cleanup error:', storageError);
+        }
+      }
+
+      // 3. Supprimer toutes les entrées de la base
       const { error } = await supabase
         .from('data_collection_documents')
         .delete()
-        .in('id', docs.map(d => d.id));
+        .in('id', docIds);
 
       if (error) throw error;
       return { data: { deleted: docs.length } };
     } catch (error) {
+      console.error('Reset all documents error:', error);
       return { error: `Erreur lors de la réinitialisation: ${error}` };
     }
   }

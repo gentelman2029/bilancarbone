@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SmartDocumentUploader } from '@/components/data-collection/SmartDocumentUploader';
@@ -7,14 +7,16 @@ import { EnhancedActivityDataTable } from '@/components/data-collection/Enhanced
 import { CSVAccountingImporter } from '@/components/data-collection/CSVAccountingImporter';
 import { ScopeProgressBarsV2 } from '@/components/data-collection/ScopeProgressBarsV2';
 import { Scope3Questionnaires } from '@/components/data-collection/Scope3Questionnaires';
-import { CarbonSummaryDashboard } from '@/components/data-collection/CarbonSummaryDashboard';
+import { AnalysisModule } from '@/components/data-collection/AnalysisModule';
 import { ValidationWorkflow } from '@/components/data-collection/ValidationWorkflow';
 import { ActivitiesPurgeButton } from '@/components/data-collection/ResetButtons';
+import { RSEReportGenerator } from '@/components/data-collection/RSEReportGenerator';
 import { Database, ShieldCheck, BarChart3, Upload, FileSpreadsheet, ClipboardList, Sparkles, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { usePendingDocumentsCount } from '@/hooks/useDataCollectionDocuments';
+import { useScopeProgress } from '@/hooks/useScopeProgress';
 import { cn } from '@/lib/utils';
 
 type CollectionSource = 'upload' | 'csv' | 'questionnaires' | null;
@@ -23,6 +25,17 @@ export default function DataCollectionOCR() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [selectedSource, setSelectedSource] = useState<CollectionSource>(null);
   const { count: pendingCount, isLoading: isLoadingCount } = usePendingDocumentsCount(refreshTrigger);
+  
+  // Use scope progress hook to get emissions for RSE report
+  const { stats, totalCO2 } = useScopeProgress(refreshTrigger);
+  
+  // Calculate scope totals in tCO2e for reports
+  const scopeData = {
+    scope1: (stats.find(s => s.scope === 'scope1')?.totalCO2Kg || 0) / 1000,
+    scope2: (stats.find(s => s.scope === 'scope2')?.totalCO2Kg || 0) / 1000,
+    scope3: (stats.find(s => s.scope === 'scope3')?.totalCO2Kg || 0) / 1000,
+    total: totalCO2 / 1000,
+  };
 
   const handleRefresh = () => {
     setRefreshTrigger(prev => prev + 1);
@@ -241,9 +254,10 @@ export default function DataCollectionOCR() {
 
         {/* Étape 3: Analyse */}
         <TabsContent value="analyze" className="space-y-6">
-          {/* Dashboard KPI */}
-          <CarbonSummaryDashboard 
-            key={`dashboard-${refreshTrigger}`}
+          {/* Enhanced Analysis Module with Financial/HR, Historical, SBT and Benchmark */}
+          <AnalysisModule 
+            key={`analysis-${refreshTrigger}`}
+            totalEmissions={scopeData.total}
             refreshTrigger={refreshTrigger} 
           />
 
@@ -256,7 +270,10 @@ export default function DataCollectionOCR() {
                   Données d'activité avec calculs CO₂ finalisés après validation
                 </CardDescription>
               </div>
-              <ActivitiesPurgeButton onResetComplete={handleRefresh} />
+              <div className="flex items-center gap-2">
+                <RSEReportGenerator scopeData={scopeData} />
+                <ActivitiesPurgeButton onResetComplete={handleRefresh} />
+              </div>
             </CardHeader>
             <CardContent>
               <EnhancedActivityDataTable 

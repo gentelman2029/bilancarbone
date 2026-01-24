@@ -24,7 +24,9 @@ export function DocumentPreviewButton({
 
   const handleOpen = async () => {
     if (!documentPath && !documentId) {
-      toast.error('Aucun justificatif disponible');
+      toast.info('Aucun justificatif lié', {
+        description: 'Cette donnée provient d\'un import CSV ou d\'un questionnaire.'
+      });
       return;
     }
 
@@ -33,27 +35,42 @@ export function DocumentPreviewButton({
 
     try {
       let filePath = documentPath;
+      let docFileName = fileName;
       
       // Si on a un documentId mais pas de path, on récupère le document
       if (!filePath && documentId) {
         const result = await documentCollectionService.getDocument(documentId);
-        if (result.error || !result.data) {
-          throw new Error('Document non trouvé');
+        if (result.error) {
+          console.warn('Document fetch error:', result.error);
+          throw new Error('Document non trouvé dans la base de données');
+        }
+        if (!result.data) {
+          throw new Error('Document introuvable');
         }
         filePath = result.data.file_path;
+        docFileName = result.data.file_name || fileName;
       }
 
-      if (filePath) {
-        const urlResult = await documentCollectionService.getDocumentUrl(filePath);
-        if (urlResult.data) {
-          setPreviewUrl(urlResult.data);
-        } else {
-          throw new Error('Impossible de générer l\'URL');
-        }
+      if (!filePath) {
+        throw new Error('Chemin du fichier non disponible');
       }
-    } catch (error) {
+
+      const urlResult = await documentCollectionService.getDocumentUrl(filePath);
+      if (urlResult.error) {
+        console.warn('URL generation error:', urlResult.error);
+        throw new Error('Impossible de générer l\'URL de prévisualisation');
+      }
+      if (urlResult.data) {
+        setPreviewUrl(urlResult.data);
+      } else {
+        throw new Error('URL non générée');
+      }
+    } catch (error: any) {
       console.error('Error loading document:', error);
-      toast.error('Erreur lors du chargement du document');
+      toast.error('Erreur lors du chargement', {
+        description: error.message || 'Le document n\'est pas accessible'
+      });
+      setIsOpen(false);
     } finally {
       setIsLoading(false);
     }

@@ -9,13 +9,14 @@ import {
   BookOpen, 
   Plus,
   Sparkles,
-  RefreshCw
+  FileText
 } from 'lucide-react';
 import { RSEKanbanBoard } from '@/components/rse/RSEKanbanBoard';
 import { RSEActionForm } from '@/components/rse/RSEActionForm';
 import { RSEStakeholderMatrix } from '@/components/rse/RSEStakeholderMatrix';
 import { RSEActionLibrary } from '@/components/rse/RSEActionLibrary';
 import { RSEStrategicDashboard } from '@/components/rse/RSEStrategicDashboard';
+import { RSEPilotageReport } from '@/components/rse/RSEPilotageReport';
 import { RSEAction, ActionStatus, DEFAULT_STAKEHOLDERS } from '@/lib/rse/types';
 import { generateActionSuggestions } from '@/lib/rse/actionEngine';
 import { BVMT_ESG_SCHEMA, ESGCategory } from '@/lib/esg/types';
@@ -131,6 +132,7 @@ export default function RSEPilotage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <RSEPilotageReport actions={actions} />
           <Button variant="outline" onClick={handleGenerateSuggestions}>
             <Sparkles className="h-4 w-4 mr-2" />
             Générer Suggestions

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SmartDocumentUploader } from '@/components/data-collection/SmartDocumentUploader';
@@ -10,7 +10,6 @@ import { Scope3Questionnaires } from '@/components/data-collection/Scope3Questio
 import { AnalysisModule } from '@/components/data-collection/AnalysisModule';
 import { ValidationWorkflow } from '@/components/data-collection/ValidationWorkflow';
 import { ActivitiesPurgeButton } from '@/components/data-collection/ResetButtons';
-import { RSEReportGenerator } from '@/components/data-collection/RSEReportGenerator';
 import { Database, ShieldCheck, BarChart3, Upload, FileSpreadsheet, ClipboardList, Sparkles, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -270,10 +269,7 @@ export default function DataCollectionOCR() {
                   Données d'activité avec calculs CO₂ finalisés après validation
                 </CardDescription>
               </div>
-              <div className="flex items-center gap-2">
-                <RSEReportGenerator scopeData={scopeData} />
-                <ActivitiesPurgeButton onResetComplete={handleRefresh} />
-              </div>
+              <ActivitiesPurgeButton onResetComplete={handleRefresh} />
             </CardHeader>
             <CardContent>
               <EnhancedActivityDataTable 

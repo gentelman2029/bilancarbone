@@ -71,7 +71,7 @@ class ActivityDataService {
           emission_factor_unit: emissionFactor.data?.factor_unit,
           emission_factor_source: emissionFactor.data?.source_name,
           co2_equivalent_kg: co2Kg,
-          status: 'draft' // Toujours créer en draft, la validation se fait après
+          status: 'validated' // Directement validé car l'utilisateur valide le document
         })
         .select()
         .single();
@@ -121,7 +121,7 @@ class ActivityDataService {
         emission_factor_unit: 'kgCO2e/L',
         emission_factor_source: 'ADEME Base Carbone - Carburants',
         co2_equivalent_kg: item.co2_kg,
-        status: 'draft'
+        status: 'validated' // Directement validé car l'utilisateur valide le document
       }));
 
       const { data, error } = await supabase

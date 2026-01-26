@@ -74,6 +74,10 @@ export function ValidationWorkflow({ refreshTrigger, onValidationComplete }: Val
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  
+  // Reset dialog state
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   // Load activities
   const loadActivities = async () => {
@@ -256,6 +260,30 @@ export function ValidationWorkflow({ refreshTrigger, onValidationComplete }: Val
     }
   };
 
+  // Reset all activities in pipeline
+  const handleResetAll = async () => {
+    setIsResetting(true);
+    try {
+      const result = await activityDataService.deleteAllActivities();
+      if (result.error) throw new Error(result.error);
+      
+      // Clear local state
+      setActivities([]);
+      localStorage.removeItem('workflow-data');
+      
+      toast.success(`${result.data?.deleted || 0} activité(s) supprimée(s)`, {
+        description: 'Pipeline vidé avec succès.'
+      });
+      setResetDialogOpen(false);
+      onValidationComplete?.();
+    } catch (error) {
+      console.error('Reset error:', error);
+      toast.error('Erreur lors de la réinitialisation');
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   // Add comment
   const addComment = () => {
     if (!selectedActivity || !comment.trim()) return;
@@ -349,13 +377,28 @@ export function ValidationWorkflow({ refreshTrigger, onValidationComplete }: Val
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Pipeline de Validation
-          </CardTitle>
-          <CardDescription>
-            Workflow de validation des données : Brouillon → Pré-validation IA → Validation → Archive
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Filter className="h-5 w-5" />
+                Pipeline de Validation
+              </CardTitle>
+              <CardDescription>
+                Workflow de validation des données : Brouillon → Pré-validation IA → Validation → Archive
+              </CardDescription>
+            </div>
+            {activities.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                onClick={() => setResetDialogOpen(true)}
+              >
+                <RotateCcw className="h-4 w-4 mr-1" />
+                Tout réinitialiser
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {/* Workflow Steps Visualization */}
@@ -673,6 +716,33 @@ export function ValidationWorkflow({ refreshTrigger, onValidationComplete }: Val
           </ScrollArea>
         </DialogContent>
       </Dialog>
+
+      {/* Reset All Confirmation Dialog */}
+      <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <RotateCcw className="h-5 w-5" />
+              Réinitialiser tout le pipeline ?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Toutes les activités ({activities.length}) seront définitivement supprimées, 
+              y compris les données validées et les calculs carbone associés.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isResetting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleResetAll}
+              disabled={isResetting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isResetting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <RotateCcw className="h-4 w-4 mr-1" />}
+              Réinitialiser tout
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

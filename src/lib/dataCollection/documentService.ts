@@ -158,31 +158,30 @@ class DocumentCollectionService {
     }
   }
 
-  // Helper: Supprimer un calcul carbone par son activity_data_id
-  private async deleteCalculationsForActivity(activityId: string, userId: string): Promise<void> {
-    const { error } = await supabase
-      .from('carbon_calculations_v2')
-      .delete()
-      .eq('activity_data_id', activityId);
-    
-    if (error) {
-      console.warn('Error deleting calculations for activity', activityId, error);
-    }
-  }
-
-  // Helper: Supprimer une activité par ID
-  private async deleteActivityById(activityId: string, userId: string): Promise<void> {
-    // D'abord supprimer les calculs liés
-    await this.deleteCalculationsForActivity(activityId, userId);
-    
-    // Puis supprimer l'activité
-    const { error } = await supabase
-      .from('activity_data')
-      .delete()
-      .eq('id', activityId);
-    
-    if (error) {
-      console.warn('Error deleting activity', activityId, error);
+  // Helper: Supprimer les calculs et l'activité de manière séquentielle
+  private async deleteActivityWithCalculations(activityId: string): Promise<void> {
+    try {
+      // 1. D'abord supprimer les calculs liés à cette activité
+      const { error: calcError } = await supabase
+        .from('carbon_calculations_v2')
+        .delete()
+        .eq('activity_data_id', activityId);
+      
+      if (calcError) {
+        console.warn('Error deleting calculations for activity', activityId, calcError);
+      }
+      
+      // 2. Puis supprimer l'activité elle-même
+      const { error: actError } = await supabase
+        .from('activity_data')
+        .delete()
+        .eq('id', activityId);
+      
+      if (actError) {
+        console.warn('Error deleting activity', activityId, actError);
+      }
+    } catch (error) {
+      console.warn('Error in deleteActivityWithCalculations:', error);
     }
   }
 
@@ -193,16 +192,11 @@ class DocumentCollectionService {
       if (!user) throw new Error('Utilisateur non authentifié');
 
       // 1. Récupérer le document avec son chemin fichier
-      const { data: doc, error: fetchError } = await supabase
+      const { data: doc } = await supabase
         .from('data_collection_documents')
         .select('file_path')
         .eq('id', documentId)
-        .single();
-
-      if (fetchError) {
-        console.warn('Document not found:', fetchError);
-        // Continue anyway to clean up orphan records
-      }
+        .maybeSingle();
 
       // 2. Récupérer les activités liées à ce document
       const { data: activities } = await supabase
@@ -210,18 +204,22 @@ class DocumentCollectionService {
         .select('id')
         .eq('source_document_id', documentId);
 
-      // 3. Supprimer les activités et leurs calculs (ordre: calculs -> activités)
+      // 3. Supprimer les activités et leurs calculs SÉQUENTIELLEMENT
       if (activities && activities.length > 0) {
         for (const activity of activities) {
-          await this.deleteActivityById(activity.id, user.id);
+          await this.deleteActivityWithCalculations(activity.id);
         }
       }
 
       // 4. Supprimer le fichier du storage
       if (doc?.file_path) {
-        await supabase.storage
-          .from('data-collection-documents')
-          .remove([doc.file_path]);
+        try {
+          await supabase.storage
+            .from('data-collection-documents')
+            .remove([doc.file_path]);
+        } catch (storageError) {
+          console.warn('Storage deletion failed:', storageError);
+        }
       }
 
       // 5. Supprimer le document de la base
@@ -230,7 +228,10 @@ class DocumentCollectionService {
         .delete()
         .eq('id', documentId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Document deletion error:', error);
+        throw error;
+      }
       
       return {};
     } catch (error) {
@@ -245,27 +246,7 @@ class DocumentCollectionService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Utilisateur non authentifié');
 
-      // 1. D'abord supprimer TOUS les calculs carbone de l'utilisateur
-      const { error: calcError } = await supabase
-        .from('carbon_calculations_v2')
-        .delete()
-        .eq('user_id', user.id);
-      
-      if (calcError) {
-        console.warn('Error deleting all calculations:', calcError);
-      }
-
-      // 2. Ensuite supprimer TOUTES les activités de l'utilisateur
-      const { error: actError } = await supabase
-        .from('activity_data')
-        .delete()
-        .eq('user_id', user.id);
-      
-      if (actError) {
-        console.warn('Error deleting all activities:', actError);
-      }
-
-      // 3. Récupérer tous les documents pour les fichiers storage
+      // 1. Récupérer tous les documents pour le comptage et les fichiers
       const { data: docs } = await supabase
         .from('data_collection_documents')
         .select('id, file_path')
@@ -273,24 +254,41 @@ class DocumentCollectionService {
 
       const docCount = docs?.length || 0;
 
+      // 2. Récupérer toutes les activités de l'utilisateur
+      const { data: activities } = await supabase
+        .from('activity_data')
+        .select('id')
+        .eq('user_id', user.id);
+
+      // 3. Supprimer séquentiellement: calculs -> activités pour chaque activité
+      if (activities && activities.length > 0) {
+        for (const activity of activities) {
+          await this.deleteActivityWithCalculations(activity.id);
+        }
+      }
+
       // 4. Supprimer tous les fichiers du storage
       if (docs && docs.length > 0) {
         const filePaths = docs.filter(d => d.file_path).map(d => d.file_path);
         if (filePaths.length > 0) {
-          await supabase.storage
-            .from('data-collection-documents')
-            .remove(filePaths);
+          try {
+            await supabase.storage
+              .from('data-collection-documents')
+              .remove(filePaths);
+          } catch (storageError) {
+            console.warn('Storage cleanup failed:', storageError);
+          }
         }
       }
 
       // 5. Supprimer tous les documents de la base
-      const { error: docError } = await supabase
-        .from('data_collection_documents')
-        .delete()
-        .eq('user_id', user.id);
-
-      if (docError) {
-        console.warn('Error deleting all documents:', docError);
+      if (docs && docs.length > 0) {
+        for (const doc of docs) {
+          await supabase
+            .from('data_collection_documents')
+            .delete()
+            .eq('id', doc.id);
+        }
       }
       
       // Clear localStorage workflow data

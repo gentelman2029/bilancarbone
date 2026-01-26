@@ -156,7 +156,7 @@ export function CSVAccountingImporter({ onImportComplete }: CSVAccountingImporte
         // car le calcul CO2 est déjà effectué via les ratios monétaires
         await activityDataService.createValidated({
           organization_id: undefined,
-          source_type: 'import_csv',
+          source_type: 'csv', // CRITICAL: Must match DB constraint (csv, not import_csv)
           source_document_id: undefined,
           source_reference: `CSV Import - ${fileName}`,
           period_start: entry.date,
@@ -165,10 +165,10 @@ export function CSVAccountingImporter({ onImportComplete }: CSVAccountingImporte
           ghg_category: factor.ghg_category,
           ghg_subcategory: factor.subcategory,
           quantity: entry.amount_ht,
-          unit: 'EUR',
+          unit: 'TND', // Tunisian Dinar as base currency
           amount_ht: entry.amount_ht,
           amount_ttc: entry.amount_ttc,
-          currency_code: entry.currency,
+          currency_code: 'TND', // Tunisian Dinar
           supplier_name: entry.supplier_name,
           supplier_country: undefined,
           emission_factor_value: factor.factor_value,

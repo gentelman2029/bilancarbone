@@ -14,7 +14,12 @@ import {
   Filter,
   ChevronDown,
   Sparkles,
-  Info
+  Info,
+  FileSpreadsheet,
+  ClipboardList,
+  ScanLine,
+  FileText,
+  ExternalLink
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -308,6 +313,49 @@ export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplet
     );
   };
 
+  // Source type badge for audit traceability
+  const getSourceTypeBadge = (sourceType: string) => {
+    switch (sourceType) {
+      case 'ocr':
+        return (
+          <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/30 flex items-center gap-1">
+            <ScanLine className="h-3 w-3" />
+            OCR
+          </Badge>
+        );
+      case 'csv':
+        return (
+          <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 flex items-center gap-1">
+            <FileSpreadsheet className="h-3 w-3" />
+            CSV
+          </Badge>
+        );
+      case 'questionnaire':
+        return (
+          <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30 flex items-center gap-1">
+            <ClipboardList className="h-3 w-3" />
+            Enquête
+          </Badge>
+        );
+      case 'manual':
+        return (
+          <Badge className="bg-gray-500/10 text-gray-600 border-gray-500/30 flex items-center gap-1">
+            <FileText className="h-3 w-3" />
+            Manuel
+          </Badge>
+        );
+      case 'api':
+        return (
+          <Badge className="bg-purple-500/10 text-purple-600 border-purple-500/30 flex items-center gap-1">
+            <ExternalLink className="h-3 w-3" />
+            API
+          </Badge>
+        );
+      default:
+        return <Badge variant="secondary">{sourceType}</Badge>;
+    }
+  };
+
   // Category label
   const getCategoryLabel = (scope: string, category: string) => {
     const scopeCategories = GHG_CATEGORIES[scope as keyof typeof GHG_CATEGORIES] || [];
@@ -461,7 +509,22 @@ export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplet
                     </div>
                   </TableHead>
                   <TableHead>Incertitude</TableHead>
-                  <TableHead>Source</TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1">
+                      Type Source
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-3 w-3 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Origine des données pour traçabilité audit
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </TableHead>
+                  <TableHead>Référence Source</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -524,34 +587,56 @@ export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplet
                         </Badge>
                       )}
                     </TableCell>
+                    {/* Type Source - Audit Traceability */}
+                    <TableCell>
+                      {getSourceTypeBadge(activity.source_type)}
+                    </TableCell>
+                    {/* Reference Source - Audit Traceability */}
                     <TableCell>
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="flex items-center gap-1 max-w-[150px]">
+                            <div className="flex items-center gap-1 max-w-[180px]">
                               <DocumentPreviewButton 
                                 documentId={activity.source_document_id}
                                 compact
                               />
-                              {activity.source_reference && (
+                              {activity.source_reference ? (
                                 <span className="text-xs text-muted-foreground truncate">
-                                  {activity.source_reference.length > 20 
-                                    ? activity.source_reference.slice(0, 20) + '...'
+                                  {activity.source_reference.length > 25 
+                                    ? activity.source_reference.slice(0, 25) + '...'
                                     : activity.source_reference}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground italic">
+                                  {(activity.source_type as string) === 'csv' && 'Import CSV'}
+                                  {(activity.source_type as string) === 'questionnaire' && 'Formulaire enquête'}
+                                  {(activity.source_type as string) === 'manual' && 'Saisie manuelle'}
+                                  {!['csv', 'questionnaire', 'manual'].includes(activity.source_type as string) && 'Non spécifiée'}
                                 </span>
                               )}
                             </div>
                           </TooltipTrigger>
                           <TooltipContent side="left" className="max-w-xs">
-                            <p className="font-medium">Source du calcul</p>
-                            <p className="text-xs text-muted-foreground">
-                              {activity.source_reference || 'Non spécifiée'}
-                            </p>
-                            {activity.emission_factor_source && (
-                              <p className="text-xs mt-1">
-                                Facteur: {activity.emission_factor_source}
+                            <div className="space-y-1">
+                              <p className="font-medium flex items-center gap-1">
+                                Traçabilité Audit
                               </p>
-                            )}
+                              <div className="text-xs space-y-0.5">
+                                <p><span className="text-muted-foreground">Type:</span> {activity.source_type}</p>
+                                <p><span className="text-muted-foreground">Référence:</span> {activity.source_reference || 'Non spécifiée'}</p>
+                                {activity.supplier_name && (
+                                  <p><span className="text-muted-foreground">Fournisseur:</span> {activity.supplier_name}</p>
+                                )}
+                                {activity.emission_factor_source && (
+                                  <p><span className="text-muted-foreground">Facteur:</span> {activity.emission_factor_source}</p>
+                                )}
+                                {activity.emission_factor_value && (
+                                  <p><span className="text-muted-foreground">Valeur FE:</span> {activity.emission_factor_value} {activity.emission_factor_unit}</p>
+                                )}
+                                <p><span className="text-muted-foreground">Créé le:</span> {new Date(activity.created_at).toLocaleDateString('fr-FR')}</p>
+                              </div>
+                            </div>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>

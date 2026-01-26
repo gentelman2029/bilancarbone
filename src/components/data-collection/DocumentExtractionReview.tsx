@@ -150,8 +150,8 @@ export function DocumentExtractionReview({
     calculateEmissions();
   }, [editedData.quantity, editedData.ghg_category, isFuelDocument, editedFuelItems]);
   
-  // Update fuel item quantity and recalculate CO2
-  const updateFuelItem = (index: number, field: keyof FuelItem, value: number | string) => {
+  // Update fuel item quantity or emission factor and recalculate CO2
+  const updateFuelItem = (index: number, field: keyof FuelItem | 'emission_factor', value: number | string) => {
     setEditedFuelItems(prev => {
       const updated = [...prev];
       if (field === 'quantity' && typeof value === 'number') {
@@ -159,6 +159,12 @@ export function DocumentExtractionReview({
           ...updated[index],
           quantity: value,
           co2_kg: value * updated[index].emission_factor
+        };
+      } else if (field === 'emission_factor' && typeof value === 'number') {
+        updated[index] = {
+          ...updated[index],
+          emission_factor: value,
+          co2_kg: updated[index].quantity * value
         };
       } else {
         updated[index] = { ...updated[index], [field]: value };
@@ -466,7 +472,15 @@ export function DocumentExtractionReview({
                             className="w-28 h-8 text-right ml-auto"
                           />
                         </td>
-                        <td className="px-3 py-2 text-right text-muted-foreground">{item.emission_factor}</td>
+                        <td className="px-3 py-2 text-right">
+                          <Input 
+                            type="number"
+                            step="0.01"
+                            value={item.emission_factor}
+                            onChange={(e) => updateFuelItem(idx, 'emission_factor', parseFloat(e.target.value) || 0)}
+                            className="w-20 h-8 text-right ml-auto"
+                          />
+                        </td>
                         <td className="px-3 py-2 text-right font-medium text-green-600">{item.co2_kg.toFixed(2)}</td>
                       </tr>
                     ))}

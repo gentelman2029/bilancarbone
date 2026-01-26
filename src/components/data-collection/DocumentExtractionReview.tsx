@@ -65,6 +65,18 @@ export function DocumentExtractionReview({
   const isFuelInvoice = editedData.document_type === 'fuel_invoice' && editedFuelItems.length > 0;
   const isFuelVoucher = editedData.document_type === 'fuel_voucher' && editedFuelItems.length > 0;
   const isFuelDocument = isFuelInvoice || isFuelVoucher;
+  
+  // Debug logging
+  console.log('DocumentExtractionReview Debug:', {
+    document_type: editedData.document_type,
+    fuel_items_count: editedFuelItems.length,
+    isFuelInvoice,
+    isFuelVoucher,
+    isFuelDocument,
+    calculatedEmissions,
+    editedData_quantity: editedData.quantity,
+    isButtonDisabled: (!isFuelDocument && !editedData.quantity) || !calculatedEmissions
+  });
 
   // Parse field confidences from extracted data or generate based on overall score
   useEffect(() => {
@@ -88,9 +100,22 @@ export function DocumentExtractionReview({
   // Calculate emissions when quantity or category changes (for single-line documents)
   useEffect(() => {
     const calculateEmissions = async () => {
+      // Check if this is a fuel document based on current state
+      const currentIsFuelInvoice = editedData.document_type === 'fuel_invoice' && editedFuelItems.length > 0;
+      const currentIsFuelVoucher = editedData.document_type === 'fuel_voucher' && editedFuelItems.length > 0;
+      const currentIsFuelDocument = currentIsFuelInvoice || currentIsFuelVoucher;
+      
+      console.log('calculateEmissions called:', {
+        document_type: editedData.document_type,
+        fuel_items_count: editedFuelItems.length,
+        currentIsFuelDocument,
+        fuel_items: editedFuelItems
+      });
+      
       // For fuel documents with multi-line items, use the sum from fuel_items
-      if (isFuelDocument) {
+      if (currentIsFuelDocument) {
         const totalCo2 = editedFuelItems.reduce((sum, item) => sum + (item.co2_kg || 0), 0);
+        console.log('Fuel document - totalCo2:', totalCo2);
         setCalculatedEmissions(totalCo2);
         setEmissionFactor(null);
         return;
@@ -148,7 +173,7 @@ export function DocumentExtractionReview({
     };
 
     calculateEmissions();
-  }, [editedData.quantity, editedData.ghg_category, isFuelDocument, editedFuelItems]);
+  }, [editedData.quantity, editedData.ghg_category, editedData.document_type, editedFuelItems]);
   
   // Update fuel item quantity or emission factor and recalculate CO2
   const updateFuelItem = (index: number, field: keyof FuelItem | 'emission_factor', value: number | string) => {

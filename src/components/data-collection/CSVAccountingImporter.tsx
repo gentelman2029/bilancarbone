@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileSpreadsheet, Loader2, CheckCircle, AlertTriangle, Calculator, Euro, TrendingDown, Pencil } from 'lucide-react';
+import { Upload, FileSpreadsheet, Loader2, CheckCircle, AlertTriangle, Calculator, TrendingDown, Pencil } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -264,8 +264,7 @@ export function CSVAccountingImporter({ onImportComplete }: CSVAccountingImporte
               <div className="p-4 rounded-lg bg-primary/10 text-center">
                 <p className="text-sm text-muted-foreground">Montant total</p>
                 <p className="text-2xl font-bold flex items-center justify-center gap-1">
-                  <Euro className="h-5 w-5" />
-                  {totalAmount.toLocaleString('fr-FR', { maximumFractionDigits: 0 })}
+                  {totalAmount.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} TND
                 </p>
               </div>
               <div className="p-4 rounded-lg bg-green-500/10 text-center">
@@ -309,7 +308,7 @@ export function CSVAccountingImporter({ onImportComplete }: CSVAccountingImporte
                         {item.entry.description}
                       </TableCell>
                       <TableCell>
-                        {item.entry.amount_ht.toLocaleString('fr-FR')} {item.entry.currency}
+                        {item.entry.amount_ht.toLocaleString('fr-FR')} TND
                       </TableCell>
                       <TableCell>
                         <Badge variant="secondary" className="text-xs">

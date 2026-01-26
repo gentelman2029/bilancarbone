@@ -1,12 +1,13 @@
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileSpreadsheet, Loader2, CheckCircle, AlertTriangle, Calculator, Euro, TrendingDown } from 'lucide-react';
+import { Upload, FileSpreadsheet, Loader2, CheckCircle, AlertTriangle, Calculator, Euro, TrendingDown, Pencil } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { 
   parseAccountingCSV, 
@@ -26,6 +27,9 @@ interface ProcessedEntry {
   co2_kg: number;
   uncertainty_percent: number;
   selected: boolean;
+  isEditing?: boolean;
+  editedFactor?: number;
+  editedUncertainty?: number;
 }
 
 export function CSVAccountingImporter({ onImportComplete }: CSVAccountingImporterProps) {
@@ -88,6 +92,53 @@ export function CSVAccountingImporter({ onImportComplete }: CSVAccountingImporte
   const toggleAll = () => {
     const allSelected = processedEntries.every(e => e.selected);
     setProcessedEntries(prev => prev.map(e => ({ ...e, selected: !allSelected })));
+  };
+
+  // Toggle edit mode for a specific entry
+  const toggleEdit = (index: number) => {
+    setProcessedEntries(prev => 
+      prev.map((e, i) => {
+        if (i === index) {
+          return { 
+            ...e, 
+            isEditing: !e.isEditing,
+            editedFactor: e.editedFactor ?? e.factor.factor_value,
+            editedUncertainty: e.editedUncertainty ?? e.uncertainty_percent
+          };
+        }
+        return e;
+      })
+    );
+  };
+
+  // Update factor value for an entry
+  const updateFactor = (index: number, value: number) => {
+    setProcessedEntries(prev => 
+      prev.map((e, i) => {
+        if (i === index) {
+          const newCo2 = e.entry.amount_ht * value;
+          return { 
+            ...e, 
+            editedFactor: value,
+            co2_kg: newCo2,
+            factor: { ...e.factor, factor_value: value }
+          };
+        }
+        return e;
+      })
+    );
+  };
+
+  // Update uncertainty for an entry
+  const updateUncertainty = (index: number, value: number) => {
+    setProcessedEntries(prev => 
+      prev.map((e, i) => {
+        if (i === index) {
+          return { ...e, editedUncertainty: value, uncertainty_percent: value };
+        }
+        return e;
+      })
+    );
   };
 
   const handleImport = async () => {
@@ -239,9 +290,10 @@ export function CSVAccountingImporter({ onImportComplete }: CSVAccountingImporte
                     <TableHead>Description</TableHead>
                     <TableHead>Montant HT</TableHead>
                     <TableHead>Catégorie détectée</TableHead>
-                    <TableHead>Ratio</TableHead>
-                    <TableHead>CO₂e</TableHead>
+                    <TableHead>Ratio (kgCO2e/€)</TableHead>
                     <TableHead>Incertitude</TableHead>
+                    <TableHead>CO₂e</TableHead>
+                    <TableHead className="w-10">Éditer</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -264,16 +316,51 @@ export function CSVAccountingImporter({ onImportComplete }: CSVAccountingImporte
                           {item.factor.subcategory}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {item.factor.factor_value} kgCO2e/€
+                      <TableCell>
+                        {item.isEditing ? (
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={item.editedFactor ?? item.factor.factor_value}
+                            onChange={(e) => updateFactor(index, parseFloat(e.target.value) || 0)}
+                            className="w-20 h-7 text-sm"
+                          />
+                        ) : (
+                          <span className="text-sm text-muted-foreground">
+                            {item.factor.factor_value}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {item.isEditing ? (
+                          <Input
+                            type="number"
+                            step="1"
+                            min="0"
+                            max="100"
+                            value={item.editedUncertainty ?? item.uncertainty_percent}
+                            onChange={(e) => updateUncertainty(index, parseInt(e.target.value) || 0)}
+                            className="w-16 h-7 text-sm"
+                          />
+                        ) : (
+                          <Badge variant="outline" className="text-amber-600 border-amber-500/30">
+                            ±{item.uncertainty_percent}%
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell className="font-medium text-primary">
                         {item.co2_kg.toFixed(2)} kg
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="text-amber-600 border-amber-500/30">
-                          ±{item.uncertainty_percent}%
-                        </Badge>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                          onClick={() => toggleEdit(index)}
+                        >
+                          <Pencil className={`h-3.5 w-3.5 ${item.isEditing ? 'text-primary' : 'text-muted-foreground'}`} />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}

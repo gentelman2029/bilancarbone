@@ -400,30 +400,35 @@ class ActivityDataService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Utilisateur non authentifié');
 
-      // Get count before delete
-      const { count } = await supabase
+      // Get all activities for this user
+      const { data: activities } = await supabase
         .from('activity_data')
-        .select('*', { count: 'exact', head: true })
+        .select('id')
         .eq('user_id', user.id);
 
-      // Delete all carbon calculations first (foreign key constraint)
-      await supabase
-        .from('carbon_calculations_v2')
-        .delete()
-        .eq('user_id', user.id);
+      const count = activities?.length || 0;
 
-      // Delete all activities for this user
-      const { error } = await supabase
-        .from('activity_data')
-        .delete()
-        .eq('user_id', user.id);
-
-      if (error) throw error;
+      // Delete sequentially: calculations first, then activities
+      if (activities && activities.length > 0) {
+        for (const activity of activities) {
+          // Delete related calculations
+          await supabase
+            .from('carbon_calculations_v2')
+            .delete()
+            .eq('activity_data_id', activity.id);
+          
+          // Delete activity
+          await supabase
+            .from('activity_data')
+            .delete()
+            .eq('id', activity.id);
+        }
+      }
       
       // Clear workflow data from localStorage
       localStorage.removeItem('workflow-data');
       
-      return { data: { deleted: count || 0 } };
+      return { data: { deleted: count } };
     } catch (error) {
       console.error('Delete all activities error:', error);
       return { error: `Erreur lors de la suppression: ${error}` };
@@ -436,11 +441,15 @@ class ActivityDataService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Utilisateur non authentifié');
 
-      // Delete related carbon calculations first
-      await supabase
+      // Delete related carbon calculations first (sequentially to avoid FK issues)
+      const { error: calcError } = await supabase
         .from('carbon_calculations_v2')
         .delete()
         .eq('activity_data_id', activityId);
+
+      if (calcError) {
+        console.warn('Error deleting calculations for activity', activityId, calcError);
+      }
 
       // Delete the activity
       const { error } = await supabase
@@ -449,7 +458,11 @@ class ActivityDataService {
         .eq('id', activityId)
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Activity deletion error:', error);
+        throw error;
+      }
+      
       return {};
     } catch (error) {
       console.error('Delete activity error:', error);

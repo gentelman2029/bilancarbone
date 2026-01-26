@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FileText, Check, X, Eye, Loader2, AlertTriangle, Clock, Trash2, Pencil, MessageSquare, RotateCcw } from 'lucide-react';
+import { FileText, Check, X, Eye, Loader2, AlertTriangle, Clock, Trash2, Pencil, MessageSquare, RotateCcw, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,6 +42,10 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
   // State pour la réinitialisation complète
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  
+  // State pour l'aperçu du document
+  const [documentPreviewUrl, setDocumentPreviewUrl] = useState<string | null>(null);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
 
   const loadDocuments = async () => {
     try {
@@ -60,10 +64,26 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
     loadDocuments();
   }, []);
 
-  const handleReview = (doc: DataCollectionDocument) => {
+  const handleReview = async (doc: DataCollectionDocument) => {
     setSelectedDoc(doc);
     setEditedData(doc.extracted_data || {});
     setValidationNotes('');
+    setDocumentPreviewUrl(null);
+    
+    // Load document preview URL
+    if (doc.file_path) {
+      setIsLoadingPreview(true);
+      try {
+        const result = await documentCollectionService.getDocumentUrl(doc.file_path);
+        if (result.data) {
+          setDocumentPreviewUrl(result.data);
+        }
+      } catch (error) {
+        console.error('Error loading document preview:', error);
+      } finally {
+        setIsLoadingPreview(false);
+      }
+    }
   };
 
   const handleValidate = async () => {
@@ -419,14 +439,55 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={!!selectedDoc} onOpenChange={() => setSelectedDoc(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <Dialog open={!!selectedDoc} onOpenChange={() => { setSelectedDoc(null); setDocumentPreviewUrl(null); }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Validation des données extraites</DialogTitle>
           </DialogHeader>
 
           {selectedDoc && (
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Left: Document Preview */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Aperçu du document</Label>
+                <div className="relative rounded-lg border bg-muted/50 overflow-hidden min-h-[300px]">
+                  {isLoadingPreview ? (
+                    <div className="flex items-center justify-center h-[300px]">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : documentPreviewUrl ? (
+                    <>
+                      <img 
+                        src={documentPreviewUrl} 
+                        alt="Document preview" 
+                        className="w-full h-auto object-contain max-h-[400px]"
+                      />
+                      <a 
+                        href={documentPreviewUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="absolute top-2 right-2"
+                      >
+                        <Button size="sm" variant="secondary">
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                          Ouvrir
+                        </Button>
+                      </a>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                      <div className="text-center">
+                        <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">Aperçu non disponible</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">{selectedDoc.file_name}</p>
+              </div>
+
+              {/* Right: Form */}
+              <div className="space-y-4">
               {/* Confidence Score */}
               {selectedDoc.ocr_confidence_score && (
                 <div className={`p-3 rounded-lg ${
@@ -526,6 +587,7 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
                   placeholder="Commentaires sur les modifications effectuées..."
                   rows={2}
                 />
+              </div>
               </div>
             </div>
           )}

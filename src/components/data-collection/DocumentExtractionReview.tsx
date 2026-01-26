@@ -66,17 +66,6 @@ export function DocumentExtractionReview({
   const isFuelVoucher = editedData.document_type === 'fuel_voucher' && editedFuelItems.length > 0;
   const isFuelDocument = isFuelInvoice || isFuelVoucher;
   
-  // Debug logging
-  console.log('DocumentExtractionReview Debug:', {
-    document_type: editedData.document_type,
-    fuel_items_count: editedFuelItems.length,
-    isFuelInvoice,
-    isFuelVoucher,
-    isFuelDocument,
-    calculatedEmissions,
-    editedData_quantity: editedData.quantity,
-    isButtonDisabled: (!isFuelDocument && !editedData.quantity) || !calculatedEmissions
-  });
 
   // Parse field confidences from extracted data or generate based on overall score
   useEffect(() => {
@@ -105,17 +94,9 @@ export function DocumentExtractionReview({
       const currentIsFuelVoucher = editedData.document_type === 'fuel_voucher' && editedFuelItems.length > 0;
       const currentIsFuelDocument = currentIsFuelInvoice || currentIsFuelVoucher;
       
-      console.log('calculateEmissions called:', {
-        document_type: editedData.document_type,
-        fuel_items_count: editedFuelItems.length,
-        currentIsFuelDocument,
-        fuel_items: editedFuelItems
-      });
-      
       // For fuel documents with multi-line items, use the sum from fuel_items
       if (currentIsFuelDocument) {
         const totalCo2 = editedFuelItems.reduce((sum, item) => sum + (item.co2_kg || 0), 0);
-        console.log('Fuel document - totalCo2:', totalCo2);
         setCalculatedEmissions(totalCo2);
         setEmissionFactor(null);
         return;
@@ -529,44 +510,91 @@ export function DocumentExtractionReview({
 
           {/* Consumption Value - SINGLE LINE (hide for fuel documents) */}
           {!isFuelDocument && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="flex items-center font-semibold text-primary">
-                  🔢 Consommation
-                  {getConfidenceBadge(fieldConfidences.quantity || 0.8)}
-                </Label>
-                <Input 
-                  type="number"
-                  value={editedData.quantity ?? ''} 
-                  onChange={(e) => setEditedData({...editedData, quantity: e.target.value ? parseFloat(e.target.value) : undefined})}
-                  className={`text-lg font-medium ${getConfidenceColor(fieldConfidences.quantity || 0.8)}`}
-                  placeholder="Quantité consommée"
-                />
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="flex items-center font-semibold text-primary">
+                    🔢 Quantité
+                    {getConfidenceBadge(fieldConfidences.quantity || 0.8)}
+                  </Label>
+                  <Input 
+                    type="number"
+                    value={editedData.quantity ?? ''} 
+                    onChange={(e) => setEditedData({...editedData, quantity: e.target.value ? parseFloat(e.target.value) : undefined})}
+                    className={`text-lg font-medium ${getConfidenceColor(fieldConfidences.quantity || 0.8)}`}
+                    placeholder="Quantité consommée"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center">
+                    Unité
+                    {getConfidenceBadge(fieldConfidences.unit || 0.8)}
+                  </Label>
+                  <Select 
+                    value={editedData.unit || ''} 
+                    onValueChange={(v) => setEditedData({...editedData, unit: v})}
+                  >
+                    <SelectTrigger className={getConfidenceColor(fieldConfidences.unit || 0.8)}>
+                      <SelectValue placeholder="Sélectionner..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="kWh">kWh</SelectItem>
+                      <SelectItem value="thermies">Thermies</SelectItem>
+                      <SelectItem value="litres">Litres</SelectItem>
+                      <SelectItem value="m3">m³</SelectItem>
+                      <SelectItem value="km">km</SelectItem>
+                      <SelectItem value="tonnes">Tonnes</SelectItem>
+                      <SelectItem value="t.km">Tonnes.km</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label className="flex items-center">
-                  Unité
-                  {getConfidenceBadge(fieldConfidences.unit || 0.8)}
-                </Label>
-                <Select 
-                  value={editedData.unit || ''} 
-                  onValueChange={(v) => setEditedData({...editedData, unit: v})}
-                >
-                  <SelectTrigger className={getConfidenceColor(fieldConfidences.unit || 0.8)}>
-                    <SelectValue placeholder="Sélectionner..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="kWh">kWh</SelectItem>
-                    <SelectItem value="thermies">Thermies</SelectItem>
-                    <SelectItem value="litres">Litres</SelectItem>
-                    <SelectItem value="m3">m³</SelectItem>
-                    <SelectItem value="km">km</SelectItem>
-                    <SelectItem value="tonnes">Tonnes</SelectItem>
-                    <SelectItem value="t.km">Tonnes.km</SelectItem>
-                  </SelectContent>
-                </Select>
+
+              {/* Emission Factor - Editable */}
+              <div className="grid grid-cols-2 gap-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+                <div className="space-y-2">
+                  <Label className="flex items-center text-emerald-700 font-medium">
+                    ⚡ Facteur d'émission
+                  </Label>
+                  <Input 
+                    type="number"
+                    step="0.001"
+                    value={emissionFactor?.factor_value ?? editedData.emission_factor_value ?? ''} 
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value) || 0;
+                      setEditedData({...editedData, emission_factor_value: value});
+                      // Recalculate emissions with new factor
+                      if (editedData.quantity) {
+                        setCalculatedEmissions(editedData.quantity * value);
+                      }
+                      // Update emissionFactor state for display
+                      setEmissionFactor(prev => prev ? {...prev, factor_value: value} : {
+                        id: 'manual',
+                        category: editedData.ghg_category || '',
+                        factor_value: value,
+                        factor_unit: 'kgCO2e',
+                        source_name: 'Manuel'
+                      });
+                    }}
+                    className="font-medium"
+                    placeholder="Ex: 0.456"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center text-emerald-700 font-medium">
+                    Source du facteur
+                  </Label>
+                  <Input 
+                    value={emissionFactor?.source_name ?? editedData.emission_factor_source ?? ''} 
+                    onChange={(e) => {
+                      setEditedData({...editedData, emission_factor_source: e.target.value});
+                      setEmissionFactor(prev => prev ? {...prev, source_name: e.target.value} : null);
+                    }}
+                    placeholder="ADEME, STEG, Manuel..."
+                  />
+                </div>
               </div>
-            </div>
+            </>
           )}
 
           {/* GHG Scope & Category */}

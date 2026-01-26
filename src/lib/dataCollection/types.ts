@@ -90,6 +90,9 @@ export interface ExtractedData {
   extraction_notes?: string;
   // Field-level confidence scores
   field_confidences?: Record<string, number>;
+  // Emission factor fields
+  emission_factor_value?: number;
+  emission_factor_source?: string;
   // Calculated emissions
   calculated_co2_kg?: number;
   co2_equivalent_kg?: number;

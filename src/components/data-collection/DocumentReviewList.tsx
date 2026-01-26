@@ -553,6 +553,24 @@ export function DocumentReviewList({ onDataValidated }: DocumentReviewListProps)
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label className="text-emerald-600 font-medium">Facteur d'émission</Label>
+                  <Input 
+                    type="number"
+                    step="0.001"
+                    value={editedData.emission_factor_value || ''} 
+                    onChange={(e) => setEditedData({...editedData, emission_factor_value: parseFloat(e.target.value) || undefined})}
+                    placeholder="Ex: 0.456 kgCO2e/unité"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Source du facteur</Label>
+                  <Input 
+                    value={editedData.emission_factor_source || ''} 
+                    onChange={(e) => setEditedData({...editedData, emission_factor_source: e.target.value})}
+                    placeholder="ADEME, STEG, Manuel..."
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label>Montant HT</Label>
                   <Input 
                     type="number"

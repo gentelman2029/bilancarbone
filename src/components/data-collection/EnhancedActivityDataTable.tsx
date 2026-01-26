@@ -58,6 +58,7 @@ export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplet
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [filterScope, setFilterScope] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterSourceType, setFilterSourceType] = useState<string>('all');
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
   
   const { addNotification } = useNotifications();
@@ -252,6 +253,7 @@ export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplet
     if (showOnlyValidated && a.status !== 'validated' && a.status !== 'integrated') return false;
     if (filterScope !== 'all' && a.ghg_scope !== filterScope) return false;
     if (filterStatus !== 'all' && a.status !== filterStatus) return false;
+    if (filterSourceType !== 'all' && (a.source_type as string) !== filterSourceType) return false;
     return true;
   });
 
@@ -433,6 +435,20 @@ export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplet
                   <SelectItem value="draft">Brouillon</SelectItem>
                   <SelectItem value="validated">Validé</SelectItem>
                   <SelectItem value="integrated">Intégré</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {/* Source Type Filter for Audit Traceability */}
+              <Select value={filterSourceType} onValueChange={setFilterSourceType}>
+                <SelectTrigger className="w-32 h-8 text-xs">
+                  <SelectValue placeholder="Source" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes sources</SelectItem>
+                  <SelectItem value="ocr">OCR (Factures)</SelectItem>
+                  <SelectItem value="csv">CSV (Import)</SelectItem>
+                  <SelectItem value="questionnaire">Enquêtes</SelectItem>
+                  <SelectItem value="manual">Manuel</SelectItem>
                 </SelectContent>
               </Select>
               

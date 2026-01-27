@@ -84,8 +84,10 @@ export function AnalysisModule({ totalEmissions, refreshTrigger }: AnalysisModul
   const [hasChanges, setHasChanges] = useState(false);
 
   // Calculate intensities
+  // Revenue is in millions (MTND), emissions in tCO2e
+  // Intensity = tCO2e / MTND (no conversion needed)
   const intensityPerRevenue = data.revenue > 0 
-    ? (totalEmissions / data.revenue * 1000000).toFixed(2) 
+    ? (totalEmissions / data.revenue).toFixed(2) 
     : '—';
   
   const intensityPerEmployee = data.employeeCount > 0 

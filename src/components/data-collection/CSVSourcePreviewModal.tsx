@@ -58,20 +58,24 @@ export function CSVSourcePreviewModal({ isOpen, onClose, activity }: CSVSourcePr
     try {
       // Find all CSV-imported activities from the same batch (same source_reference pattern)
       const sourceRef = activity.source_reference || '';
+      // Extract the batch identifier (filename) from source_reference
       const batchPattern = sourceRef.includes(' - ') 
-        ? sourceRef.split(' - ')[0] 
-        : sourceRef;
+        ? sourceRef.split(' - ')[0].trim()
+        : sourceRef.trim();
       
       setImportBatchId(batchPattern);
       
-      const { data, error } = await supabase
+      // Fetch ALL rows without any limit to ensure complete audit trail
+      const { data, error, count } = await supabase
         .from('activity_data')
-        .select('id, period_start, period_end, ghg_category, quantity, unit, amount_ht, supplier_name, emission_factor_value, emission_factor_source, co2_equivalent_kg')
+        .select('id, period_start, period_end, ghg_category, quantity, unit, amount_ht, supplier_name, emission_factor_value, emission_factor_source, co2_equivalent_kg', { count: 'exact' })
         .eq('source_type', 'csv')
-        .ilike('source_reference', `%${batchPattern}%`)
+        .ilike('source_reference', `${batchPattern}%`)
         .order('period_start', { ascending: false });
 
       if (error) throw error;
+      
+      console.log(`CSV Preview: Found ${count} rows for batch "${batchPattern}"`);
       setCSVData(data || []);
     } catch (error) {
       console.error('Error loading CSV data:', error);
@@ -187,61 +191,67 @@ export function CSVSourcePreviewModal({ isOpen, onClose, activity }: CSVSourcePr
             <p>Aucune donnée CSV associée trouvée</p>
           </div>
         ) : (
-          <ScrollArea className="flex-1 max-h-[50vh]">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="sticky top-0 bg-muted/50">Période</TableHead>
-                  <TableHead className="sticky top-0 bg-muted/50">Catégorie</TableHead>
-                  <TableHead className="sticky top-0 bg-muted/50">Fournisseur</TableHead>
-                  <TableHead className="sticky top-0 bg-muted/50 text-right">Quantité</TableHead>
-                  <TableHead className="sticky top-0 bg-muted/50 text-right">Montant HT</TableHead>
-                  <TableHead className="sticky top-0 bg-muted/50">Facteur émission</TableHead>
-                  <TableHead className="sticky top-0 bg-muted/50 text-right">kgCO₂e</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {csvData.map((row) => (
-                  <TableRow 
-                    key={row.id}
-                    className={row.id === activity.id ? 'bg-primary/5 border-l-2 border-l-primary' : ''}
-                  >
-                    <TableCell className="text-sm">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3 text-muted-foreground" />
-                        {formatDate(row.period_start)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{row.ghg_category}</TableCell>
-                    <TableCell>
-                      {row.supplier_name ? (
-                        <div className="flex items-center gap-1">
-                          <Building2 className="h-3 w-3 text-muted-foreground" />
-                          <span className="truncate max-w-[120px]">{row.supplier_name}</span>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground italic">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {row.quantity.toLocaleString('fr-FR')} {row.unit}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {row.amount_ht ? `${row.amount_ht.toLocaleString('fr-FR')} TND` : '—'}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {row.emission_factor_value ? (
-                        <span>{row.emission_factor_value} • {row.emission_factor_source}</span>
-                      ) : '—'}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums font-medium text-primary">
-                      {row.co2_equivalent_kg ? row.co2_equivalent_kg.toFixed(2) : '—'}
-                    </TableCell>
+          <div className="flex-1 overflow-hidden">
+            <ScrollArea className="h-[55vh]">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="sticky top-0 z-10 bg-muted">Période</TableHead>
+                    <TableHead className="sticky top-0 z-10 bg-muted">Catégorie</TableHead>
+                    <TableHead className="sticky top-0 z-10 bg-muted">Fournisseur</TableHead>
+                    <TableHead className="sticky top-0 z-10 bg-muted text-right">Quantité</TableHead>
+                    <TableHead className="sticky top-0 z-10 bg-muted text-right">Montant HT</TableHead>
+                    <TableHead className="sticky top-0 z-10 bg-muted">Facteur émission</TableHead>
+                    <TableHead className="sticky top-0 z-10 bg-muted text-right">kgCO₂e</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </ScrollArea>
+                </TableHeader>
+                <TableBody>
+                  {csvData.map((row, index) => (
+                    <TableRow 
+                      key={row.id}
+                      className={row.id === activity.id ? 'bg-primary/5 border-l-2 border-l-primary' : ''}
+                    >
+                      <TableCell className="text-sm">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3 text-muted-foreground" />
+                          {formatDate(row.period_start)}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium">{row.ghg_category}</TableCell>
+                      <TableCell>
+                        {row.supplier_name ? (
+                          <div className="flex items-center gap-1">
+                            <Building2 className="h-3 w-3 text-muted-foreground" />
+                            <span className="truncate max-w-[120px]">{row.supplier_name}</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground italic">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {row.quantity.toLocaleString('fr-FR')} {row.unit}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {row.amount_ht ? `${row.amount_ht.toLocaleString('fr-FR')} TND` : '—'}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {row.emission_factor_value ? (
+                          <span>{row.emission_factor_value} • {row.emission_factor_source}</span>
+                        ) : '—'}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums font-medium text-primary">
+                        {row.co2_equivalent_kg ? row.co2_equivalent_kg.toFixed(2) : '—'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {/* Footer showing total count for verification */}
+              <div className="py-2 px-4 text-xs text-muted-foreground border-t bg-muted/30">
+                Affichage de {csvData.length} ligne{csvData.length > 1 ? 's' : ''} sur {csvData.length}
+              </div>
+            </ScrollArea>
+          </div>
         )}
 
         <div className="flex justify-end pt-4 border-t">

@@ -1,19 +1,15 @@
 // Enhanced Analysis Module with Financial, Historical, SBT and Benchmark features
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { 
   TrendingUp, 
   TrendingDown,
   DollarSign, 
   Users, 
   Target, 
-  BarChart3,
   Award,
   Calendar,
   Building2,
-  FileText,
-  Save,
-  RefreshCw,
-  Loader2,
+  RotateCcw,
   Info
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -24,6 +20,17 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import {
   ResponsiveContainer,
@@ -33,12 +40,12 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip as RechartsTooltip,
-  Legend,
   LineChart,
   Line,
   ReferenceLine,
 } from 'recharts';
 import { CarbonSummaryDashboard } from './CarbonSummaryDashboard';
+import { usePersistentForm } from '@/hooks/usePersistentForm';
 
 interface AnalysisData {
   revenue: number;
@@ -72,16 +79,11 @@ interface AnalysisModuleProps {
 }
 
 export function AnalysisModule({ totalEmissions, refreshTrigger }: AnalysisModuleProps) {
-  const [data, setData] = useState<AnalysisData>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? { ...DEFAULT_DATA, ...JSON.parse(saved) } : DEFAULT_DATA;
-    } catch {
-      return DEFAULT_DATA;
-    }
-  });
-  const [isSaving, setIsSaving] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
+  // Use persistent form hook for automatic localStorage sync
+  const { data, updateData, resetData, hasData } = usePersistentForm<AnalysisData>(
+    STORAGE_KEY,
+    DEFAULT_DATA
+  );
 
   // Calculate intensities
   // Revenue is in millions (MTND), emissions in tCO2e
@@ -144,23 +146,14 @@ export function AnalysisModule({ totalEmissions, refreshTrigger }: AnalysisModul
   ] : [];
 
   const handleChange = (field: keyof AnalysisData, value: number | string) => {
-    setData(prev => ({ ...prev, [field]: value }));
-    setHasChanges(true);
+    updateData({ [field]: value } as Partial<AnalysisData>);
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      toast.success('Données sauvegardées', {
-        description: 'Les paramètres d\'analyse ont été enregistrés.'
-      });
-      setHasChanges(false);
-    } catch (error) {
-      toast.error('Erreur lors de la sauvegarde');
-    } finally {
-      setIsSaving(false);
-    }
+  const handleReset = () => {
+    resetData();
+    toast.success('Données réinitialisées', {
+      description: 'Tous les champs ont été remis à zéro.'
+    });
   };
 
   return (
@@ -178,11 +171,29 @@ export function AnalysisModule({ totalEmissions, refreshTrigger }: AnalysisModul
               <DollarSign className="h-5 w-5 text-primary" />
               Intensité Carbone
             </span>
-            {hasChanges && (
-              <Button size="sm" onClick={handleSave} disabled={isSaving}>
-                {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
-                Sauvegarder
-              </Button>
+            {hasData && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="text-destructive hover:text-destructive">
+                    <RotateCcw className="h-4 w-4 mr-1" />
+                    Réinitialiser
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Réinitialiser les données d'analyse ?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Cette action effacera toutes les données saisies (intensité carbone, historique, objectifs SBT, benchmark). Cette action est irréversible.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Annuler</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleReset} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Réinitialiser
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
           </CardTitle>
           <CardDescription>

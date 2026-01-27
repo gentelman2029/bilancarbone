@@ -36,6 +36,9 @@ import { emissionsCalculator } from '@/lib/dataCollection/emissionsCalculator';
 import { ActivityData, GHG_CATEGORIES } from '@/lib/dataCollection/types';
 import { DocumentPreviewButton } from './DocumentPreviewButton';
 import { useNotifications, createNotification } from '@/hooks/useNotifications';
+import { CSVSourcePreviewModal } from './CSVSourcePreviewModal';
+import { QuestionnairePreviewModal } from './QuestionnairePreviewModal';
+import { ValidationStatusBadge } from './ValidationStatusBadge';
 
 interface EnhancedActivityDataTableProps {
   refreshTrigger?: number;
@@ -60,6 +63,10 @@ export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplet
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterSourceType, setFilterSourceType] = useState<string>('all');
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
+  
+  // Modal states for source previews
+  const [csvPreviewActivity, setCSVPreviewActivity] = useState<EnhancedActivity | null>(null);
+  const [questionnairePreviewActivity, setQuestionnairePreviewActivity] = useState<EnhancedActivity | null>(null);
   
   const { addNotification } = useNotifications();
 
@@ -315,8 +322,23 @@ export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplet
     );
   };
 
-  // Source type badge for audit traceability
-  const getSourceTypeBadge = (sourceType: string) => {
+  // Source type badge for audit traceability - now clickable
+  const getSourceTypeBadge = (activity: EnhancedActivity) => {
+    const sourceType = activity.source_type as string;
+    
+    const handleClick = () => {
+      if (sourceType === 'csv') {
+        setCSVPreviewActivity(activity);
+      } else if (sourceType === 'questionnaire') {
+        setQuestionnairePreviewActivity(activity);
+      }
+    };
+    
+    const isClickable = sourceType === 'csv' || sourceType === 'questionnaire';
+    const baseClasses = isClickable 
+      ? 'cursor-pointer transition-all hover:scale-105 hover:shadow-sm active:scale-95' 
+      : '';
+    
     switch (sourceType) {
       case 'ocr':
         return (
@@ -327,14 +349,20 @@ export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplet
         );
       case 'csv':
         return (
-          <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 flex items-center gap-1">
+          <Badge 
+            className={`bg-emerald-500/10 text-emerald-600 border-emerald-500/30 flex items-center gap-1 ${baseClasses}`}
+            onClick={handleClick}
+          >
             <FileSpreadsheet className="h-3 w-3" />
             CSV
           </Badge>
         );
       case 'questionnaire':
         return (
-          <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30 flex items-center gap-1">
+          <Badge 
+            className={`bg-amber-500/10 text-amber-600 border-amber-500/30 flex items-center gap-1 ${baseClasses}`}
+            onClick={handleClick}
+          >
             <ClipboardList className="h-3 w-3" />
             Enquête
           </Badge>
@@ -605,7 +633,7 @@ export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplet
                     </TableCell>
                     {/* Type Source - Audit Traceability */}
                     <TableCell>
-                      {getSourceTypeBadge(activity.source_type)}
+                      {getSourceTypeBadge(activity)}
                     </TableCell>
                     {/* Reference Source - Audit Traceability */}
                     <TableCell>
@@ -657,7 +685,9 @@ export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplet
                         </Tooltip>
                       </TooltipProvider>
                     </TableCell>
-                    <TableCell>{getStatusBadge(activity.status)}</TableCell>
+                    <TableCell>
+                      <ValidationStatusBadge activity={activity} />
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
                         {!activity.co2_equivalent_kg && (
@@ -732,6 +762,24 @@ export function EnhancedActivityDataTable({ refreshTrigger, onRecalculateComplet
           </div>
         )}
       </CardContent>
+
+      {/* CSV Source Preview Modal */}
+      {csvPreviewActivity && (
+        <CSVSourcePreviewModal
+          isOpen={!!csvPreviewActivity}
+          onClose={() => setCSVPreviewActivity(null)}
+          activity={csvPreviewActivity}
+        />
+      )}
+
+      {/* Questionnaire Preview Modal */}
+      {questionnairePreviewActivity && (
+        <QuestionnairePreviewModal
+          isOpen={!!questionnairePreviewActivity}
+          onClose={() => setQuestionnairePreviewActivity(null)}
+          activity={questionnairePreviewActivity}
+        />
+      )}
     </Card>
   );
 }

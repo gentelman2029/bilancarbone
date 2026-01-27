@@ -1,9 +1,10 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Leaf, Users, Building2, CheckCircle2, Clock, ArrowRight } from 'lucide-react';
 import { RSEAction } from '@/lib/rse/types';
 import { cn } from '@/lib/utils';
+import { ActionDetailDrawer } from './ActionDetailDrawer';
 
 interface ESGPillarCardProps {
   category: 'E' | 'S' | 'G';
@@ -54,6 +55,9 @@ const STATUS_BADGES = {
 };
 
 export function ESGPillarCard({ category, actions }: ESGPillarCardProps) {
+  const [selectedAction, setSelectedAction] = useState<RSEAction | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
   const config = PILLAR_CONFIG[category];
   const Icon = config.icon;
 
@@ -75,101 +79,121 @@ export function ESGPillarCard({ category, actions }: ESGPillarCardProps) {
     .filter(a => a.priority === 'high' || a.status === 'in_progress')
     .slice(0, 3);
 
+  const handleActionClick = (action: RSEAction) => {
+    setSelectedAction(action);
+    setDrawerOpen(true);
+  };
+
   return (
-    <Card className={cn(
-      'relative overflow-hidden border transition-all duration-300 hover:shadow-lg',
-      config.borderColor
-    )}>
-      {/* Subtle gradient background */}
-      <div className={cn(
-        'absolute inset-0 bg-gradient-to-br opacity-50',
-        config.bgGradient
-      )} />
+    <>
+      <Card className={cn(
+        'relative overflow-hidden border transition-all duration-300 hover:shadow-lg',
+        config.borderColor
+      )}>
+        {/* Subtle gradient background */}
+        <div className={cn(
+          'absolute inset-0 bg-gradient-to-br opacity-50',
+          config.bgGradient
+        )} />
 
-      <CardHeader className="relative pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={cn('p-2.5 rounded-xl', config.iconBg)}>
-              <Icon className={cn('h-5 w-5', config.iconColor)} />
+        <CardHeader className="relative pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={cn('p-2.5 rounded-xl', config.iconBg)}>
+                <Icon className={cn('h-5 w-5', config.iconColor)} />
+              </div>
+              <div>
+                <CardTitle className="text-lg font-semibold">{config.label}</CardTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {catActions.length} action{catActions.length > 1 ? 's' : ''} • {completionRate}% complété
+                </p>
+              </div>
             </div>
-            <div>
-              <CardTitle className="text-lg font-semibold">{config.label}</CardTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {catActions.length} action{catActions.length > 1 ? 's' : ''} • {completionRate}% complété
-              </p>
+            <div className="text-right">
+              <span className="text-2xl font-bold tabular-nums">{completedCount}</span>
+              <span className="text-muted-foreground">/{catActions.length}</span>
             </div>
           </div>
-          <div className="text-right">
-            <span className="text-2xl font-bold tabular-nums">{completedCount}</span>
-            <span className="text-muted-foreground">/{catActions.length}</span>
-          </div>
-        </div>
-      </CardHeader>
+        </CardHeader>
 
-      <CardContent className="relative space-y-5">
-        {/* Budget Progress */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Budget consommé</span>
-            <span className="font-medium tabular-nums">
-              {(spentBudget / 1000).toFixed(0)}K / {(totalBudget / 1000).toFixed(0)}K TND
-            </span>
-          </div>
-          <div className={cn('h-3 rounded-full overflow-hidden', config.barBg)}>
-            <div 
-              className={cn('h-full rounded-full transition-all duration-700 ease-out', config.progressColor)}
-              style={{ width: `${Math.min(budgetProgress, 100)}%` }}
-            />
-          </div>
-          <p className="text-xs text-muted-foreground text-right">
-            {budgetProgress.toFixed(0)}% du budget engagé
-          </p>
-        </div>
-
-        {/* Flagship Actions */}
-        {flagshipActions.length > 0 && (
+        <CardContent className="relative space-y-5">
+          {/* Budget Progress */}
           <div className="space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              Actions phares
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Budget consommé</span>
+              <span className="font-medium tabular-nums">
+                {(spentBudget / 1000).toFixed(0)}K / {(totalBudget / 1000).toFixed(0)}K TND
+              </span>
+            </div>
+            <div className={cn('h-3 rounded-full overflow-hidden', config.barBg)}>
+              <div 
+                className={cn('h-full rounded-full transition-all duration-700 ease-out', config.progressColor)}
+                style={{ width: `${Math.min(budgetProgress, 100)}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground text-right">
+              {budgetProgress.toFixed(0)}% du budget engagé
             </p>
-            <ul className="space-y-2">
-              {flagshipActions.map(action => (
-                <li 
-                  key={action.id}
-                  className="flex items-center gap-2 p-2.5 rounded-lg bg-background/80 backdrop-blur-sm border border-border/50"
-                >
-                  {action.status === 'done' ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                  ) : action.status === 'in_progress' ? (
-                    <Clock className="h-4 w-4 text-blue-500 shrink-0" />
-                  ) : (
-                    <ArrowRight className="h-4 w-4 text-slate-400 shrink-0" />
-                  )}
-                  <span className="text-sm flex-1 line-clamp-1">{action.title}</span>
-                  <Badge 
-                    variant="outline" 
-                    className={cn('text-[10px] px-1.5', STATUS_BADGES[action.status].className)}
-                  >
-                    {STATUS_BADGES[action.status].label}
-                  </Badge>
-                </li>
-              ))}
-            </ul>
           </div>
-        )}
 
-        {/* Stats Row */}
-        <div className="flex items-center justify-between pt-2 border-t border-border/50">
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span className="text-xs text-muted-foreground">{completedCount} terminée{completedCount > 1 ? 's' : ''}</span>
+          {/* Flagship Actions */}
+          {flagshipActions.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Actions phares
+              </p>
+              <ul className="space-y-2">
+                {flagshipActions.map(action => (
+                  <li 
+                    key={action.id}
+                    onClick={() => handleActionClick(action)}
+                    className={cn(
+                      'flex items-center gap-2 p-2.5 rounded-lg bg-background/80 backdrop-blur-sm border border-border/50',
+                      'cursor-pointer transition-all duration-200',
+                      'hover:bg-background hover:border-border hover:shadow-sm hover:scale-[1.01]',
+                      'active:scale-[0.99]'
+                    )}
+                  >
+                    {action.status === 'done' ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    ) : action.status === 'in_progress' ? (
+                      <Clock className="h-4 w-4 text-blue-500 shrink-0" />
+                    ) : (
+                      <ArrowRight className="h-4 w-4 text-slate-400 shrink-0" />
+                    )}
+                    <span className="text-sm flex-1 line-clamp-1">{action.title}</span>
+                    <Badge 
+                      variant="outline" 
+                      className={cn('text-[10px] px-1.5', STATUS_BADGES[action.status].className)}
+                    >
+                      {STATUS_BADGES[action.status].label}
+                    </Badge>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Stats Row */}
+          <div className="flex items-center justify-between pt-2 border-t border-border/50">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-xs text-muted-foreground">{completedCount} terminée{completedCount > 1 ? 's' : ''}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <span className="text-xs text-muted-foreground">{inProgressCount} en cours</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-blue-500" />
-            <span className="text-xs text-muted-foreground">{inProgressCount} en cours</span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {/* Action Detail Drawer */}
+      <ActionDetailDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        action={selectedAction}
+      />
+    </>
   );
 }

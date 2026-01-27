@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Leaf, Users, Building2, CheckCircle2, Clock, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Leaf, Users, Building2, CheckCircle2, Clock, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { RSEAction } from '@/lib/rse/types';
 import { cn } from '@/lib/utils';
 import { ActionDetailDrawer } from './ActionDetailDrawer';
@@ -57,6 +59,7 @@ const STATUS_BADGES = {
 export function ESGPillarCard({ category, actions }: ESGPillarCardProps) {
   const [selectedAction, setSelectedAction] = useState<RSEAction | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [showAllActions, setShowAllActions] = useState(false);
 
   const config = PILLAR_CONFIG[category];
   const Icon = config.icon;
@@ -70,14 +73,14 @@ export function ESGPillarCard({ category, actions }: ESGPillarCardProps) {
 
   const completedCount = catActions.filter(a => a.status === 'done').length;
   const inProgressCount = catActions.filter(a => a.status === 'in_progress').length;
+  const todoCount = catActions.filter(a => a.status === 'todo').length;
   const completionRate = catActions.length > 0 
     ? Math.round((completedCount / catActions.length) * 100) 
     : 0;
 
-  // Get top 3 flagship actions
-  const flagshipActions = catActions
-    .filter(a => a.priority === 'high' || a.status === 'in_progress')
-    .slice(0, 3);
+  // Show all actions or just the first 3
+  const displayedActions = showAllActions ? catActions : catActions.slice(0, 3);
+  const hasMoreActions = catActions.length > 3;
 
   const handleActionClick = (action: RSEAction) => {
     setSelectedAction(action);
@@ -136,41 +139,92 @@ export function ESGPillarCard({ category, actions }: ESGPillarCardProps) {
             </p>
           </div>
 
-          {/* Flagship Actions */}
-          {flagshipActions.length > 0 && (
+          {/* All Actions List */}
+          {catActions.length > 0 && (
             <div className="space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                Actions phares
-              </p>
-              <ul className="space-y-2">
-                {flagshipActions.map(action => (
-                  <li 
-                    key={action.id}
-                    onClick={() => handleActionClick(action)}
-                    className={cn(
-                      'flex items-center gap-2 p-2.5 rounded-lg bg-background/80 backdrop-blur-sm border border-border/50',
-                      'cursor-pointer transition-all duration-200',
-                      'hover:bg-background hover:border-border hover:shadow-sm hover:scale-[1.01]',
-                      'active:scale-[0.99]'
-                    )}
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Actions ({catActions.length})
+                </p>
+                {hasMoreActions && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowAllActions(!showAllActions)}
+                    className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
                   >
-                    {action.status === 'done' ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                    ) : action.status === 'in_progress' ? (
-                      <Clock className="h-4 w-4 text-blue-500 shrink-0" />
+                    {showAllActions ? (
+                      <>Réduire <ChevronUp className="h-3 w-3 ml-1" /></>
                     ) : (
-                      <ArrowRight className="h-4 w-4 text-slate-400 shrink-0" />
+                      <>Voir tout ({catActions.length}) <ChevronDown className="h-3 w-3 ml-1" /></>
                     )}
-                    <span className="text-sm flex-1 line-clamp-1">{action.title}</span>
-                    <Badge 
-                      variant="outline" 
-                      className={cn('text-[10px] px-1.5', STATUS_BADGES[action.status].className)}
+                  </Button>
+                )}
+              </div>
+              
+              {showAllActions && catActions.length > 4 ? (
+                <ScrollArea className="h-[180px] pr-2">
+                  <ul className="space-y-2">
+                    {displayedActions.map(action => (
+                      <li 
+                        key={action.id}
+                        onClick={() => handleActionClick(action)}
+                        className={cn(
+                          'flex items-center gap-2 p-2.5 rounded-lg bg-background/80 backdrop-blur-sm border border-border/50',
+                          'cursor-pointer transition-all duration-200',
+                          'hover:bg-background hover:border-border hover:shadow-sm hover:scale-[1.01]',
+                          'active:scale-[0.99]'
+                        )}
+                      >
+                        {action.status === 'done' ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                        ) : action.status === 'in_progress' ? (
+                          <Clock className="h-4 w-4 text-blue-500 shrink-0" />
+                        ) : (
+                          <ArrowRight className="h-4 w-4 text-slate-400 shrink-0" />
+                        )}
+                        <span className="text-sm flex-1 line-clamp-1">{action.title}</span>
+                        <Badge 
+                          variant="outline" 
+                          className={cn('text-[10px] px-1.5 shrink-0', STATUS_BADGES[action.status].className)}
+                        >
+                          {STATUS_BADGES[action.status].label}
+                        </Badge>
+                      </li>
+                    ))}
+                  </ul>
+                </ScrollArea>
+              ) : (
+                <ul className="space-y-2">
+                  {displayedActions.map(action => (
+                    <li 
+                      key={action.id}
+                      onClick={() => handleActionClick(action)}
+                      className={cn(
+                        'flex items-center gap-2 p-2.5 rounded-lg bg-background/80 backdrop-blur-sm border border-border/50',
+                        'cursor-pointer transition-all duration-200',
+                        'hover:bg-background hover:border-border hover:shadow-sm hover:scale-[1.01]',
+                        'active:scale-[0.99]'
+                      )}
                     >
-                      {STATUS_BADGES[action.status].label}
-                    </Badge>
-                  </li>
-                ))}
-              </ul>
+                      {action.status === 'done' ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                      ) : action.status === 'in_progress' ? (
+                        <Clock className="h-4 w-4 text-blue-500 shrink-0" />
+                      ) : (
+                        <ArrowRight className="h-4 w-4 text-slate-400 shrink-0" />
+                      )}
+                      <span className="text-sm flex-1 line-clamp-1">{action.title}</span>
+                      <Badge 
+                        variant="outline" 
+                        className={cn('text-[10px] px-1.5 shrink-0', STATUS_BADGES[action.status].className)}
+                      >
+                        {STATUS_BADGES[action.status].label}
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
 
@@ -184,6 +238,12 @@ export function ESGPillarCard({ category, actions }: ESGPillarCardProps) {
               <div className="w-2 h-2 rounded-full bg-blue-500" />
               <span className="text-xs text-muted-foreground">{inProgressCount} en cours</span>
             </div>
+            {todoCount > 0 && (
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-slate-400" />
+                <span className="text-xs text-muted-foreground">{todoCount} à venir</span>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

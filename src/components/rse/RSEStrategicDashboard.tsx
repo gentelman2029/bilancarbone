@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, CheckCircle2, Target, MapPin, Coins } from 'lucide-react';
@@ -7,7 +8,9 @@ import {
   CircularProgressGauge, 
   ESGPillarCard, 
   StakeholderMaterialityChart, 
-  ActionTrackingTable 
+  ActionTrackingTable,
+  KPIDrilldownDrawer,
+  DrilldownType
 } from './dashboard';
 
 interface RSEStrategicDashboardProps {
@@ -23,14 +26,30 @@ export function RSEStrategicDashboard({ actions, stakeholders = DEFAULT_STAKEHOL
   const csrdProgress = calculateCSRDProgress(actions);
   const regionalImpactActions = countRegionalImpactActions(actions);
   const regionalPercentage = totalActions > 0 ? Math.round((regionalImpactActions / totalActions) * 100) : 0;
-  const { allocated, spent } = calculateBudgetStats(actions);
-  const budgetOptimization = allocated > 0 ? Math.round((spent / allocated) * 100) : 0;
+  const budgetStats = calculateBudgetStats(actions);
+  const budgetOptimization = budgetStats.allocated > 0 ? Math.round((budgetStats.spent / budgetStats.allocated) * 100) : 0;
+
+  // Drilldown state
+  const [drilldownOpen, setDrilldownOpen] = useState(false);
+  const [drilldownType, setDrilldownType] = useState<DrilldownType>(null);
+
+  const handleOpenDrilldown = (type: DrilldownType) => {
+    setDrilldownType(type);
+    setDrilldownOpen(true);
+  };
 
   const handleExportReport = () => {
-    // This would trigger the PDF export - integrated with RSEPilotageReport
+    // Trigger the PDF export via custom event (listened by RSEPilotageReport)
     const event = new CustomEvent('rse-export-report');
     window.dispatchEvent(event);
   };
+
+  // Listen for export trigger from other components
+  useEffect(() => {
+    const handleExportTrigger = () => handleExportReport();
+    window.addEventListener('rse-export-report', handleExportTrigger);
+    return () => window.removeEventListener('rse-export-report', handleExportTrigger);
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -44,7 +63,7 @@ export function RSEStrategicDashboard({ actions, stakeholders = DEFAULT_STAKEHOL
             </p>
           </div>
           <Button 
-            variant="outline" 
+            variant="default" 
             className="gap-2"
             onClick={handleExportReport}
           >
@@ -53,7 +72,7 @@ export function RSEStrategicDashboard({ actions, stakeholders = DEFAULT_STAKEHOL
           </Button>
         </div>
 
-        {/* Circular KPI Gauges */}
+        {/* Circular KPI Gauges - Clickable */}
         <Card className="bg-gradient-to-br from-background to-muted/20 border-border/50">
           <CardContent className="py-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
@@ -63,6 +82,8 @@ export function RSEStrategicDashboard({ actions, stakeholders = DEFAULT_STAKEHOL
                 sublabel={`${completedActions}/${totalActions} actions terminées`}
                 color="emerald"
                 icon={<CheckCircle2 className="h-4 w-4" />}
+                onClick={() => handleOpenDrilldown('score')}
+                tooltipText="Ratio d'actions terminées sur le total. Cliquez pour voir le détail des actions."
               />
               <CircularProgressGauge
                 value={csrdProgress}
@@ -70,6 +91,8 @@ export function RSEStrategicDashboard({ actions, stakeholders = DEFAULT_STAKEHOL
                 sublabel="Plan de Transition CSRD"
                 color="blue"
                 icon={<Target className="h-4 w-4" />}
+                onClick={() => handleOpenDrilldown('engagement')}
+                tooltipText="Progression des jalons CSRD (Directive européenne 2022/2464). Cliquez pour voir les jalons."
               />
               <CircularProgressGauge
                 value={regionalPercentage}
@@ -77,13 +100,17 @@ export function RSEStrategicDashboard({ actions, stakeholders = DEFAULT_STAKEHOL
                 sublabel={`${regionalImpactActions} actions Loi 2018-35`}
                 color="amber"
                 icon={<MapPin className="h-4 w-4" />}
+                onClick={() => handleOpenDrilldown('impact')}
+                tooltipText="Actions contribuant au développement régional (Loi RSE 2018-35). Cliquez pour la liste."
               />
               <CircularProgressGauge
                 value={budgetOptimization}
                 label="Optimisation budgétaire"
-                sublabel={`${(spent / 1000).toFixed(0)}K / ${(allocated / 1000).toFixed(0)}K TND`}
+                sublabel={`${(budgetStats.spent / 1000).toFixed(0)}K / ${(budgetStats.allocated / 1000).toFixed(0)}K TND`}
                 color="purple"
                 icon={<Coins className="h-4 w-4" />}
+                onClick={() => handleOpenDrilldown('budget')}
+                tooltipText="Ratio budget engagé vs budget alloué par pilier ESG. Cliquez pour le détail."
               />
             </div>
           </CardContent>
@@ -115,6 +142,15 @@ export function RSEStrategicDashboard({ actions, stakeholders = DEFAULT_STAKEHOL
       <section>
         <ActionTrackingTable actions={actions} />
       </section>
+
+      {/* Drilldown Drawer */}
+      <KPIDrilldownDrawer
+        open={drilldownOpen}
+        onOpenChange={setDrilldownOpen}
+        type={drilldownType}
+        actions={actions}
+        budgetStats={budgetStats}
+      />
     </div>
   );
 }

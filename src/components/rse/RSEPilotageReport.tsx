@@ -1,5 +1,5 @@
 // RSE Pilotage Report Generator - Based on RSE Action Data
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FileText, Download, Loader2, CheckCircle, Building2, Target, Users, Scale, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,13 @@ export function RSEPilotageReport({ actions }: RSEPilotageReportProps) {
     reportingYear: new Date().getFullYear(),
     executiveSummary: '',
   });
+
+  // Listen for custom event to open dialog
+  useEffect(() => {
+    const handleExportEvent = () => setIsOpen(true);
+    window.addEventListener('rse-export-report', handleExportEvent);
+    return () => window.removeEventListener('rse-export-report', handleExportEvent);
+  }, []);
 
   // Calculate metrics from actions
   const totalActions = actions.length;

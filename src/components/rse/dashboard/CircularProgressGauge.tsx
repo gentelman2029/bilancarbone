@@ -1,4 +1,6 @@
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Info } from 'lucide-react';
 
 interface CircularProgressGaugeProps {
   value: number;
@@ -10,6 +12,8 @@ interface CircularProgressGaugeProps {
   suffix?: string;
   color?: 'emerald' | 'blue' | 'amber' | 'purple';
   icon?: React.ReactNode;
+  onClick?: () => void;
+  tooltipText?: string;
 }
 
 const COLOR_MAP = {
@@ -18,24 +22,28 @@ const COLOR_MAP = {
     bg: 'bg-emerald-50',
     text: 'text-emerald-600',
     gradient: 'url(#emerald-gradient)',
+    ring: 'ring-emerald-200',
   },
   blue: {
     stroke: 'stroke-blue-500',
     bg: 'bg-blue-50',
     text: 'text-blue-600',
     gradient: 'url(#blue-gradient)',
+    ring: 'ring-blue-200',
   },
   amber: {
     stroke: 'stroke-amber-500',
     bg: 'bg-amber-50',
     text: 'text-amber-600',
     gradient: 'url(#amber-gradient)',
+    ring: 'ring-amber-200',
   },
   purple: {
     stroke: 'stroke-purple-500',
     bg: 'bg-purple-50',
     text: 'text-purple-600',
     gradient: 'url(#purple-gradient)',
+    ring: 'ring-purple-200',
   },
 };
 
@@ -49,6 +57,8 @@ export function CircularProgressGauge({
   suffix = '%',
   color = 'emerald',
   icon,
+  onClick,
+  tooltipText,
 }: CircularProgressGaugeProps) {
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
@@ -57,9 +67,22 @@ export function CircularProgressGauge({
 
   const colors = COLOR_MAP[color];
 
+  const isClickable = !!onClick;
+
   return (
     <div className="flex flex-col items-center justify-center">
-      <div className="relative" style={{ width: size, height: size }}>
+      <div 
+        className={cn(
+          "relative rounded-full transition-all duration-200",
+          isClickable && "cursor-pointer hover:scale-105 hover:ring-4",
+          isClickable && colors.ring
+        )}
+        style={{ width: size, height: size }}
+        onClick={onClick}
+        role={isClickable ? "button" : undefined}
+        tabIndex={isClickable ? 0 : undefined}
+        onKeyDown={isClickable ? (e) => e.key === 'Enter' && onClick?.() : undefined}
+      >
         {/* SVG Gradients */}
         <svg width={0} height={0} className="absolute">
           <defs>
@@ -125,11 +148,32 @@ export function CircularProgressGauge({
             {suffix && <span className="text-sm font-medium">{suffix}</span>}
           </span>
         </div>
+
+        {/* Click indicator */}
+        {isClickable && (
+          <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-background border-2 border-border flex items-center justify-center shadow-sm">
+            <span className="text-[10px] text-muted-foreground">↗</span>
+          </div>
+        )}
       </div>
 
-      {/* Labels */}
+      {/* Labels with Tooltip */}
       <div className="mt-3 text-center">
-        <p className="text-sm font-semibold text-foreground">{label}</p>
+        <div className="flex items-center justify-center gap-1">
+          <p className="text-sm font-semibold text-foreground">{label}</p>
+          {tooltipText && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs text-xs">
+                  {tooltipText}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
         {sublabel && (
           <p className="text-xs text-muted-foreground mt-0.5">{sublabel}</p>
         )}

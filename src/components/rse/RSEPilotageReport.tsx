@@ -317,14 +317,8 @@ export function RSEPilotageReport({ actions }: RSEPilotageReportProps) {
   };
 
   return (
-    <>
-      <Button onClick={() => setIsOpen(true)} className="gap-2">
-        <FileText className="h-4 w-4" />
-        Generer Rapport RSE
-      </Button>
-
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
@@ -465,6 +459,5 @@ export function RSEPilotageReport({ actions }: RSEPilotageReportProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
   );
 }

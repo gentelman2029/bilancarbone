@@ -132,7 +132,6 @@ export default function RSEPilotage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <RSEPilotageReport actions={actions} />
           <Button variant="outline" onClick={handleGenerateSuggestions}>
             <Sparkles className="h-4 w-4 mr-2" />
             Générer Suggestions
@@ -197,6 +196,9 @@ export default function RSEPilotage() {
         onSave={handleSaveAction}
         editAction={editingAction}
       />
+
+      {/* Hidden Report Dialog - triggered via custom event */}
+      <RSEPilotageReport actions={actions} />
     </div>
   );
 }

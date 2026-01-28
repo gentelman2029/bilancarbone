@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Calendar, 
   User, 
@@ -59,9 +60,22 @@ export function RSEActionCard({ action, onStatusChange, onEdit }: RSEActionCardP
                   <Sparkles className="inline-block ml-2 h-4 w-4 text-amber-500" />
                 )}
               </CardTitle>
-              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                {action.description}
-              </p>
+              <TooltipProvider delayDuration={300}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p className={`text-xs text-muted-foreground mt-1 cursor-help ${isExpanded ? '' : 'line-clamp-2'}`}>
+                      {action.description}
+                    </p>
+                  </TooltipTrigger>
+                  <TooltipContent 
+                    side="bottom" 
+                    align="start" 
+                    className="max-w-xs p-3 text-sm bg-popover border shadow-lg z-50"
+                  >
+                    <p className="whitespace-pre-wrap">{action.description}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
           <Badge variant="outline" className={priorityConfig.color}>

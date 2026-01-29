@@ -8,13 +8,53 @@ interface KPICardsProps {
   isLoading?: boolean;
 }
 
+// Static color mapping to prevent Tailwind purge
+const colorClasses = {
+  emerald: {
+    text: "text-emerald-400",
+    bg: "bg-emerald-500/10",
+    hoverBorder: "hover:border-emerald-500/50",
+  },
+  amber: {
+    text: "text-amber-400",
+    bg: "bg-amber-500/10",
+    hoverBorder: "hover:border-amber-500/50",
+  },
+  slate: {
+    text: "text-slate-400",
+    bg: "bg-slate-500/10",
+    hoverBorder: "hover:border-slate-500/50",
+  },
+  purple: {
+    text: "text-purple-400",
+    bg: "bg-purple-500/10",
+    hoverBorder: "hover:border-purple-500/50",
+  },
+  indigo: {
+    text: "text-indigo-400",
+    bg: "bg-indigo-500/10",
+    hoverBorder: "hover:border-indigo-500/50",
+  },
+} as const;
+
+type ColorKey = keyof typeof colorClasses;
+
 export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
   const { 
     payback, cbamSavingsYear1, cbamSavingsLifetime, lcoe, lcoeWithoutOM, 
     co2Avoided, annualOMCost, fiscalBenefits, savingsRange, van 
   } = metrics;
 
-  const cards = [
+  const cards: {
+    label: string;
+    value: string;
+    unit: string;
+    subtext: string;
+    trend: "positive" | "neutral";
+    icon: typeof TrendingDown;
+    color: ColorKey;
+    tooltip: string;
+  }[] = [
     {
       label: "TRI / Payback",
       value: payback === Infinity ? "∞" : `${payback.toFixed(1)}`,
@@ -90,40 +130,46 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
   return (
     <TooltipProvider>
       <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
-        {cards.map((card, idx) => (
-          <Tooltip key={idx}>
-            <TooltipTrigger asChild>
-              <Card 
-                className={`bg-slate-800/50 border-slate-700 hover:border-${card.color}-500/30 transition-colors cursor-help ${isLoading ? 'animate-pulse' : ''}`}
-              >
-                <CardContent className="pt-5 pb-4">
-                  <div className={`flex items-start justify-between ${isLoading ? 'opacity-50' : ''}`}>
-                    <div>
-                      <p className="text-sm text-slate-400 mb-1">{card.label}</p>
-                      <p className={`text-2xl font-bold text-${card.color}-400`}>
-                        {card.value} <span className="text-base font-normal">{card.unit}</span>
-                      </p>
-                      <div className="flex items-center gap-1 mt-1.5">
-                        {card.trend === "positive" && (
-                          <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
-                        )}
-                        <span className={`text-xs ${card.trend === "positive" ? "text-emerald-500" : "text-slate-500"}`}>
-                          {card.subtext}
-                        </span>
+        {cards.map((card, idx) => {
+          const colors = colorClasses[card.color];
+          return (
+            <Tooltip key={idx}>
+              <TooltipTrigger asChild>
+                <Card 
+                  className={`bg-slate-800/50 border-slate-700 ${colors.hoverBorder} transition-colors cursor-help ${isLoading ? 'animate-pulse' : ''}`}
+                >
+                  <CardContent className="pt-5 pb-4">
+                    <div className={`flex items-start justify-between ${isLoading ? 'opacity-50' : ''}`}>
+                      <div>
+                        <p className="text-sm text-slate-400 mb-1">{card.label}</p>
+                        <p className={`text-2xl font-bold ${colors.text}`}>
+                          {card.value} <span className="text-base font-normal">{card.unit}</span>
+                        </p>
+                        <div className="flex items-center gap-1 mt-1.5">
+                          {card.trend === "positive" && (
+                            <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
+                          )}
+                          <span className={`text-xs ${card.trend === "positive" ? "text-emerald-500" : "text-slate-500"}`}>
+                            {card.subtext}
+                          </span>
+                        </div>
+                      </div>
+                      <div className={`p-2 rounded-lg ${colors.bg}`}>
+                        <card.icon className={`h-5 w-5 ${colors.text}`} />
                       </div>
                     </div>
-                    <div className={`p-2 rounded-lg bg-${card.color}-500/10`}>
-                      <card.icon className={`h-5 w-5 text-${card.color}-400`} />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-xs bg-slate-900 border-slate-700">
-              <p className="text-sm">{card.tooltip}</p>
-            </TooltipContent>
-          </Tooltip>
-        ))}
+                  </CardContent>
+                </Card>
+              </TooltipTrigger>
+              <TooltipContent 
+                side="bottom" 
+                className="max-w-xs bg-slate-900 border-slate-700 text-slate-100 shadow-xl opacity-100 z-[100]"
+              >
+                <p className="text-sm font-medium">{card.tooltip}</p>
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
       </div>
 
       {/* Savings Range Indicator */}

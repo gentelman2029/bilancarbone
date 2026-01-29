@@ -1,4 +1,4 @@
-import { TrendingDown, TrendingUp, Coins, Gauge, Leaf, Wrench, Calculator } from "lucide-react";
+import { TrendingDown, TrendingUp, Coins, Gauge, Leaf, Wrench, Calculator, BadgeDollarSign } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { DigitalTwinMetrics } from "@/hooks/useDigitalTwin";
@@ -11,7 +11,7 @@ interface KPICardsProps {
 export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
   const { 
     payback, cbamSavingsYear1, cbamSavingsLifetime, lcoe, lcoeWithoutOM, 
-    co2Avoided, annualOMCost, fiscalBenefits, savingsRange 
+    co2Avoided, annualOMCost, fiscalBenefits, savingsRange, van 
   } = metrics;
 
   const cards = [
@@ -74,6 +74,16 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
       icon: Calculator,
       color: "purple",
       tooltip: `Amortissement accéléré sur ${fiscalBenefits.depreciationYears} ans. Économie d'impôt annuelle: ${Math.round(fiscalBenefits.taxSavings).toLocaleString('fr-FR')} TND (IS 15%).`
+    },
+    {
+      label: "VAN (25 ans)",
+      value: Math.round(van / 1000).toLocaleString('fr-FR'),
+      unit: "kTND",
+      subtext: van > 0 ? "Projet rentable" : "Projet non rentable",
+      trend: van > 0 ? "positive" : "neutral",
+      icon: BadgeDollarSign,
+      color: "indigo",
+      tooltip: `Valeur Actuelle Nette sur 25 ans avec un taux d'actualisation de 8%. La VAN représente la richesse réelle créée aujourd'hui, déduite de l'inflation et du coût du capital. Une VAN positive signifie que l'investissement crée de la valeur.`
     }
   ];
 

@@ -170,6 +170,7 @@ export interface DigitalTwinMetrics {
   lcoeWithoutOM: number;
   annualOMCost: number;
   totalOMCost: number;
+  van: number; // Net Present Value (VAN) over 25 years at 8% discount rate
   
   // CBAM
   cbamSavingsYear1: number;
@@ -339,6 +340,20 @@ const calculateMetrics = (config: DigitalTwinConfig): DigitalTwinMetrics => {
     lifetimeSavings += yearSavings + fiscalYear - batteryReplacement;
   }
 
+  // VAN (Net Present Value) calculation with 8% discount rate over 25 years
+  const DISCOUNT_RATE = 0.08;
+  let van = -investment;
+  for (let t = 1; t <= PROJECT_LIFETIME_YEARS; t++) {
+    const yearDegradation = Math.pow(1 - PANEL_DEGRADATION_RATE, t - 1);
+    const yearSavings = annualSavings * yearDegradation;
+    const yearOMCost = annualOMCost;
+    const fiscalYear = t <= DEPRECIATION_YEARS && includeFiscalBenefits ? fiscalBenefits.taxSavings : 0;
+    const batteryReplacement = t === BATTERY_REPLACEMENT_YEAR + 1 ? batteryCapacity * COST_PER_KWH_BATTERY * BATTERY_REPLACEMENT_COST_FACTOR : 0;
+    
+    const annualFlux = yearSavings - yearOMCost + fiscalYear - batteryReplacement;
+    van += annualFlux / Math.pow(1 + DISCOUNT_RATE, t);
+  }
+
   return {
     effectiveSolar,
     annualSavings,
@@ -351,6 +366,7 @@ const calculateMetrics = (config: DigitalTwinConfig): DigitalTwinMetrics => {
     lcoeWithoutOM,
     annualOMCost,
     totalOMCost,
+    van,
     cbamSavingsYear1,
     cbamSavingsLifetime,
     savingsBreakdown,

@@ -17,6 +17,8 @@ import { RSEStakeholderMatrix } from '@/components/rse/RSEStakeholderMatrix';
 import { RSEActionLibrary } from '@/components/rse/RSEActionLibrary';
 import { RSEStrategicDashboard } from '@/components/rse/RSEStrategicDashboard';
 import { RSEPilotageReport } from '@/components/rse/RSEPilotageReport';
+import { RSEReportViewer, generateRSEReportPDF } from '@/components/rse/report';
+import { useRSEReport } from '@/hooks/useRSEReport';
 import { RSEAction, ActionStatus, DEFAULT_STAKEHOLDERS } from '@/lib/rse/types';
 import { generateActionSuggestions } from '@/lib/rse/actionEngine';
 import { BVMT_ESG_SCHEMA, ESGCategory } from '@/lib/esg/types';
@@ -27,6 +29,10 @@ export default function RSEPilotage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAction, setEditingAction] = useState<RSEAction | null>(null);
   const [stakeholders] = useState(DEFAULT_STAKEHOLDERS);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
+  
+  // Integrated RSE Report hook
+  const { reportData, isLoading: isReportLoading, refreshReport } = useRSEReport(actions);
 
   // Load actions from localStorage
   useEffect(() => {
@@ -119,6 +125,26 @@ export default function RSEPilotage() {
     }
   };
 
+  // Handle integrated PDF export
+  const handleExportIntegratedPDF = async () => {
+    if (!reportData) {
+      toast.error('Données du rapport non disponibles');
+      return;
+    }
+    
+    setIsExportingPDF(true);
+    try {
+      await generateRSEReportPDF(reportData, (step) => {
+        console.log('PDF Generation:', step);
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Erreur lors de la génération du PDF');
+    } finally {
+      setIsExportingPDF(false);
+    }
+  };
+
   const suggestionCount = actions.filter(a => a.isSuggestion).length;
 
   return (
@@ -148,7 +174,7 @@ export default function RSEPilotage() {
 
       {/* Main Tabs */}
       <Tabs defaultValue="dashboard" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
           <TabsTrigger value="dashboard" className="gap-2">
             <LayoutDashboard className="h-4 w-4" />
             <span className="hidden sm:inline">Dashboard</span>
@@ -165,6 +191,10 @@ export default function RSEPilotage() {
           <TabsTrigger value="library" className="gap-2">
             <BookOpen className="h-4 w-4" />
             <span className="hidden sm:inline">Bibliothèque</span>
+          </TabsTrigger>
+          <TabsTrigger value="report" className="gap-2">
+            <FileText className="h-4 w-4" />
+            <span className="hidden sm:inline">Rapport RSE</span>
           </TabsTrigger>
         </TabsList>
 
@@ -186,6 +216,24 @@ export default function RSEPilotage() {
 
         <TabsContent value="library">
           <RSEActionLibrary onAddToBacklog={handleAddFromLibrary} />
+        </TabsContent>
+
+        <TabsContent value="report">
+          {reportData ? (
+            <RSEReportViewer 
+              reportData={reportData}
+              onExportPDF={handleExportIntegratedPDF}
+              onRefresh={refreshReport}
+              isExporting={isExportingPDF}
+            />
+          ) : (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-muted-foreground">Chargement du rapport...</p>
+              </div>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 

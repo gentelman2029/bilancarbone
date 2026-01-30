@@ -62,14 +62,6 @@ export function RSEStrategicDashboard({ actions, stakeholders = DEFAULT_STAKEHOL
               Vision consolidée de l'engagement RSE de l'entreprise
             </p>
           </div>
-          <Button 
-            variant="default" 
-            className="gap-2"
-            onClick={handleExportReport}
-          >
-            <Download className="h-4 w-4" />
-            Télécharger le rapport annuel
-          </Button>
         </div>
 
         {/* Circular KPI Gauges - Clickable */}

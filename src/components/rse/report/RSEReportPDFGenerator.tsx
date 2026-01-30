@@ -1,5 +1,6 @@
-// RSE Report PDF Generator - Full Regulatory Compliant Document
-// Uses jsPDF for vector-based PDF generation
+// RSE Report PDF Generator - Universal Dynamic Template
+// Uses jsPDF for vector-based PDF generation with dynamic variables
+// Compliant with: Loi RSE 2018-35, CSRD, GRI, ISO 26000
 
 import jsPDF from 'jspdf';
 import { toast } from 'sonner';
@@ -18,6 +19,30 @@ const COLORS = {
   lightGray: { r: 248, g: 250, b: 252 },
 };
 
+type Color = typeof COLORS.emerald;
+
+// Dynamic template variables interface
+interface TemplateVariables {
+  nom_entreprise: string;
+  secteur_activite: string;
+  periode_exercice: number;
+  nom_dirigeant: string;
+  titre_dirigeant: string;
+  mot_dirigeant: string;
+}
+
+// Default template values
+const getTemplateDefaults = (reportData: RSEReportData): TemplateVariables => ({
+  nom_entreprise: reportData.companyName || 'Nom de l\'entreprise',
+  secteur_activite: reportData.sectorLabel || 'Secteur d\'activite',
+  periode_exercice: reportData.fiscalYear || new Date().getFullYear(),
+  nom_dirigeant: 'Directeur General',
+  titre_dirigeant: 'President-Directeur General',
+  mot_dirigeant: `La responsabilite societale est au coeur de notre strategie d'entreprise. Ce rapport temoigne de notre engagement envers un developpement durable et responsable, en harmonie avec les attentes de nos parties prenantes et les exigences reglementaires tunisiennes et internationales.
+
+Notre ambition est de creer de la valeur partagee tout en reduisant notre empreinte environnementale et en renforcant notre impact social positif. L'exercice ${reportData.fiscalYear} a ete marque par des avancees significatives dans notre demarche RSE, avec un taux de realisation de ${reportData.actionStats.completionRate}% de notre plan d'actions.`,
+});
+
 export async function generateRSEReportPDF(
   reportData: RSEReportData,
   onProgress?: (step: string) => void
@@ -28,20 +53,58 @@ export async function generateRSEReportPDF(
   const margin = 20;
   let y = margin;
 
-  const formatNum = (n: number) => n.toLocaleString('fr-FR');
-  const formatDate = (date: string) => new Date(date).toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  });
+  // Get template variables
+  const tpl = getTemplateDefaults(reportData);
 
-  // Helper: Draw rounded rectangle
-  const drawRoundedRect = (x: number, yPos: number, w: number, h: number, r: number, color: typeof COLORS.emerald, fill = true) => {
-    doc.setFillColor(color.r, color.g, color.b);
-    doc.roundedRect(x, yPos, w, h, r, r, fill ? 'F' : 'S');
+  // ===== UTILITY FUNCTIONS =====
+  
+  // Format number with French convention (space separator)
+  const formatNum = (n: number): string => {
+    if (n === undefined || n === null || isNaN(n)) return '0';
+    return n.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
   };
 
-  // Helper: Add new page with header
+  // Format currency
+  const formatCurrency = (n: number): string => {
+    return `${formatNum(n)} TND`;
+  };
+
+  // Format date
+  const formatDate = (date: string): string => {
+    return new Date(date).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
+  };
+
+  // Clean text for PDF (remove problematic characters)
+  const cleanText = (text: string): string => {
+    return text
+      .replace(/[^\x00-\x7F]/g, (char) => {
+        // Map common special characters to ASCII equivalents
+        const charMap: Record<string, string> = {
+          '\u00e9': 'e', '\u00e8': 'e', '\u00ea': 'e', '\u00eb': 'e',
+          '\u00e0': 'a', '\u00e2': 'a', '\u00e4': 'a',
+          '\u00f9': 'u', '\u00fb': 'u', '\u00fc': 'u',
+          '\u00f4': 'o', '\u00f6': 'o',
+          '\u00ee': 'i', '\u00ef': 'i',
+          '\u00e7': 'c',
+          '\u00c9': 'E', '\u00c8': 'E', '\u00ca': 'E',
+          '\u00c0': 'A', '\u00c2': 'A',
+          '\u2018': "'", '\u2019': "'", '\u201c': '"', '\u201d': '"',
+          '\u2013': '-', '\u2014': '-',
+          '\u2022': '-',
+          '\u2026': '...',
+          '\u20ac': 'EUR',
+          '\u00b2': '2',
+          '\u2082': '2',
+        };
+        return charMap[char] || '';
+      });
+  };
+
+  // Add new page with header
   const addNewPage = () => {
     doc.addPage();
     y = margin;
@@ -50,8 +113,10 @@ export async function generateRSEReportPDF(
     y = 20;
   };
 
-  // Helper: Draw visual gauge (arc-based score indicator)
-  const drawGauge = (x: number, yPos: number, radius: number, percentage: number, color: typeof COLORS.emerald, label: string) => {
+  // ===== VISUAL COMPONENTS =====
+
+  // Draw visual gauge (circular progress indicator)
+  const drawGauge = (x: number, yPos: number, radius: number, percentage: number, color: Color, label: string) => {
     const centerX = x + radius;
     const centerY = yPos + radius;
     
@@ -61,7 +126,7 @@ export async function generateRSEReportPDF(
     
     // Draw arc segments for progress
     const segments = 36;
-    const filledSegments = Math.round((percentage / 100) * segments);
+    const filledSegments = Math.round((Math.min(100, Math.max(0, percentage)) / 100) * segments);
     
     for (let i = 0; i < segments; i++) {
       const startAngle = (i * 10 - 90) * (Math.PI / 180);
@@ -73,7 +138,6 @@ export async function generateRSEReportPDF(
         doc.setFillColor(226, 232, 240);
       }
       
-      // Draw segment as small arc approximation
       const innerRadius = radius * 0.7;
       const outerRadius = radius;
       
@@ -98,37 +162,105 @@ export async function generateRSEReportPDF(
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(color.r, color.g, color.b);
-    doc.text(`${percentage.toFixed(0)}`, centerX, centerY + 2, { align: 'center' });
+    doc.text(`${Math.round(percentage)}`, centerX, centerY + 2, { align: 'center' });
     
     // Label
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
-    doc.text(label, centerX, centerY + radius + 8, { align: 'center' });
+    if (label) {
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
+      doc.text(cleanText(label), centerX, centerY + radius + 8, { align: 'center' });
+    }
   };
 
-  // Helper: Draw KPI card
-  const drawKPICard = (x: number, yPos: number, w: number, h: number, value: string, label: string, color: typeof COLORS.emerald) => {
-    doc.setFillColor(COLORS.lightGray.r, COLORS.lightGray.g, COLORS.lightGray.b);
-    doc.roundedRect(x, yPos, w, h, 4, 4, 'F');
-    doc.setFillColor(color.r, color.g, color.b);
-    doc.roundedRect(x, yPos, w, 4, 4, 4, 'F');
-    doc.rect(x, yPos + 2, w, 2, 'F');
+  // Draw radar/spider chart for ESG pillars
+  const drawRadarChart = (x: number, yPos: number, size: number, scores: { e: number; s: number; g: number }) => {
+    const centerX = x + size / 2;
+    const centerY = yPos + size / 2;
+    const maxRadius = size / 2 - 10;
     
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(color.r, color.g, color.b);
-    doc.text(value, x + w/2, yPos + 20, { align: 'center' });
+    // Draw background grid circles
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.2);
+    [0.25, 0.5, 0.75, 1].forEach(scale => {
+      doc.circle(centerX, centerY, maxRadius * scale, 'S');
+    });
     
+    // Draw axis lines (3 axes for E, S, G)
+    const angles = [-90, 30, 150]; // Degrees for each axis
+    const labels = ['E', 'S', 'G'];
+    const colors = [COLORS.emerald, COLORS.blue, COLORS.purple];
+    
+    doc.setLineWidth(0.3);
+    angles.forEach((angle, idx) => {
+      const rad = angle * Math.PI / 180;
+      const endX = centerX + Math.cos(rad) * maxRadius;
+      const endY = centerY + Math.sin(rad) * maxRadius;
+      
+      doc.setDrawColor(200, 200, 200);
+      doc.line(centerX, centerY, endX, endY);
+      
+      // Axis labels
+      const labelX = centerX + Math.cos(rad) * (maxRadius + 8);
+      const labelY = centerY + Math.sin(rad) * (maxRadius + 8);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors[idx].r, colors[idx].g, colors[idx].b);
+      doc.text(labels[idx], labelX, labelY + 3, { align: 'center' });
+    });
+    
+    // Calculate polygon points based on scores
+    const scoreValues = [scores.e / 100, scores.s / 100, scores.g / 100];
+    const points: { x: number; y: number }[] = [];
+    
+    angles.forEach((angle, idx) => {
+      const rad = angle * Math.PI / 180;
+      const distance = maxRadius * scoreValues[idx];
+      points.push({
+        x: centerX + Math.cos(rad) * distance,
+        y: centerY + Math.sin(rad) * distance,
+      });
+    });
+    
+    // Draw filled polygon (using lighter color for fill effect)
+    doc.setFillColor(200, 240, 220);
+    
+    // Draw polygon as triangles from center
+    for (let i = 0; i < points.length; i++) {
+      const next = (i + 1) % points.length;
+      doc.triangle(centerX, centerY, points[i].x, points[i].y, points[next].x, points[next].y, 'F');
+    }
+    
+    // Draw polygon outline
+    doc.setDrawColor(COLORS.emerald.r, COLORS.emerald.g, COLORS.emerald.b);
+    doc.setLineWidth(1.5);
+    for (let i = 0; i < points.length; i++) {
+      const next = (i + 1) % points.length;
+      doc.line(points[i].x, points[i].y, points[next].x, points[next].y);
+    }
+    
+    // Draw score points
+    points.forEach((point, idx) => {
+      doc.setFillColor(colors[idx].r, colors[idx].g, colors[idx].b);
+      doc.circle(point.x, point.y, 3, 'F');
+    });
+    
+    // Add score values near points
     doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
-    const labelLines = doc.splitTextToSize(label, w - 6);
-    doc.text(labelLines, x + w/2, yPos + 30, { align: 'center' });
+    doc.setFont('helvetica', 'bold');
+    angles.forEach((angle, idx) => {
+      const rad = angle * Math.PI / 180;
+      const scoreVal = [scores.e, scores.s, scores.g][idx];
+      const labelDistance = maxRadius * (scoreValues[idx] + 0.15);
+      const labelX = centerX + Math.cos(rad) * labelDistance;
+      const labelY = centerY + Math.sin(rad) * labelDistance;
+      doc.setTextColor(colors[idx].r, colors[idx].g, colors[idx].b);
+      doc.text(`${Math.round(scoreVal)}`, labelX, labelY + 2, { align: 'center' });
+    });
   };
 
-  // Helper: Draw progress bar
-  const drawProgressBar = (x: number, yPos: number, w: number, h: number, percentage: number, color: typeof COLORS.emerald) => {
+  // Draw progress bar
+  const drawProgressBar = (x: number, yPos: number, w: number, h: number, percentage: number, color: Color) => {
     doc.setFillColor(226, 232, 240);
     doc.roundedRect(x, yPos, w, h, 2, 2, 'F');
     const progressWidth = Math.max(0, Math.min(w, (percentage / 100) * w));
@@ -138,54 +270,161 @@ export async function generateRSEReportPDF(
     }
   };
 
-  // Helper: Draw table with proper spacing
-  const drawBudgetTable = (x: number, yPos: number, budgetStats: RSEReportData['budgetStats']) => {
+  // Draw KPI card
+  const drawKPICard = (x: number, yPos: number, w: number, h: number, value: string, label: string, color: Color) => {
+    doc.setFillColor(COLORS.lightGray.r, COLORS.lightGray.g, COLORS.lightGray.b);
+    doc.roundedRect(x, yPos, w, h, 4, 4, 'F');
+    doc.setFillColor(color.r, color.g, color.b);
+    doc.roundedRect(x, yPos, w, 4, 4, 4, 'F');
+    doc.rect(x, yPos + 2, w, 2, 'F');
+    
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(color.r, color.g, color.b);
+    doc.text(value, x + w / 2, yPos + 18, { align: 'center' });
+    
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
+    const labelLines = doc.splitTextToSize(cleanText(label), w - 6);
+    doc.text(labelLines, x + w / 2, yPos + 28, { align: 'center' });
+  };
+
+  // Draw budget table with proper formatting
+  const drawBudgetTable = (x: number, yPos: number, budgetStats: RSEReportData['budgetStats']): number => {
     const tableWidth = pageWidth - 2 * margin;
     const colWidth = tableWidth / 4;
-    const rowHeight = 20;
+    const headerHeight = 18;
+    const dataHeight = 22;
     
     // Table background
     doc.setFillColor(COLORS.lightGray.r, COLORS.lightGray.g, COLORS.lightGray.b);
-    doc.roundedRect(x, yPos, tableWidth, rowHeight * 2 + 10, 4, 4, 'F');
+    doc.roundedRect(x, yPos, tableWidth, headerHeight + dataHeight, 4, 4, 'F');
     
     // Header row
     doc.setFillColor(COLORS.emerald.r, COLORS.emerald.g, COLORS.emerald.b);
-    doc.roundedRect(x, yPos, tableWidth, rowHeight, 4, 4, 'F');
-    doc.rect(x, yPos + rowHeight - 4, tableWidth, 4, 'F');
+    doc.roundedRect(x, yPos, tableWidth, headerHeight, 4, 4, 'F');
+    doc.rect(x, yPos + headerHeight - 4, tableWidth, 4, 'F');
     
     // Header texts
     const headers = ['Budget Alloue', 'Budget Consomme', 'Budget Restant', 'Taux Utilisation'];
-    doc.setFontSize(9);
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(255, 255, 255);
     
     headers.forEach((header, idx) => {
       const cellX = x + idx * colWidth + colWidth / 2;
-      doc.text(header, cellX, yPos + 13, { align: 'center' });
+      doc.text(header, cellX, yPos + 12, { align: 'center' });
     });
     
-    // Data row
+    // Vertical separators in data row
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.3);
+    for (let i = 1; i < 4; i++) {
+      const sepX = x + i * colWidth;
+      doc.line(sepX, yPos + headerHeight, sepX, yPos + headerHeight + dataHeight);
+    }
+    
+    // Data row values with proper formatting
     const values = [
-      `${formatNum(budgetStats.allocated)} TND`,
-      `${formatNum(budgetStats.spent)} TND`,
-      `${formatNum(budgetStats.remaining)} TND`,
-      `${budgetStats.utilizationRate}%`
+      formatCurrency(budgetStats.allocated),
+      formatCurrency(budgetStats.spent),
+      formatCurrency(budgetStats.remaining),
+      `${budgetStats.utilizationRate} %`
     ];
     
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
     
     values.forEach((value, idx) => {
       const cellX = x + idx * colWidth + colWidth / 2;
-      doc.text(value, cellX, yPos + rowHeight + 15, { align: 'center' });
+      doc.text(value, cellX, yPos + headerHeight + 14, { align: 'center' });
     });
     
-    // Progress bar below
-    drawProgressBar(x + 10, yPos + rowHeight * 2 + 5, tableWidth - 20, 4, budgetStats.utilizationRate, COLORS.emerald);
-    
-    return rowHeight * 2 + 15;
+    return headerHeight + dataHeight + 5;
   };
+
+  // Draw materiality matrix
+  const drawMaterialityMatrix = (x: number, yPos: number, size: number): number => {
+    const matrixX = x;
+    const matrixY = yPos;
+    
+    // Background with grid
+    doc.setFillColor(252, 252, 252);
+    doc.roundedRect(matrixX, matrixY, size, size, 4, 4, 'F');
+    
+    // Grid lines
+    doc.setDrawColor(230, 230, 230);
+    doc.setLineWidth(0.2);
+    for (let i = 1; i < 4; i++) {
+      const linePos = size * i / 4;
+      doc.line(matrixX + linePos, matrixY, matrixX + linePos, matrixY + size);
+      doc.line(matrixX, matrixY + linePos, matrixX + size, matrixY + linePos);
+    }
+    
+    // Border
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(matrixX, matrixY, size, size, 4, 4, 'S');
+    
+    // Zone colors (quadrants)
+    // High-High (top-right) - Green
+    doc.setFillColor(220, 252, 231);
+    doc.rect(matrixX + size / 2, matrixY, size / 2, size / 2, 'F');
+    
+    // Medium zones - Yellow
+    doc.setFillColor(254, 249, 195);
+    doc.rect(matrixX, matrixY, size / 2, size / 2, 'F');
+    doc.rect(matrixX + size / 2, matrixY + size / 2, size / 2, size / 2, 'F');
+    
+    // Low-Low (bottom-left) - Light gray
+    doc.setFillColor(241, 245, 249);
+    doc.rect(matrixX, matrixY + size / 2, size / 2, size / 2, 'F');
+    
+    // Sample materiality issues (bubbles)
+    const issues = [
+      { x: 0.85, y: 0.9, label: 'Climat', color: COLORS.emerald, size: 6 },
+      { x: 0.75, y: 0.8, label: 'Eau', color: COLORS.blue, size: 5 },
+      { x: 0.65, y: 0.65, label: 'Emploi', color: COLORS.purple, size: 5 },
+      { x: 0.55, y: 0.85, label: 'Ethique', color: COLORS.amber, size: 4 },
+      { x: 0.4, y: 0.5, label: 'Dechets', color: COLORS.emerald, size: 4 },
+      { x: 0.8, y: 0.6, label: 'Formation', color: COLORS.blue, size: 4 },
+    ];
+    
+    issues.forEach(issue => {
+      const px = matrixX + issue.x * size;
+      const py = matrixY + (1 - issue.y) * size;
+      doc.setFillColor(issue.color.r, issue.color.g, issue.color.b);
+      doc.circle(px, py, issue.size, 'F');
+      doc.setFontSize(6);
+      doc.setTextColor(issue.color.r, issue.color.g, issue.color.b);
+      doc.text(issue.label, px, py - issue.size - 2, { align: 'center' });
+    });
+    
+    // Axis labels
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
+    doc.text('Impact Entreprise', matrixX + size / 2, matrixY + size + 10, { align: 'center' });
+    
+    // Rotated Y-axis label (simulated)
+    doc.text('Impact', matrixX - 12, matrixY + size / 2 - 8);
+    doc.text('Parties', matrixX - 12, matrixY + size / 2);
+    doc.text('Prenantes', matrixX - 12, matrixY + size / 2 + 8);
+    
+    // Scale indicators
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
+    doc.text('Faible', matrixX + 5, matrixY + size - 3);
+    doc.text('Eleve', matrixX + size - 10, matrixY + size - 3);
+    doc.text('Eleve', matrixX + 5, matrixY + 8);
+    
+    return size + 20;
+  };
+
+  // ===== BEGIN PDF GENERATION =====
 
   onProgress?.('Generation de la page de couverture...');
 
@@ -199,7 +438,7 @@ export async function generateRSEReportPDF(
   doc.setFillColor(12, 170, 120);
   doc.circle(30, 80, 40, 'F');
 
-  // Title - using clean ASCII text (no emoji encoding issues)
+  // Title
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(32);
   doc.setFont('helvetica', 'bold');
@@ -211,29 +450,29 @@ export async function generateRSEReportPDF(
   
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.text(`Exercice ${reportData.fiscalYear}`, pageWidth / 2, 85, { align: 'center' });
+  doc.text(`Exercice ${tpl.periode_exercice}`, pageWidth / 2, 85, { align: 'center' });
 
-  // Company info card
+  // Company info card (dynamic variable)
   y = 115;
   doc.setFillColor(255, 255, 255);
-  doc.roundedRect(margin, y, pageWidth - 2*margin, 35, 6, 6, 'F');
+  doc.roundedRect(margin, y, pageWidth - 2 * margin, 35, 6, 6, 'F');
   doc.setFillColor(COLORS.emerald.r, COLORS.emerald.g, COLORS.emerald.b);
   doc.roundedRect(margin, y, 4, 35, 2, 0, 'F');
   
   doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text(reportData.companyName, margin + 12, y + 15);
+  doc.text(cleanText(tpl.nom_entreprise), margin + 12, y + 15);
   
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
-  doc.text(`Secteur : ${reportData.sectorLabel}`, margin + 12, y + 26);
+  doc.text(`Secteur : ${cleanText(tpl.secteur_activite)}`, margin + 12, y + 26);
 
   // Key metrics with visual gauges
   y = 165;
   const gaugeRadius = 18;
-  const gaugeSpacing = (pageWidth - 2*margin) / 4;
+  const gaugeSpacing = (pageWidth - 2 * margin) / 4;
   
   drawGauge(margin + gaugeSpacing * 0, y, gaugeRadius, reportData.esgScores.totalScore, COLORS.emerald, 'Score ESG');
   drawGauge(margin + gaugeSpacing * 1, y, gaugeRadius, reportData.actionStats.completionRate, COLORS.blue, 'Realisation');
@@ -243,12 +482,12 @@ export async function generateRSEReportPDF(
   // Source attribution
   y = 225;
   doc.setFillColor(240, 253, 244);
-  doc.roundedRect(margin, y, pageWidth - 2*margin, 25, 4, 4, 'F');
+  doc.roundedRect(margin, y, pageWidth - 2 * margin, 25, 4, 4, 'F');
   doc.setFontSize(8);
   doc.setTextColor(COLORS.emerald.r, COLORS.emerald.g, COLORS.emerald.b);
   doc.setFont('helvetica', 'bold');
-  const sourceText = 'Ce rapport RSE est genere a partir du module de Scoring ESG et du module de Pilotage RSE de la plateforme GreenInsight.';
-  const sourceLines = doc.splitTextToSize(sourceText, pageWidth - 2*margin - 12);
+  const sourceText = 'Ce rapport RSE est genere a partir du module de Scoring ESG et du module de Pilotage RSE de la plateforme.';
+  const sourceLines = doc.splitTextToSize(sourceText, pageWidth - 2 * margin - 12);
   doc.text(sourceLines, pageWidth / 2, y + 10, { align: 'center' });
 
   // Regulatory compliance badges
@@ -309,15 +548,25 @@ export async function generateRSEReportPDF(
     doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
     doc.text(item.title, margin + 12, y);
     
+    // Dotted line
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.2);
+    const titleWidth = doc.getTextWidth(item.title);
+    const dotStart = margin + 14 + titleWidth;
+    const dotEnd = pageWidth - margin - 15;
+    for (let dx = dotStart; dx < dotEnd; dx += 3) {
+      doc.circle(dx, y - 1, 0.3, 'F');
+    }
+    
     doc.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
     doc.text(item.page, pageWidth - margin, y, { align: 'right' });
     
-    y += 12;
+    y += 14;
   });
 
   onProgress?.('Generation du mot du dirigeant...');
 
-  // ===== PAGE 3: MOT DU DIRIGEANT (CEO MESSAGE) =====
+  // ===== PAGE 3: CEO MESSAGE =====
   addNewPage();
   
   doc.setFontSize(18);
@@ -329,31 +578,32 @@ export async function generateRSEReportPDF(
   
   // Decorative quote box
   doc.setFillColor(240, 253, 244);
-  doc.roundedRect(margin, y, pageWidth - 2*margin, 80, 6, 6, 'F');
+  doc.roundedRect(margin, y, pageWidth - 2 * margin, 90, 6, 6, 'F');
   doc.setFillColor(COLORS.emerald.r, COLORS.emerald.g, COLORS.emerald.b);
-  doc.roundedRect(margin, y, 4, 80, 2, 0, 'F');
+  doc.roundedRect(margin, y, 4, 90, 2, 0, 'F');
   
-  doc.setFontSize(11);
+  // Quote marks
+  doc.setFontSize(36);
+  doc.setTextColor(COLORS.emerald.r, COLORS.emerald.g, COLORS.emerald.b);
+  doc.text('"', margin + 10, y + 18);
+  
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'italic');
   doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
   
-  const ceoMessage = `"La responsabilite societale est au coeur de notre strategie d'entreprise. Ce rapport temoigne de notre engagement envers un developpement durable et responsable, en harmonie avec les attentes de nos parties prenantes et les exigences reglementaires tunisiennes et internationales.
-
-Notre ambition est de creer de la valeur partagee tout en reduisant notre empreinte environnementale et en renforçant notre impact social positif."`;
+  const ceoMessageLines = doc.splitTextToSize(cleanText(tpl.mot_dirigeant), pageWidth - 2 * margin - 30);
+  doc.text(ceoMessageLines, margin + 18, y + 25);
   
-  const ceoLines = doc.splitTextToSize(ceoMessage, pageWidth - 2*margin - 20);
-  doc.text(ceoLines, margin + 12, y + 15);
+  y += 105;
   
-  y += 95;
-  
-  // Signature placeholder
+  // Signature placeholder (dynamic variable)
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
-  doc.text('[Nom du Dirigeant]', pageWidth - margin, y, { align: 'right' });
+  doc.text(`[${tpl.nom_dirigeant}]`, pageWidth - margin, y, { align: 'right' });
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
-  doc.text('Directeur General', pageWidth - margin, y + 8, { align: 'right' });
+  doc.text(tpl.titre_dirigeant, pageWidth - margin, y + 8, { align: 'right' });
 
   onProgress?.('Generation du contexte reglementaire...');
 
@@ -369,8 +619,8 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(71, 85, 105);
-  const introText = `Ce rapport RSE de ${reportData.companyName} presente une synthese complete de la performance extra-financiere de l'entreprise pour l'exercice ${reportData.fiscalYear}. Il agregge les donnees issues du module de Scoring ESG (mesure, benchmark, methodologie) et du module de Pilotage RSE (actions, budgets, statuts, impacts).`;
-  const introTextLines = doc.splitTextToSize(introText, pageWidth - 2*margin);
+  const introText = `Ce rapport RSE de ${cleanText(tpl.nom_entreprise)} presente une synthese complete de la performance extra-financiere de l'entreprise pour l'exercice ${tpl.periode_exercice}. Il agregge les donnees issues du module de Scoring ESG (mesure, benchmark, methodologie) et du module de Pilotage RSE (actions, budgets, statuts, impacts).`;
+  const introTextLines = doc.splitTextToSize(introText, pageWidth - 2 * margin);
   doc.text(introTextLines, margin, y);
   
   y += introTextLines.length * 5 + 15;
@@ -384,7 +634,7 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
   y += 10;
   reportData.regulatoryFramework.tunisian.forEach(reg => {
     doc.setFillColor(COLORS.lightGray.r, COLORS.lightGray.g, COLORS.lightGray.b);
-    doc.roundedRect(margin, y, pageWidth - 2*margin, 18, 3, 3, 'F');
+    doc.roundedRect(margin, y, pageWidth - 2 * margin, 18, 3, 3, 'F');
     
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
@@ -393,7 +643,7 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
     
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
-    doc.text(reg.description, margin + 5, y + 14);
+    doc.text(cleanText(reg.description), margin + 5, y + 14);
     
     y += 22;
   });
@@ -409,7 +659,7 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
   y += 10;
   reportData.regulatoryFramework.international.forEach(reg => {
     doc.setFillColor(COLORS.lightGray.r, COLORS.lightGray.g, COLORS.lightGray.b);
-    doc.roundedRect(margin, y, pageWidth - 2*margin, 18, 3, 3, 'F');
+    doc.roundedRect(margin, y, pageWidth - 2 * margin, 18, 3, 3, 'F');
     
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
@@ -418,14 +668,14 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
     
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
-    doc.text(reg.description, margin + 5, y + 14);
+    doc.text(cleanText(reg.description), margin + 5, y + 14);
     
     y += 22;
   });
 
   onProgress?.('Generation des resultats ESG...');
 
-  // ===== PAGE 5: ESG RESULTS WITH VISUAL GAUGES =====
+  // ===== PAGE 5: ESG RESULTS WITH RADAR CHART =====
   addNewPage();
   
   doc.setFontSize(18);
@@ -435,7 +685,7 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
   
   y += 20;
 
-  // Global score with large gauge
+  // Left side: Global score gauge
   const mainGaugeRadius = 35;
   drawGauge(margin, y, mainGaugeRadius, reportData.esgScores.totalScore, COLORS.emerald, '');
   
@@ -443,7 +693,7 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
   doc.setFontSize(24);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(COLORS.emerald.r, COLORS.emerald.g, COLORS.emerald.b);
-  doc.text(`${reportData.esgScores.totalScore.toFixed(0)}/100`, margin + mainGaugeRadius * 2 + 20, y + 25);
+  doc.text(`${Math.round(reportData.esgScores.totalScore)}/100`, margin + mainGaugeRadius * 2 + 20, y + 25);
   
   doc.setFontSize(16);
   doc.text(reportData.esgScores.grade, margin + mainGaugeRadius * 2 + 80, y + 25);
@@ -451,7 +701,7 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
-  doc.text(`Score ESG Global - ${reportData.esgScores.gradeLabel}`, margin + mainGaugeRadius * 2 + 20, y + 40);
+  doc.text(`Score ESG Global - ${cleanText(reportData.esgScores.gradeLabel)}`, margin + mainGaugeRadius * 2 + 20, y + 40);
 
   // Benchmark position
   doc.setFontSize(10);
@@ -464,27 +714,56 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
   };
   doc.text(positionLabels[reportData.benchmark.position], margin + mainGaugeRadius * 2 + 20, y + 52);
   
-  y += 80;
+  y += 85;
 
-  // Category gauges in a row
-  const categoryGaugeRadius = 25;
-  const categories = [
+  // Radar chart for E/S/G comparison
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
+  doc.text('Analyse Comparative par Pilier (Radar ESG)', margin, y);
+  
+  y += 10;
+  
+  const radarSize = 80;
+  drawRadarChart(margin + 20, y, radarSize, {
+    e: reportData.esgScores.categoryScores.E || 0,
+    s: reportData.esgScores.categoryScores.S || 0,
+    g: reportData.esgScores.categoryScores.G || 0,
+  });
+  
+  // Legend next to radar
+  const legendX = margin + radarSize + 50;
+  const legendY = y + 15;
+  
+  const pillarDetails = [
     { id: 'E', name: 'Environnement', color: COLORS.emerald, score: reportData.esgScores.categoryScores.E || 0 },
     { id: 'S', name: 'Social', color: COLORS.blue, score: reportData.esgScores.categoryScores.S || 0 },
     { id: 'G', name: 'Gouvernance', color: COLORS.purple, score: reportData.esgScores.categoryScores.G || 0 },
   ];
   
-  const categorySpacing = (pageWidth - 2*margin) / 3;
-  categories.forEach((cat, idx) => {
-    const x = margin + idx * categorySpacing + (categorySpacing - categoryGaugeRadius * 2) / 2;
-    drawGauge(x, y, categoryGaugeRadius, cat.score, cat.color, cat.name);
+  pillarDetails.forEach((pillar, idx) => {
+    const ly = legendY + idx * 22;
+    
+    doc.setFillColor(pillar.color.r, pillar.color.g, pillar.color.b);
+    doc.circle(legendX, ly, 4, 'F');
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
+    doc.text(pillar.name, legendX + 10, ly + 3);
+    
+    doc.setTextColor(pillar.color.r, pillar.color.g, pillar.color.b);
+    doc.text(`${Math.round(pillar.score)}/100`, legendX + 60, ly + 3);
+    
+    // Mini progress bar
+    drawProgressBar(legendX + 10, ly + 7, 70, 3, pillar.score, pillar.color);
   });
   
-  y += categoryGaugeRadius * 2 + 25;
+  y += radarSize + 20;
 
   // Weighting info
   doc.setFillColor(241, 245, 249);
-  doc.roundedRect(margin, y, pageWidth - 2*margin, 25, 4, 4, 'F');
+  doc.roundedRect(margin, y, pageWidth - 2 * margin, 25, 4, 4, 'F');
   
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
@@ -492,7 +771,7 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
   doc.text('Ponderation appliquee :', margin + 10, y + 10);
   
   doc.setFont('helvetica', 'normal');
-  const weightText = `E: ${reportData.weightingConfig.e.toFixed(0)}% - S: ${reportData.weightingConfig.s.toFixed(0)}% - G: ${reportData.weightingConfig.g.toFixed(0)}% (Mode ${reportData.weightingConfig.mode})`;
+  const weightText = `E: ${Math.round(reportData.weightingConfig.e)}% - S: ${Math.round(reportData.weightingConfig.s)}% - G: ${Math.round(reportData.weightingConfig.g)}% (Mode ${reportData.weightingConfig.mode})`;
   doc.text(weightText, margin + 10, y + 18);
 
   onProgress?.('Generation de l\'analyse par pilier...');
@@ -524,16 +803,16 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
     
     // Section header
     doc.setFillColor(catConfig.color.r, catConfig.color.g, catConfig.color.b);
-    doc.roundedRect(margin, y, pageWidth - 2*margin, 25, 4, 4, 'F');
+    doc.roundedRect(margin, y, pageWidth - 2 * margin, 25, 4, 4, 'F');
     
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(255, 255, 255);
     doc.text(`${catConfig.icon} ${catConfig.name}`, margin + 10, y + 16);
     
-    // Mini gauge for score
+    // Score badge
     doc.setFontSize(16);
-    doc.text(`${catScore.toFixed(0)}/100`, pageWidth - margin - 10, y + 16, { align: 'right' });
+    doc.text(`${Math.round(catScore)}/100`, pageWidth - margin - 10, y + 16, { align: 'right' });
     
     y += 35;
     
@@ -550,17 +829,17 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
       doc.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
       
       // Truncate label if too long
-      let labelText = ind.label;
+      let labelText = cleanText(ind.label);
       if (labelText.length > 50) {
         labelText = labelText.substring(0, 47) + '...';
       }
       doc.text(`- ${labelText}`, margin + 5, y);
       
-      let valueStr = '—';
+      let valueStr = '---';
       if (ind.value !== undefined) {
         valueStr = ind.type === 'binary' 
           ? (ind.value ? 'Oui' : 'Non') 
-          : `${Number(ind.value).toLocaleString('fr-FR')} ${ind.unit}`;
+          : `${formatNum(Number(ind.value))} ${ind.unit || ''}`;
       }
       doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
       doc.text(valueStr, pageWidth - margin, y, { align: 'right' });
@@ -605,66 +884,49 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(71, 85, 105);
   const matDesc = 'La matrice de materialite identifie les enjeux ESG les plus significatifs pour l\'entreprise et ses parties prenantes, conformement aux exigences de la CSRD et du principe de double materialite.';
-  const matDescLines = doc.splitTextToSize(matDesc, pageWidth - 2*margin);
+  const matDescLines = doc.splitTextToSize(matDesc, pageWidth - 2 * margin);
   doc.text(matDescLines, margin, y);
   
   y += matDescLines.length * 5 + 15;
   
-  // Placeholder matrix visualization
+  // Draw materiality matrix
   const matrixSize = 100;
-  const matrixX = (pageWidth - matrixSize) / 2;
+  const matrixHeight = drawMaterialityMatrix((pageWidth - matrixSize) / 2 + 15, y, matrixSize);
   
-  // Background
-  doc.setFillColor(COLORS.lightGray.r, COLORS.lightGray.g, COLORS.lightGray.b);
-  doc.roundedRect(matrixX, y, matrixSize, matrixSize, 4, 4, 'F');
+  y += matrixHeight;
   
-  // Grid lines
-  doc.setDrawColor(200, 200, 200);
-  doc.setLineWidth(0.3);
-  for (let i = 1; i < 4; i++) {
-    const linePos = matrixSize * i / 4;
-    doc.line(matrixX + linePos, y, matrixX + linePos, y + matrixSize);
-    doc.line(matrixX, y + linePos, matrixX + matrixSize, y + linePos);
-  }
-  
-  // Axes labels
+  // Legend
   doc.setFontSize(8);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
-  doc.text('Impact Entreprise', matrixX + matrixSize / 2, y + matrixSize + 10, { align: 'center' });
+  doc.text('Legende :', margin, y);
   
-  // Vertical label (rotated simulation with multiple lines)
-  doc.text('Impact', matrixX - 10, y + matrixSize / 2 - 5);
-  doc.text('Parties', matrixX - 10, y + matrixSize / 2 + 2);
-  doc.text('Prenantes', matrixX - 10, y + matrixSize / 2 + 9);
-  
-  // Sample data points
-  const materialityPoints = [
-    { x: 0.8, y: 0.9, label: 'Climat', color: COLORS.emerald },
-    { x: 0.7, y: 0.75, label: 'Eau', color: COLORS.blue },
-    { x: 0.6, y: 0.6, label: 'Emploi', color: COLORS.purple },
-    { x: 0.5, y: 0.8, label: 'Ethique', color: COLORS.amber },
+  y += 8;
+  const legendItems = [
+    { color: { r: 220, g: 252, b: 231 }, label: 'Enjeux prioritaires (double materialite elevee)' },
+    { color: { r: 254, g: 249, b: 195 }, label: 'Enjeux a surveiller' },
+    { color: { r: 241, g: 245, b: 249 }, label: 'Enjeux secondaires' },
   ];
   
-  materialityPoints.forEach(point => {
-    const px = matrixX + point.x * matrixSize;
-    const py = y + (1 - point.y) * matrixSize;
-    doc.setFillColor(point.color.r, point.color.g, point.color.b);
-    doc.circle(px, py, 4, 'F');
+  legendItems.forEach((item, idx) => {
+    doc.setFillColor(item.color.r, item.color.g, item.color.b);
+    doc.rect(margin + idx * 60, y, 8, 8, 'F');
     doc.setFontSize(6);
-    doc.setTextColor(point.color.r, point.color.g, point.color.b);
-    doc.text(point.label, px, py - 6, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
+    const labelLines = doc.splitTextToSize(item.label, 50);
+    doc.text(labelLines, margin + idx * 60 + 10, y + 5);
   });
   
-  y += matrixSize + 25;
+  y += 25;
   
   // Note
   doc.setFillColor(255, 251, 235);
-  doc.roundedRect(margin, y, pageWidth - 2*margin, 20, 4, 4, 'F');
+  doc.roundedRect(margin, y, pageWidth - 2 * margin, 20, 4, 4, 'F');
   doc.setFontSize(8);
   doc.setTextColor(COLORS.amber.r, COLORS.amber.g, COLORS.amber.b);
   doc.setFont('helvetica', 'bold');
-  doc.text('[!] Cette matrice est un exemple. Configurez vos enjeux materiels dans le module ESG.', margin + 10, y + 12);
+  doc.text('[!] Configurez vos enjeux materiels dans le module ESG pour personnaliser cette matrice.', margin + 10, y + 12);
 
   onProgress?.('Generation du plan d\'actions...');
 
@@ -678,36 +940,23 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
   
   y += 15;
 
-  // Action stats with gauges
-  const actionGaugeRadius = 18;
-  const actionGaugeSpacing = (pageWidth - 2*margin) / 5;
+  // Action stats KPI cards
+  const cardWidth = (pageWidth - 2 * margin - 16) / 5;
+  const cardHeight = 38;
   
-  const actionStats = [
-    { label: 'Total', value: reportData.actionStats.total, pct: 100, color: COLORS.slate },
-    { label: 'Terminees', value: reportData.actionStats.completed, pct: reportData.actionStats.completionRate, color: COLORS.emerald },
-    { label: 'En cours', value: reportData.actionStats.inProgress, pct: reportData.actionStats.total > 0 ? (reportData.actionStats.inProgress / reportData.actionStats.total) * 100 : 0, color: COLORS.blue },
-    { label: 'A faire', value: reportData.actionStats.todo, pct: reportData.actionStats.total > 0 ? (reportData.actionStats.todo / reportData.actionStats.total) * 100 : 0, color: COLORS.amber },
-    { label: 'Bloquees', value: reportData.actionStats.blocked, pct: reportData.actionStats.total > 0 ? (reportData.actionStats.blocked / reportData.actionStats.total) * 100 : 0, color: COLORS.red },
+  const actionKPIs = [
+    { label: 'Total', value: String(reportData.actionStats.total), color: COLORS.slate },
+    { label: 'Terminees', value: String(reportData.actionStats.completed), color: COLORS.emerald },
+    { label: 'En cours', value: String(reportData.actionStats.inProgress), color: COLORS.blue },
+    { label: 'A faire', value: String(reportData.actionStats.todo), color: COLORS.amber },
+    { label: 'Bloquees', value: String(reportData.actionStats.blocked), color: COLORS.red },
   ];
   
-  actionStats.forEach((stat, idx) => {
-    const x = margin + idx * actionGaugeSpacing;
-    
-    doc.setFillColor(COLORS.lightGray.r, COLORS.lightGray.g, COLORS.lightGray.b);
-    doc.roundedRect(x, y, actionGaugeSpacing - 5, 45, 3, 3, 'F');
-    
-    doc.setFontSize(20);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(stat.color.r, stat.color.g, stat.color.b);
-    doc.text(String(stat.value), x + (actionGaugeSpacing - 5) / 2, y + 22, { align: 'center' });
-    
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
-    doc.text(stat.label, x + (actionGaugeSpacing - 5) / 2, y + 35, { align: 'center' });
+  actionKPIs.forEach((kpi, idx) => {
+    drawKPICard(margin + idx * (cardWidth + 4), y, cardWidth, cardHeight, kpi.value, kpi.label, kpi.color);
   });
   
-  y += 60;
+  y += cardHeight + 15;
 
   // Budget section with proper table
   doc.setFontSize(12);
@@ -717,9 +966,18 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
   
   y += 10;
   const tableHeight = drawBudgetTable(margin, y, reportData.budgetStats);
-  y += tableHeight + 15;
+  y += tableHeight + 10;
 
-  // Regional Impact - with correct CO2 calculation
+  // Progress bar for budget utilization
+  doc.setFontSize(8);
+  doc.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
+  doc.text('Taux d\'utilisation budgetaire', margin, y);
+  y += 5;
+  drawProgressBar(margin, y, pageWidth - 2 * margin, 6, reportData.budgetStats.utilizationRate, COLORS.emerald);
+  
+  y += 20;
+
+  // Regional Impact with CO2 calculation
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(COLORS.amber.r, COLORS.amber.g, COLORS.amber.b);
@@ -727,22 +985,29 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
   
   y += 10;
   doc.setFillColor(255, 251, 235);
-  doc.roundedRect(margin, y, pageWidth - 2*margin, 40, 4, 4, 'F');
+  doc.roundedRect(margin, y, pageWidth - 2 * margin, 50, 4, 4, 'F');
   
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
   doc.text(`${reportData.regionalImpact.actionsCount} actions contribuant au developpement regional`, margin + 10, y + 12);
   
-  // CO2 reduction from completed actions
+  // CO2 reduction calculated from completed actions
   const co2Avoided = reportData.regionalImpact.co2Reduction;
-  const co2Text = co2Avoided > 0 
-    ? `${formatNum(co2Avoided)} tCO2e evitees grace aux actions terminees`
-    : 'Calculez l\'impact CO2 en definissant les objectifs de reduction dans vos actions';
-  doc.text(co2Text, margin + 10, y + 24);
+  const co2Display = co2Avoided > 0 ? formatNum(co2Avoided) : '0';
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(COLORS.emerald.r, COLORS.emerald.g, COLORS.emerald.b);
+  doc.text(`${co2Display} tCO2e evitees`, margin + 10, y + 26);
   
-  // Show gauge for regional percentage
-  drawProgressBar(margin + 10, y + 32, pageWidth - 2*margin - 20, 4, reportData.regionalImpact.percentage, COLORS.amber);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
+  const co2Note = co2Avoided > 0 
+    ? 'grace aux actions terminees avec objectifs de reduction definis'
+    : 'Definissez les objectifs CO2 dans vos actions pour calculer les reductions';
+  doc.text(co2Note, margin + 10, y + 36);
+  
+  // Regional percentage gauge
+  drawProgressBar(margin + 10, y + 44, pageWidth - 2 * margin - 20, 4, reportData.regionalImpact.percentage, COLORS.amber);
 
   onProgress?.('Generation de la methodologie...');
 
@@ -763,7 +1028,7 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
   
   y += 10;
   doc.setFillColor(241, 245, 249);
-  doc.roundedRect(margin, y, pageWidth - 2*margin, 20, 4, 4, 'F');
+  doc.roundedRect(margin, y, pageWidth - 2 * margin, 20, 4, 4, 'F');
   
   doc.setFontSize(10);
   doc.setFont('courier', 'normal');
@@ -790,7 +1055,7 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
-  const dataSourceLines = doc.splitTextToSize(reportData.methodology.dataSource, pageWidth - 2*margin);
+  const dataSourceLines = doc.splitTextToSize(reportData.methodology.dataSource, pageWidth - 2 * margin);
   doc.text(dataSourceLines, margin, y);
   
   y += dataSourceLines.length * 5 + 15;
@@ -806,7 +1071,7 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
-    const limitLines = doc.splitTextToSize(`- ${limitation}`, pageWidth - 2*margin - 10);
+    const limitLines = doc.splitTextToSize(`- ${cleanText(limitation)}`, pageWidth - 2 * margin - 10);
     doc.text(limitLines, margin + 5, y);
     y += limitLines.length * 5 + 3;
   });
@@ -821,10 +1086,10 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
   
   y += 10;
   const scopeItems = [
-    { label: 'Entite', value: reportData.companyName },
-    { label: 'Secteur', value: reportData.sectorLabel },
-    { label: 'Exercice fiscal', value: String(reportData.fiscalYear) },
-    { label: 'Chiffre d\'affaires', value: `${formatNum(reportData.revenue)} TND` },
+    { label: 'Entite', value: cleanText(tpl.nom_entreprise) },
+    { label: 'Secteur', value: cleanText(tpl.secteur_activite) },
+    { label: 'Exercice fiscal', value: String(tpl.periode_exercice) },
+    { label: 'Chiffre d\'affaires', value: formatCurrency(reportData.revenue) },
   ];
   
   scopeItems.forEach(item => {
@@ -837,15 +1102,39 @@ Notre ambition est de creer de la valeur partagee tout en reduisant notre emprei
     y += 8;
   });
 
+  // Referentiels table
+  y += 10;
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
+  doc.text('Referentiels Utilises', margin, y);
+  
+  y += 10;
+  const allRefs = [...reportData.regulatoryFramework.tunisian, ...reportData.regulatoryFramework.international];
+  allRefs.forEach((ref, idx) => {
+    if (idx % 2 === 0) {
+      doc.setFillColor(COLORS.lightGray.r, COLORS.lightGray.g, COLORS.lightGray.b);
+      doc.rect(margin, y - 3, pageWidth - 2 * margin, 8, 'F');
+    }
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b);
+    doc.text(ref.name, margin + 5, y + 3);
+    doc.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
+    doc.text(cleanText(ref.description).substring(0, 60), margin + 50, y + 3);
+    y += 8;
+  });
+
   // Final footer
   doc.setFontSize(8);
   doc.setTextColor(148, 163, 184);
-  doc.text(`Rapport genere automatiquement par GreenInsight - ${formatDate(reportData.reportGeneratedAt)}`, pageWidth / 2, pageHeight - 12, { align: 'center' });
+  doc.text(`Rapport genere automatiquement - ${formatDate(reportData.reportGeneratedAt)}`, pageWidth / 2, pageHeight - 12, { align: 'center' });
 
   onProgress?.('Finalisation du document...');
 
   // Save the PDF
-  const fileName = `Rapport_RSE_${reportData.companyName.replace(/\s+/g, '_')}_${reportData.fiscalYear}.pdf`;
+  const cleanCompanyName = cleanText(tpl.nom_entreprise).replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+  const fileName = `Rapport_RSE_${cleanCompanyName || 'Entreprise'}_${tpl.periode_exercice}.pdf`;
   doc.save(fileName);
   
   toast.success('Rapport RSE genere avec succes !', {

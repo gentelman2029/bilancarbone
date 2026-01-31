@@ -1,5 +1,6 @@
 export { DigitalTwinSidebar } from './DigitalTwinSidebar';
 export { DigitalTwinHeader } from './DigitalTwinHeader';
+export { DigitalTwinLayout } from './DigitalTwinLayout';
 export { ConfigPanel } from './ConfigPanel';
 export { KPICards } from './KPICards';
 export { ProjectionChart } from './ProjectionChart';

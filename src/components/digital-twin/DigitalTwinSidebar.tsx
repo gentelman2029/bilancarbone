@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from "react-router-dom";
+import { useDigitalTwinTheme } from "@/contexts/DigitalTwinThemeContext";
 
 interface MenuItem {
   icon: LucideIcon;
@@ -25,12 +26,21 @@ const menuItems: MenuItem[] = [
 
 export const DigitalTwinSidebar = () => {
   const location = useLocation();
+  const { theme } = useDigitalTwinTheme();
+  const isDark = theme === "dark";
   
   return (
-    <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
-      <div className="p-6 border-b border-sidebar-border">
+    <aside className={cn(
+      "w-64 border-r flex flex-col",
+      isDark ? "bg-slate-950 border-slate-800" : "bg-white border-gray-200"
+    )}>
+      <div className={cn(
+        "p-6 border-b",
+        isDark ? "border-slate-800" : "border-gray-200"
+      )}>
         <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity">
-          <span className="text-primary">Green</span><span className="text-foreground">Insight</span>
+          <span className="text-emerald-500">Green</span>
+          <span className={isDark ? "text-white" : "text-gray-900"}>Insight</span>
         </Link>
       </div>
       
@@ -46,8 +56,10 @@ export const DigitalTwinSidebar = () => {
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all cursor-pointer",
                 isActive 
-                  ? "bg-primary/10 text-primary border border-primary/20" 
-                  : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent active:bg-sidebar-accent/80"
+                  ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" 
+                  : isDark 
+                    ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50" 
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
               )}
             >
               <item.icon className="h-5 w-5" />
@@ -57,8 +69,14 @@ export const DigitalTwinSidebar = () => {
         })}
       </nav>
 
-      <div className="p-4 border-t border-sidebar-border">
-        <div className="text-xs text-muted-foreground">Version 2.1.0</div>
+      <div className={cn(
+        "p-4 border-t",
+        isDark ? "border-slate-800" : "border-gray-200"
+      )}>
+        <div className={cn(
+          "text-xs",
+          isDark ? "text-slate-500" : "text-gray-400"
+        )}>Version 2.1.0</div>
       </div>
     </aside>
   );

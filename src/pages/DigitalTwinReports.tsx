@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DigitalTwinSidebar, DigitalTwinHeader } from "@/components/digital-twin";
+import { DigitalTwinThemeProvider, useDigitalTwinTheme } from "@/contexts/DigitalTwinThemeContext";
+import { cn } from "@/lib/utils";
 
 const reports = [
   { 
@@ -28,9 +30,15 @@ const reports = [
   },
 ];
 
-const DigitalTwinReports = () => {
+const DigitalTwinReportsContent = () => {
+  const { theme } = useDigitalTwinTheme();
+  const isDark = theme === "dark";
+
   return (
-    <div className="min-h-screen bg-background text-foreground flex">
+    <div className={cn(
+      "min-h-screen flex",
+      isDark ? "bg-slate-900 text-slate-100" : "bg-gray-50 text-gray-900"
+    )}>
       <DigitalTwinSidebar />
       
       <div className="flex-1 flex flex-col">
@@ -38,80 +46,83 @@ const DigitalTwinReports = () => {
         
         <main className="flex-1 p-6 overflow-auto">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-foreground">Rapports Réglementaires</h1>
-            <p className="text-muted-foreground">Génération et suivi des déclarations environnementales</p>
+            <h1 className={cn("text-2xl font-bold", isDark ? "text-slate-100" : "text-gray-900")}>Rapports Réglementaires</h1>
+            <p className={isDark ? "text-slate-400" : "text-gray-500"}>Génération et suivi des déclarations environnementales</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <Card className="bg-card border-border">
+            <Card className={isDark ? "bg-slate-800/50 border-slate-700" : "bg-white border-gray-200"}>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-primary" />
+                <CardTitle className={cn("text-sm flex items-center gap-2", isDark ? "text-slate-400" : "text-gray-500")}>
+                  <FileText className="h-4 w-4 text-emerald-500" />
                   Rapports Générés
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-foreground">12</div>
-                <p className="text-xs text-muted-foreground">Cette année</p>
+                <div className={cn("text-2xl font-bold", isDark ? "text-slate-100" : "text-gray-900")}>12</div>
+                <p className={cn("text-xs", isDark ? "text-slate-400" : "text-gray-500")}>Cette année</p>
               </CardContent>
             </Card>
             
-            <Card className="bg-card border-border">
+            <Card className={isDark ? "bg-slate-800/50 border-slate-700" : "bg-white border-gray-200"}>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+                <CardTitle className={cn("text-sm flex items-center gap-2", isDark ? "text-slate-400" : "text-gray-500")}>
                   <Calendar className="h-4 w-4 text-amber-500" />
                   Prochaine Échéance
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-foreground">31 Jan</div>
+                <div className={cn("text-2xl font-bold", isDark ? "text-slate-100" : "text-gray-900")}>31 Jan</div>
                 <p className="text-xs text-amber-500">CBAM Q4</p>
               </CardContent>
             </Card>
             
-            <Card className="bg-card border-border">
+            <Card className={isDark ? "bg-slate-800/50 border-slate-700" : "bg-white border-gray-200"}>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary" />
+                <CardTitle className={cn("text-sm flex items-center gap-2", isDark ? "text-slate-400" : "text-gray-500")}>
+                  <CheckCircle className="h-4 w-4 text-emerald-500" />
                   Conformité
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-primary">100%</div>
-                <p className="text-xs text-muted-foreground">À jour</p>
+                <div className="text-2xl font-bold text-emerald-500">100%</div>
+                <p className={cn("text-xs", isDark ? "text-slate-400" : "text-gray-500")}>À jour</p>
               </CardContent>
             </Card>
           </div>
           
-          <Card className="bg-card border-border">
+          <Card className={isDark ? "bg-slate-800/50 border-slate-700" : "bg-white border-gray-200"}>
             <CardHeader>
-              <CardTitle className="text-foreground">Historique des Rapports</CardTitle>
+              <CardTitle className={isDark ? "text-slate-100" : "text-gray-900"}>Historique des Rapports</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {reports.map((report) => (
                   <div 
                     key={report.id}
-                    className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border"
+                    className={cn(
+                      "flex items-center justify-between p-4 rounded-lg border",
+                      isDark ? "bg-slate-800 border-slate-700" : "bg-gray-50 border-gray-200"
+                    )}
                   >
                     <div className="flex items-center gap-4">
-                      <FileText className="h-5 w-5 text-muted-foreground" />
+                      <FileText className={cn("h-5 w-5", isDark ? "text-slate-400" : "text-gray-400")} />
                       <div>
-                        <p className="font-medium text-foreground">{report.name}</p>
-                        <p className="text-sm text-muted-foreground">{report.date}</p>
+                        <p className={cn("font-medium", isDark ? "text-slate-100" : "text-gray-900")}>{report.name}</p>
+                        <p className={cn("text-sm", isDark ? "text-slate-400" : "text-gray-500")}>{report.date}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
                       <Badge 
                         variant={report.status === "Généré" ? "default" : "secondary"}
-                        className={report.status === "Généré" ? "bg-primary/20 text-primary" : ""}
+                        className={report.status === "Généré" ? "bg-emerald-500/20 text-emerald-500" : ""}
                       >
                         {report.status}
                       </Badge>
-                      <Badge variant="outline" className="border-border text-muted-foreground">
+                      <Badge variant="outline" className={isDark ? "border-slate-600 text-slate-400" : "border-gray-300 text-gray-500"}>
                         {report.type}
                       </Badge>
-                      <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-foreground">
+                      <Button size="sm" variant="ghost" className={isDark ? "text-slate-400 hover:text-slate-100" : "text-gray-500 hover:text-gray-900"}>
                         <Download className="h-4 w-4" />
                       </Button>
                     </div>
@@ -123,6 +134,14 @@ const DigitalTwinReports = () => {
         </main>
       </div>
     </div>
+  );
+};
+
+const DigitalTwinReports = () => {
+  return (
+    <DigitalTwinThemeProvider>
+      <DigitalTwinReportsContent />
+    </DigitalTwinThemeProvider>
   );
 };
 

@@ -10,7 +10,9 @@ import {
   AIRecommendation,
   AdditionalInfo,
   DigitalTwinTour,
-  CalculationNotes
+  CalculationNotes,
+  AdvancedHypothesesAccordion,
+  SensitivityInsight
 } from "@/components/digital-twin";
 
 const DigitalTwinContent = () => {
@@ -39,7 +41,25 @@ const DigitalTwinContent = () => {
     projectionData,
     aiRecommendation,
     handleSimulation,
-    STEG_TARIFFS
+    STEG_TARIFFS,
+    // Advanced hypotheses
+    corporateTaxRate,
+    setCorporateTaxRate,
+    discountRate,
+    setDiscountRate,
+    omPercentage,
+    setOmPercentage,
+    panelLifetime,
+    setPanelLifetime,
+    batteryLifetime,
+    setBatteryLifetime,
+    depreciationYears,
+    setDepreciationYears,
+    weatherScenario,
+    setWeatherScenario,
+    // Sensitivity tracking
+    previousMetrics,
+    changedParameter,
   } = useDigitalTwin();
 
   const {
@@ -77,37 +97,64 @@ const DigitalTwinContent = () => {
         <main className="flex-1 p-6 overflow-auto">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Left Column - Control Panel */}
-            <ConfigPanel
-              solarPower={solarPower}
-              setSolarPower={setSolarPower}
-              hasTracker={hasTracker}
-              setHasTracker={setHasTracker}
-              batteryCapacity={batteryCapacity}
-              setBatteryCapacity={setBatteryCapacity}
-              withSubsidy={withSubsidy}
-              setWithSubsidy={setWithSubsidy}
-              inflationRate={inflationRate}
-              setInflationRate={setInflationRate}
-              energyPriceEscalation={energyPriceEscalation}
-              setEnergyPriceEscalation={setEnergyPriceEscalation}
-              voltageRegime={voltageRegime}
-              setVoltageRegime={setVoltageRegime}
-              includeWeatherVariability={includeWeatherVariability}
-              setIncludeWeatherVariability={setIncludeWeatherVariability}
-              includeFiscalBenefits={includeFiscalBenefits}
-              setIncludeFiscalBenefits={setIncludeFiscalBenefits}
-              isSimulating={isSimulating}
-              validation={validation}
-              onSimulate={handleSimulation}
-              stegTariffs={STEG_TARIFFS}
-            />
+            <div className="lg:col-span-5 space-y-5">
+              <ConfigPanel
+                solarPower={solarPower}
+                setSolarPower={setSolarPower}
+                hasTracker={hasTracker}
+                setHasTracker={setHasTracker}
+                batteryCapacity={batteryCapacity}
+                setBatteryCapacity={setBatteryCapacity}
+                withSubsidy={withSubsidy}
+                setWithSubsidy={setWithSubsidy}
+                inflationRate={inflationRate}
+                setInflationRate={setInflationRate}
+                energyPriceEscalation={energyPriceEscalation}
+                setEnergyPriceEscalation={setEnergyPriceEscalation}
+                voltageRegime={voltageRegime}
+                setVoltageRegime={setVoltageRegime}
+                includeWeatherVariability={includeWeatherVariability}
+                setIncludeWeatherVariability={setIncludeWeatherVariability}
+                includeFiscalBenefits={includeFiscalBenefits}
+                setIncludeFiscalBenefits={setIncludeFiscalBenefits}
+                isSimulating={isSimulating}
+                validation={validation}
+                onSimulate={handleSimulation}
+                stegTariffs={STEG_TARIFFS}
+              />
+
+              {/* Advanced Hypotheses Accordion */}
+              <AdvancedHypothesesAccordion
+                corporateTaxRate={corporateTaxRate}
+                setCorporateTaxRate={setCorporateTaxRate}
+                discountRate={discountRate}
+                setDiscountRate={setDiscountRate}
+                omPercentage={omPercentage}
+                setOmPercentage={setOmPercentage}
+                panelLifetime={panelLifetime}
+                setPanelLifetime={setPanelLifetime}
+                batteryLifetime={batteryLifetime}
+                setBatteryLifetime={setBatteryLifetime}
+                depreciationYears={depreciationYears}
+                setDepreciationYears={setDepreciationYears}
+                weatherScenario={weatherScenario}
+                setWeatherScenario={setWeatherScenario}
+              />
+            </div>
 
             {/* Right Column - Results */}
             <div className="lg:col-span-7 space-y-6">
               <div>
                 <h2 className="text-lg font-semibold mb-1 text-gray-900">Impact Financier & Carbone</h2>
-                <p className="text-sm text-gray-500">Résultats de la simulation</p>
+                <p className="text-sm text-gray-500">Résultats de la simulation (temps réel)</p>
               </div>
+
+              {/* Sensitivity Insight Alert */}
+              <SensitivityInsight
+                previousMetrics={previousMetrics}
+                currentMetrics={metrics}
+                changedParameter={changedParameter}
+              />
 
               {/* KPI Cards Row */}
               <KPICards metrics={metrics} isLoading={isSimulating} />

@@ -27,10 +27,10 @@ export const DigitalTwinSidebar = () => {
   const location = useLocation();
   
   return (
-    <aside className="w-64 bg-slate-950 border-r border-slate-800 flex flex-col">
-      <div className="p-6 border-b border-slate-800">
+    <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
+      <div className="p-6 border-b border-sidebar-border">
         <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity">
-          <span className="text-emerald-500">Green</span>Insight
+          <span className="text-primary">Green</span><span className="text-foreground">Insight</span>
         </Link>
       </div>
       
@@ -46,8 +46,8 @@ export const DigitalTwinSidebar = () => {
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all cursor-pointer",
                 isActive 
-                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" 
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 active:bg-slate-700/50"
+                  ? "bg-primary/10 text-primary border border-primary/20" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent active:bg-sidebar-accent/80"
               )}
             >
               <item.icon className="h-5 w-5" />
@@ -57,8 +57,8 @@ export const DigitalTwinSidebar = () => {
         })}
       </nav>
 
-      <div className="p-4 border-t border-slate-800">
-        <div className="text-xs text-slate-500">Version 2.1.0</div>
+      <div className="p-4 border-t border-sidebar-border">
+        <div className="text-xs text-muted-foreground">Version 2.1.0</div>
       </div>
     </aside>
   );

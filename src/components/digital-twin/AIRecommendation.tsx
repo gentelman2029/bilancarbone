@@ -13,23 +13,23 @@ export const AIRecommendation = ({ recommendation }: AIRecommendationProps) => {
     optimization: {
       icon: Zap,
       title: "Optimisation Détectée",
-      borderClass: "border-emerald-500/30 border-l-emerald-500",
-      iconClass: "text-emerald-400",
-      titleClass: "text-emerald-400"
+      borderClass: "border-primary/30 border-l-primary",
+      iconClass: "text-primary",
+      titleClass: "text-primary"
     },
     warning: {
       icon: AlertTriangle,
       title: "Attention Recommandée",
       borderClass: "border-amber-500/30 border-l-amber-500",
-      iconClass: "text-amber-400",
-      titleClass: "text-amber-400"
+      iconClass: "text-amber-500",
+      titleClass: "text-amber-500"
     },
     info: {
       icon: Info,
       title: "Information CBAM",
       borderClass: "border-blue-500/30 border-l-blue-500",
-      iconClass: "text-blue-400",
-      titleClass: "text-blue-400"
+      iconClass: "text-blue-500",
+      titleClass: "text-blue-500"
     }
   };
 
@@ -50,10 +50,10 @@ export const AIRecommendation = ({ recommendation }: AIRecommendationProps) => {
   };
 
   return (
-    <Alert className={`bg-gradient-to-r from-slate-800/80 to-slate-800/50 ${borderClass} border-l-4`}>
+    <Alert className={`bg-gradient-to-r from-card/80 to-card/50 ${borderClass} border-l-4`}>
       <Icon className={`h-5 w-5 ${iconClass}`} />
       <AlertTitle className={`${titleClass} font-semibold`}>{title}</AlertTitle>
-      <AlertDescription className="text-slate-300 mt-2">
+      <AlertDescription className="text-muted-foreground mt-2">
         {highlightNumbers(recommendation.message)}
       </AlertDescription>
     </Alert>

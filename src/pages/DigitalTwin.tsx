@@ -1,5 +1,6 @@
 import { useDigitalTwin } from "@/hooks/useDigitalTwin";
 import { useDigitalTwinTour } from "@/hooks/useDigitalTwinTour";
+import { DigitalTwinThemeProvider, useDigitalTwinTheme } from "@/contexts/DigitalTwinThemeContext";
 import {
   DigitalTwinSidebar,
   DigitalTwinHeader,
@@ -11,8 +12,9 @@ import {
   DigitalTwinTour,
   CalculationNotes
 } from "@/components/digital-twin";
+import { cn } from "@/lib/utils";
 
-const DigitalTwin = () => {
+const DigitalTwinContent = () => {
   const {
     solarPower,
     setSolarPower,
@@ -49,8 +51,14 @@ const DigitalTwin = () => {
     handleJoyrideCallback,
   } = useDigitalTwinTour();
 
+  const { theme } = useDigitalTwinTheme();
+  const isDark = theme === "dark";
+
   return (
-    <div className="min-h-screen bg-background text-foreground flex">
+    <div className={cn(
+      "min-h-screen flex",
+      isDark ? "bg-slate-900 text-slate-100" : "bg-gray-50 text-gray-900"
+    )}>
       {/* Joyride Tour */}
       <DigitalTwinTour
         runTour={runTour}
@@ -99,8 +107,14 @@ const DigitalTwin = () => {
             {/* Right Column - Results */}
             <div className="lg:col-span-7 space-y-6">
               <div>
-                <h2 className="text-lg font-semibold text-slate-100 mb-1">Impact Financier & Carbone</h2>
-                <p className="text-sm text-slate-500">Résultats de la simulation</p>
+                <h2 className={cn(
+                  "text-lg font-semibold mb-1",
+                  isDark ? "text-slate-100" : "text-gray-900"
+                )}>Impact Financier & Carbone</h2>
+                <p className={cn(
+                  "text-sm",
+                  isDark ? "text-slate-500" : "text-gray-500"
+                )}>Résultats de la simulation</p>
               </div>
 
               {/* KPI Cards Row */}
@@ -122,6 +136,14 @@ const DigitalTwin = () => {
         </main>
       </div>
     </div>
+  );
+};
+
+const DigitalTwin = () => {
+  return (
+    <DigitalTwinThemeProvider>
+      <DigitalTwinContent />
+    </DigitalTwinThemeProvider>
   );
 };
 

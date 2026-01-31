@@ -5,10 +5,18 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { DigitalTwinSidebar, DigitalTwinHeader } from "@/components/digital-twin";
+import { DigitalTwinThemeProvider, useDigitalTwinTheme } from "@/contexts/DigitalTwinThemeContext";
+import { cn } from "@/lib/utils";
 
-const DigitalTwinSettings = () => {
+const DigitalTwinSettingsContent = () => {
+  const { theme } = useDigitalTwinTheme();
+  const isDark = theme === "dark";
+
   return (
-    <div className="min-h-screen bg-background text-foreground flex">
+    <div className={cn(
+      "min-h-screen flex",
+      isDark ? "bg-slate-900 text-slate-100" : "bg-gray-50 text-gray-900"
+    )}>
       <DigitalTwinSidebar />
       
       <div className="flex-1 flex flex-col">
@@ -16,135 +24,141 @@ const DigitalTwinSettings = () => {
         
         <main className="flex-1 p-6 overflow-auto">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-foreground">Paramètres</h1>
-            <p className="text-muted-foreground">Configuration du Jumeau Numérique</p>
+            <h1 className={cn("text-2xl font-bold", isDark ? "text-slate-100" : "text-gray-900")}>Paramètres</h1>
+            <p className={isDark ? "text-slate-400" : "text-gray-500"}>Configuration du Jumeau Numérique</p>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="bg-card border-border">
+            <Card className={isDark ? "bg-slate-800/50 border-slate-700" : "bg-white border-gray-200"}>
               <CardHeader>
-                <CardTitle className="text-foreground flex items-center gap-2">
-                  <Building className="h-5 w-5 text-primary" />
+                <CardTitle className={cn("flex items-center gap-2", isDark ? "text-slate-100" : "text-gray-900")}>
+                  <Building className="h-5 w-5 text-emerald-500" />
                   Informations Installation
                 </CardTitle>
-                <CardDescription className="text-muted-foreground">
+                <CardDescription className={isDark ? "text-slate-400" : "text-gray-500"}>
                   Données de base de votre site industriel
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-foreground">Nom du Site</Label>
+                  <Label className={isDark ? "text-slate-300" : "text-gray-700"}>Nom du Site</Label>
                   <Input 
                     defaultValue="Usine Sousse - Zone Industrielle" 
-                    className="bg-background border-border text-foreground"
+                    className={isDark ? "bg-slate-900 border-slate-600 text-slate-100" : "bg-white border-gray-300 text-gray-900"}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-foreground">Consommation Annuelle (MWh)</Label>
+                  <Label className={isDark ? "text-slate-300" : "text-gray-700"}>Consommation Annuelle (MWh)</Label>
                   <Input 
                     type="number"
                     defaultValue="4500" 
-                    className="bg-background border-border text-foreground"
+                    className={isDark ? "bg-slate-900 border-slate-600 text-slate-100" : "bg-white border-gray-300 text-gray-900"}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-foreground">Surface Toiture Disponible (m²)</Label>
+                  <Label className={isDark ? "text-slate-300" : "text-gray-700"}>Surface Toiture Disponible (m²)</Label>
                   <Input 
                     type="number"
                     defaultValue="8000" 
-                    className="bg-background border-border text-foreground"
+                    className={isDark ? "bg-slate-900 border-slate-600 text-slate-100" : "bg-white border-gray-300 text-gray-900"}
                   />
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="bg-card border-border">
+            <Card className={isDark ? "bg-slate-800/50 border-slate-700" : "bg-white border-gray-200"}>
               <CardHeader>
-                <CardTitle className="text-foreground flex items-center gap-2">
+                <CardTitle className={cn("flex items-center gap-2", isDark ? "text-slate-100" : "text-gray-900")}>
                   <Zap className="h-5 w-5 text-amber-500" />
                   Paramètres Tarifaires
                 </CardTitle>
-                <CardDescription className="text-muted-foreground">
+                <CardDescription className={isDark ? "text-slate-400" : "text-gray-500"}>
                   Configuration des tarifs STEG
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-foreground">Tarif Actuel (TND/kWh)</Label>
+                  <Label className={isDark ? "text-slate-300" : "text-gray-700"}>Tarif Actuel (TND/kWh)</Label>
                   <Input 
                     type="number"
                     step="0.001"
                     defaultValue="0.285" 
-                    className="bg-background border-border text-foreground"
+                    className={isDark ? "bg-slate-900 border-slate-600 text-slate-100" : "bg-white border-gray-300 text-gray-900"}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-foreground">Puissance Souscrite (kVA)</Label>
+                  <Label className={isDark ? "text-slate-300" : "text-gray-700"}>Puissance Souscrite (kVA)</Label>
                   <Input 
                     type="number"
                     defaultValue="500" 
-                    className="bg-background border-border text-foreground"
+                    className={isDark ? "bg-slate-900 border-slate-600 text-slate-100" : "bg-white border-gray-300 text-gray-900"}
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label className="text-foreground">Régime Haute Tension</Label>
+                  <Label className={isDark ? "text-slate-300" : "text-gray-700"}>Régime Haute Tension</Label>
                   <Switch />
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="bg-card border-border">
+            <Card className={isDark ? "bg-slate-800/50 border-slate-700" : "bg-white border-gray-200"}>
               <CardHeader>
-                <CardTitle className="text-foreground flex items-center gap-2">
+                <CardTitle className={cn("flex items-center gap-2", isDark ? "text-slate-100" : "text-gray-900")}>
                   <Bell className="h-5 w-5 text-blue-500" />
                   Notifications
                 </CardTitle>
-                <CardDescription className="text-muted-foreground">
+                <CardDescription className={isDark ? "text-slate-400" : "text-gray-500"}>
                   Alertes et rappels
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label className="text-foreground">Alertes Pic de Consommation</Label>
+                  <Label className={isDark ? "text-slate-300" : "text-gray-700"}>Alertes Pic de Consommation</Label>
                   <Switch defaultChecked />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label className="text-foreground">Rappels Échéances CBAM</Label>
+                  <Label className={isDark ? "text-slate-300" : "text-gray-700"}>Rappels Échéances CBAM</Label>
                   <Switch defaultChecked />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label className="text-foreground">Rapport Hebdomadaire</Label>
+                  <Label className={isDark ? "text-slate-300" : "text-gray-700"}>Rapport Hebdomadaire</Label>
                   <Switch />
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="bg-card border-border">
+            <Card className={isDark ? "bg-slate-800/50 border-slate-700" : "bg-white border-gray-200"}>
               <CardHeader>
-                <CardTitle className="text-foreground flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-primary" />
+                <CardTitle className={cn("flex items-center gap-2", isDark ? "text-slate-100" : "text-gray-900")}>
+                  <Shield className="h-5 w-5 text-emerald-500" />
                   Intégrations
                 </CardTitle>
-                <CardDescription className="text-muted-foreground">
+                <CardDescription className={isDark ? "text-slate-400" : "text-gray-500"}>
                   Connexions externes
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <div className={cn(
+                  "flex items-center justify-between p-3 rounded-lg",
+                  isDark ? "bg-slate-900" : "bg-gray-50"
+                )}>
                   <div>
-                    <p className="font-medium text-foreground">API Compteur IoT</p>
-                    <p className="text-sm text-primary">Connecté</p>
+                    <p className={cn("font-medium", isDark ? "text-slate-100" : "text-gray-900")}>API Compteur IoT</p>
+                    <p className="text-sm text-emerald-500">Connecté</p>
                   </div>
-                  <Button size="sm" variant="outline" className="border-border">
+                  <Button size="sm" variant="outline" className={isDark ? "border-slate-600" : "border-gray-300"}>
                     Configurer
                   </Button>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <div className={cn(
+                  "flex items-center justify-between p-3 rounded-lg",
+                  isDark ? "bg-slate-900" : "bg-gray-50"
+                )}>
                   <div>
-                    <p className="font-medium text-foreground">Export ERP</p>
-                    <p className="text-sm text-muted-foreground">Non configuré</p>
+                    <p className={cn("font-medium", isDark ? "text-slate-100" : "text-gray-900")}>Export ERP</p>
+                    <p className={cn("text-sm", isDark ? "text-slate-400" : "text-gray-500")}>Non configuré</p>
                   </div>
-                  <Button size="sm" variant="outline" className="border-border">
+                  <Button size="sm" variant="outline" className={isDark ? "border-slate-600" : "border-gray-300"}>
                     Activer
                   </Button>
                 </div>
@@ -153,13 +167,21 @@ const DigitalTwinSettings = () => {
           </div>
           
           <div className="mt-6 flex justify-end">
-            <Button className="bg-primary hover:bg-primary/90">
+            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
               Sauvegarder les Paramètres
             </Button>
           </div>
         </main>
       </div>
     </div>
+  );
+};
+
+const DigitalTwinSettings = () => {
+  return (
+    <DigitalTwinThemeProvider>
+      <DigitalTwinSettingsContent />
+    </DigitalTwinThemeProvider>
   );
 };
 

@@ -8,3 +8,7 @@ export { AIRecommendation } from './AIRecommendation';
 export { AdditionalInfo } from './AdditionalInfo';
 export { DigitalTwinTour } from './DigitalTwinTour';
 export { CalculationNotes } from './CalculationNotes';
+export { AdvancedHypothesesAccordion } from './AdvancedHypothesesAccordion';
+export { FormulaModal } from './FormulaModal';
+export { EducationalTooltip, KnownTermTooltip, educationalContent } from './EducationalTooltips';
+export { SensitivityInsight } from './SensitivityInsight';

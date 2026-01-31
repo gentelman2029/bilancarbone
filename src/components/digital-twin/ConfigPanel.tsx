@@ -64,10 +64,10 @@ export const ConfigPanel = ({
   const currentTariff = stegTariffs[voltageRegime];
   
   return (
-    <div className="lg:col-span-5 space-y-5">
+    <>
       <div>
         <h2 className="text-lg font-semibold mb-1 text-gray-900">Configuration du Scénario</h2>
-        <p className="text-sm text-gray-500">Paramètres technico-économiques avancés</p>
+        <p className="text-sm text-gray-500">Paramètres technico-économiques</p>
       </div>
 
       {/* Validation Errors */}
@@ -343,6 +343,6 @@ export const ConfigPanel = ({
           </>
         )}
       </Button>
-    </div>
+    </>
   );
 };

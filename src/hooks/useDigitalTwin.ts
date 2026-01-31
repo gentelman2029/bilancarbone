@@ -1,26 +1,34 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 
 // =====================================================
-// CONSTANTS & PRICING MODELS
+// CONSTANTS & PRICING MODELS (DEFAULTS - User can override)
 // =====================================================
 
 // Installation costs
 const COST_PER_KWC = 850; // TND per kWc
 const COST_PER_KWH_BATTERY = 450; // TND per kWh
 const TRACKER_ADDITIONAL_COST = 120; // TND per kWc for tracker system
-const ANNUAL_OM_PERCENT = 0.015; // 1.5% of CAPEX per year for O&M
-const BATTERY_REPLACEMENT_YEAR = 10;
+const DEFAULT_ANNUAL_OM_PERCENT = 1.5; // 1.5% of CAPEX per year for O&M
+const DEFAULT_BATTERY_LIFETIME = 10;
 const BATTERY_REPLACEMENT_COST_FACTOR = 0.5; // 50% of original battery cost
 
 // System performance
 const TRACKER_BONUS = 1.15; // 15% efficiency boost
 const SUBSIDY_REDUCTION = 0.3; // 30% CAPEX reduction with FTE subsidy
 const SOLAR_HOURS_PER_YEAR = 1600; // Average irradiation hours in Tunisia
-const PROJECT_LIFETIME_YEARS = 25;
+const DEFAULT_PANEL_LIFETIME = 25;
 const PANEL_DEGRADATION_RATE = 0.007; // 0.7% per year
 
 // Emissions
 const CO2_INTENSITY = 0.48; // kg CO2/kWh (STEG mix)
+
+// Fiscal defaults
+const DEFAULT_CORPORATE_TAX_RATE = 15; // 15% corporate tax in Tunisia
+const DEFAULT_DEPRECIATION_YEARS = 7; // Accelerated depreciation for renewable energy
+const DEFAULT_DISCOUNT_RATE = 8; // 8% WACC
+
+// Weather risk
+const P90_REDUCTION_FACTOR = 0.95; // 5% reduction for P90 scenario
 
 // =====================================================
 // STEG TARIFF STRUCTURE (2024)
@@ -110,14 +118,15 @@ const WEATHER_SCENARIOS: WeatherScenario[] = [
 ];
 
 // Deterministic weather pattern for projection (varies by year for realism)
-const getWeatherFactor = (yearIndex: number): number => {
-  // Create a pseudo-random but deterministic pattern
+const getWeatherFactor = (yearIndex: number, useP90: boolean): number => {
+  if (useP90) return P90_REDUCTION_FACTOR; // Conservative scenario
+  // Create a pseudo-random but deterministic pattern for P50
   const patterns = [1.0, 1.05, 0.95, 1.08, 0.92, 1.0, 0.98, 1.03, 0.94, 1.02, 1.0];
   return patterns[yearIndex % patterns.length];
 };
 
 // =====================================================
-// FISCAL AMORTIZATION MODEL (Tunisia)
+// FISCAL AMORTIZATION MODEL (Dynamic)
 // =====================================================
 interface FiscalBenefits {
   annualDepreciation: number;
@@ -125,17 +134,18 @@ interface FiscalBenefits {
   depreciationYears: number;
 }
 
-const CORPORATE_TAX_RATE = 0.15; // 15% corporate tax in Tunisia (reduced rate for renewables)
-const DEPRECIATION_YEARS = 7; // Accelerated depreciation for renewable energy
-
-const calculateFiscalBenefits = (investment: number): FiscalBenefits => {
-  const annualDepreciation = investment / DEPRECIATION_YEARS;
-  const taxSavings = annualDepreciation * CORPORATE_TAX_RATE;
+const calculateFiscalBenefits = (
+  investment: number, 
+  taxRate: number, 
+  depreciationYears: number
+): FiscalBenefits => {
+  const annualDepreciation = investment / depreciationYears;
+  const taxSavings = annualDepreciation * (taxRate / 100);
   
   return {
     annualDepreciation,
     taxSavings,
-    depreciationYears: DEPRECIATION_YEARS
+    depreciationYears
   };
 };
 
@@ -143,16 +153,28 @@ const calculateFiscalBenefits = (investment: number): FiscalBenefits => {
 // INTERFACES
 // =====================================================
 
+export interface AdvancedHypotheses {
+  corporateTaxRate: number;      // % (default 15)
+  discountRate: number;          // WACC % (default 8)
+  omPercentage: number;          // O&M as % of CAPEX (default 1.5)
+  panelLifetime: number;         // years (default 25)
+  batteryLifetime: number;       // years (default 10)
+  depreciationYears: number;     // fiscal years (default 7)
+  weatherScenario: 'P50' | 'P90'; // P50 = standard, P90 = conservative
+}
+
 export interface DigitalTwinConfig {
   solarPower: number;
   hasTracker: boolean;
   batteryCapacity: number;
   withSubsidy: boolean;
   inflationRate: number;
-  energyPriceEscalation: number; // Separate from general inflation
+  energyPriceEscalation: number;
   voltageRegime: 'MT' | 'HT';
   includeWeatherVariability: boolean;
   includeFiscalBenefits: boolean;
+  // Advanced hypotheses
+  hypotheses: AdvancedHypotheses;
 }
 
 export interface DigitalTwinMetrics {
@@ -248,15 +270,28 @@ const validateConfig = (config: DigitalTwinConfig): ValidationResult => {
 const calculateMetrics = (config: DigitalTwinConfig): DigitalTwinMetrics => {
   const { 
     solarPower, hasTracker, batteryCapacity, withSubsidy, 
-    voltageRegime, includeFiscalBenefits, includeWeatherVariability 
+    voltageRegime, includeFiscalBenefits, includeWeatherVariability,
+    hypotheses
   } = config;
+
+  // Extract user-defined hypotheses
+  const omPercentage = hypotheses.omPercentage / 100;
+  const panelLifetime = hypotheses.panelLifetime;
+  const batteryLifetime = hypotheses.batteryLifetime;
+  const depreciationYears = hypotheses.depreciationYears;
+  const discountRate = hypotheses.discountRate / 100;
+  const corporateTaxRate = hypotheses.corporateTaxRate;
+  const useP90 = hypotheses.weatherScenario === 'P90';
 
   const tariff = STEG_TARIFFS[voltageRegime];
   const trackerBonus = hasTracker ? TRACKER_BONUS : 1;
   const effectiveSolar = solarPower * trackerBonus;
   
+  // Apply P90 reduction if conservative scenario selected
+  const weatherReductionFactor = useP90 ? P90_REDUCTION_FACTOR : 1.0;
+  
   // Annual energy production (kWh)
-  const annualEnergy = effectiveSolar * SOLAR_HOURS_PER_YEAR;
+  const annualEnergy = effectiveSolar * SOLAR_HOURS_PER_YEAR * weatherReductionFactor;
   
   // Calculate savings by time-of-use (TOU)
   const peakProduction = annualEnergy * SOLAR_PRODUCTION_PROFILE.peakPercent;
@@ -268,7 +303,7 @@ const calculateMetrics = (config: DigitalTwinConfig): DigitalTwinMetrics => {
   const nightSavings = nightProduction * tariff.night;
   
   // Battery value: shifting cheap night energy to expensive peak
-  const batteryDailyShift = Math.min(batteryCapacity * 0.8, annualEnergy / 365 * 0.3); // 80% DoD, max 30% of daily production
+  const batteryDailyShift = Math.min(batteryCapacity * 0.8, annualEnergy / 365 * 0.3);
   const batteryAnnualShift = batteryDailyShift * 365 * BATTERY_SHIFT_PROFILE.peakShiftPercent;
   const batteryPeakShiftSavings = batteryAnnualShift * (tariff.peak - tariff.night);
   
@@ -288,16 +323,16 @@ const calculateMetrics = (config: DigitalTwinConfig): DigitalTwinMetrics => {
   const baseInvestment = solarCost + trackerCost + batteryCost;
   const investment = withSubsidy ? baseInvestment * (1 - SUBSIDY_REDUCTION) : baseInvestment;
   
-  // O&M costs
-  const annualOMCost = baseInvestment * ANNUAL_OM_PERCENT;
-  const totalOMCost = annualOMCost * PROJECT_LIFETIME_YEARS;
+  // O&M costs (user-defined percentage)
+  const annualOMCost = baseInvestment * omPercentage;
+  const totalOMCost = annualOMCost * panelLifetime;
   
   // Payback (simple, without inflation)
   const netAnnualCashflow = annualSavings - annualOMCost;
   const payback = netAnnualCashflow > 0 ? investment / netAnnualCashflow : Infinity;
   
   // LCOE calculation (with and without O&M)
-  const totalLifetimeEnergy = annualEnergy * PROJECT_LIFETIME_YEARS * 0.88; // Average degradation factor
+  const totalLifetimeEnergy = annualEnergy * panelLifetime * 0.88; // Average degradation factor
   const lcoeWithoutOM = totalLifetimeEnergy > 0 ? (investment / totalLifetimeEnergy) * 1000 : 0;
   const lcoe = totalLifetimeEnergy > 0 ? ((investment + totalOMCost) / totalLifetimeEnergy) * 1000 : 0;
   
@@ -305,19 +340,19 @@ const calculateMetrics = (config: DigitalTwinConfig): DigitalTwinMetrics => {
   const co2Avoided = (annualEnergy * CO2_INTENSITY) / 1000;
   
   // CBAM savings (year 1 and lifetime with price escalation)
-  const cbamPriceYear1 = getCBAMPrice(2026) / 1000; // EUR per kg
+  const cbamPriceYear1 = getCBAMPrice(2026) / 1000;
   const cbamSavingsYear1 = annualEnergy * CO2_INTENSITY * cbamPriceYear1;
   
   let cbamSavingsLifetime = 0;
-  for (let i = 0; i < PROJECT_LIFETIME_YEARS; i++) {
+  for (let i = 0; i < panelLifetime; i++) {
     const yearDegradation = Math.pow(1 - PANEL_DEGRADATION_RATE, i);
     const yearEnergy = annualEnergy * yearDegradation;
     const cbamPrice = getCBAMPrice(2026 + i) / 1000;
     cbamSavingsLifetime += yearEnergy * CO2_INTENSITY * cbamPrice;
   }
   
-  // Fiscal benefits
-  const fiscalBenefits = calculateFiscalBenefits(investment);
+  // Fiscal benefits (user-defined tax rate and depreciation period)
+  const fiscalBenefits = calculateFiscalBenefits(investment, corporateTaxRate, depreciationYears);
   
   // Weather risk analysis
   const expectedProduction = WEATHER_SCENARIOS.reduce(
@@ -330,28 +365,28 @@ const calculateMetrics = (config: DigitalTwinConfig): DigitalTwinMetrics => {
   const pessimisticFactor = WEATHER_SCENARIOS.find(s => s.name === 'poor')?.productionFactor || 0.85;
   const optimisticFactor = WEATHER_SCENARIOS.find(s => s.name === 'excellent')?.productionFactor || 1.15;
   
-  // Lifetime savings (with all adjustments)
+  // Lifetime savings (with all adjustments including battery replacement)
   let lifetimeSavings = -investment;
-  for (let i = 0; i < PROJECT_LIFETIME_YEARS; i++) {
+  for (let i = 0; i < panelLifetime; i++) {
     const yearDegradation = Math.pow(1 - PANEL_DEGRADATION_RATE, i);
     const yearSavings = annualSavings * yearDegradation - annualOMCost;
-    const fiscalYear = i < DEPRECIATION_YEARS && includeFiscalBenefits ? fiscalBenefits.taxSavings : 0;
-    const batteryReplacement = i === BATTERY_REPLACEMENT_YEAR ? batteryCapacity * COST_PER_KWH_BATTERY * BATTERY_REPLACEMENT_COST_FACTOR : 0;
+    const fiscalYear = i < depreciationYears && includeFiscalBenefits ? fiscalBenefits.taxSavings : 0;
+    // Battery replacement at batteryLifetime years (re-vamping)
+    const batteryReplacement = i === batteryLifetime ? batteryCapacity * COST_PER_KWH_BATTERY * BATTERY_REPLACEMENT_COST_FACTOR : 0;
     lifetimeSavings += yearSavings + fiscalYear - batteryReplacement;
   }
 
-  // VAN (Net Present Value) calculation with 8% discount rate over 25 years
-  const DISCOUNT_RATE = 0.08;
+  // VAN (Net Present Value) with user-defined discount rate
   let van = -investment;
-  for (let t = 1; t <= PROJECT_LIFETIME_YEARS; t++) {
+  for (let t = 1; t <= panelLifetime; t++) {
     const yearDegradation = Math.pow(1 - PANEL_DEGRADATION_RATE, t - 1);
     const yearSavings = annualSavings * yearDegradation;
     const yearOMCost = annualOMCost;
-    const fiscalYear = t <= DEPRECIATION_YEARS && includeFiscalBenefits ? fiscalBenefits.taxSavings : 0;
-    const batteryReplacement = t === BATTERY_REPLACEMENT_YEAR + 1 ? batteryCapacity * COST_PER_KWH_BATTERY * BATTERY_REPLACEMENT_COST_FACTOR : 0;
+    const fiscalYear = t <= depreciationYears && includeFiscalBenefits ? fiscalBenefits.taxSavings : 0;
+    const batteryReplacement = t === batteryLifetime + 1 ? batteryCapacity * COST_PER_KWH_BATTERY * BATTERY_REPLACEMENT_COST_FACTOR : 0;
     
     const annualFlux = yearSavings - yearOMCost + fiscalYear - batteryReplacement;
-    van += annualFlux / Math.pow(1 + DISCOUNT_RATE, t);
+    van += annualFlux / Math.pow(1 + discountRate, t);
   }
 
   return {
@@ -390,12 +425,16 @@ const generateProjectionData = (
 ): ProjectionDataPoint[] => {
   const { 
     inflationRate, energyPriceEscalation, batteryCapacity, 
-    includeWeatherVariability, includeFiscalBenefits 
+    includeWeatherVariability, includeFiscalBenefits,
+    hypotheses
   } = config;
   const { investment, annualSavings, annualOMCost, fiscalBenefits } = metrics;
   
   const inflation = inflationRate / 100;
   const energyEscalation = energyPriceEscalation / 100;
+  const batteryLifetime = hypotheses.batteryLifetime;
+  const depreciationYears = hypotheses.depreciationYears;
+  const useP90 = hypotheses.weatherScenario === 'P90';
 
   return Array.from({ length: 11 }, (_, i) => {
     const year = 2026 + i;
@@ -404,7 +443,7 @@ const generateProjectionData = (
     const degradationFactor = Math.pow(1 - PANEL_DEGRADATION_RATE, i);
     
     // Weather variability (deterministic for chart consistency)
-    const weatherFactor = includeWeatherVariability ? getWeatherFactor(i) : 1.0;
+    const weatherFactor = includeWeatherVariability ? getWeatherFactor(i, useP90) : 1.0;
     
     // Energy price escalation (distinct from general inflation)
     const energyPriceFactor = Math.pow(1 + energyEscalation, i);
@@ -412,13 +451,13 @@ const generateProjectionData = (
     // O&M cost with inflation
     const omCostInflated = annualOMCost * Math.pow(1 + inflation, i);
     
-    // Battery replacement cost at year 10
-    const batteryReplacementCost = i === BATTERY_REPLACEMENT_YEAR 
-      ? batteryCapacity * COST_PER_KWH_BATTERY * BATTERY_REPLACEMENT_COST_FACTOR * Math.pow(1 + inflation, i) * 0.7 // Battery costs decrease over time
+    // Battery replacement cost at batteryLifetime years (re-vamping)
+    const batteryReplacementCost = i === batteryLifetime 
+      ? batteryCapacity * COST_PER_KWH_BATTERY * BATTERY_REPLACEMENT_COST_FACTOR * Math.pow(1 + inflation, i) * 0.7
       : 0;
     
     // Fiscal savings (depreciation)
-    const fiscalSavings = i < DEPRECIATION_YEARS && includeFiscalBenefits 
+    const fiscalSavings = i < depreciationYears && includeFiscalBenefits 
       ? fiscalBenefits.taxSavings 
       : 0;
     
@@ -450,13 +489,13 @@ const generateProjectionData = (
     let cumulative = -investment / 1000;
     for (let j = 1; j <= i; j++) {
       const degFactor = Math.pow(1 - PANEL_DEGRADATION_RATE, j);
-      const wFactor = includeWeatherVariability ? getWeatherFactor(j) : 1.0;
+      const wFactor = includeWeatherVariability ? getWeatherFactor(j, useP90) : 1.0;
       const ePriceFactor = Math.pow(1 + energyEscalation, j);
       const omCost = annualOMCost * Math.pow(1 + inflation, j);
-      const battReplacement = j === BATTERY_REPLACEMENT_YEAR 
+      const battReplacement = j === batteryLifetime 
         ? batteryCapacity * COST_PER_KWH_BATTERY * BATTERY_REPLACEMENT_COST_FACTOR * Math.pow(1 + inflation, j) * 0.7
         : 0;
-      const fiscal = j < DEPRECIATION_YEARS && includeFiscalBenefits ? fiscalBenefits.taxSavings : 0;
+      const fiscal = j < depreciationYears && includeFiscalBenefits ? fiscalBenefits.taxSavings : 0;
       const yearCBAM = getCBAMPrice(2026 + j) / 1000 * metrics.effectiveSolar * SOLAR_HOURS_PER_YEAR * degFactor * wFactor * CO2_INTENSITY;
       
       const yearSavings = annualSavings * degFactor * wFactor * ePriceFactor;
@@ -553,6 +592,30 @@ export const useDigitalTwin = () => {
   const [includeFiscalBenefits, setIncludeFiscalBenefits] = useState(true);
   const [isSimulating, setIsSimulating] = useState(false);
 
+  // Advanced hypotheses states
+  const [corporateTaxRate, setCorporateTaxRate] = useState(DEFAULT_CORPORATE_TAX_RATE.toString());
+  const [discountRate, setDiscountRate] = useState(DEFAULT_DISCOUNT_RATE.toString());
+  const [omPercentage, setOmPercentage] = useState(DEFAULT_ANNUAL_OM_PERCENT.toString());
+  const [panelLifetime, setPanelLifetime] = useState(DEFAULT_PANEL_LIFETIME.toString());
+  const [batteryLifetime, setBatteryLifetimeState] = useState(DEFAULT_BATTERY_LIFETIME.toString());
+  const [depreciationYears, setDepreciationYears] = useState(DEFAULT_DEPRECIATION_YEARS.toString());
+  const [weatherScenario, setWeatherScenario] = useState<'P50' | 'P90'>('P50');
+
+  // Track previous metrics for sensitivity insight
+  const previousMetricsRef = useRef<{ payback: number; lcoe: number; van: number } | null>(null);
+  const [changedParameter, setChangedParameter] = useState<string | null>(null);
+
+  // Build hypotheses object
+  const hypotheses: AdvancedHypotheses = useMemo(() => ({
+    corporateTaxRate: Math.max(0, Math.min(35, Number(corporateTaxRate) || DEFAULT_CORPORATE_TAX_RATE)),
+    discountRate: Math.max(1, Math.min(20, Number(discountRate) || DEFAULT_DISCOUNT_RATE)),
+    omPercentage: Math.max(0.5, Math.min(3, Number(omPercentage) || DEFAULT_ANNUAL_OM_PERCENT)),
+    panelLifetime: Math.max(15, Math.min(35, Number(panelLifetime) || DEFAULT_PANEL_LIFETIME)),
+    batteryLifetime: Math.max(5, Math.min(15, Number(batteryLifetime) || DEFAULT_BATTERY_LIFETIME)),
+    depreciationYears: Math.max(3, Math.min(15, Number(depreciationYears) || DEFAULT_DEPRECIATION_YEARS)),
+    weatherScenario
+  }), [corporateTaxRate, discountRate, omPercentage, panelLifetime, batteryLifetime, depreciationYears, weatherScenario]);
+
   // Build config object
   const config: DigitalTwinConfig = useMemo(() => ({
     solarPower: solarPower[0],
@@ -563,14 +626,23 @@ export const useDigitalTwin = () => {
     energyPriceEscalation: Math.max(-5, Math.min(15, Number(energyPriceEscalation) || 0)),
     voltageRegime,
     includeWeatherVariability,
-    includeFiscalBenefits
-  }), [solarPower, hasTracker, batteryCapacity, withSubsidy, inflationRate, energyPriceEscalation, voltageRegime, includeWeatherVariability, includeFiscalBenefits]);
+    includeFiscalBenefits,
+    hypotheses
+  }), [solarPower, hasTracker, batteryCapacity, withSubsidy, inflationRate, energyPriceEscalation, voltageRegime, includeWeatherVariability, includeFiscalBenefits, hypotheses]);
 
   // Validation
   const validation = useMemo(() => validateConfig(config), [config]);
 
   // Centralized metrics calculation
   const metrics = useMemo(() => calculateMetrics(config), [config]);
+
+  // Store previous metrics when they change (for sensitivity insight)
+  useEffect(() => {
+    if (changedParameter) {
+      const timer = setTimeout(() => setChangedParameter(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [changedParameter]);
 
   // Projection data with inflation
   const projectionData = useMemo(() => 
@@ -592,7 +664,16 @@ export const useDigitalTwin = () => {
     setTimeout(() => setIsSimulating(false), 1500);
   }, [validation.isValid]);
 
-  // Setters with validation
+  // Setters with validation and parameter tracking
+  const createTrackedSetter = useCallback((
+    setter: (value: any) => void, 
+    paramName: string
+  ) => (value: any) => {
+    previousMetricsRef.current = { payback: metrics.payback, lcoe: metrics.lcoe, van: metrics.van };
+    setChangedParameter(paramName);
+    setter(value);
+  }, [metrics.payback, metrics.lcoe, metrics.van]);
+
   const handleInflationChange = useCallback((value: string) => {
     const numValue = Number(value);
     if (value === '' || (!isNaN(numValue) && numValue >= 0 && numValue <= 20)) {
@@ -610,11 +691,11 @@ export const useDigitalTwin = () => {
   return {
     // State
     solarPower,
-    setSolarPower,
+    setSolarPower: createTrackedSetter(setSolarPower, 'solarPower'),
     hasTracker,
     setHasTracker,
     batteryCapacity,
-    setBatteryCapacity,
+    setBatteryCapacity: createTrackedSetter(setBatteryCapacity, 'batteryCapacity'),
     withSubsidy,
     setWithSubsidy,
     inflationRate,
@@ -629,6 +710,26 @@ export const useDigitalTwin = () => {
     setIncludeFiscalBenefits,
     isSimulating,
     
+    // Advanced hypotheses
+    corporateTaxRate,
+    setCorporateTaxRate: createTrackedSetter(setCorporateTaxRate, 'corporateTaxRate'),
+    discountRate,
+    setDiscountRate: createTrackedSetter(setDiscountRate, 'discountRate'),
+    omPercentage,
+    setOmPercentage: createTrackedSetter(setOmPercentage, 'omPercentage'),
+    panelLifetime,
+    setPanelLifetime,
+    batteryLifetime,
+    setBatteryLifetime: setBatteryLifetimeState,
+    depreciationYears,
+    setDepreciationYears,
+    weatherScenario,
+    setWeatherScenario: createTrackedSetter(setWeatherScenario, 'weatherScenario'),
+    
+    // Sensitivity tracking
+    previousMetrics: previousMetricsRef.current,
+    changedParameter,
+    
     // Computed
     config,
     validation,
@@ -641,6 +742,16 @@ export const useDigitalTwin = () => {
     
     // Constants for UI
     STEG_TARIFFS,
-    CBAM_PRICE_PROJECTIONS
+    CBAM_PRICE_PROJECTIONS,
+    
+    // Defaults for reference
+    defaults: {
+      corporateTaxRate: DEFAULT_CORPORATE_TAX_RATE,
+      discountRate: DEFAULT_DISCOUNT_RATE,
+      omPercentage: DEFAULT_ANNUAL_OM_PERCENT,
+      panelLifetime: DEFAULT_PANEL_LIFETIME,
+      batteryLifetime: DEFAULT_BATTERY_LIFETIME,
+      depreciationYears: DEFAULT_DEPRECIATION_YEARS
+    }
   };
 };

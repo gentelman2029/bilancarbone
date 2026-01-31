@@ -16,9 +16,9 @@ export function DigitalTwinThemeProvider({ children }: { children: ReactNode }) 
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem(STORAGE_KEY);
-      return (stored as Theme) || "dark";
+      return (stored as Theme) || "light";
     }
-    return "dark";
+    return "light";
   });
 
   useEffect(() => {

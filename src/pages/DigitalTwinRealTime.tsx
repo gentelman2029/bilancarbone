@@ -9,10 +9,15 @@ const DigitalTwinRealTimeContent = () => {
   const isDark = theme === "dark";
 
   return (
-    <div className={cn(
-      "min-h-screen flex",
-      isDark ? "bg-slate-900 text-slate-100" : "bg-gray-50 text-gray-900"
-    )}>
+    <div 
+      className={cn(
+        "min-h-screen flex",
+        isDark ? "bg-slate-900 text-slate-100" : "text-gray-900"
+      )}
+      style={!isDark ? { 
+        background: 'linear-gradient(180deg, hsl(142 60% 96%) 0%, hsl(120 40% 98%) 100%)' 
+      } : undefined}
+    >
       <DigitalTwinSidebar />
       
       <div className="flex-1 flex flex-col">

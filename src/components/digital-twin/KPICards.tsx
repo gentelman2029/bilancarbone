@@ -8,30 +8,30 @@ interface KPICardsProps {
   isLoading?: boolean;
 }
 
-// Static color mapping to prevent Tailwind purge
+// Static color mapping - using specific colors for financial indicators
 const colorClasses = {
   emerald: {
-    text: "text-emerald-400",
+    text: "text-emerald-600 dark:text-emerald-400",
     bg: "bg-emerald-500/10",
     hoverBorder: "hover:border-emerald-500/50",
   },
   amber: {
-    text: "text-amber-400",
+    text: "text-amber-600 dark:text-amber-400",
     bg: "bg-amber-500/10",
     hoverBorder: "hover:border-amber-500/50",
   },
-  slate: {
-    text: "text-slate-400",
-    bg: "bg-slate-500/10",
-    hoverBorder: "hover:border-slate-500/50",
+  muted: {
+    text: "text-muted-foreground",
+    bg: "bg-muted",
+    hoverBorder: "hover:border-muted-foreground/50",
   },
   purple: {
-    text: "text-purple-400",
+    text: "text-purple-600 dark:text-purple-400",
     bg: "bg-purple-500/10",
     hoverBorder: "hover:border-purple-500/50",
   },
   indigo: {
-    text: "text-indigo-400",
+    text: "text-indigo-600 dark:text-indigo-400",
     bg: "bg-indigo-500/10",
     hoverBorder: "hover:border-indigo-500/50",
   },
@@ -129,7 +129,7 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
       subtext: "1.5% du CAPEX",
       trend: "neutral",
       icon: Wrench,
-      color: "slate",
+      color: "muted",
       formulaInfo: {
         title: "Coûts d'Opération et Maintenance",
         definition: "Budget annuel pour l'entretien de l'installation : nettoyage, monitoring, remplacement onduleurs.",
@@ -178,20 +178,20 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
             <Tooltip key={idx}>
               <TooltipTrigger asChild>
                 <Card 
-                  className={`bg-slate-800/50 border-slate-700 ${colors.hoverBorder} transition-colors cursor-help ${isLoading ? 'animate-pulse' : ''}`}
+                  className={`bg-card border-border ${colors.hoverBorder} transition-colors cursor-help ${isLoading ? 'animate-pulse' : ''}`}
                 >
                   <CardContent className="pt-5 pb-4">
                     <div className={`flex items-start justify-between ${isLoading ? 'opacity-50' : ''}`}>
                       <div>
-                        <p className="text-sm text-slate-400 mb-1">{card.label}</p>
+                        <p className="text-sm text-muted-foreground mb-1">{card.label}</p>
                         <p className={`text-2xl font-bold ${colors.text}`}>
                           {card.value} <span className="text-base font-normal">{card.unit}</span>
                         </p>
                         <div className="flex items-center gap-1 mt-1.5">
                           {card.trend === "positive" && (
-                            <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
+                            <TrendingUp className="h-3.5 w-3.5 text-primary" />
                           )}
-                          <span className={`text-xs ${card.trend === "positive" ? "text-emerald-500" : "text-slate-500"}`}>
+                          <span className={`text-xs ${card.trend === "positive" ? "text-primary" : "text-muted-foreground"}`}>
                             {card.subtext}
                           </span>
                         </div>
@@ -205,23 +205,23 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
               </TooltipTrigger>
               <TooltipContent 
                 side="bottom" 
-                className="max-w-sm bg-slate-900 border-slate-700 text-slate-100 shadow-xl p-0 z-[100]"
+                className="max-w-sm bg-popover border-border text-popover-foreground shadow-xl p-0 z-[100]"
               >
                 <div className="p-4 space-y-3">
                   <div className="flex items-start gap-2">
-                    <Info className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                    <Info className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="font-semibold text-emerald-400">{card.formulaInfo.title}</p>
-                      <p className="text-sm text-slate-300 mt-1">{card.formulaInfo.definition}</p>
+                      <p className="font-semibold text-primary">{card.formulaInfo.title}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{card.formulaInfo.definition}</p>
                     </div>
                   </div>
                   {card.formulaInfo.formula && (
-                    <div className="bg-slate-800/80 rounded-lg px-3 py-2 border border-slate-700">
-                      <p className="text-xs text-slate-400 mb-1">Formule :</p>
-                      <code className="text-sm font-mono text-amber-400">{card.formulaInfo.formula}</code>
+                    <div className="bg-muted rounded-lg px-3 py-2 border border-border">
+                      <p className="text-xs text-muted-foreground mb-1">Formule :</p>
+                      <code className="text-sm font-mono text-amber-600 dark:text-amber-400">{card.formulaInfo.formula}</code>
                     </div>
                   )}
-                  <div className="text-xs text-slate-400 border-t border-slate-700/50 pt-2">
+                  <div className="text-xs text-muted-foreground border-t border-border/50 pt-2">
                     {card.formulaInfo.interpretation}
                   </div>
                 </div>
@@ -232,29 +232,29 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
       </div>
 
       {/* Savings Range Indicator */}
-      <Card className="bg-slate-800/30 border-slate-700/50 mt-4">
+      <Card className="bg-card/50 border-border/50 mt-4">
         <CardContent className="py-4">
           <div className="flex items-center justify-between text-sm">
             <div className="text-center">
-              <p className="text-slate-500">Pessimiste</p>
-              <p className="text-red-400 font-semibold">{Math.round(savingsRange.pessimistic / 1000)} kTND</p>
+              <p className="text-muted-foreground">Pessimiste</p>
+              <p className="text-destructive font-semibold">{Math.round(savingsRange.pessimistic / 1000)} kTND</p>
             </div>
             <div className="flex-1 mx-4">
               <div className="h-2 bg-gradient-to-r from-red-500/30 via-emerald-500/50 to-emerald-500/30 rounded-full" />
             </div>
             <div className="text-center">
-              <p className="text-slate-500">Attendu</p>
-              <p className="text-emerald-400 font-semibold">{Math.round(savingsRange.expected / 1000)} kTND</p>
+              <p className="text-muted-foreground">Attendu</p>
+              <p className="text-primary font-semibold">{Math.round(savingsRange.expected / 1000)} kTND</p>
             </div>
             <div className="flex-1 mx-4">
               <div className="h-2 bg-gradient-to-r from-emerald-500/50 via-emerald-500/30 to-emerald-500/20 rounded-full" />
             </div>
             <div className="text-center">
-              <p className="text-slate-500">Optimiste</p>
-              <p className="text-emerald-300 font-semibold">{Math.round(savingsRange.optimistic / 1000)} kTND</p>
+              <p className="text-muted-foreground">Optimiste</p>
+              <p className="text-emerald-500 dark:text-emerald-300 font-semibold">{Math.round(savingsRange.optimistic / 1000)} kTND</p>
             </div>
           </div>
-          <p className="text-xs text-slate-500 text-center mt-2">Économies annuelles selon variabilité météo</p>
+          <p className="text-xs text-muted-foreground text-center mt-2">Économies annuelles selon variabilité météo</p>
         </CardContent>
       </Card>
     </TooltipProvider>

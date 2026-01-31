@@ -1,4 +1,5 @@
 import { useDigitalTwin } from "@/hooks/useDigitalTwin";
+import { useDigitalTwinTour } from "@/hooks/useDigitalTwinTour";
 import {
   DigitalTwinSidebar,
   DigitalTwinHeader,
@@ -6,7 +7,9 @@ import {
   KPICards,
   ProjectionChart,
   AIRecommendation,
-  AdditionalInfo
+  AdditionalInfo,
+  DigitalTwinTour,
+  CalculationNotes
 } from "@/components/digital-twin";
 
 const DigitalTwin = () => {
@@ -38,15 +41,31 @@ const DigitalTwin = () => {
     STEG_TARIFFS
   } = useDigitalTwin();
 
+  const {
+    runTour,
+    stepIndex,
+    steps,
+    startTour,
+    handleJoyrideCallback,
+  } = useDigitalTwinTour();
+
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex">
+      {/* Joyride Tour */}
+      <DigitalTwinTour
+        runTour={runTour}
+        steps={steps}
+        stepIndex={stepIndex}
+        handleCallback={handleJoyrideCallback}
+      />
+
       {/* Sidebar */}
       <DigitalTwinSidebar />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <DigitalTwinHeader />
+        <DigitalTwinHeader onStartTour={startTour} />
 
         {/* Main Grid */}
         <main className="flex-1 p-6 overflow-auto">
@@ -95,6 +114,9 @@ const DigitalTwin = () => {
 
               {/* Additional Info */}
               <AdditionalInfo metrics={metrics} />
+
+              {/* Calculation Notes (Collapsible) */}
+              <CalculationNotes />
             </div>
           </div>
         </main>

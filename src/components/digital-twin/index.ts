@@ -5,3 +5,5 @@ export { KPICards } from './KPICards';
 export { ProjectionChart } from './ProjectionChart';
 export { AIRecommendation } from './AIRecommendation';
 export { AdditionalInfo } from './AdditionalInfo';
+export { DigitalTwinTour } from './DigitalTwinTour';
+export { CalculationNotes } from './CalculationNotes';

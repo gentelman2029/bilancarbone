@@ -85,7 +85,7 @@ export const ConfigPanel = ({
       )}
 
       {/* Solar PV Card */}
-      <Card className="bg-slate-800/50 border-slate-700">
+      <Card className="bg-slate-800/50 border-slate-700" data-tour="config-solar">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-amber-500/10">
@@ -134,7 +134,7 @@ export const ConfigPanel = ({
       </Card>
 
       {/* Battery Storage Card */}
-      <Card className="bg-slate-800/50 border-slate-700">
+      <Card className="bg-slate-800/50 border-slate-700" data-tour="config-battery">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-blue-500/10">
@@ -167,7 +167,7 @@ export const ConfigPanel = ({
       </Card>
 
       {/* Tariff Card */}
-      <Card className="bg-slate-800/50 border-slate-700">
+      <Card className="bg-slate-800/50 border-slate-700" data-tour="config-financial">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-yellow-500/10">

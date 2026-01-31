@@ -1,4 +1,4 @@
-import { TrendingDown, TrendingUp, Coins, Gauge, Leaf, Wrench, Calculator, BadgeDollarSign } from "lucide-react";
+import { TrendingDown, TrendingUp, Coins, Gauge, Leaf, Wrench, Calculator, BadgeDollarSign, Info } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { DigitalTwinMetrics } from "@/hooks/useDigitalTwin";
@@ -39,6 +39,13 @@ const colorClasses = {
 
 type ColorKey = keyof typeof colorClasses;
 
+interface FormulaTooltipContent {
+  title: string;
+  definition: string;
+  formula?: string;
+  interpretation: string;
+}
+
 export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
   const { 
     payback, cbamSavingsYear1, cbamSavingsLifetime, lcoe, lcoeWithoutOM, 
@@ -53,7 +60,7 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
     trend: "positive" | "neutral";
     icon: typeof TrendingDown;
     color: ColorKey;
-    tooltip: string;
+    formulaInfo: FormulaTooltipContent;
   }[] = [
     {
       label: "TRI / Payback",
@@ -63,7 +70,12 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
       trend: payback < 5 ? "positive" : "neutral",
       icon: TrendingDown,
       color: "emerald",
-      tooltip: `Temps de retour sur investissement incluant O&M (${Math.round(annualOMCost).toLocaleString('fr-FR')} TND/an)`
+      formulaInfo: {
+        title: "Temps de Retour sur Investissement",
+        definition: "Le TRI indique le nombre d'années nécessaires pour que les économies cumulées couvrent l'investissement initial.",
+        formula: "TRI = CAPEX ÷ Économies annuelles nettes",
+        interpretation: `Avec un O&M de ${Math.round(annualOMCost).toLocaleString('fr-FR')} TND/an, votre investissement sera rentabilisé en ${payback.toFixed(1)} ans.`
+      }
     },
     {
       label: "Économie CBAM",
@@ -73,7 +85,12 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
       trend: "positive",
       icon: Coins,
       color: "emerald",
-      tooltip: `Prix CBAM évolutif: 65€ (2026) → 130€/tCO2 (2036). Économie totale: ${Math.round(cbamSavingsLifetime).toLocaleString('fr-FR')} €`
+      formulaInfo: {
+        title: "Économie Taxe Carbone UE (CBAM)",
+        definition: "Le CBAM (Carbon Border Adjustment Mechanism) taxe les importations selon leur empreinte carbone. Le solaire évite ces coûts.",
+        formula: "CBAM = CO₂ évité (t) × Prix carbone UE (€/t)",
+        interpretation: `Prix CBAM évolutif : 65€ (2026) → 130€/tCO₂ (2036). Économie totale sur 25 ans : ${Math.round(cbamSavingsLifetime).toLocaleString('fr-FR')} €.`
+      }
     },
     {
       label: "LCOE",
@@ -83,7 +100,12 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
       trend: lcoe < 150 ? "positive" : "neutral",
       icon: Gauge,
       color: lcoe < 150 ? "emerald" : "amber",
-      tooltip: `LCOE avec O&M: ${lcoe.toFixed(1)} TND/MWh. Sans O&M: ${lcoeWithoutOM.toFixed(1)} TND/MWh. Inclut dégradation panneau 0.7%/an.`
+      formulaInfo: {
+        title: "Coût Actualisé de l'Énergie (LCOE)",
+        definition: "Le LCOE représente le coût total de production d'un MWh d'électricité sur la durée de vie du projet.",
+        formula: "LCOE = Σ(CAPEX + OPEX) ÷ Σ(Énergie produite)",
+        interpretation: `LCOE avec O&M : ${lcoe.toFixed(1)} TND/MWh. Sans O&M : ${lcoeWithoutOM.toFixed(1)} TND/MWh. Inclut dégradation panneau 0.7%/an.`
+      }
     },
     {
       label: "CO₂ Évité",
@@ -93,7 +115,12 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
       trend: "positive",
       icon: Leaf,
       color: "emerald",
-      tooltip: `Intensité carbone STEG: 0.48 kgCO2/kWh. Impact cumulé sur 25 ans avec dégradation.`
+      formulaInfo: {
+        title: "Émissions de CO₂ Évitées",
+        definition: "Quantité de CO₂ non émise grâce à la substitution de l'électricité STEG par le solaire.",
+        formula: "CO₂ évité = Production (MWh) × Intensité carbone STEG (kgCO₂/kWh)",
+        interpretation: `Intensité carbone STEG : 0.48 kgCO₂/kWh. Impact cumulé sur 25 ans avec dégradation : ${(co2Avoided * 25 * 0.88).toFixed(0)} tonnes.`
+      }
     },
     {
       label: "Coût O&M",
@@ -103,7 +130,12 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
       trend: "neutral",
       icon: Wrench,
       color: "slate",
-      tooltip: `Maintenance annuelle: ${Math.round(annualOMCost).toLocaleString('fr-FR')} TND. Inclut: nettoyage, monitoring, remplacement onduleurs.`
+      formulaInfo: {
+        title: "Coûts d'Opération et Maintenance",
+        definition: "Budget annuel pour l'entretien de l'installation : nettoyage, monitoring, remplacement onduleurs.",
+        formula: "O&M = CAPEX × 1.5%",
+        interpretation: `Maintenance annuelle : ${Math.round(annualOMCost).toLocaleString('fr-FR')} TND. Standard industriel pour installations > 100 kWc.`
+      }
     },
     {
       label: "Avantage Fiscal",
@@ -113,7 +145,12 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
       trend: "positive",
       icon: Calculator,
       color: "purple",
-      tooltip: `Amortissement accéléré sur ${fiscalBenefits.depreciationYears} ans. Économie d'impôt annuelle: ${Math.round(fiscalBenefits.taxSavings).toLocaleString('fr-FR')} TND (IS 15%).`
+      formulaInfo: {
+        title: "Avantage Fiscal (Amortissement Accéléré)",
+        definition: "Économie d'impôt grâce à l'amortissement accéléré des équipements EnR (Code des Investissements Tunisien).",
+        formula: "Économie IS = (CAPEX ÷ Durée amort.) × Taux IS",
+        interpretation: `Amortissement sur ${fiscalBenefits.depreciationYears} ans. Économie d'impôt annuelle : ${Math.round(fiscalBenefits.taxSavings).toLocaleString('fr-FR')} TND (IS 15%).`
+      }
     },
     {
       label: "VAN (25 ans)",
@@ -123,13 +160,18 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
       trend: van > 0 ? "positive" : "neutral",
       icon: BadgeDollarSign,
       color: "indigo",
-      tooltip: `Valeur Actuelle Nette sur 25 ans avec un taux d'actualisation de 8%. La VAN représente la richesse réelle créée aujourd'hui, déduite de l'inflation et du coût du capital. Une VAN positive signifie que l'investissement crée de la valeur.`
+      formulaInfo: {
+        title: "Valeur Actuelle Nette (VAN)",
+        definition: "La VAN mesure la richesse réelle créée par le projet, en actualisant tous les flux futurs à leur valeur présente.",
+        formula: "VAN = Σ(Flux_n ÷ (1 + r)^n) - Investissement",
+        interpretation: `Taux d'actualisation : 8%. Une VAN positive (${Math.round(van / 1000).toLocaleString('fr-FR')} kTND) signifie que l'investissement crée de la valeur après déduction de l'inflation et du coût du capital.`
+      }
     }
   ];
 
   return (
     <TooltipProvider>
-      <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-3 gap-4" data-tour="kpi-cards">
         {cards.map((card, idx) => {
           const colors = colorClasses[card.color];
           return (
@@ -163,9 +205,26 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
               </TooltipTrigger>
               <TooltipContent 
                 side="bottom" 
-                className="max-w-xs bg-slate-900 border-slate-700 text-slate-100 shadow-xl opacity-100 z-[100]"
+                className="max-w-sm bg-slate-900 border-slate-700 text-slate-100 shadow-xl p-0 z-[100]"
               >
-                <p className="text-sm font-medium">{card.tooltip}</p>
+                <div className="p-4 space-y-3">
+                  <div className="flex items-start gap-2">
+                    <Info className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-semibold text-emerald-400">{card.formulaInfo.title}</p>
+                      <p className="text-sm text-slate-300 mt-1">{card.formulaInfo.definition}</p>
+                    </div>
+                  </div>
+                  {card.formulaInfo.formula && (
+                    <div className="bg-slate-800/80 rounded-lg px-3 py-2 border border-slate-700">
+                      <p className="text-xs text-slate-400 mb-1">Formule :</p>
+                      <code className="text-sm font-mono text-amber-400">{card.formulaInfo.formula}</code>
+                    </div>
+                  )}
+                  <div className="text-xs text-slate-400 border-t border-slate-700/50 pt-2">
+                    {card.formulaInfo.interpretation}
+                  </div>
+                </div>
               </TooltipContent>
             </Tooltip>
           );

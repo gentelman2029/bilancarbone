@@ -74,7 +74,7 @@ export const ProjectionChart = ({ data, isLoading = false }: ProjectionChartProp
   const breakEvenYear = data.find(d => d.cumulative >= 0 && d.year !== "2026")?.year;
 
   return (
-    <Card className="bg-slate-800/50 border-slate-700">
+    <Card className="bg-slate-800/50 border-slate-700" data-tour="projection-chart">
       <CardHeader>
         <CardTitle className="text-slate-100">Flux de Trésorerie & Économies Projetées</CardTitle>
         <CardDescription className="text-slate-400">

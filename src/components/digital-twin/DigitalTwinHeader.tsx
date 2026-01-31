@@ -1,7 +1,12 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, HelpCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
-export const DigitalTwinHeader = () => {
+interface DigitalTwinHeaderProps {
+  onStartTour?: () => void;
+}
+
+export const DigitalTwinHeader = ({ onStartTour }: DigitalTwinHeaderProps) => {
   return (
     <header className="h-16 bg-slate-950/50 border-b border-slate-800 flex items-center justify-between px-6">
       <div className="flex items-center gap-2 text-sm">
@@ -11,6 +16,19 @@ export const DigitalTwinHeader = () => {
       </div>
 
       <div className="flex items-center gap-4">
+        {/* Guide Button */}
+        {onStartTour && (
+          <Button
+            onClick={onStartTour}
+            variant="outline"
+            size="sm"
+            className="bg-slate-800/50 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50 gap-2"
+          >
+            <HelpCircle className="h-4 w-4" />
+            Guide
+          </Button>
+        )}
+
         {/* Network Status Badge */}
         <Badge 
           variant="outline" 

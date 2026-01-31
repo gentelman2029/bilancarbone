@@ -1,6 +1,6 @@
 import { useDigitalTwin } from "@/hooks/useDigitalTwin";
 import { useDigitalTwinTour } from "@/hooks/useDigitalTwinTour";
-import { DigitalTwinThemeProvider, useDigitalTwinTheme } from "@/contexts/DigitalTwinThemeContext";
+import { DigitalTwinThemeProvider } from "@/contexts/DigitalTwinThemeContext";
 import {
   DigitalTwinSidebar,
   DigitalTwinHeader,
@@ -12,7 +12,6 @@ import {
   DigitalTwinTour,
   CalculationNotes
 } from "@/components/digital-twin";
-import { cn } from "@/lib/utils";
 
 const DigitalTwinContent = () => {
   const {
@@ -51,18 +50,12 @@ const DigitalTwinContent = () => {
     handleJoyrideCallback,
   } = useDigitalTwinTour();
 
-  const { theme } = useDigitalTwinTheme();
-  const isDark = theme === "dark";
-
   return (
     <div 
-      className={cn(
-        "min-h-screen flex",
-        isDark ? "bg-slate-900 text-slate-100" : "text-gray-900"
-      )}
-      style={!isDark ? { 
+      className="min-h-screen flex text-gray-900"
+      style={{ 
         background: 'linear-gradient(180deg, hsl(142 60% 96%) 0%, hsl(120 40% 98%) 100%)' 
-      } : undefined}
+      }}
     >
       {/* Joyride Tour */}
       <DigitalTwinTour
@@ -112,14 +105,8 @@ const DigitalTwinContent = () => {
             {/* Right Column - Results */}
             <div className="lg:col-span-7 space-y-6">
               <div>
-                <h2 className={cn(
-                  "text-lg font-semibold mb-1",
-                  isDark ? "text-slate-100" : "text-gray-900"
-                )}>Impact Financier & Carbone</h2>
-                <p className={cn(
-                  "text-sm",
-                  isDark ? "text-slate-500" : "text-gray-500"
-                )}>Résultats de la simulation</p>
+                <h2 className="text-lg font-semibold mb-1 text-gray-900">Impact Financier & Carbone</h2>
+                <p className="text-sm text-gray-500">Résultats de la simulation</p>
               </div>
 
               {/* KPI Cards Row */}

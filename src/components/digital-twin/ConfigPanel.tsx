@@ -10,8 +10,6 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
-import { useDigitalTwinTheme } from "@/contexts/DigitalTwinThemeContext";
-import { cn } from "@/lib/utils";
 import type { ValidationResult } from "@/hooks/useDigitalTwin";
 
 interface ConfigPanelProps {
@@ -63,20 +61,18 @@ export const ConfigPanel = ({
   onSimulate,
   stegTariffs
 }: ConfigPanelProps) => {
-  const { theme } = useDigitalTwinTheme();
-  const isDark = theme === "dark";
   const currentTariff = stegTariffs[voltageRegime];
   
   return (
     <div className="lg:col-span-5 space-y-5">
       <div>
-        <h2 className={cn("text-lg font-semibold mb-1", isDark ? "text-slate-100" : "text-gray-900")}>Configuration du Scénario</h2>
-        <p className={cn("text-sm", isDark ? "text-slate-500" : "text-gray-500")}>Paramètres technico-économiques avancés</p>
+        <h2 className="text-lg font-semibold mb-1 text-gray-900">Configuration du Scénario</h2>
+        <p className="text-sm text-gray-500">Paramètres technico-économiques avancés</p>
       </div>
 
       {/* Validation Errors */}
       {!validation.isValid && (
-        <Alert className="bg-red-500/10 border-red-500/30 text-red-500">
+        <Alert className="bg-red-500/10 border-red-500/30 text-red-600">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
             <ul className="list-disc list-inside space-y-1">
@@ -89,23 +85,23 @@ export const ConfigPanel = ({
       )}
 
       {/* Solar PV Card */}
-      <Card className={cn(isDark ? "bg-slate-800/50 border-slate-700" : "bg-white border-gray-200")} data-tour="config-solar">
+      <Card className="bg-white border-gray-200 shadow-sm" data-tour="config-solar">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-amber-500/10">
               <Sun className="h-5 w-5 text-amber-500" />
             </div>
             <div>
-              <CardTitle className={cn("text-base", isDark ? "text-slate-100" : "text-gray-900")}>Solaire Photovoltaïque</CardTitle>
-              <CardDescription className={isDark ? "text-slate-400" : "text-gray-500"}>Dégradation 0.7%/an incluse</CardDescription>
+              <CardTitle className="text-base text-gray-900">Solaire Photovoltaïque</CardTitle>
+              <CardDescription className="text-gray-500">Dégradation 0.7%/an incluse</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <Label className={isDark ? "text-slate-300" : "text-gray-700"}>Puissance Installée</Label>
-              <span className="text-lg font-semibold text-emerald-500">{solarPower[0]} kWc</span>
+              <Label className="text-gray-700">Puissance Installée</Label>
+              <span className="text-lg font-semibold text-emerald-600">{solarPower[0]} kWc</span>
             </div>
             <Slider
               value={solarPower}
@@ -115,18 +111,18 @@ export const ConfigPanel = ({
               step={50}
               className="[&_[role=slider]]:bg-emerald-500 [&_[role=slider]]:border-emerald-500"
             />
-            <div className={cn("flex justify-between text-xs", isDark ? "text-slate-500" : "text-gray-400")}>
+            <div className="flex justify-between text-xs text-gray-400">
               <span>0 kWc</span>
               <span>5 000 kWc</span>
             </div>
           </div>
 
-          <Separator className={isDark ? "bg-slate-700" : "bg-gray-200"} />
+          <Separator className="bg-gray-200" />
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label className={isDark ? "text-slate-300" : "text-gray-700"}>Système Tracker</Label>
-              <p className={cn("text-xs", isDark ? "text-slate-500" : "text-gray-400")}>+15% rendement, +120 TND/kWc</p>
+              <Label className="text-gray-700">Système Tracker</Label>
+              <p className="text-xs text-gray-400">+15% rendement, +120 TND/kWc</p>
             </div>
             <Switch
               checked={hasTracker}
@@ -138,22 +134,22 @@ export const ConfigPanel = ({
       </Card>
 
       {/* Battery Storage Card */}
-      <Card className={cn(isDark ? "bg-slate-800/50 border-slate-700" : "bg-white border-gray-200")} data-tour="config-battery">
+      <Card className="bg-white border-gray-200 shadow-sm" data-tour="config-battery">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-blue-500/10">
               <Battery className="h-5 w-5 text-blue-500" />
             </div>
             <div>
-              <CardTitle className={cn("text-base", isDark ? "text-slate-100" : "text-gray-900")}>Stockage Batterie</CardTitle>
-              <CardDescription className={isDark ? "text-slate-400" : "text-gray-500"}>Remplacement année 10 inclus</CardDescription>
+              <CardTitle className="text-base text-gray-900">Stockage Batterie</CardTitle>
+              <CardDescription className="text-gray-500">Remplacement année 10 inclus</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex justify-between items-center">
-            <Label className={isDark ? "text-slate-300" : "text-gray-700"}>Capacité</Label>
-            <span className="text-lg font-semibold text-blue-500">{batteryCapacity[0]} kWh</span>
+            <Label className="text-gray-700">Capacité</Label>
+            <span className="text-lg font-semibold text-blue-600">{batteryCapacity[0]} kWh</span>
           </div>
           <Slider
             value={batteryCapacity}
@@ -163,7 +159,7 @@ export const ConfigPanel = ({
             step={25}
             className="[&_[role=slider]]:bg-blue-500 [&_[role=slider]]:border-blue-500"
           />
-          <div className={cn("flex justify-between text-xs", isDark ? "text-slate-500" : "text-gray-400")}>
+          <div className="flex justify-between text-xs text-gray-400">
             <span>0 kWh</span>
             <span>2 000 kWh</span>
           </div>
@@ -171,33 +167,30 @@ export const ConfigPanel = ({
       </Card>
 
       {/* Tariff Card */}
-      <Card className={cn(isDark ? "bg-slate-800/50 border-slate-700" : "bg-white border-gray-200")} data-tour="config-financial">
+      <Card className="bg-white border-gray-200 shadow-sm" data-tour="config-financial">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-yellow-500/10">
               <Zap className="h-5 w-5 text-yellow-500" />
             </div>
             <div>
-              <CardTitle className={cn("text-base", isDark ? "text-slate-100" : "text-gray-900")}>Tarif STEG</CardTitle>
-              <CardDescription className={isDark ? "text-slate-400" : "text-gray-500"}>Différentiation Pointe/Jour/Nuit</CardDescription>
+              <CardTitle className="text-base text-gray-900">Tarif STEG</CardTitle>
+              <CardDescription className="text-gray-500">Différentiation Pointe/Jour/Nuit</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label className={isDark ? "text-slate-300" : "text-gray-700"}>Régime de Tension</Label>
+            <Label className="text-gray-700">Régime de Tension</Label>
             <Select value={voltageRegime} onValueChange={(v) => setVoltageRegime(v as 'MT' | 'HT')}>
-              <SelectTrigger className={cn(
-                "focus:border-emerald-500",
-                isDark ? "bg-slate-900/50 border-slate-600 text-slate-100" : "bg-white border-gray-300 text-gray-900"
-              )}>
+              <SelectTrigger className="focus:border-emerald-500 bg-white border-gray-300 text-gray-900">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className={isDark ? "bg-slate-800 border-slate-700" : "bg-white border-gray-200"}>
-                <SelectItem value="MT" className={cn(isDark ? "text-slate-100 focus:bg-slate-700" : "text-gray-900 focus:bg-gray-100")}>
+              <SelectContent className="bg-white border-gray-200">
+                <SelectItem value="MT" className="text-gray-900 focus:bg-gray-100">
                   Moyenne Tension (MT)
                 </SelectItem>
-                <SelectItem value="HT" className={cn(isDark ? "text-slate-100 focus:bg-slate-700" : "text-gray-900 focus:bg-gray-100")}>
+                <SelectItem value="HT" className="text-gray-900 focus:bg-gray-100">
                   Haute Tension (HT)
                 </SelectItem>
               </SelectContent>
@@ -207,51 +200,48 @@ export const ConfigPanel = ({
           {/* Tariff Display */}
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="bg-red-500/10 rounded-lg p-2">
-              <p className={cn("text-xs", isDark ? "text-slate-400" : "text-gray-500")}>Pointe</p>
-              <p className="text-sm font-semibold text-red-500">{(currentTariff.peak * 1000).toFixed(0)} mill</p>
-              <p className={cn("text-xs", isDark ? "text-slate-500" : "text-gray-400")}>18h-22h</p>
+              <p className="text-xs text-gray-500">Pointe</p>
+              <p className="text-sm font-semibold text-red-600">{(currentTariff.peak * 1000).toFixed(0)} mill</p>
+              <p className="text-xs text-gray-400">18h-22h</p>
             </div>
             <div className="bg-amber-500/10 rounded-lg p-2">
-              <p className={cn("text-xs", isDark ? "text-slate-400" : "text-gray-500")}>Jour</p>
-              <p className="text-sm font-semibold text-amber-500">{(currentTariff.day * 1000).toFixed(0)} mill</p>
-              <p className={cn("text-xs", isDark ? "text-slate-500" : "text-gray-400")}>7h-18h</p>
+              <p className="text-xs text-gray-500">Jour</p>
+              <p className="text-sm font-semibold text-amber-600">{(currentTariff.day * 1000).toFixed(0)} mill</p>
+              <p className="text-xs text-gray-400">7h-18h</p>
             </div>
             <div className="bg-blue-500/10 rounded-lg p-2">
-              <p className={cn("text-xs", isDark ? "text-slate-400" : "text-gray-500")}>Nuit</p>
-              <p className="text-sm font-semibold text-blue-500">{(currentTariff.night * 1000).toFixed(0)} mill</p>
-              <p className={cn("text-xs", isDark ? "text-slate-500" : "text-gray-400")}>22h-7h</p>
+              <p className="text-xs text-gray-500">Nuit</p>
+              <p className="text-sm font-semibold text-blue-600">{(currentTariff.night * 1000).toFixed(0)} mill</p>
+              <p className="text-xs text-gray-400">22h-7h</p>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label className={isDark ? "text-slate-300" : "text-gray-700"}>Escalade Prix Énergie (%/an)</Label>
+            <Label className="text-gray-700">Escalade Prix Énergie (%/an)</Label>
             <Input
               type="number"
               min={-5}
               max={15}
               value={energyPriceEscalation}
               onChange={(e) => setEnergyPriceEscalation(e.target.value)}
-              className={cn(
-                "focus:border-emerald-500",
-                isDark ? "bg-slate-900/50 border-slate-600 text-slate-100" : "bg-white border-gray-300 text-gray-900"
-              )}
+              className="focus:border-emerald-500 bg-white border-gray-300 text-gray-900"
               placeholder="-5 à +15%"
             />
-            <p className={cn("text-xs", isDark ? "text-slate-500" : "text-gray-400")}>Distinct de l'inflation générale</p>
+            <p className="text-xs text-gray-400">Distinct de l'inflation générale</p>
           </div>
         </CardContent>
       </Card>
 
       {/* Financing Card */}
-      <Card className={cn(isDark ? "bg-slate-800/50 border-slate-700" : "bg-white border-gray-200")}>
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-purple-500/10">
               <Landmark className="h-5 w-5 text-purple-500" />
             </div>
             <div>
-              <CardTitle className={cn("text-base", isDark ? "text-slate-100" : "text-gray-900")}>Financement</CardTitle>
-              <CardDescription className={isDark ? "text-slate-400" : "text-gray-500"}>Contexte réglementaire Tunisie</CardDescription>
+              <CardTitle className="text-base text-gray-900">Financement</CardTitle>
+              <CardDescription className="text-gray-500">Contexte réglementaire Tunisie</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -261,31 +251,25 @@ export const ConfigPanel = ({
               id="subsidy" 
               checked={withSubsidy}
               onCheckedChange={(checked) => setWithSubsidy(checked === true)}
-              className={cn(
-                "data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500",
-                isDark ? "border-slate-600" : "border-gray-300"
-              )}
+              className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 border-gray-300"
             />
             <div className="space-y-0.5">
-              <Label htmlFor="subsidy" className={cn("cursor-pointer", isDark ? "text-slate-300" : "text-gray-700")}>
+              <Label htmlFor="subsidy" className="cursor-pointer text-gray-700">
                 Subvention FTE (ANME)
               </Label>
-              <p className={cn("text-xs", isDark ? "text-slate-500" : "text-gray-400")}>-30% sur le CAPEX</p>
+              <p className="text-xs text-gray-400">-30% sur le CAPEX</p>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label className={isDark ? "text-slate-300" : "text-gray-700"}>Inflation Générale (%/an)</Label>
+            <Label className="text-gray-700">Inflation Générale (%/an)</Label>
             <Input
               type="number"
               min={0}
               max={20}
               value={inflationRate}
               onChange={(e) => setInflationRate(e.target.value)}
-              className={cn(
-                "focus:border-emerald-500",
-                isDark ? "bg-slate-900/50 border-slate-600 text-slate-100" : "bg-white border-gray-300 text-gray-900"
-              )}
+              className="focus:border-emerald-500 bg-white border-gray-300 text-gray-900"
               placeholder="0 - 20%"
             />
           </div>
@@ -293,15 +277,15 @@ export const ConfigPanel = ({
       </Card>
 
       {/* Advanced Options Card */}
-      <Card className={cn(isDark ? "bg-slate-800/50 border-slate-700" : "bg-white border-gray-200")}>
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
-            <div className={cn("p-2 rounded-lg", isDark ? "bg-slate-500/10" : "bg-gray-100")}>
-              <Cloud className={cn("h-5 w-5", isDark ? "text-slate-400" : "text-gray-500")} />
+            <div className="p-2 rounded-lg bg-gray-100">
+              <Cloud className="h-5 w-5 text-gray-500" />
             </div>
             <div>
-              <CardTitle className={cn("text-base", isDark ? "text-slate-100" : "text-gray-900")}>Options Avancées</CardTitle>
-              <CardDescription className={isDark ? "text-slate-400" : "text-gray-500"}>Aléas et avantages fiscaux</CardDescription>
+              <CardTitle className="text-base text-gray-900">Options Avancées</CardTitle>
+              <CardDescription className="text-gray-500">Aléas et avantages fiscaux</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -311,16 +295,13 @@ export const ConfigPanel = ({
               id="weather" 
               checked={includeWeatherVariability}
               onCheckedChange={(checked) => setIncludeWeatherVariability(checked === true)}
-              className={cn(
-                "data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500",
-                isDark ? "border-slate-600" : "border-gray-300"
-              )}
+              className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500 border-gray-300"
             />
             <div className="space-y-0.5">
-              <Label htmlFor="weather" className={cn("cursor-pointer", isDark ? "text-slate-300" : "text-gray-700")}>
+              <Label htmlFor="weather" className="cursor-pointer text-gray-700">
                 Variabilité Météo
               </Label>
-              <p className={cn("text-xs", isDark ? "text-slate-500" : "text-gray-400")}>Simule bonnes/mauvaises années (±15%)</p>
+              <p className="text-xs text-gray-400">Simule bonnes/mauvaises années (±15%)</p>
             </div>
           </div>
 
@@ -329,18 +310,15 @@ export const ConfigPanel = ({
               id="fiscal" 
               checked={includeFiscalBenefits}
               onCheckedChange={(checked) => setIncludeFiscalBenefits(checked === true)}
-              className={cn(
-                "data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500",
-                isDark ? "border-slate-600" : "border-gray-300"
-              )}
+              className="data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500 border-gray-300"
             />
             <div className="space-y-0.5 flex items-center gap-2">
               <Receipt className="h-4 w-4 text-purple-500" />
               <div>
-                <Label htmlFor="fiscal" className={cn("cursor-pointer", isDark ? "text-slate-300" : "text-gray-700")}>
+                <Label htmlFor="fiscal" className="cursor-pointer text-gray-700">
                   Amortissement Fiscal
                 </Label>
-                <p className={cn("text-xs", isDark ? "text-slate-500" : "text-gray-400")}>Déduction IS 15% sur 7 ans</p>
+                <p className="text-xs text-gray-400">Déduction IS 15% sur 7 ans</p>
               </div>
             </div>
           </div>

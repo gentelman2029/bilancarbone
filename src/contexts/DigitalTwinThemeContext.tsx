@@ -13,24 +13,22 @@ const DigitalTwinThemeContext = createContext<DigitalTwinThemeContextType | unde
 const STORAGE_KEY = "greeninsight-digital-twin-theme";
 
 export function DigitalTwinThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return (stored as Theme) || "light";
-    }
-    return "light";
-  });
+  // Force light mode by default, clear any old dark theme stored
+  const [theme, setThemeState] = useState<Theme>("light");
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, theme);
-  }, [theme]);
+    // Clear old dark theme preference and set to light
+    localStorage.setItem(STORAGE_KEY, "light");
+  }, []);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
+    localStorage.setItem(STORAGE_KEY, newTheme);
   };
 
   const toggleTheme = () => {
-    setThemeState((prev) => (prev === "dark" ? "light" : "dark"));
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
   };
 
   return (

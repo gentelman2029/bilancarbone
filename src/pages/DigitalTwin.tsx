@@ -134,6 +134,7 @@ const DigitalTwinContent = () => {
                 setBatteryUnitCost={setBatteryUnitCost}
                 trackerAdditionalCost={TRACKER_ADDITIONAL_COST}
                 subsidyReduction={SUBSIDY_REDUCTION}
+                metrics={metrics}
               />
 
               {/* Advanced Hypotheses Accordion */}

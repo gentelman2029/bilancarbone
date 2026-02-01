@@ -592,6 +592,10 @@ export const useDigitalTwin = () => {
   const [includeFiscalBenefits, setIncludeFiscalBenefits] = useState(true);
   const [isSimulating, setIsSimulating] = useState(false);
 
+  // CAPEX unit costs (user-editable)
+  const [solarUnitCost, setSolarUnitCost] = useState(COST_PER_KWC.toString());
+  const [batteryUnitCost, setBatteryUnitCost] = useState(COST_PER_KWH_BATTERY.toString());
+
   // Advanced hypotheses states
   const [corporateTaxRate, setCorporateTaxRate] = useState(DEFAULT_CORPORATE_TAX_RATE.toString());
   const [discountRate, setDiscountRate] = useState(DEFAULT_DISCOUNT_RATE.toString());
@@ -740,9 +744,17 @@ export const useDigitalTwin = () => {
     // Actions
     handleSimulation,
     
+    // CAPEX unit costs
+    solarUnitCost,
+    setSolarUnitCost,
+    batteryUnitCost,
+    setBatteryUnitCost,
+    
     // Constants for UI
     STEG_TARIFFS,
     CBAM_PRICE_PROJECTIONS,
+    TRACKER_ADDITIONAL_COST,
+    SUBSIDY_REDUCTION,
     
     // Defaults for reference
     defaults: {
@@ -751,7 +763,9 @@ export const useDigitalTwin = () => {
       omPercentage: DEFAULT_ANNUAL_OM_PERCENT,
       panelLifetime: DEFAULT_PANEL_LIFETIME,
       batteryLifetime: DEFAULT_BATTERY_LIFETIME,
-      depreciationYears: DEFAULT_DEPRECIATION_YEARS
+      depreciationYears: DEFAULT_DEPRECIATION_YEARS,
+      solarUnitCost: COST_PER_KWC,
+      batteryUnitCost: COST_PER_KWH_BATTERY
     }
   };
 };

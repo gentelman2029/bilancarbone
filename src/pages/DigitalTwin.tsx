@@ -42,6 +42,13 @@ const DigitalTwinContent = () => {
     aiRecommendation,
     handleSimulation,
     STEG_TARIFFS,
+    TRACKER_ADDITIONAL_COST,
+    SUBSIDY_REDUCTION,
+    // CAPEX unit costs
+    solarUnitCost,
+    setSolarUnitCost,
+    batteryUnitCost,
+    setBatteryUnitCost,
     // Advanced hypotheses
     corporateTaxRate,
     setCorporateTaxRate,
@@ -121,6 +128,12 @@ const DigitalTwinContent = () => {
                 validation={validation}
                 onSimulate={handleSimulation}
                 stegTariffs={STEG_TARIFFS}
+                solarUnitCost={solarUnitCost}
+                setSolarUnitCost={setSolarUnitCost}
+                batteryUnitCost={batteryUnitCost}
+                setBatteryUnitCost={setBatteryUnitCost}
+                trackerAdditionalCost={TRACKER_ADDITIONAL_COST}
+                subsidyReduction={SUBSIDY_REDUCTION}
               />
 
               {/* Advanced Hypotheses Accordion */}

@@ -1,4 +1,4 @@
-import { Sun, Battery, Landmark, Play, Cloud, Receipt, Zap } from "lucide-react";
+import { Sun, Battery, Landmark, Play, Cloud, Receipt, Zap, Calculator } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -35,6 +35,13 @@ interface ConfigPanelProps {
   validation: ValidationResult;
   onSimulate: () => void;
   stegTariffs: Record<'MT' | 'HT', { peak: number; day: number; night: number }>;
+  // CAPEX unit costs
+  solarUnitCost: string;
+  setSolarUnitCost: (value: string) => void;
+  batteryUnitCost: string;
+  setBatteryUnitCost: (value: string) => void;
+  trackerAdditionalCost: number;
+  subsidyReduction: number;
 }
 
 export const ConfigPanel = ({
@@ -59,9 +66,25 @@ export const ConfigPanel = ({
   isSimulating,
   validation,
   onSimulate,
-  stegTariffs
+  stegTariffs,
+  solarUnitCost,
+  setSolarUnitCost,
+  batteryUnitCost,
+  setBatteryUnitCost,
+  trackerAdditionalCost,
+  subsidyReduction
 }: ConfigPanelProps) => {
   const currentTariff = stegTariffs[voltageRegime];
+  
+  // Calculate CAPEX in real-time
+  const solarCostNum = Number(solarUnitCost) || 850;
+  const batteryCostNum = Number(batteryUnitCost) || 450;
+  const solarCapex = solarPower[0] * solarCostNum;
+  const trackerCapex = hasTracker ? solarPower[0] * trackerAdditionalCost : 0;
+  const batteryCapex = batteryCapacity[0] * batteryCostNum;
+  const totalCapexBrut = solarCapex + trackerCapex + batteryCapex;
+  const subsidyAmount = withSubsidy ? (solarCapex + trackerCapex) * subsidyReduction : 0;
+  const totalCapexNet = totalCapexBrut - subsidyAmount;
   
   return (
     <>
@@ -320,6 +343,87 @@ export const ConfigPanel = ({
                 </Label>
                 <p className="text-xs text-gray-400">Déduction IS 15% sur 7 ans</p>
               </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* CAPEX Detail Card */}
+      <Card className="bg-white border-gray-200 shadow-sm" data-tour="config-capex">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-indigo-500/10">
+              <Calculator className="h-5 w-5 text-indigo-500" />
+            </div>
+            <div>
+              <CardTitle className="text-base text-gray-900">Détail de l'Investissement (CAPEX)</CardTitle>
+              <CardDescription className="text-gray-500">Hypothèses de coûts unitaires du marché</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Unit cost inputs */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-600">Coût Solaire (TND/kWc)</Label>
+              <Input
+                type="number"
+                min={500}
+                max={1500}
+                value={solarUnitCost}
+                onChange={(e) => setSolarUnitCost(e.target.value)}
+                className="bg-white border-gray-300 text-gray-900 focus:border-indigo-500"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-600">Coût Batterie (TND/kWh)</Label>
+              <Input
+                type="number"
+                min={200}
+                max={800}
+                value={batteryUnitCost}
+                onChange={(e) => setBatteryUnitCost(e.target.value)}
+                className="bg-white border-gray-300 text-gray-900 focus:border-indigo-500"
+              />
+            </div>
+          </div>
+
+          {/* CAPEX Summary */}
+          <div className="bg-slate-50 rounded-lg p-4 space-y-2 border border-gray-100">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Panneaux solaires ({solarPower[0]} kWc × {solarCostNum} TND)</span>
+              <span className="font-medium text-gray-900">{solarCapex.toLocaleString('fr-FR')} TND</span>
+            </div>
+            {hasTracker && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Système Tracker ({solarPower[0]} kWc × {trackerAdditionalCost} TND)</span>
+                <span className="font-medium text-gray-900">{trackerCapex.toLocaleString('fr-FR')} TND</span>
+              </div>
+            )}
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Stockage batterie ({batteryCapacity[0]} kWh × {batteryCostNum} TND)</span>
+              <span className="font-medium text-gray-900">{batteryCapex.toLocaleString('fr-FR')} TND</span>
+            </div>
+            
+            <Separator className="my-2 bg-gray-200" />
+            
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-700 font-medium">Total Brut</span>
+              <span className="font-semibold text-gray-900">{totalCapexBrut.toLocaleString('fr-FR')} TND</span>
+            </div>
+            
+            {withSubsidy && (
+              <div className="flex justify-between text-sm">
+                <span className="text-emerald-600">Dont Subvention FTE (-{(subsidyReduction * 100).toFixed(0)}% solaire)</span>
+                <span className="font-medium text-emerald-600">-{subsidyAmount.toLocaleString('fr-FR')} TND</span>
+              </div>
+            )}
+            
+            <Separator className="my-2 bg-gray-200" />
+            
+            <div className="flex justify-between text-base">
+              <span className="text-gray-900 font-semibold">CAPEX Net</span>
+              <span className="font-bold text-indigo-600">{totalCapexNet.toLocaleString('fr-FR')} TND</span>
             </div>
           </div>
         </CardContent>

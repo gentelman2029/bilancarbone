@@ -1,5 +1,13 @@
-import { TrendingUp, TrendingDown, Minus, Lightbulb } from 'lucide-react';
+import { TrendingUp, TrendingDown, Lightbulb, ArrowRight } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 interface SensitivityInsightProps {
   previousMetrics: {
@@ -132,13 +140,87 @@ export const SensitivityInsight = ({
     }
   };
 
+  // Helper to format delta with color
+  const formatDelta = (delta: number, metric: 'payback' | 'lcoe' | 'van') => {
+    const isPositiveGood = metric === 'van';
+    const isImprovement = isPositiveGood ? delta > 0 : delta < 0;
+    const colorClass = isImprovement ? 'text-emerald-600' : delta === 0 ? 'text-gray-500' : 'text-red-600';
+    const prefix = delta > 0 ? '+' : '';
+    
+    if (metric === 'van') {
+      return <span className={`font-medium ${colorClass}`}>{prefix}{(delta / 1000).toFixed(1)} kTND</span>;
+    } else if (metric === 'payback') {
+      return <span className={`font-medium ${colorClass}`}>{prefix}{delta.toFixed(2)} ans</span>;
+    } else {
+      return <span className={`font-medium ${colorClass}`}>{prefix}{delta.toFixed(0)} TND/MWh</span>;
+    }
+  };
+
+  // Comparison data for the table
+  const comparisonData = [
+    {
+      metric: 'Payback (TRI)',
+      before: `${previousMetrics.payback.toFixed(2)} ans`,
+      after: `${currentMetrics.payback.toFixed(2)} ans`,
+      delta: paybackChange,
+      type: 'payback' as const
+    },
+    {
+      metric: 'LCOE',
+      before: `${previousMetrics.lcoe.toFixed(0)} TND/MWh`,
+      after: `${currentMetrics.lcoe.toFixed(0)} TND/MWh`,
+      delta: lcoeChange,
+      type: 'lcoe' as const
+    },
+    {
+      metric: 'VAN (25 ans)',
+      before: `${(previousMetrics.van / 1000).toFixed(1)} kTND`,
+      after: `${(currentMetrics.van / 1000).toFixed(1)} kTND`,
+      delta: vanChange,
+      type: 'van' as const
+    }
+  ];
+
   return (
     <Alert className={`${getAlertStyle()} transition-all duration-300 animate-in fade-in slide-in-from-top-2`}>
-      <div className="flex items-start gap-3">
-        {getIcon()}
-        <AlertDescription className="text-sm">
-          {insight.message}
-        </AlertDescription>
+      <div className="space-y-4">
+        {/* Message explicatif */}
+        <div className="flex items-start gap-3">
+          {getIcon()}
+          <AlertDescription className="text-sm">
+            {insight.message}
+          </AlertDescription>
+        </div>
+
+        {/* Tableau de comparaison */}
+        <div className="bg-white/60 rounded-lg border border-gray-200 overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-slate-50 hover:bg-slate-50">
+                <TableHead className="text-xs font-semibold text-gray-700 py-2">Métrique</TableHead>
+                <TableHead className="text-xs font-semibold text-gray-700 py-2 text-right">Avant</TableHead>
+                <TableHead className="text-xs font-semibold text-gray-500 py-2 text-center w-8">
+                  <ArrowRight className="h-3 w-3 mx-auto" />
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-gray-700 py-2 text-right">Après</TableHead>
+                <TableHead className="text-xs font-semibold text-gray-700 py-2 text-right">Δ Variation</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {comparisonData.map((row) => (
+                <TableRow key={row.metric} className="hover:bg-gray-50/50">
+                  <TableCell className="text-xs font-medium text-gray-700 py-2">{row.metric}</TableCell>
+                  <TableCell className="text-xs text-gray-500 py-2 text-right">{row.before}</TableCell>
+                  <TableCell className="py-2 text-center">
+                    <ArrowRight className="h-3 w-3 text-gray-400 mx-auto" />
+                  </TableCell>
+                  <TableCell className="text-xs text-gray-900 py-2 text-right font-medium">{row.after}</TableCell>
+                  <TableCell className="text-xs py-2 text-right">{formatDelta(row.delta, row.type)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </Alert>
   );

@@ -4,6 +4,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { FormulaModal } from "./FormulaModal";
 import type { DigitalTwinMetrics } from "@/hooks/useDigitalTwin";
 
+// Format number with space separator (French style)
+const formatNumber = (num: number): string => {
+  return Math.round(num).toLocaleString('fr-FR').replace(/,/g, ' ');
+};
+
 interface KPICardsProps {
   metrics: DigitalTwinMetrics;
   isLoading?: boolean;
@@ -92,9 +97,9 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
         formula: "TRI = Investissement ÷ (Économies - O&M)",
         description: "Le TRI mesure le temps nécessaire pour récupérer l'investissement initial grâce aux économies générées.",
         variables: [
-          { name: "Investissement", value: Math.round(investment).toLocaleString('fr-FR'), unit: "TND", description: "CAPEX total" },
-          { name: "Économies/an", value: Math.round(annualSavings).toLocaleString('fr-FR'), unit: "TND", description: "Économies facture STEG" },
-          { name: "O&M/an", value: Math.round(annualOMCost).toLocaleString('fr-FR'), unit: "TND", description: "Maintenance annuelle" },
+          { name: "Investissement", value: formatNumber(investment), unit: "TND", description: "Investissement Initial (CAPEX)" },
+          { name: "Économies/an", value: formatNumber(annualSavings), unit: "TND", description: "Économies facture STEG" },
+          { name: "O&M/an", value: formatNumber(annualOMCost), unit: "TND", description: "OPEX (Maintenance annuelle)" },
         ],
         result: payback === Infinity ? "∞" : payback.toFixed(1),
         resultUnit: "années",
@@ -120,11 +125,11 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
         formula: "Économie = Production × FE_STEG × Prix_CBAM",
         description: "Le mécanisme CBAM taxe les émissions CO₂ aux frontières UE. Produire localement en solaire évite cette taxe sur vos exportations.",
         variables: [
-          { name: "Production", value: Math.round(effectiveSolar * 1600 / 1000).toLocaleString('fr-FR'), unit: "MWh/an", description: "Énergie solaire produite" },
+          { name: "Production", value: formatNumber(effectiveSolar * 1600 / 1000), unit: "MWh/an", description: "Énergie solaire produite" },
           { name: "FE_STEG", value: "0.48", unit: "tCO₂/MWh", description: "Facteur émission réseau tunisien" },
           { name: "Prix_CBAM", value: "65", unit: "€/tCO₂", description: "Prix carbone UE 2026" },
         ],
-        result: Math.round(cbamSavingsYear1).toLocaleString('fr-FR'),
+        result: formatNumber(cbamSavingsYear1),
         resultUnit: "€/an",
         sources: ["Règlement UE 2023/956 (CBAM)", "Commission Européenne"]
       }
@@ -148,9 +153,9 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
         formula: "LCOE = (CAPEX + Σ OPEX) ÷ Σ Production",
         description: "Le LCOE permet de comparer le coût de différentes sources d'énergie sur leur durée de vie complète.",
         variables: [
-          { name: "CAPEX", value: Math.round(investment).toLocaleString('fr-FR'), unit: "TND", description: "Investissement initial" },
-          { name: "OPEX total", value: Math.round(annualOMCost * 25).toLocaleString('fr-FR'), unit: "TND", description: "O&M sur 25 ans" },
-          { name: "Production", value: Math.round(effectiveSolar * 1600 * 25 * 0.88 / 1000).toLocaleString('fr-FR'), unit: "MWh", description: "Total sur 25 ans" },
+          { name: "CAPEX", value: formatNumber(investment), unit: "TND", description: "Investissement Initial (CAPEX)" },
+          { name: "OPEX total", value: formatNumber(annualOMCost * 25), unit: "TND", description: "OPEX (Maintenance) sur 25 ans" },
+          { name: "Production", value: formatNumber(effectiveSolar * 1600 * 25 * 0.88 / 1000), unit: "MWh", description: "Total sur 25 ans" },
         ],
         result: lcoe.toFixed(0),
         resultUnit: "TND/MWh",
@@ -173,23 +178,23 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
       }
     },
     {
-      label: "Coût O&M",
-      value: Math.round(annualOMCost / 1000).toLocaleString('fr-FR'),
+      label: "OPEX (Maintenance)",
+      value: formatNumber(annualOMCost / 1000),
       unit: "kTND/an",
-      subtext: "Maintenance annuelle",
+      subtext: "Frais annuels d'entretien",
       trend: "neutral",
       icon: Wrench,
       color: "muted",
       formulaInfo: {
-        title: "Coûts d'Opération et Maintenance",
+        title: "OPEX (Maintenance)",
         definition: "Budget annuel pour l'entretien de l'installation : nettoyage, monitoring, remplacement onduleurs.",
-        formula: "O&M = CAPEX × Taux O&M (%)",
-        interpretation: `Maintenance annuelle : ${Math.round(annualOMCost).toLocaleString('fr-FR')} TND. Standard industriel pour installations > 100 kWc.`
+        formula: "OPEX = CAPEX × Taux O&M (%)",
+        interpretation: `Maintenance annuelle : ${formatNumber(annualOMCost)} TND. Calculé à 1.5% du CAPEX brut.`
       }
     },
     {
       label: "Avantage Fiscal",
-      value: Math.round(fiscalBenefits.taxSavings / 1000).toLocaleString('fr-FR'),
+      value: formatNumber(fiscalBenefits.taxSavings / 1000),
       unit: "kTND/an",
       subtext: `sur ${fiscalBenefits.depreciationYears} ans`,
       trend: "positive",
@@ -199,12 +204,12 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
         title: "Avantage Fiscal (Amortissement Accéléré)",
         definition: "Économie d'impôt grâce à l'amortissement accéléré des équipements EnR (Code des Investissements Tunisien).",
         formula: "Économie IS = (CAPEX ÷ Durée amort.) × Taux IS",
-        interpretation: `Amortissement sur ${fiscalBenefits.depreciationYears} ans. Économie d'impôt annuelle : ${Math.round(fiscalBenefits.taxSavings).toLocaleString('fr-FR')} TND.`
+        interpretation: `Amortissement sur ${fiscalBenefits.depreciationYears} ans. Économie d'impôt annuelle : ${formatNumber(fiscalBenefits.taxSavings)} TND.`
       }
     },
     {
       label: "VAN (25 ans)",
-      value: Math.round(van / 1000).toLocaleString('fr-FR'),
+      value: formatNumber(van / 1000),
       unit: "kTND",
       subtext: van > 0 ? "Projet rentable" : "Projet non rentable",
       trend: van > 0 ? "positive" : "neutral",
@@ -214,19 +219,19 @@ export const KPICards = ({ metrics, isLoading = false }: KPICardsProps) => {
         title: "Valeur Actuelle Nette (VAN)",
         definition: "La VAN mesure la richesse réelle créée par le projet, en actualisant tous les flux futurs à leur valeur présente.",
         formula: "VAN = Σ(Flux_n ÷ (1 + r)^n) - Investissement",
-        interpretation: `Une VAN positive (${Math.round(van / 1000).toLocaleString('fr-FR')} kTND) signifie que l'investissement crée de la valeur après déduction de l'inflation et du coût du capital.`
+        interpretation: `Une VAN positive (${formatNumber(van / 1000)} kTND) signifie que l'investissement crée de la valeur après déduction de l'inflation et du coût du capital.`
       },
       formulaModal: {
         title: "Valeur Actuelle Nette (VAN)",
         formula: "VAN = Σ(Flux_t ÷ (1+r)^t) - I₀",
         description: "La VAN représente la création de valeur nette du projet. Une VAN positive signifie que le projet génère plus que le coût du capital.",
         variables: [
-          { name: "I₀", value: Math.round(investment).toLocaleString('fr-FR'), unit: "TND", description: "Investissement initial" },
-          { name: "Flux annuel", value: Math.round(annualSavings - annualOMCost).toLocaleString('fr-FR'), unit: "TND", description: "Économies nettes moyennes" },
+          { name: "I₀", value: formatNumber(investment), unit: "TND", description: "Investissement Initial (CAPEX)" },
+          { name: "Flux annuel", value: formatNumber(annualSavings - annualOMCost), unit: "TND", description: "Économies nettes moyennes" },
           { name: "r", value: "8", unit: "%", description: "Taux d'actualisation (WACC)" },
           { name: "t", value: "25", unit: "ans", description: "Durée du projet" },
         ],
-        result: Math.round(van / 1000).toLocaleString('fr-FR'),
+        result: formatNumber(van / 1000),
         resultUnit: "kTND",
         sources: ["Finance d'entreprise", "Méthodologie ADEME"]
       }

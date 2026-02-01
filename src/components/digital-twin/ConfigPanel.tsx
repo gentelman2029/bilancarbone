@@ -1,4 +1,4 @@
-import { Sun, Battery, Landmark, Play, Cloud, Receipt, Zap, Calculator } from "lucide-react";
+import { Sun, Battery, Landmark, Play, Cloud, Receipt, Zap, Calculator, Info, Wrench } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -10,7 +10,13 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
-import type { ValidationResult } from "@/hooks/useDigitalTwin";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import type { ValidationResult, DigitalTwinMetrics } from "@/hooks/useDigitalTwin";
+
+// Format number with space separator (French style)
+const formatNumber = (num: number): string => {
+  return Math.round(num).toLocaleString('fr-FR').replace(/,/g, ' ');
+};
 
 interface ConfigPanelProps {
   solarPower: number[];
@@ -42,6 +48,8 @@ interface ConfigPanelProps {
   setBatteryUnitCost: (value: string) => void;
   trackerAdditionalCost: number;
   subsidyReduction: number;
+  // Metrics for unified CAPEX display
+  metrics: DigitalTwinMetrics;
 }
 
 export const ConfigPanel = ({
@@ -72,11 +80,12 @@ export const ConfigPanel = ({
   batteryUnitCost,
   setBatteryUnitCost,
   trackerAdditionalCost,
-  subsidyReduction
+  subsidyReduction,
+  metrics
 }: ConfigPanelProps) => {
   const currentTariff = stegTariffs[voltageRegime];
   
-  // Calculate CAPEX in real-time
+  // Use metrics for unified CAPEX calculation (single source of truth)
   const solarCostNum = Number(solarUnitCost) || 850;
   const batteryCostNum = Number(batteryUnitCost) || 450;
   const solarCapex = solarPower[0] * solarCostNum;
@@ -84,10 +93,12 @@ export const ConfigPanel = ({
   const batteryCapex = batteryCapacity[0] * batteryCostNum;
   const totalCapexBrut = solarCapex + trackerCapex + batteryCapex;
   const subsidyAmount = withSubsidy ? (solarCapex + trackerCapex) * subsidyReduction : 0;
-  const totalCapexNet = totalCapexBrut - subsidyAmount;
+  // Use metrics.investment for THE unified CAPEX value
+  const investmentInitial = metrics.investment;
+  const annualOMCost = metrics.annualOMCost;
   
   return (
-    <>
+    <TooltipProvider>
       <div>
         <h2 className="text-lg font-semibold mb-1 text-gray-900">Configuration du Scénario</h2>
         <p className="text-sm text-gray-500">Paramètres technico-économiques</p>
@@ -348,18 +359,32 @@ export const ConfigPanel = ({
         </CardContent>
       </Card>
 
-      {/* CAPEX Detail Card */}
+      {/* CAPEX & OPEX Detail Card */}
       <Card className="bg-white border-gray-200 shadow-sm" data-tour="config-capex">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-indigo-500/10">
               <Calculator className="h-5 w-5 text-indigo-500" />
             </div>
-            <div>
-              <CardTitle className="text-base text-gray-900">Détail de l'Investissement (CAPEX)</CardTitle>
-              <CardDescription className="text-gray-500">Hypothèses de coûts unitaires du marché</CardDescription>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base text-gray-900">Investissement Initial (CAPEX)</CardTitle>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-gray-400 hover:text-indigo-600 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-sm bg-white border-gray-200 shadow-xl p-3">
+                  <p className="text-sm text-gray-700 font-medium mb-2">Détail du calcul :</p>
+                  <p className="text-xs text-gray-600">
+                    (Puissance kWc × {solarCostNum} TND) + Coût Tracker + Coût Batterie.
+                  </p>
+                  <p className="text-xs text-gray-500 mt-2 italic">
+                    C'est l'argent total investi au départ.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
+          <CardDescription className="text-gray-500">Hypothèses de coûts unitaires du marché</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Unit cost inputs */}
@@ -391,39 +416,62 @@ export const ConfigPanel = ({
           {/* CAPEX Summary */}
           <div className="bg-slate-50 rounded-lg p-4 space-y-2 border border-gray-100">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Panneaux solaires ({solarPower[0]} kWc × {solarCostNum} TND)</span>
-              <span className="font-medium text-gray-900">{solarCapex.toLocaleString('fr-FR')} TND</span>
+              <span className="text-gray-600">Panneaux solaires ({formatNumber(solarPower[0])} kWc × {formatNumber(solarCostNum)} TND)</span>
+              <span className="font-medium text-gray-900">{formatNumber(solarCapex)} TND</span>
             </div>
             {hasTracker && (
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Système Tracker ({solarPower[0]} kWc × {trackerAdditionalCost} TND)</span>
-                <span className="font-medium text-gray-900">{trackerCapex.toLocaleString('fr-FR')} TND</span>
+                <span className="text-gray-600">Système Tracker ({formatNumber(solarPower[0])} kWc × {formatNumber(trackerAdditionalCost)} TND)</span>
+                <span className="font-medium text-gray-900">{formatNumber(trackerCapex)} TND</span>
               </div>
             )}
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Stockage batterie ({batteryCapacity[0]} kWh × {batteryCostNum} TND)</span>
-              <span className="font-medium text-gray-900">{batteryCapex.toLocaleString('fr-FR')} TND</span>
+              <span className="text-gray-600">Stockage batterie ({formatNumber(batteryCapacity[0])} kWh × {formatNumber(batteryCostNum)} TND)</span>
+              <span className="font-medium text-gray-900">{formatNumber(batteryCapex)} TND</span>
             </div>
             
             <Separator className="my-2 bg-gray-200" />
             
             <div className="flex justify-between text-sm">
               <span className="text-gray-700 font-medium">Total Brut</span>
-              <span className="font-semibold text-gray-900">{totalCapexBrut.toLocaleString('fr-FR')} TND</span>
+              <span className="font-semibold text-gray-900">{formatNumber(totalCapexBrut)} TND</span>
             </div>
             
             {withSubsidy && (
               <div className="flex justify-between text-sm">
                 <span className="text-emerald-600">Dont Subvention FTE (-{(subsidyReduction * 100).toFixed(0)}% solaire)</span>
-                <span className="font-medium text-emerald-600">-{subsidyAmount.toLocaleString('fr-FR')} TND</span>
+                <span className="font-medium text-emerald-600">-{formatNumber(subsidyAmount)} TND</span>
               </div>
             )}
             
             <Separator className="my-2 bg-gray-200" />
             
+            {/* Unified CAPEX display - single source of truth from metrics */}
             <div className="flex justify-between text-base">
-              <span className="text-gray-900 font-semibold">CAPEX Net</span>
-              <span className="font-bold text-indigo-600">{totalCapexNet.toLocaleString('fr-FR')} TND</span>
+              <span className="text-gray-900 font-semibold">Investissement Initial (CAPEX)</span>
+              <span className="font-bold text-indigo-600">{formatNumber(investmentInitial)} TND</span>
+            </div>
+          </div>
+
+          {/* OPEX Section */}
+          <div className="bg-orange-50/50 rounded-lg p-4 border border-orange-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Wrench className="h-4 w-4 text-orange-500" />
+                <span className="text-sm font-medium text-gray-800">OPEX (Maintenance)</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-3.5 w-3.5 text-gray-400 hover:text-orange-600 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs bg-white border-gray-200 shadow-xl p-3">
+                    <p className="text-sm text-gray-700 font-medium mb-1">Frais annuels d'entretien</p>
+                    <p className="text-xs text-gray-600">
+                      Calculé à 1.5% du CAPEX brut par an. Inclut nettoyage, monitoring et remplacement onduleurs.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <span className="font-semibold text-orange-600">{formatNumber(annualOMCost)} TND/an</span>
             </div>
           </div>
         </CardContent>
@@ -447,6 +495,6 @@ export const ConfigPanel = ({
           </>
         )}
       </Button>
-    </>
+    </TooltipProvider>
   );
 };

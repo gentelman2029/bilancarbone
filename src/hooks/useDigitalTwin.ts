@@ -173,6 +173,9 @@ export interface DigitalTwinConfig {
   voltageRegime: 'MT' | 'HT';
   includeWeatherVariability: boolean;
   includeFiscalBenefits: boolean;
+  // Unit costs (user-configurable)
+  solarUnitCost: number;
+  batteryUnitCost: number;
   // Advanced hypotheses
   hypotheses: AdvancedHypotheses;
 }
@@ -271,6 +274,7 @@ const calculateMetrics = (config: DigitalTwinConfig): DigitalTwinMetrics => {
   const { 
     solarPower, hasTracker, batteryCapacity, withSubsidy, 
     voltageRegime, includeFiscalBenefits, includeWeatherVariability,
+    solarUnitCost, batteryUnitCost,
     hypotheses
   } = config;
 
@@ -316,12 +320,14 @@ const calculateMetrics = (config: DigitalTwinConfig): DigitalTwinMetrics => {
   
   const annualSavings = peakSavings + daySavings + nightSavings + batteryPeakShiftSavings;
   
-  // Investment calculation
-  const solarCost = solarPower * COST_PER_KWC;
+  // Investment calculation - using user-defined unit costs
+  const solarCost = solarPower * solarUnitCost;
   const trackerCost = hasTracker ? solarPower * TRACKER_ADDITIONAL_COST : 0;
-  const batteryCost = batteryCapacity * COST_PER_KWH_BATTERY;
+  const batteryCost = batteryCapacity * batteryUnitCost;
   const baseInvestment = solarCost + trackerCost + batteryCost;
-  const investment = withSubsidy ? baseInvestment * (1 - SUBSIDY_REDUCTION) : baseInvestment;
+  // Subsidy applies to solar + tracker only (not battery)
+  const subsidyAmount = withSubsidy ? (solarCost + trackerCost) * SUBSIDY_REDUCTION : 0;
+  const investment = baseInvestment - subsidyAmount;
   
   // O&M costs (user-defined percentage)
   const annualOMCost = baseInvestment * omPercentage;
@@ -631,8 +637,10 @@ export const useDigitalTwin = () => {
     voltageRegime,
     includeWeatherVariability,
     includeFiscalBenefits,
+    solarUnitCost: Math.max(500, Math.min(1500, Number(solarUnitCost) || COST_PER_KWC)),
+    batteryUnitCost: Math.max(200, Math.min(800, Number(batteryUnitCost) || COST_PER_KWH_BATTERY)),
     hypotheses
-  }), [solarPower, hasTracker, batteryCapacity, withSubsidy, inflationRate, energyPriceEscalation, voltageRegime, includeWeatherVariability, includeFiscalBenefits, hypotheses]);
+  }), [solarPower, hasTracker, batteryCapacity, withSubsidy, inflationRate, energyPriceEscalation, voltageRegime, includeWeatherVariability, includeFiscalBenefits, solarUnitCost, batteryUnitCost, hypotheses]);
 
   // Validation
   const validation = useMemo(() => validateConfig(config), [config]);

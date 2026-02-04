@@ -1,7 +1,7 @@
 // RSE Report Viewer - Interactive Preview Component
 // Displays the aggregated RSE report with regulatory compliance
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,9 +28,16 @@ import {
   BarChart3,
   PieChart,
   RefreshCw,
+  FileSpreadsheet,
+  GitBranch,
 } from 'lucide-react';
 import { RSEReportData } from '@/hooks/useRSEReport';
 import { RSEReportCharts } from './RSEReportCharts';
+import { RSEComplianceAlerts } from './RSEComplianceAlerts';
+import { RSEReportWorkflow } from './RSEReportWorkflow';
+import { RSEExcelExport } from './RSEExcelExport';
+import { checkCompliance, ComplianceCheckResult } from '@/lib/rse/complianceEngine';
+import { ReportMetadata, createReportMetadata } from '@/lib/rse/reportTypes';
 
 interface RSEReportViewerProps {
   reportData: RSEReportData;
@@ -47,7 +54,35 @@ const CATEGORY_CONFIG = {
 
 export function RSEReportViewer({ reportData, onExportPDF, onRefresh, isExporting }: RSEReportViewerProps) {
   const [activeTab, setActiveTab] = useState('overview');
+  
+  // Report workflow state
+  const [reportMetadata, setReportMetadata] = useState<ReportMetadata>(() => {
+    const saved = localStorage.getItem('rse_report_metadata');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return createReportMetadata(reportData.fiscalYear, reportData.companyName, 'Utilisateur');
+      }
+    }
+    return createReportMetadata(reportData.fiscalYear, reportData.companyName, 'Utilisateur');
+  });
 
+  // Compliance check result
+  const [complianceResult, setComplianceResult] = useState<ComplianceCheckResult | null>(null);
+
+  // Save metadata to localStorage
+  useEffect(() => {
+    localStorage.setItem('rse_report_metadata', JSON.stringify(reportMetadata));
+  }, [reportMetadata]);
+
+  // Calculate compliance on mount and when data changes
+  useEffect(() => {
+    const result = checkCompliance(reportData.actions, {
+      totalCO2Emissions: reportData.regionalImpact.co2Reduction,
+    });
+    setComplianceResult(result);
+  }, [reportData]);
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('fr-TN', {
       style: 'decimal',
@@ -116,7 +151,7 @@ export function RSEReportViewer({ reportData, onExportPDF, onRefresh, isExportin
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
+        <TabsList className="flex flex-wrap gap-1 h-auto p-1">
           <TabsTrigger value="overview" className="gap-2">
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Vue d'ensemble</span>
@@ -132,6 +167,14 @@ export function RSEReportViewer({ reportData, onExportPDF, onRefresh, isExportin
           <TabsTrigger value="compliance" className="gap-2">
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">Conformité</span>
+          </TabsTrigger>
+          <TabsTrigger value="workflow" className="gap-2">
+            <GitBranch className="h-4 w-4" />
+            <span className="hidden sm:inline">Workflow</span>
+          </TabsTrigger>
+          <TabsTrigger value="export" className="gap-2">
+            <FileSpreadsheet className="h-4 w-4" />
+            <span className="hidden sm:inline">Export</span>
           </TabsTrigger>
           <TabsTrigger value="kpis" className="gap-2">
             <TrendingUp className="h-4 w-4" />
@@ -524,6 +567,27 @@ export function RSEReportViewer({ reportData, onExportPDF, onRefresh, isExportin
               )}
             </CardContent>
           </Card>
+
+          {/* Enhanced Compliance Alerts with ROI */}
+          {complianceResult && (
+            <RSEComplianceAlerts 
+              complianceResult={complianceResult} 
+              actions={reportData.actions} 
+            />
+          )}
+        </TabsContent>
+
+        {/* Workflow Tab - NEW */}
+        <TabsContent value="workflow" className="space-y-6">
+          <RSEReportWorkflow 
+            metadata={reportMetadata}
+            onMetadataChange={setReportMetadata}
+          />
+        </TabsContent>
+
+        {/* Export Tab - NEW */}
+        <TabsContent value="export" className="space-y-6">
+          <RSEExcelExport reportData={reportData} />
         </TabsContent>
 
         {/* KPIs Tab */}

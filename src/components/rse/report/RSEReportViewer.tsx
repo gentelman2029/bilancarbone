@@ -44,6 +44,7 @@ interface RSEReportViewerProps {
   onExportPDF: () => void;
   onRefresh: () => void;
   isExporting?: boolean;
+  onNavigateToTab?: (tabId: string) => void;
 }
 
 const CATEGORY_CONFIG = {
@@ -52,7 +53,7 @@ const CATEGORY_CONFIG = {
   G: { label: 'Gouvernance', color: 'purple', icon: Scale },
 };
 
-export function RSEReportViewer({ reportData, onExportPDF, onRefresh, isExporting }: RSEReportViewerProps) {
+export function RSEReportViewer({ reportData, onExportPDF, onRefresh, isExporting, onNavigateToTab }: RSEReportViewerProps) {
   const [activeTab, setActiveTab] = useState('overview');
   
   // Report workflow state
@@ -573,6 +574,7 @@ export function RSEReportViewer({ reportData, onExportPDF, onRefresh, isExportin
             <RSEComplianceAlerts 
               complianceResult={complianceResult} 
               actions={reportData.actions} 
+              onNavigateToActions={() => onNavigateToTab?.('kanban')}
             />
           )}
         </TabsContent>

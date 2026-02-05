@@ -16,6 +16,14 @@ export interface ComplianceAlert {
   requiredAction?: string;
 }
 
+// RSE Governance Configuration (Article 2 - Loi 2018-35)
+export interface RSEGovernance {
+  hasRSEManager: boolean;
+  hasSustainabilityPolicy: boolean;
+  rseManagerName?: string;
+  policyDocumentRef?: string;
+}
+
 // BVMT ESG Reporting Thresholds (configurable defaults)
 export interface ComplianceThresholds {
   // Environmental thresholds
@@ -63,6 +71,20 @@ export interface ComplianceCheckResult {
   alerts: ComplianceAlert[];
   score: number; // 0-100
   timestamp: string;
+  hasGovernanceIssue: boolean; // Article 2 non-compliance
+}
+
+/**
+ * Get overall compliance status based on alerts
+ * Returns 'Non-conforme' if any critical alert exists
+ */
+export function getOverallStatus(alerts: ComplianceAlert[]): 'Conforme' | 'Attention requise' | 'Non-conforme' {
+  const hasCritical = alerts.some(a => a.level === 'critical');
+  const hasWarning = alerts.some(a => a.level === 'warning');
+  
+  if (hasCritical) return 'Non-conforme';
+  if (hasWarning) return 'Attention requise';
+  return 'Conforme';
 }
 
 /**
@@ -81,11 +103,30 @@ export function checkCompliance(
     auditMeetings?: number;
     totalCO2Emissions?: number;
   },
-  thresholds: ComplianceThresholds = DEFAULT_COMPLIANCE_THRESHOLDS
+  thresholds: ComplianceThresholds = DEFAULT_COMPLIANCE_THRESHOLDS,
+  governance?: RSEGovernance
 ): ComplianceCheckResult {
   const alerts: ComplianceAlert[] = [];
   let criticalCount = 0;
   let warningCount = 0;
+  let hasGovernanceIssue = false;
+
+  // =====================================================
+  // ARTICLE 2 - LOI RSE 2018-35 : GOUVERNANCE RSE
+  // =====================================================
+  // Check if company has defined sustainability orientations and RSE manager
+  if (!governance || !governance.hasRSEManager || !governance.hasSustainabilityPolicy) {
+    hasGovernanceIssue = true;
+    alerts.push({
+      id: 'article_2_governance',
+      level: 'critical',
+      title: 'Manquement Article 2 : Gouvernance RSE non identifiée',
+      description: 'L\'entreprise n\'a pas défini ses orientations en matière de développement durable ou n\'a pas désigné de responsable RSE, conformément à l\'Article 2 de la Loi RSE 2018-35.',
+      regulation: 'Loi RSE 2018-35 (Article 2)',
+      requiredAction: 'Désigner un responsable RSE et documenter les orientations en matière de développement durable de l\'entreprise.',
+    });
+    criticalCount++;
+  }
 
   // Action Plan Compliance
   const totalActions = actions.length;
@@ -245,14 +286,22 @@ export function checkCompliance(
   // Calculate overall compliance score
   const totalChecks = 10; // Maximum number of checks
   const passedChecks = totalChecks - (criticalCount * 2) - warningCount;
-  const score = Math.max(0, Math.round((passedChecks / totalChecks) * 100));
+  let score = Math.max(0, Math.round((passedChecks / totalChecks) * 100));
+  
+  // CAP SCORE AT 50 IF GOVERNANCE ISSUE (Article 2)
+  if (hasGovernanceIssue) {
+    score = Math.min(score, 50);
+  }
 
   // Determine overall level
-  let overallLevel: ComplianceLevel = 'conformant';
-  if (criticalCount > 0) {
+  // FIXED: Cannot be 'conformant' if there are any critical alerts
+  let overallLevel: ComplianceLevel;
+  if (criticalCount > 0 || hasGovernanceIssue) {
     overallLevel = 'critical';
-  } else if (warningCount > 2) {
+  } else if (warningCount > 0) {
     overallLevel = 'warning';
+  } else {
+    overallLevel = 'conformant';
   }
 
   return {
@@ -260,17 +309,22 @@ export function checkCompliance(
     alerts,
     score,
     timestamp: new Date().toISOString(),
+    hasGovernanceIssue,
   };
 }
 
 /**
  * Calculate Environmental ROI (TND saved per tCO2e avoided)
+ * FIXED FORMULA: ROI = ((Gains - Investment) / Investment) * 100
+ * If gains are zero, returns special status
  */
 export function calculateEnvironmentalROI(actions: RSEAction[]): {
   totalInvestment: number;
   totalCO2Avoided: number;
   roiPerTonne: number;
   tndSavedPerTonne: number;
+  roiStatus: 'calculated' | 'evaluating' | 'no_investment';
+  totalSavings: number;
 } {
   const completedActions = actions.filter(a => a.status === 'done' && a.category === 'E');
   
@@ -279,22 +333,36 @@ export function calculateEnvironmentalROI(actions: RSEAction[]): {
   
   // Assume average carbon price of 80 TND/tCO2e (aligned with future EU ETS projections)
   const carbonPricePerTonne = 80; // TND
-  const tndSavedPerTonne = totalCO2Avoided > 0 ? (totalCO2Avoided * carbonPricePerTonne) / totalCO2Avoided : 0;
-  
-  // ROI = (Savings - Investment) / Investment
   const savings = totalCO2Avoided * carbonPricePerTonne;
-  const roiPerTonne = totalInvestment > 0 ? ((savings - totalInvestment) / totalInvestment) * 100 : 0;
+  
+  // CORRECTED ROI FORMULA: ((Gains - Investment) / Investment) * 100
+  let roiPerTonne: number;
+  let roiStatus: 'calculated' | 'evaluating' | 'no_investment';
+  
+  if (totalInvestment === 0) {
+    roiPerTonne = 0;
+    roiStatus = 'no_investment';
+  } else if (savings === 0) {
+    // If gains are zero, we're still evaluating
+    roiPerTonne = 0;
+    roiStatus = 'evaluating';
+  } else {
+    roiPerTonne = ((savings - totalInvestment) / totalInvestment) * 100;
+    roiStatus = 'calculated';
+  }
 
   return {
     totalInvestment,
     totalCO2Avoided,
     roiPerTonne,
-    tndSavedPerTonne: carbonPricePerTonne, // TND value per tonne
+    tndSavedPerTonne: carbonPricePerTonne,
+    roiStatus,
+    totalSavings: savings,
   };
 }
 
 /**
- * Get compliance level color
+ * Get compliance level configuration
  */
 export function getComplianceLevelConfig(level: ComplianceLevel): {
   label: string;

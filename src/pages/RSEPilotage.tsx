@@ -30,6 +30,7 @@ export default function RSEPilotage() {
   const [editingAction, setEditingAction] = useState<RSEAction | null>(null);
   const [stakeholders] = useState(DEFAULT_STAKEHOLDERS);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
+  const [activeTab, setActiveTab] = useState('dashboard');
   
   // Integrated RSE Report hook
   const { reportData, isLoading: isReportLoading, refreshReport } = useRSEReport(actions);
@@ -147,6 +148,11 @@ export default function RSEPilotage() {
 
   const suggestionCount = actions.filter(a => a.isSuggestion).length;
 
+  // Handle tab navigation from child components
+  const handleNavigateToTab = (tabId: string) => {
+    setActiveTab(tabId);
+  };
+
   return (
     <div className="container mx-auto py-6 px-4 max-w-7xl">
       {/* Header */}
@@ -173,7 +179,7 @@ export default function RSEPilotage() {
       </div>
 
       {/* Main Tabs */}
-      <Tabs defaultValue="dashboard" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
           <TabsTrigger value="dashboard" className="gap-2">
             <LayoutDashboard className="h-4 w-4" />
@@ -199,7 +205,7 @@ export default function RSEPilotage() {
         </TabsList>
 
         <TabsContent value="dashboard">
-          <RSEStrategicDashboard actions={actions} />
+          <RSEStrategicDashboard actions={actions} onNavigateToTab={handleNavigateToTab} />
         </TabsContent>
 
         <TabsContent value="kanban">
@@ -225,6 +231,7 @@ export default function RSEPilotage() {
               onExportPDF={handleExportIntegratedPDF}
               onRefresh={refreshReport}
               isExporting={isExportingPDF}
+              onNavigateToTab={handleNavigateToTab}
             />
           ) : (
             <div className="flex items-center justify-center py-12">

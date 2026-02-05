@@ -6,14 +6,18 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 import {
   AlertTriangle,
   ShieldCheck,
   ShieldAlert,
   ShieldX,
   TrendingDown,
+  TrendingUp,
   Leaf,
   Info,
+  ArrowRight,
+  HelpCircle,
 } from 'lucide-react';
 import {
   ComplianceCheckResult,
@@ -21,12 +25,14 @@ import {
   ComplianceLevel,
   getComplianceLevelConfig,
   calculateEnvironmentalROI,
+  getOverallStatus,
 } from '@/lib/rse/complianceEngine';
 import { RSEAction } from '@/lib/rse/types';
 
 interface RSEComplianceAlertsProps {
   complianceResult: ComplianceCheckResult;
   actions: RSEAction[];
+  onNavigateToActions?: () => void;
 }
 
 const getLevelIcon = (level: ComplianceLevel) => {
@@ -44,15 +50,63 @@ const getAlertVariant = (level: ComplianceLevel): 'default' | 'destructive' => {
   return level === 'critical' ? 'destructive' : 'default';
 };
 
-export function RSEComplianceAlerts({ complianceResult, actions }: RSEComplianceAlertsProps) {
+// Format number with space separator for thousands
+const formatNumber = (n: number) => {
+  return n.toLocaleString('fr-FR', { maximumFractionDigits: 0 }).replace(/,/g, ' ');
+};
+
+export function RSEComplianceAlerts({ complianceResult, actions, onNavigateToActions }: RSEComplianceAlertsProps) {
   const levelConfig = getComplianceLevelConfig(complianceResult.overallLevel);
   const envROI = calculateEnvironmentalROI(actions);
+  const overallStatus = getOverallStatus(complianceResult.alerts);
 
   const criticalAlerts = complianceResult.alerts.filter(a => a.level === 'critical');
   const warningAlerts = complianceResult.alerts.filter(a => a.level === 'warning');
 
-  const formatNumber = (n: number) => {
-    return n.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
+  // Determine badge color based on alerts (not just score)
+  const getBadgeConfig = () => {
+    if (criticalAlerts.length > 0) {
+      return { className: 'bg-red-100 text-red-600 border-red-200', label: 'Non-conforme' };
+    }
+    if (warningAlerts.length > 0) {
+      return { className: 'bg-amber-100 text-amber-600 border-amber-200', label: 'Attention requise' };
+    }
+    return { className: 'bg-emerald-100 text-emerald-600 border-emerald-200', label: 'Conforme' };
+  };
+
+  const badgeConfig = getBadgeConfig();
+
+  // Format ROI display
+  const renderROIValue = () => {
+    if (envROI.roiStatus === 'no_investment') {
+      return (
+        <div className="flex flex-col items-center">
+          <HelpCircle className="h-5 w-5 text-muted-foreground mb-1" />
+          <p className="text-sm text-muted-foreground">Aucun investissement</p>
+        </div>
+      );
+    }
+    if (envROI.roiStatus === 'evaluating') {
+      return (
+        <div className="flex flex-col items-center">
+          <p className="text-lg font-semibold text-blue-600">En cours</p>
+          <p className="text-xs text-muted-foreground">d'évaluation</p>
+        </div>
+      );
+    }
+    return (
+      <>
+        {envROI.roiPerTonne >= 0 ? (
+          <TrendingUp className="h-5 w-5 mx-auto mb-1 text-emerald-500" />
+        ) : (
+          <TrendingDown className="h-5 w-5 mx-auto mb-1 text-red-500" />
+        )}
+        <p className={`text-2xl font-bold ${envROI.roiPerTonne >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+          {envROI.roiPerTonne.toFixed(0)}%
+        </p>
+        <p className="text-xs text-muted-foreground">ROI Carbone</p>
+      </>
+    );
   };
 
   return (
@@ -69,8 +123,8 @@ export function RSEComplianceAlerts({ complianceResult, actions }: RSECompliance
               {getLevelIcon(complianceResult.overallLevel)}
               <span>Conformité Réglementaire</span>
             </CardTitle>
-            <Badge className={`${levelConfig.bgColor} ${levelConfig.color}`}>
-              {levelConfig.icon} {levelConfig.label}
+            <Badge className={`${badgeConfig.className} border`}>
+              {levelConfig.icon} {badgeConfig.label}
             </Badge>
           </div>
         </CardHeader>
@@ -78,12 +132,25 @@ export function RSEComplianceAlerts({ complianceResult, actions }: RSECompliance
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Compliance Score */}
             <div className="text-center">
-              <p className="text-4xl font-bold">{complianceResult.score}</p>
+              <p className={`text-4xl font-bold ${
+                criticalAlerts.length > 0 ? 'text-red-600' :
+                warningAlerts.length > 0 ? 'text-amber-600' :
+                'text-emerald-600'
+              }`}>{complianceResult.score}</p>
               <p className="text-sm text-muted-foreground">Score de Conformité</p>
               <Progress 
                 value={complianceResult.score} 
-                className="h-2 mt-2"
+                className={`h-2 mt-2 ${
+                  criticalAlerts.length > 0 ? '[&>div]:bg-red-500' :
+                  warningAlerts.length > 0 ? '[&>div]:bg-amber-500' :
+                  ''
+                }`}
               />
+              {complianceResult.hasGovernanceIssue && (
+                <p className="text-xs text-red-500 mt-1 font-medium">
+                  Plafonné à 50 (Art. 2)
+                </p>
+              )}
             </div>
 
             {/* Alert Summary */}
@@ -113,6 +180,20 @@ export function RSEComplianceAlerts({ complianceResult, actions }: RSECompliance
               </p>
             </div>
           </div>
+
+          {/* Corrective Actions Button */}
+          {complianceResult.score < 100 && onNavigateToActions && (
+            <div className="mt-6 pt-4 border-t border-border/50">
+              <Button 
+                variant="outline" 
+                className="w-full bg-primary/5 hover:bg-primary/10 border-primary/20"
+                onClick={onNavigateToActions}
+              >
+                <ArrowRight className="h-4 w-4 mr-2" />
+                Voir les actions correctives
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -140,21 +221,17 @@ export function RSEComplianceAlerts({ complianceResult, actions }: RSECompliance
             </div>
             <div className="text-center p-3 rounded-lg bg-white/60">
               <p className="text-2xl font-bold text-purple-600">
-                {envROI.tndSavedPerTonne}
+                {formatNumber(envROI.totalSavings)}
               </p>
-              <p className="text-xs text-muted-foreground">TND/tCO₂e</p>
+              <p className="text-xs text-muted-foreground">TND Économisés</p>
             </div>
             <div className="text-center p-3 rounded-lg bg-white/60">
-              <TrendingDown className={`h-5 w-5 mx-auto mb-1 ${envROI.roiPerTonne >= 0 ? 'text-emerald-500' : 'text-red-500'}`} />
-              <p className={`text-2xl font-bold ${envROI.roiPerTonne >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                {envROI.roiPerTonne.toFixed(0)}%
-              </p>
-              <p className="text-xs text-muted-foreground">ROI Carbone</p>
+              {renderROIValue()}
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-4 text-center">
             <Info className="h-3 w-3 inline mr-1" />
-            Calcul basé sur un prix carbone de 80 TND/tCO₂e (projection EU ETS)
+            ROI = ((Économies - Investissements) / Investissements) × 100 | Prix carbone : 80 TND/tCO₂e
           </p>
         </CardContent>
       </Card>

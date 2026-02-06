@@ -174,17 +174,20 @@ export const SectorComparativeAnalysis = ({ totalEmissions, annualRevenue = 1000
   
   // Données pour le graphique comparatif
   const getChartData = () => {
+    // Ensure emissionsIntensity has a minimum visible value for the chart
+    const displayIntensity = emissionsIntensity > 0 ? emissionsIntensity : 0.01;
+    
     return [
       {
         name: "Votre entreprise",
-        value: emissionsIntensity,
+        value: displayIntensity,
         color: performance.color === "green" ? "#22c55e" : 
                performance.color === "blue" ? "#3b82f6" :
                performance.color === "yellow" ? "#eab308" : "#ef4444",
         isCompany: true
       },
       {
-        name: "Top 10%",
+        name: "Top 10",
         value: sectorData.topPerformers,
         color: "#10b981",
         isCompany: false
@@ -355,8 +358,8 @@ export const SectorComparativeAnalysis = ({ totalEmissions, annualRevenue = 1000
           <Card className="p-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Top 10%</span>
-                <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950">
+                <span className="text-sm font-medium">Top 10</span>
+                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950">
                   {sectorData.topPerformers.toFixed(1)} {sectorData.unit}
                 </Badge>
               </div>

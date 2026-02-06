@@ -264,14 +264,19 @@ export const AdvancedGHGCalculator = () => {
         const savedAdvanced = localStorage.getItem('scope3-advanced-calculations');
         if (savedAdvanced) {
           const advancedCalcs = JSON.parse(savedAdvanced);
-          const entriesFromAdvanced = advancedCalcs.map((calc: any) => ({
-            id: calc.id || `scope3-adv-${Date.now()}-${Math.random()}`,
-            source: `${calc.categoryName} - ${calc.subcategoryName}`,
-            quantity: calc.quantity,
-            unit: calc.unit,
-            emissionFactor: calc.emissions / (calc.quantity || 1), // Recalculer le facteur
-            total: calc.emissions
-          }));
+          const entriesFromAdvanced = advancedCalcs.map((calc: any) => {
+            const quantity = calc.quantity || 0;
+            const emissions = calc.emissions || 0;
+            const factor = quantity > 0 ? emissions / quantity : 0;
+            return {
+              id: calc.id || `scope3-adv-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              source: `${calc.categoryName || 'Catégorie'} - ${calc.subcategoryName || calc.method || 'Calcul avancé'}`,
+              quantity: quantity,
+              unit: calc.unit || 'unités',
+              emissionFactor: factor,
+              total: emissions
+            };
+          });
           return [...entriesFromDetails, ...entriesFromAdvanced];
         }
       } catch (e) {
@@ -286,47 +291,96 @@ export const AdvancedGHGCalculator = () => {
   const handleScopeEntriesChange = (scopeNumber: 1 | 2 | 3, entries: { id: string; source: string; quantity: number; unit: string; emissionFactor: number; total: number }[]) => {
     const scopeKey = `scope${scopeNumber}` as 'scope1' | 'scope2' | 'scope3';
     
-    // Convertir les entrées en format CalculationDetail
-    const newDetails = entries.map(entry => ({
+    // Séparer les entrées standard des entrées du module avancé Scope 3
+    const isAdvancedEntry = (entry: { id: string; source: string }) => 
+      entry.id.startsWith('scope3-adv-') || entry.source.includes(' - ');
+    
+    // Pour Scope 3 en mode avancé, séparer les entrées
+    let standardEntries = entries;
+    let advancedEntries: typeof entries = [];
+    
+    if (scopeNumber === 3 && isAdvancedMode) {
+      standardEntries = entries.filter(e => !isAdvancedEntry(e));
+      advancedEntries = entries.filter(e => isAdvancedEntry(e));
+    }
+    
+    // Convertir les entrées standard en format CalculationDetail
+    const newDetails = standardEntries.map(entry => ({
       id: entry.id,
       type: entry.source.toLowerCase().replace(/\s+/g, '-'),
       description: entry.source,
       quantity: entry.quantity,
       unit: entry.unit,
       emissionFactor: entry.emissionFactor,
-      emissions: entry.total,
+      emissions: entry.total, // Utiliser le total recalculé (quantity * emissionFactor)
       timestamp: new Date().toLocaleString('fr-FR'),
       formuleDetail: `${entry.quantity} ${entry.unit} × ${entry.emissionFactor} kg CO₂e/${entry.unit}`
     }));
     
-    // Mettre à jour sectionDetails (cela déclenchera un re-render et mettra à jour getEmissionsByScope)
+    // Mettre à jour sectionDetails avec les entrées standard uniquement
     setSectionDetails(scopeKey, newDetails);
     
-    // Pour le mode avancé Scope 3, synchroniser aussi le localStorage
+    // Pour le mode avancé Scope 3, synchroniser le localStorage avec les entrées avancées
     if (scopeNumber === 3 && isAdvancedMode) {
-      const advancedEntries = entries.filter(e => e.id.startsWith('scope3-adv-') || e.source.includes(' - '));
-      if (advancedEntries.length > 0) {
-        try {
-          const savedAdvanced = localStorage.getItem('scope3-advanced-calculations');
-          if (savedAdvanced) {
-            const originalAdvanced = JSON.parse(savedAdvanced);
-            const updatedAdvanced = originalAdvanced.filter((calc: any) => 
-              advancedEntries.some(e => e.id === calc.id)
-            ).map((calc: any) => {
+      try {
+        const savedAdvanced = localStorage.getItem('scope3-advanced-calculations');
+        if (savedAdvanced) {
+          const originalAdvanced = JSON.parse(savedAdvanced);
+          
+          // Filtrer pour ne garder que les entrées qui sont encore présentes
+          const remainingAdvancedIds = advancedEntries.map(e => e.id);
+          
+          // Mettre à jour les entrées avancées avec les nouvelles valeurs
+          const updatedAdvanced = originalAdvanced
+            .filter((calc: any) => remainingAdvancedIds.includes(calc.id))
+            .map((calc: any) => {
               const matchingEntry = advancedEntries.find(e => e.id === calc.id);
               if (matchingEntry) {
-                return { ...calc, quantity: matchingEntry.quantity, emissions: matchingEntry.total };
+                return { 
+                  ...calc, 
+                  quantity: matchingEntry.quantity, 
+                  emissions: matchingEntry.total 
+                };
               }
               return calc;
             });
-            localStorage.setItem('scope3-advanced-calculations', JSON.stringify(updatedAdvanced));
-            setScope3AdvancedTotal(updatedAdvanced.reduce((sum: number, c: any) => sum + (c.emissions || 0), 0));
-          }
-        } catch (e) {
-          console.error('Erreur mise à jour Scope3 avancé:', e);
+          
+          localStorage.setItem('scope3-advanced-calculations', JSON.stringify(updatedAdvanced));
+          const newAdvancedTotal = updatedAdvanced.reduce((sum: number, c: any) => sum + (c.emissions || 0), 0);
+          setScope3AdvancedTotal(newAdvancedTotal);
         }
+      } catch (e) {
+        console.error('Erreur mise à jour Scope3 avancé:', e);
       }
     }
+    
+    // Forcer la mise à jour du contexte global avec les nouvelles valeurs
+    const scope1Total = scopeKey === 'scope1' 
+      ? newDetails.reduce((sum, d) => sum + d.emissions, 0)
+      : sectionDetails.scope1.reduce((sum, d) => sum + d.emissions, 0);
+    
+    const scope2Total = scopeKey === 'scope2'
+      ? newDetails.reduce((sum, d) => sum + d.emissions, 0)
+      : sectionDetails.scope2.reduce((sum, d) => sum + d.emissions, 0);
+    
+    // Pour Scope 3, calculer le total combiné (standard + avancé)
+    let scope3Total: number;
+    if (scopeKey === 'scope3') {
+      const standardScope3Total = newDetails.reduce((sum, d) => sum + d.emissions, 0);
+      const advancedScope3Total = isAdvancedMode 
+        ? advancedEntries.reduce((sum, e) => sum + e.total, 0)
+        : 0;
+      scope3Total = standardScope3Total + advancedScope3Total;
+    } else {
+      const standardScope3 = sectionDetails.scope3.reduce((sum, d) => sum + d.emissions, 0);
+      scope3Total = isAdvancedMode ? standardScope3 + scope3AdvancedTotal : standardScope3;
+    }
+    
+    updateEmissions({
+      scope1: scope1Total,
+      scope2: scope2Total,
+      scope3: scope3Total
+    });
   };
 
   // États pour les formulaires avec persistance
@@ -561,15 +615,20 @@ export const AdvancedGHGCalculator = () => {
   // Sauvegarder les calculs et mettre à jour le contexte (incluant Scope 3 avancé)
   useEffect(() => {
     localStorage.setItem('calculator-calculations', JSON.stringify(calculations));
-    const emissionsByScope = getEmissionsByScope();
+  }, [calculations]);
+
+  // Effet séparé pour la synchronisation des totaux (évite les dépendances circulaires)
+  useEffect(() => {
+    const scope1Total = sectionDetails.scope1.reduce((sum, d) => sum + d.emissions, 0);
+    const scope2Total = sectionDetails.scope2.reduce((sum, d) => sum + d.emissions, 0);
     
     // Utiliser TOUJOURS le scope3TotalCalculated pour garantir la cohérence
     updateEmissions({
-      scope1: emissionsByScope.scope1,
-      scope2: emissionsByScope.scope2,
+      scope1: scope1Total,
+      scope2: scope2Total,
       scope3: scope3TotalCalculated
     });
-  }, [calculations, scope3TotalCalculated, sectionDetails]);
+  }, [sectionDetails.scope1, sectionDetails.scope2, scope3TotalCalculated, updateEmissions]);
 
   const addCalculation = (scope: string, category: string, subcategory: string, quantity: number) => {
     const scopeData = baseCarbone[scope as keyof typeof baseCarbone] as any;
@@ -623,6 +682,8 @@ export const AdvancedGHGCalculator = () => {
     // Ils sont synchronisés avec les calculations via addCalculation
     const scope1 = sectionDetails.scope1.reduce((sum, d) => sum + d.emissions, 0);
     const scope2 = sectionDetails.scope2.reduce((sum, d) => sum + d.emissions, 0);
+    // Pour Scope 3, utiliser uniquement les sectionDetails standard
+    // Le module avancé est ajouté séparément via scope3TotalCalculated
     const scope3 = sectionDetails.scope3.reduce((sum, d) => sum + d.emissions, 0);
     return { scope1, scope2, scope3 };
   };

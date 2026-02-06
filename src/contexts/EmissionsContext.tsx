@@ -54,56 +54,57 @@ const loadFromLocalStorage = (): EmissionsData | null => {
       const scope1 = (details.scope1 || []).reduce((sum: number, d: any) => sum + (d.emissions || 0), 0);
       const scope2 = (details.scope2 || []).reduce((sum: number, d: any) => sum + (d.emissions || 0), 0);
       
-      // Calculer Scope 3 : toujours inclure les sectionDetails, + module avancé si activé
-      // Cette logique est synchronisée avec scope3TotalCalculated dans AdvancedGHGCalculator
+      // Calculer Scope 3 : toujours inclure les sectionDetails standard
       let scope3 = (details.scope3 || []).reduce((sum: number, d: any) => sum + (d.emissions || 0), 0);
       
       if (advancedModeEnabled) {
-        // Mode avancé : ajouter les calculs du module avancé aux sectionDetails
+        // Mode avancé : ajouter les calculs du module avancé aux sectionDetails standard
         const scope3Advanced = localStorage.getItem('scope3-advanced-calculations');
         if (scope3Advanced) {
-          const advCalcs = JSON.parse(scope3Advanced);
-          const advancedTotal = advCalcs.reduce((sum: number, c: any) => sum + (c.emissions || 0), 0);
-          scope3 += advancedTotal;
+          try {
+            const advCalcs = JSON.parse(scope3Advanced);
+            const advancedTotal = advCalcs.reduce((sum: number, c: any) => sum + (c.emissions || 0), 0);
+            scope3 += advancedTotal;
+          } catch (e) {
+            console.error('Erreur parsing scope3-advanced-calculations:', e);
+          }
         }
       }
       
-      if (scope1 > 0 || scope2 > 0 || scope3 > 0) {
-        // Charger aussi les autres données d'entreprise
-        const chiffreAffaires = localStorage.getItem('calculator-chiffre-affaires');
-        const nombrePersonnels = localStorage.getItem('calculator-nombre-personnels');
-        const emissionsAnneePrecedente = localStorage.getItem('calculator-emissions-annee-precedente');
-        const objectifSBTI = localStorage.getItem('calculator-objectif-sbti');
-        const objectifsSBTParAnnee = localStorage.getItem('calculator-objectifs-sbt-par-annee');
-        const moyenneSectorielle = localStorage.getItem('calculator-moyenne-sectorielle');
-        const leadersSecteur = localStorage.getItem('calculator-leaders-secteur');
-        const positionClassement = localStorage.getItem('calculator-position-classement');
-        
-        // Nouveaux benchmarks sectoriels dynamiques
-        const benchmarkSectorName = localStorage.getItem('calculator-benchmark-sector-name');
-        const benchmarkSectorAverage = localStorage.getItem('calculator-benchmark-sector-average');
-        const benchmarkSectorTop10 = localStorage.getItem('calculator-benchmark-sector-top10');
-        const benchmarkSectorCritical = localStorage.getItem('calculator-benchmark-sector-critical');
-        
-        return {
-          scope1,
-          scope2,
-          scope3,
-          total: scope1 + scope2 + scope3,
-          chiffreAffaires: chiffreAffaires ? JSON.parse(chiffreAffaires) : 1000,
-          nombrePersonnels: nombrePersonnels ? JSON.parse(nombrePersonnels) : 50,
-          emissionsAnneePrecedente: emissionsAnneePrecedente ? JSON.parse(emissionsAnneePrecedente) : 0,
-          objectifSBTI: objectifSBTI ? JSON.parse(objectifSBTI) : 0,
-          objectifsSBTParAnnee: objectifsSBTParAnnee ? JSON.parse(objectifsSBTParAnnee) : {},
-          moyenneSectorielle: moyenneSectorielle ? JSON.parse(moyenneSectorielle) : 0,
-          leadersSecteur: leadersSecteur ? JSON.parse(leadersSecteur) : 0,
-          positionClassement: positionClassement ? JSON.parse(positionClassement) : 0,
-          benchmarkSectorName: benchmarkSectorName ? JSON.parse(benchmarkSectorName) : '',
-          benchmarkSectorAverage: benchmarkSectorAverage ? JSON.parse(benchmarkSectorAverage) : 0,
-          benchmarkSectorTop10: benchmarkSectorTop10 ? JSON.parse(benchmarkSectorTop10) : 0,
-          benchmarkSectorCritical: benchmarkSectorCritical ? JSON.parse(benchmarkSectorCritical) : 0,
-        };
-      }
+      // Charger aussi les autres données d'entreprise
+      const chiffreAffaires = localStorage.getItem('calculator-chiffre-affaires');
+      const nombrePersonnels = localStorage.getItem('calculator-nombre-personnels');
+      const emissionsAnneePrecedente = localStorage.getItem('calculator-emissions-annee-precedente');
+      const objectifSBTI = localStorage.getItem('calculator-objectif-sbti');
+      const objectifsSBTParAnnee = localStorage.getItem('calculator-objectifs-sbt-par-annee');
+      const moyenneSectorielle = localStorage.getItem('calculator-moyenne-sectorielle');
+      const leadersSecteur = localStorage.getItem('calculator-leaders-secteur');
+      const positionClassement = localStorage.getItem('calculator-position-classement');
+      
+      // Nouveaux benchmarks sectoriels dynamiques
+      const benchmarkSectorName = localStorage.getItem('calculator-benchmark-sector-name');
+      const benchmarkSectorAverage = localStorage.getItem('calculator-benchmark-sector-average');
+      const benchmarkSectorTop10 = localStorage.getItem('calculator-benchmark-sector-top10');
+      const benchmarkSectorCritical = localStorage.getItem('calculator-benchmark-sector-critical');
+      
+      return {
+        scope1,
+        scope2,
+        scope3,
+        total: scope1 + scope2 + scope3,
+        chiffreAffaires: chiffreAffaires ? JSON.parse(chiffreAffaires) : 1000,
+        nombrePersonnels: nombrePersonnels ? JSON.parse(nombrePersonnels) : 50,
+        emissionsAnneePrecedente: emissionsAnneePrecedente ? JSON.parse(emissionsAnneePrecedente) : 0,
+        objectifSBTI: objectifSBTI ? JSON.parse(objectifSBTI) : 0,
+        objectifsSBTParAnnee: objectifsSBTParAnnee ? JSON.parse(objectifsSBTParAnnee) : {},
+        moyenneSectorielle: moyenneSectorielle ? JSON.parse(moyenneSectorielle) : 0,
+        leadersSecteur: leadersSecteur ? JSON.parse(leadersSecteur) : 0,
+        positionClassement: positionClassement ? JSON.parse(positionClassement) : 0,
+        benchmarkSectorName: benchmarkSectorName ? JSON.parse(benchmarkSectorName) : '',
+        benchmarkSectorAverage: benchmarkSectorAverage ? JSON.parse(benchmarkSectorAverage) : 0,
+        benchmarkSectorTop10: benchmarkSectorTop10 ? JSON.parse(benchmarkSectorTop10) : 0,
+        benchmarkSectorCritical: benchmarkSectorCritical ? JSON.parse(benchmarkSectorCritical) : 0,
+      };
     }
   } catch (error) {
     console.error('Erreur lors du chargement localStorage:', error);

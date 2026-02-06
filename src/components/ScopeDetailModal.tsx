@@ -87,10 +87,16 @@ export const ScopeDetailModal: React.FC<ScopeDetailModalProps> = ({
     
     const updatedEntries = localEntries.map(entry => {
       if (entry.id === editingId) {
-        const newTotal = (editData.quantity || 0) * (editData.emissionFactor || 0);
+        const quantity = editData.quantity ?? entry.quantity;
+        const emissionFactor = editData.emissionFactor ?? entry.emissionFactor;
+        // Recalculer le total avec la formule correcte
+        const newTotal = quantity * emissionFactor;
         return {
           ...entry,
-          ...editData,
+          source: editData.source ?? entry.source,
+          quantity,
+          unit: editData.unit ?? entry.unit,
+          emissionFactor,
           total: newTotal
         };
       }

@@ -107,11 +107,14 @@ export const useComplianceScore = (): ComplianceResult => {
       const sectionDetails = sectionDetailsStr ? JSON.parse(sectionDetailsStr) : { scope1: [], scope2: [], scope3: [] };
       const scope3Advanced = scope3AdvancedStr ? JSON.parse(scope3AdvancedStr) : [];
       
-      // Fusionner toutes les entrées par scope
+      // Fusionner toutes les entrées par scope avec vérification de type Array
       const allEntries = {
-        scope1: sectionDetails.scope1 || [],
-        scope2: sectionDetails.scope2 || [],
-        scope3: [...(sectionDetails.scope3 || []), ...scope3Advanced]
+        scope1: Array.isArray(sectionDetails.scope1) ? sectionDetails.scope1 : [],
+        scope2: Array.isArray(sectionDetails.scope2) ? sectionDetails.scope2 : [],
+        scope3: [
+          ...(Array.isArray(sectionDetails.scope3) ? sectionDetails.scope3 : []),
+          ...(Array.isArray(scope3Advanced) ? scope3Advanced : [])
+        ]
       };
 
       // Vérifier chaque catégorie obligatoire
@@ -120,18 +123,22 @@ export const useComplianceScore = (): ComplianceResult => {
         
         // Chercher si au moins une entrée correspond à cette catégorie
         const isFilled = scopeEntries.some((entry: any) => {
-          // Vérifier dans le type, la description, la formule, la catégorie et sous-catégorie
+          // Vérifier dans tous les champs textuels disponibles (standard + avancé)
           const searchText = normalizeText([
             entry.type || '',
             entry.description || '',
             entry.formuleDetail || '',
             entry.category || '',
             entry.subcategory || '',
-            entry.unit || ''
+            entry.categoryName || '',
+            entry.subcategoryName || '',
+            entry.method || '',
+            entry.unit || '',
+            entry.source || ''
           ].join(' '));
           
-          // Vérifier aussi si l'entrée a des émissions > 0
-          const hasEmissions = (entry.emissions || 0) > 0;
+          // Vérifier si l'entrée a des émissions > 0 (supporte les 2 formats)
+          const hasEmissions = (entry.emissions || 0) > 0 || (entry.total || 0) > 0;
           
           // Chercher si un des mots-clés correspond (tous normalisés)
           const matchesKeyword = cat.keywords.some(keyword => 

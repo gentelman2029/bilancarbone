@@ -18,64 +18,73 @@ export interface ComplianceResult {
   filledCategories: ComplianceCategory[];
 }
 
+// Normaliser le texte : retirer les accents et mettre en minuscules
+const normalizeText = (text: string): string => {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+};
+
 // Référentiel des 9 catégories obligatoires
+// Les keywords sont SANS accents pour correspondre au normalizeText
 const MANDATORY_CATEGORIES: Omit<ComplianceCategory, 'isFilled'>[] = [
   // Scope 1 - 3 catégories
   {
     id: 'heating',
     name: 'Chauffage (Gaz/Fioul)',
     scope: 'scope1',
-    keywords: ['gaz', 'fioul', 'chauffage', 'combustible', 'gazNaturel', 'fioulDomestique', 'fioulLourd', 'propane', 'butane', 'charbon', 'bois', 'granulés']
+    keywords: ['gaz', 'fioul', 'chauffage', 'combustible', 'combustibles', 'gaznaturel', 'fiouldomestique', 'fioullourd', 'propane', 'butane', 'charbon', 'bois', 'granules', 'diesel', 'gazole', 'essence', 'coke', 'lignite', 'gpl']
   },
   {
     id: 'fleet',
     name: 'Flotte de véhicules',
     scope: 'scope1',
-    keywords: ['véhicule', 'voiture', 'camion', 'utilitaire', 'flotte', 'diesel', 'essence', 'km', 'kilometr', 'tracteur', 'chariot']
+    keywords: ['vehicule', 'vehicules', 'voiture', 'camion', 'utilitaire', 'flotte', 'km', 'kilometr', 'tracteur', 'chariot', 'poids lourd', 'hybride', 'electrique']
   },
   {
     id: 'refrigerants',
     name: 'Fluides frigorigènes (Climatisation)',
     scope: 'scope1',
-    keywords: ['frigorigène', 'climatisation', 'froid', 'r-', 'r134', 'r404', 'r410', 'r407', 'r32', 'r22', 'hfc', 'cfc', 'réfrigérant']
+    keywords: ['frigorigene', 'refrigerant', 'refrigerants', 'climatisation', 'froid', 'r-', 'r134', 'r404', 'r410', 'r407', 'r32', 'r22', 'r11', 'r12', 'hfc', 'cfc', 'hcfc']
   },
   // Scope 2 - 2 catégories
   {
     id: 'electricity',
     name: 'Électricité',
     scope: 'scope2',
-    keywords: ['électricité', 'electrique', 'kwh', 'énergie', 'solaire', 'eolien', 'hydraulique', 'mix']
+    keywords: ['electricite', 'electrique', 'kwh', 'mwh', 'energie', 'solaire', 'eolien', 'hydraulique', 'mix', 'tunisie', 'france', 'allemagne']
   },
   {
     id: 'heat_networks',
     name: 'Réseaux de chaleur/froid',
     scope: 'scope2',
-    keywords: ['vapeur', 'chaleur', 'réseau', 'eau chaude', 'chauffage urbain', 'district']
+    keywords: ['vapeur', 'chaleur', 'reseau', 'eau chaude', 'chauffage urbain', 'district', 'vapeurindustrielle', 'eauchaude']
   },
   // Scope 3 - 4 catégories
   {
     id: 'purchases',
     name: 'Achats de biens et services',
     scope: 'scope3',
-    keywords: ['achat', 'bien', 'service', 'fournisseur', 'approvisionnement', 'matière', 'équipement', 'immobilisation']
+    keywords: ['achat', 'achats', 'bien', 'service', 'fournisseur', 'approvisionnement', 'matiere', 'materiaux', 'equipement', 'immobilisation', 'acier', 'aluminium', 'beton', 'ciment', 'verre', 'plastique', 'papier', 'cuivre', 'alimentation', 'boeuf', 'porc', 'volaille', 'poisson', 'lait', 'fromage', 'oeuf', 'legumes', 'fruits', 'cereales', 'agneau', 'numerique', 'email', 'streaming', 'visioconference', 'stockage', 'cloud', 'cat1', 'cat2']
   },
   {
     id: 'waste',
     name: 'Déchets',
     scope: 'scope3',
-    keywords: ['déchet', 'recyclage', 'enfouissement', 'incinération', 'valorisation', 'ordure', 'tri']
+    keywords: ['dechet', 'dechets', 'recyclage', 'enfouissement', 'incineration', 'valorisation', 'ordure', 'tri', 'compostage', 'methanisation', 'cat5']
   },
   {
     id: 'travel',
     name: 'Déplacements professionnels/Domicile-travail',
     scope: 'scope3',
-    keywords: ['déplacement', 'professionnel', 'domicile', 'travail', 'trajet', 'transport', 'avion', 'train', 'bus', 'métro', 'voyage', 'mission']
+    keywords: ['deplacement', 'professionnel', 'domicile', 'travail', 'trajet', 'avion', 'train', 'bus', 'metro', 'tramway', 'voyage', 'mission', 'tgv', 'ter', 'passager', 'court-courrier', 'long-courrier', 'moyen-courrier', 'cat6', 'cat7']
   },
   {
     id: 'freight',
     name: 'Fret (Transport de marchandises)',
     scope: 'scope3',
-    keywords: ['fret', 'transport', 'marchandise', 'logistique', 'livraison', 'expédition', 'amont', 'aval', 'distribution']
+    keywords: ['fret', 'marchandise', 'logistique', 'livraison', 'expedition', 'amont', 'aval', 'distribution', 'transport routier', 'transport ferroviaire', 'transport maritime', 'transport aerien', 'transport fluvial', 't.km', 'poids moyen', 'poids lourd', 'cargo', 'cat4', 'cat9']
   }
 ];
 
@@ -111,21 +120,22 @@ export const useComplianceScore = (): ComplianceResult => {
         
         // Chercher si au moins une entrée correspond à cette catégorie
         const isFilled = scopeEntries.some((entry: any) => {
-          // Vérifier dans le type, la description ou la formule
-          const searchText = [
+          // Vérifier dans le type, la description, la formule, la catégorie et sous-catégorie
+          const searchText = normalizeText([
             entry.type || '',
             entry.description || '',
             entry.formuleDetail || '',
             entry.category || '',
-            entry.subcategory || ''
-          ].join(' ').toLowerCase();
+            entry.subcategory || '',
+            entry.unit || ''
+          ].join(' '));
           
           // Vérifier aussi si l'entrée a des émissions > 0
           const hasEmissions = (entry.emissions || 0) > 0;
           
-          // Chercher si un des mots-clés correspond
+          // Chercher si un des mots-clés correspond (tous normalisés)
           const matchesKeyword = cat.keywords.some(keyword => 
-            searchText.includes(keyword.toLowerCase())
+            searchText.includes(normalizeText(keyword))
           );
           
           return matchesKeyword && hasEmissions;

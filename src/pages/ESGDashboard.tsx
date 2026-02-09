@@ -243,7 +243,7 @@ const ESGDashboard: React.FC = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {[2025, 2024, 2023, 2022].map((year) => (
+                    {[2026, 2025, 2024, 2023, 2022].map((year) => (
                       <SelectItem key={year} value={year.toString()}>
                         {year}
                       </SelectItem>
@@ -252,12 +252,12 @@ const ESGDashboard: React.FC = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Chiffre d'Affaires (TND)</Label>
+                <Label>Chiffre d'Affaires (en milliers de dinars - kTND)</Label>
                 <Input
                   type="number"
                   value={esgData.revenue || ''}
                   onChange={(e) => handleCompanyInfoChange('revenue', parseFloat(e.target.value) || 0)}
-                  placeholder="Ex: 15000000"
+                  placeholder="Ex: 15000 (= 15 millions TND)"
                 />
               </div>
             </div>

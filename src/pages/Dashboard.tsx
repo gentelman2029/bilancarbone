@@ -606,26 +606,35 @@ export const Dashboard = () => {
     const baseYear = 2023; // Commencer à partir de 2023
     const targetYear = 2030;
     
-    // Récupérer les émissions réelles et objectifs SBT du calculateur
-    const emissionsReellesValue = emissions.emissionsReelles || currentEmissions;
+    // Récupérer les émissions réelles du calculateur
+    // Priorité: émissions réelles saisies > émissions courantes calculées
+    const emissionsReellesValue = emissionsReelles > 0 ? emissionsReelles : currentEmissions;
+    const baseEmissions = emissionsAnneePrecedente > 0 ? emissionsAnneePrecedente : emissionsReellesValue;
     
     const trajectory = [];
     for (let year = baseYear; year <= targetYear; year++) {
       // Utiliser les objectifs SBT par année si disponibles, sinon calculer automatiquement
-      const targetValue = objectifsSBTParAnnee[year] || 
-        (hasData && objectifsSBTParAnnee[baseYear] ? 
-          objectifsSBTParAnnee[baseYear] * Math.pow(0.935, year - baseYear) : // 6.5% de réduction par an
-          currentEmissions * 0.8 * Math.pow(0.935, year - baseYear));
+      let targetValue;
+      if (objectifsSBTParAnnee[year]) {
+        targetValue = objectifsSBTParAnnee[year];
+      } else if (objectifSBTI > 0 && baseEmissions > 0) {
+        // Interpolation linéaire entre baseEmissions et objectifSBTI sur la période
+        const yearsTotal = targetYear - baseYear;
+        const yearsPassed = year - baseYear;
+        targetValue = baseEmissions - ((baseEmissions - objectifSBTI) * yearsPassed / yearsTotal);
+      } else {
+        // Réduction par défaut de 4.2% par an (aligné SBTi 1.5°C)
+        targetValue = baseEmissions * Math.pow(0.958, year - baseYear);
+      }
       
-      // Pour les émissions réelles, utiliser la valeur saisie pour 2024 et projeter
+      // Émissions réelles: afficher uniquement les années avec des données connues
       let actualValue = null;
-      if (year === 2023) {
-        actualValue = emissionsAnneePrecedente; // Année N-1
-      } else if (year === 2024) {
-        actualValue = emissionsReellesValue; // Année N (calculée)
-      } else if (year <= currentYear) {
-        // Projeter pour les années futures déjà passées
-        actualValue = Math.round(emissionsReellesValue * Math.pow(0.935, year - 2024));
+      if (year === 2023 && emissionsAnneePrecedente > 0) {
+        actualValue = emissionsAnneePrecedente;
+      } else if (year === 2024 && emissionsReellesValue > 0) {
+        actualValue = emissionsReellesValue;
+      } else if (year === 2025 && currentEmissions > 0 && hasData) {
+        actualValue = currentEmissions;
       }
       
       trajectory.push({
@@ -991,15 +1000,11 @@ export const Dashboard = () => {
                     <span className="text-sm font-medium text-muted-foreground">{t("dashboard.annual_reduction")}</span>
                   </div>
                    <div className="text-3xl font-bold text-foreground mb-1">
-                     {hasData ? reductionAnnuelle.toFixed(0) : "600"} <span className="text-lg">tCO2e</span>
+                     {hasData ? Math.abs(reductionAnnuelle).toFixed(0) : "600"} <span className="text-lg">tCO2e</span>
                    </div>
                    <div className="flex items-center gap-1 text-sm">
-                     {(hasData ? pourcentageReduction : 16.3) >= 0 ? (
-                       <ArrowUp className="w-4 h-4 text-primary" />
-                     ) : (
-                       <ArrowDown className="w-4 h-4 text-destructive" />
-                     )}
-                     <span className={((hasData ? pourcentageReduction : 16.3) >= 0 ? "text-primary" : "text-destructive") + " font-medium"}>
+                     <ArrowDown className="w-4 h-4 text-destructive" />
+                     <span className="text-destructive font-medium">
                        {(hasData ? Math.abs(pourcentageReduction).toFixed(1) : "16.3")}%
                      </span>
                    </div>
@@ -1021,17 +1026,24 @@ export const Dashboard = () => {
                      <span className="text-sm font-medium text-muted-foreground">{t("dashboard.sbt_target")}</span>
                    </div>
                     <div className="text-3xl font-bold text-foreground mb-1">
-                      {hasData && objectifsSBTParAnnee[2024] ? objectifsSBTParAnnee[2024].toFixed(0) : "87"} <span className="text-lg">tCO2e</span>
+                      {hasData && objectifSBTI > 0 ? objectifSBTI.toFixed(0) : "—"} <span className="text-lg">tCO2e</span>
                     </div>
                     <div className="flex items-center gap-1 text-sm">
-                      {(hasData ? progressionSBTi : 8.7) >= 0 ? (
-                        <ArrowUp className="w-4 h-4 text-primary" />
+                      {hasData && progressionSBTi > 0 ? (
+                        <>
+                          <ArrowUp className="w-4 h-4 text-primary" />
+                          <span className="text-primary font-medium">
+                            {progressionSBTi.toFixed(1)}% atteint
+                          </span>
+                        </>
                       ) : (
-                        <ArrowDown className="w-4 h-4 text-destructive" />
+                        <span className="text-muted-foreground font-medium">
+                          Non défini
+                        </span>
                       )}
-                      <span className={((hasData ? progressionSBTi : 8.7) >= 0 ? "text-primary" : "text-destructive") + " font-medium"}>
-                        {(hasData ? Math.abs(progressionSBTi).toFixed(1) : "8.7")}%
-                      </span>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Objectif de réduction cible (SBTi)
                     </div>
                  </div>
                </div>

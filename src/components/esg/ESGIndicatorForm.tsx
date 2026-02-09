@@ -124,13 +124,13 @@ export const ESGIndicatorForm: React.FC<ESGIndicatorFormProps> = ({
           {/* Revenue Input - Required for calculated KPIs */}
           <div className="mb-6 p-4 bg-muted/50 rounded-lg border">
             <Label className="text-sm font-medium mb-2 flex items-center gap-2">
-              Chiffre d'Affaires Annuel
+              Chiffre d'Affaires Annuel (en milliers de dinars - kTND)
               <Tooltip>
                 <TooltipTrigger>
                   <HelpCircle className="h-4 w-4 text-muted-foreground" />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Requis pour calculer l'intensité énergétique (E2) et carbone (E8)</p>
+                  <p>Requis pour calculer l'intensité énergétique (E2) et carbone (E8). Saisir en kTND (ex: 15 000 = 15 millions TND)</p>
                 </TooltipContent>
               </Tooltip>
             </Label>
@@ -139,10 +139,10 @@ export const ESGIndicatorForm: React.FC<ESGIndicatorFormProps> = ({
                 type="number"
                 value={revenue || ''}
                 onChange={(e) => onRevenueChange(parseFloat(e.target.value) || 0)}
-                placeholder="Ex: 15000000"
+                placeholder="Ex: 15000"
                 className="w-48"
               />
-              <span className="text-sm text-muted-foreground">TND</span>
+              <span className="text-sm text-muted-foreground">kTND</span>
             </div>
           </div>
 

@@ -59,7 +59,7 @@ export interface SectorBenchmark {
   gScore: number;
 }
 
-// Tunisian Sectors
+// Tunisian Sectors (exhaustive)
 export const TUNISIAN_SECTORS = [
   { value: 'textile', label: 'Textile & Habillement' },
   { value: 'agroalimentaire', label: 'Agroalimentaire' },
@@ -71,6 +71,23 @@ export const TUNISIAN_SECTORS = [
   { value: 'banque', label: 'Banque & Finance' },
   { value: 'energie', label: 'Énergie' },
   { value: 'tourisme', label: 'Tourisme & Hôtellerie' },
+  { value: 'transport', label: 'Transport & Logistique' },
+  { value: 'telecom', label: 'Télécommunications & IT' },
+  { value: 'immobilier', label: 'Immobilier & Promotion' },
+  { value: 'sante', label: 'Santé & Pharmaceutique' },
+  { value: 'education', label: 'Éducation & Formation' },
+  { value: 'agriculture', label: 'Agriculture & Pêche' },
+  { value: 'mines', label: 'Mines & Extraction' },
+  { value: 'petrole', label: 'Pétrole & Gaz' },
+  { value: 'assurance', label: 'Assurance' },
+  { value: 'commerce', label: 'Commerce & Distribution' },
+  { value: 'btp', label: 'BTP & Génie Civil' },
+  { value: 'cuir', label: 'Cuir & Chaussure' },
+  { value: 'artisanat', label: 'Artisanat & Économie Sociale' },
+  { value: 'automobile', label: 'Automobile & Composants' },
+  { value: 'aeronautique', label: 'Aéronautique' },
+  { value: 'plasturgie', label: 'Plasturgie & Emballage' },
+  { value: 'autre', label: 'Autre' },
 ] as const;
 
 // BVMT ESG Schema with 32 indicators

@@ -11,12 +11,12 @@ import { ESGCategory, ESGIndicator } from '@/lib/esg/types';
 
 // Formulas for calculated KPIs
 const CALCULATED_KPI_FORMULAS: Record<string, { formula: string; explanation: string }> = {
-  E2: {
-    formula: 'E1 / Chiffre d\'Affaires',
-    explanation: 'Intensité Énergétique = Consommation totale d\'énergie (kWh) ÷ Chiffre d\'affaires (TND). Mesure l\'efficacité énergétique par Dinar Tunisien généré.'
+  'E2.1': {
+    formula: 'E1.1 / Chiffre d\'Affaires (kTND)',
+    explanation: 'Intensité Énergétique = Consommation totale d\'énergie interne (kWh) ÷ Chiffre d\'affaires (kTND).'
   },
-  E8: {
-    formula: '(E6 + E7) / (CA / 1 000 000)',
+  'E6': {
+    formula: '(E5.1 + E5.2) / (CA en millions TND)',
     explanation: 'Intensité Carbone = (Scope 1 + Scope 2) ÷ CA en millions TND. Indicateur clé pour le MACF européen.'
   }
 };
@@ -170,12 +170,20 @@ export const ESGIndicatorForm: React.FC<ESGIndicatorFormProps> = ({
                       }`}
                     >
                       <div className="flex items-center gap-3 flex-1">
-                        <Badge variant="outline" className="font-mono text-xs w-10 justify-center">
+                        <Badge variant="outline" className="font-mono text-xs min-w-[50px] justify-center">
                           {indicator.id}
                         </Badge>
                         <div className="flex-1">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-sm font-medium">{indicator.label}</span>
+                            {indicator.autoPopulate && typeof indicator.value === 'number' && indicator.value > 0 && (
+                              <Badge className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[10px]">
+                                Auto-alimenté
+                              </Badge>
+                            )}
+                            {indicator.gri && (
+                              <Badge variant="secondary" className="text-[10px]">{indicator.gri}</Badge>
+                            )}
                             {indicator.description && (
                               <Tooltip>
                                 <TooltipTrigger>

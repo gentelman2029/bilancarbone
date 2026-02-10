@@ -1,59 +1,116 @@
-// ESG Scoring Engine for Tunisia BVMT Standard
+// ESG Scoring Engine for Tunisia BVMT Standard - 32 KPIs
 
 import { ESGCategory, ESGData, ESGIndicator, ESG_GRADES, MaterialityPoint, ComplianceAlert } from './types';
 
-// Sector-specific weight multipliers for water-intensive sectors
+// Sector-specific weight multipliers
 const SECTOR_WEIGHT_MULTIPLIERS: Record<string, Record<string, number>> = {
   textile: {
-    E4: 1.5, // Water consumption
-    E5: 1.5, // Water recycling
-    E9: 1.5, // Waste production
-    E10: 1.5, // Waste valorization
+    'E4.1': 1.5, 'E4.2': 1.5, 'E9': 1.5, 'E10': 1.5,
   },
   agroalimentaire: {
-    E4: 1.5,
-    E5: 1.5,
-    E9: 1.5,
-    E10: 1.5,
+    'E4.1': 1.5, 'E4.2': 1.5, 'E9': 1.5, 'E10': 1.5,
   },
 };
 
-// Benchmark thresholds for scoring (Tunisian context)
+// Benchmark thresholds for numeric indicators
 const INDICATOR_BENCHMARKS: Record<string, { min: number; max: number; optimal: number; inverse?: boolean }> = {
-  // Environment - lower is better for consumption metrics
-  E1: { min: 10000, max: 10000000, optimal: 50000, inverse: true },
-  E2: { min: 0.001, max: 0.5, optimal: 0.01, inverse: true },
-  E3: { min: 0, max: 100, optimal: 50 },
-  E4: { min: 100, max: 500000, optimal: 5000, inverse: true },
-  E5: { min: 0, max: 100, optimal: 30 },
-  E6: { min: 10, max: 50000, optimal: 500, inverse: true },
-  E7: { min: 10, max: 30000, optimal: 300, inverse: true },
-  E8: { min: 0.1, max: 100, optimal: 5, inverse: true },
-  E9: { min: 1, max: 10000, optimal: 100, inverse: true },
-  E10: { min: 0, max: 100, optimal: 50 },
-  E11: { min: 0, max: 10000000, optimal: 500000 },
+  // Environment
+  'E1.1': { min: 10000, max: 10000000, optimal: 50000, inverse: true },
+  'E1.2': { min: 0, max: 5000000, optimal: 10000, inverse: true },
+  'E2.1': { min: 0.001, max: 0.5, optimal: 0.01, inverse: true },
+  'E2.2': { min: 0, max: 1000000, optimal: 100000 },
+  'E3': { min: 0, max: 100, optimal: 50 },
+  'E4.1': { min: 100, max: 500000, optimal: 5000, inverse: true },
+  'E4.2': { min: 0, max: 100, optimal: 30 },
+  'E5.1': { min: 10, max: 50000, optimal: 500, inverse: true },
+  'E5.2': { min: 10, max: 30000, optimal: 300, inverse: true },
+  'E5.3': { min: 0, max: 100000, optimal: 1000, inverse: true },
+  'E6': { min: 0.1, max: 100, optimal: 5, inverse: true },
+  'E9': { min: 1, max: 10000, optimal: 100, inverse: true },
+  'E10': { min: 0, max: 100000, optimal: 10000, inverse: true },
   // Social
-  S1: { min: 10, max: 10000, optimal: 500 },
-  S2: { min: 0, max: 100, optimal: 50 },
-  S3: { min: 0, max: 50, optimal: 0, inverse: true },
-  S4: { min: 0, max: 50, optimal: 5, inverse: true },
-  S5: { min: 0, max: 20, optimal: 2, inverse: true },
-  S6: { min: 0, max: 50, optimal: 0, inverse: true },
-  S7: { min: 0, max: 100, optimal: 40 },
-  S8: { min: 0, max: 10, optimal: 3 },
-  S9: { min: 0, max: 24, optimal: 12 },
-  S10: { min: 0, max: 100, optimal: 0, inverse: true },
-  S11: { min: 0, max: 100, optimal: 80 },
-  S12: { min: 0, max: 1000000, optimal: 100000 },
+  'S1': { min: 50, max: 150, optimal: 100 }, // 100% = equal pay
+  'S2.1': { min: 10, max: 10000, optimal: 500 },
+  'S2.2': { min: 0, max: 100, optimal: 20 },
+  'S2.3': { min: 0, max: 50, optimal: 5, inverse: true },
+  'S3': { min: 0, max: 100, optimal: 50 },
+  'S5.2': { min: 0, max: 50, optimal: 0, inverse: true },
+  'S9.1': { min: 0, max: 100, optimal: 40 },
+  'S9.2': { min: 0, max: 50, optimal: 10 },
+  'S10.2': { min: 0, max: 10, optimal: 2 },
   // Governance
-  G1: { min: 0, max: 100, optimal: 40 },
-  G2: { min: 0, max: 100, optimal: 50 },
-  G6: { min: 0, max: 50000000, optimal: 5000000 },
-  G9: { min: 0, max: 100, optimal: 70 },
+  'G1.1': { min: 0, max: 100, optimal: 40 },
+  'G1.2': { min: 0, max: 100, optimal: 30 },
+  'G2.2': { min: 0, max: 100, optimal: 50 },
+  'G4': { min: 0, max: 100, optimal: 70 },
+  'G5.3': { min: 0, max: 100, optimal: 50 },
+  'G6.2': { min: 0, max: 100, optimal: 50 },
+  'G8': { min: 0, max: 100, optimal: 70 },
+  'G9.2': { min: 0, max: 24, optimal: 12 },
+  'G10.1': { min: 0, max: 50, optimal: 10 },
+  'G10.2': { min: 0, max: 50, optimal: 15 },
+  'G10.3': { min: 0, max: 120, optimal: 30, inverse: true },
 };
 
 /**
- * Calculate automatic KPIs (E2 - Energy Intensity, E8 - Carbon Intensity)
+ * Auto-populate ESG indicators from calculator/dashboard data stored in localStorage
+ */
+export function autoPopulateFromCalculator(categories: ESGCategory[]): ESGCategory[] {
+  try {
+    // Read emissions from localStorage (same keys used by the calculator)
+    const emissionsRaw = localStorage.getItem('emissions-data');
+    const emissions = emissionsRaw ? JSON.parse(emissionsRaw) : null;
+
+    // Also check calculation-section-details
+    const detailsRaw = localStorage.getItem('calculation-section-details');
+    const details = detailsRaw ? JSON.parse(detailsRaw) : null;
+
+    let scope1 = 0, scope2 = 0, scope3 = 0;
+
+    if (emissions) {
+      scope1 = parseFloat(emissions.scope1) || 0;
+      scope2 = parseFloat(emissions.scope2) || 0;
+      scope3 = parseFloat(emissions.scope3) || 0;
+    }
+
+    // Fallback: check detailed entries
+    if (details && Array.isArray(details)) {
+      const s1 = details.filter((d: any) => d.scope === 'scope1' || d.scope === 'Scope 1');
+      const s2 = details.filter((d: any) => d.scope === 'scope2' || d.scope === 'Scope 2');
+      const s3 = details.filter((d: any) => d.scope === 'scope3' || d.scope === 'Scope 3');
+      
+      const sumEntries = (entries: any[]) => entries.reduce((sum, e) => {
+        const val = parseFloat(e.emissions) || parseFloat(e.total) || 0;
+        return sum + val;
+      }, 0);
+
+      if (scope1 === 0 && s1.length > 0) scope1 = sumEntries(s1);
+      if (scope2 === 0 && s2.length > 0) scope2 = sumEntries(s2);
+      if (scope3 === 0 && s3.length > 0) scope3 = sumEntries(s3);
+    }
+
+    const autoValues: Record<string, number> = {
+      scope1, scope2, scope3,
+    };
+
+    return categories.map(category => ({
+      ...category,
+      indicators: category.indicators.map(indicator => {
+        if (!indicator.autoPopulate) return indicator;
+        const autoVal = autoValues[indicator.autoPopulate];
+        if (autoVal !== undefined && autoVal > 0) {
+          return { ...indicator, value: autoVal };
+        }
+        return indicator;
+      }),
+    }));
+  } catch {
+    return categories;
+  }
+}
+
+/**
+ * Calculate automatic KPIs (E2.1 - Energy Intensity, E6 - Carbon Intensity)
  */
 export function calculateAutomaticKPIs(categories: ESGCategory[], revenue: number): ESGCategory[] {
   if (!revenue || revenue <= 0) return categories;
@@ -61,18 +118,21 @@ export function calculateAutomaticKPIs(categories: ESGCategory[], revenue: numbe
   return categories.map(category => {
     if (category.id !== 'E') return category;
 
+    const getVal = (id: string) => {
+      const ind = category.indicators.find(i => i.id === id);
+      return typeof ind?.value === 'number' ? ind.value : 0;
+    };
+
     const indicators = category.indicators.map(indicator => {
-      if (indicator.id === 'E2') {
-        // Energy Intensity = E1 / Revenue
-        const e1 = category.indicators.find(i => i.id === 'E1')?.value as number || 0;
-        return { ...indicator, value: revenue > 0 ? e1 / revenue : 0 };
+      if (indicator.id === 'E2.1') {
+        const e11 = getVal('E1.1');
+        return { ...indicator, value: revenue > 0 ? e11 / revenue : 0 };
       }
-      if (indicator.id === 'E8') {
-        // Carbon Intensity = (E6 + E7) / (Revenue / 1000000)
-        const e6 = category.indicators.find(i => i.id === 'E6')?.value as number || 0;
-        const e7 = category.indicators.find(i => i.id === 'E7')?.value as number || 0;
-        const revenueInMillions = revenue / 1000000;
-        return { ...indicator, value: revenueInMillions > 0 ? (e6 + e7) / revenueInMillions : 0 };
+      if (indicator.id === 'E6') {
+        const scope1 = getVal('E5.1');
+        const scope2 = getVal('E5.2');
+        const revenueInMillions = (revenue * 1000) / 1000000; // kTND to millions TND
+        return { ...indicator, value: revenueInMillions > 0 ? (scope1 + scope2) / revenueInMillions : 0 };
       }
       return indicator;
     });
@@ -84,40 +144,34 @@ export function calculateAutomaticKPIs(categories: ESGCategory[], revenue: numbe
 /**
  * Calculate individual indicator score (0-100)
  */
-function calculateIndicatorScore(indicator: ESGIndicator, sectorMultiplier: number = 1): number {
+function calculateIndicatorScore(indicator: ESGIndicator): number {
   if (indicator.type === 'binary') {
     return (indicator.value === true) ? 100 : 0;
   }
 
+  if (indicator.type === 'text') {
+    return (indicator.value && String(indicator.value).length > 0) ? 100 : 0;
+  }
+
   if (indicator.type === 'calculated' || indicator.type === 'numeric') {
     const value = indicator.value as number;
-    if (value === undefined || value === null) return 0;
+    if (value === undefined || value === null || value === 0) return 0;
 
     const benchmark = INDICATOR_BENCHMARKS[indicator.id];
-    if (!benchmark) return 50; // Default middle score if no benchmark
+    if (!benchmark) return 50;
 
     let score: number;
     if (benchmark.inverse) {
-      // Lower is better
-      if (value <= benchmark.optimal) {
-        score = 100;
-      } else if (value >= benchmark.max) {
-        score = 0;
-      } else {
-        score = 100 - ((value - benchmark.optimal) / (benchmark.max - benchmark.optimal)) * 100;
-      }
+      if (value <= benchmark.optimal) score = 100;
+      else if (value >= benchmark.max) score = 0;
+      else score = 100 - ((value - benchmark.optimal) / (benchmark.max - benchmark.optimal)) * 100;
     } else {
-      // Higher is better
-      if (value >= benchmark.optimal) {
-        score = 100;
-      } else if (value <= benchmark.min) {
-        score = 0;
-      } else {
-        score = ((value - benchmark.min) / (benchmark.optimal - benchmark.min)) * 100;
-      }
+      if (value >= benchmark.optimal) score = 100;
+      else if (value <= benchmark.min) score = 0;
+      else score = ((value - benchmark.min) / (benchmark.optimal - benchmark.min)) * 100;
     }
 
-    return Math.max(0, Math.min(100, score * sectorMultiplier));
+    return Math.max(0, Math.min(100, score));
   }
 
   return 0;
@@ -134,7 +188,7 @@ export function calculateCategoryScore(category: ESGCategory, sector: string): n
   category.indicators.forEach(indicator => {
     const multiplier = sectorMultipliers[indicator.id] || 1;
     const indicatorWeight = indicator.weight || 1;
-    const score = calculateIndicatorScore(indicator, 1);
+    const score = calculateIndicatorScore(indicator);
     
     weightedScore += score * indicatorWeight * multiplier;
     totalWeight += indicatorWeight * multiplier;
@@ -160,7 +214,6 @@ export function calculateTotalScore(
   const categoryScores: Record<string, number> = {};
   let totalScore = 0;
 
-  // Use custom weights if provided, otherwise use default from schema
   const weights: Record<string, number> = customWeights 
     ? { E: customWeights.e / 100, S: customWeights.s / 100, G: customWeights.g / 100 }
     : {};
@@ -168,13 +221,10 @@ export function calculateTotalScore(
   categories.forEach(category => {
     const score = calculateCategoryScore(category, sector);
     categoryScores[category.id] = score;
-    
-    // Use custom weight or default category weight
     const weight = weights[category.id] !== undefined ? weights[category.id] : category.weight;
     totalScore += score * weight;
   });
 
-  // Determine grade
   const gradeInfo = ESG_GRADES.find(g => totalScore >= g.min) || ESG_GRADES[ESG_GRADES.length - 1];
 
   return {
@@ -191,26 +241,22 @@ export function calculateTotalScore(
  */
 export function generateMaterialityMatrix(categories: ESGCategory[]): MaterialityPoint[] {
   const materialityMap: Record<string, { envImpact: number; finRisk: number; cat: 'E' | 'S' | 'G' }> = {
-    // Environment
-    E1: { envImpact: 75, finRisk: 60, cat: 'E' },
-    E3: { envImpact: 65, finRisk: 55, cat: 'E' },
-    E4: { envImpact: 85, finRisk: 80, cat: 'E' }, // Water stress - critical for Tunisia
-    E6: { envImpact: 90, finRisk: 85, cat: 'E' }, // Direct emissions - MACF exposure
-    E7: { envImpact: 80, finRisk: 75, cat: 'E' },
-    E9: { envImpact: 70, finRisk: 50, cat: 'E' },
-    E10: { envImpact: 60, finRisk: 45, cat: 'E' },
-    E11: { envImpact: 50, finRisk: 30, cat: 'E' },
-    // Social
-    S2: { envImpact: 20, finRisk: 55, cat: 'S' },
-    S3: { envImpact: 15, finRisk: 65, cat: 'S' },
-    S4: { envImpact: 10, finRisk: 70, cat: 'S' },
-    S6: { envImpact: 25, finRisk: 80, cat: 'S' },
-    S7: { envImpact: 15, finRisk: 45, cat: 'S' },
-    // Governance
-    G1: { envImpact: 30, finRisk: 50, cat: 'G' },
-    G2: { envImpact: 25, finRisk: 60, cat: 'G' },
-    G5: { envImpact: 20, finRisk: 85, cat: 'G' },
-    G9: { envImpact: 40, finRisk: 55, cat: 'G' },
+    'E1.1': { envImpact: 75, finRisk: 60, cat: 'E' },
+    'E3': { envImpact: 65, finRisk: 55, cat: 'E' },
+    'E4.1': { envImpact: 85, finRisk: 80, cat: 'E' },
+    'E5.1': { envImpact: 90, finRisk: 85, cat: 'E' },
+    'E5.2': { envImpact: 80, finRisk: 75, cat: 'E' },
+    'E5.3': { envImpact: 70, finRisk: 65, cat: 'E' },
+    'E9': { envImpact: 70, finRisk: 50, cat: 'E' },
+    'E10': { envImpact: 60, finRisk: 45, cat: 'E' },
+    'S1': { envImpact: 20, finRisk: 55, cat: 'S' },
+    'S2.3': { envImpact: 15, finRisk: 65, cat: 'S' },
+    'S5.2': { envImpact: 10, finRisk: 70, cat: 'S' },
+    'S9.1': { envImpact: 15, finRisk: 45, cat: 'S' },
+    'G1.1': { envImpact: 30, finRisk: 50, cat: 'G' },
+    'G2.2': { envImpact: 25, finRisk: 60, cat: 'G' },
+    'G6.1': { envImpact: 20, finRisk: 85, cat: 'G' },
+    'G4': { envImpact: 40, finRisk: 55, cat: 'G' },
   };
 
   const points: MaterialityPoint[] = [];
@@ -234,50 +280,64 @@ export function generateMaterialityMatrix(categories: ESGCategory[]): Materialit
 }
 
 /**
- * Generate compliance alerts based on data
+ * Generate compliance alerts
  */
 export function generateComplianceAlerts(data: ESGData, categoryScores: Record<string, number>): ComplianceAlert[] {
   const alerts: ComplianceAlert[] = [];
 
-  // Check MACF exposure (Carbon Border Adjustment Mechanism)
-  const e6 = data.categories.find(c => c.id === 'E')?.indicators.find(i => i.id === 'E6')?.value as number || 0;
-  const e7 = data.categories.find(c => c.id === 'E')?.indicators.find(i => i.id === 'E7')?.value as number || 0;
-  const totalEmissions = e6 + e7;
+  const getVal = (catId: string, indId: string) => {
+    const cat = data.categories.find(c => c.id === catId);
+    const ind = cat?.indicators.find(i => i.id === indId);
+    return ind?.value;
+  };
+
+  // MACF exposure
+  const scope1 = (getVal('E', 'E5.1') as number) || 0;
+  const scope2 = (getVal('E', 'E5.2') as number) || 0;
+  const totalEmissions = scope1 + scope2;
 
   if (totalEmissions > 1000) {
     alerts.push({
-      id: 'macf-exposure',
-      type: 'warning',
+      id: 'macf-exposure', type: 'warning',
       title: 'Exposition MACF Significative',
       description: `Vos émissions (${totalEmissions.toFixed(0)} tCO₂e) vous exposent au Mécanisme d'Ajustement Carbone aux Frontières de l'UE.`,
       regulation: 'Règlement UE 2023/956 - MACF',
-      action: 'Préparer un plan de décarbonation pour réduire l\'exposition.',
+      action: 'Préparer un plan de décarbonation.',
     });
   }
 
-  // Check Tunisian RSE Law compliance
-  const hasCSRCommittee = data.categories.find(c => c.id === 'G')?.indicators.find(i => i.id === 'G4')?.value === true;
-  const hasEthicsCode = data.categories.find(c => c.id === 'G')?.indicators.find(i => i.id === 'G5')?.value === true;
+  // Tunisian RSE Law
+  const hasEthicsCode = getVal('G', 'G6.1') === true;
+  const hasAntiCorruption = getVal('G', 'G6.3') === true;
+  const hasESGReport = getVal('G', 'G11') === true;
 
-  if (!hasCSRCommittee || !hasEthicsCode) {
+  if (!hasEthicsCode || !hasAntiCorruption) {
     alerts.push({
-      id: 'rse-tunisia',
-      type: 'error',
+      id: 'rse-tunisia', type: 'error',
       title: 'Non-conformité Loi RSE Tunisie',
-      description: 'La Loi 2018-35 exige un comité RSE et un code éthique pour les grandes entreprises.',
+      description: 'La Loi 2018-35 exige un code d\'éthique et une politique anti-corruption.',
       regulation: 'Loi tunisienne 2018-35 (RSE)',
       action: 'Mettre en place les structures de gouvernance requises.',
     });
   }
 
-  // Check water stress (critical for Tunisia)
-  const waterConsumption = data.categories.find(c => c.id === 'E')?.indicators.find(i => i.id === 'E4')?.value as number || 0;
-  const waterRecycling = data.categories.find(c => c.id === 'E')?.indicators.find(i => i.id === 'E5')?.value as number || 0;
+  if (!hasESGReport) {
+    alerts.push({
+      id: 'esg-report-missing', type: 'warning',
+      title: 'Rapport RSE-DD non publié',
+      description: 'La publication d\'un rapport RSE-DD est recommandée par le Guide BVMT.',
+      regulation: 'Guide Reporting ESG BVMT',
+      action: 'Préparer et publier un rapport RSE-DD annuel.',
+    });
+  }
+
+  // Water stress
+  const waterConsumption = (getVal('E', 'E4.1') as number) || 0;
+  const waterRecycling = (getVal('E', 'E4.2') as number) || 0;
 
   if (waterConsumption > 10000 && waterRecycling < 20) {
     alerts.push({
-      id: 'water-stress',
-      type: 'warning',
+      id: 'water-stress', type: 'warning',
       title: 'Stress Hydrique Critique',
       description: `Consommation d'eau élevée (${waterConsumption.toLocaleString()} m³) avec faible recyclage (${waterRecycling}%).`,
       regulation: 'Plan National de l\'Eau Tunisie 2050',
@@ -285,24 +345,22 @@ export function generateComplianceAlerts(data: ESGData, categoryScores: Record<s
     });
   }
 
-  // Check gender equality
-  const genderPayGap = data.categories.find(c => c.id === 'S')?.indicators.find(i => i.id === 'S3')?.value as number || 0;
-  if (genderPayGap > 15) {
+  // Gender equality
+  const genderRatio = (getVal('S', 'S1') as number) || 0;
+  if (genderRatio > 0 && Math.abs(genderRatio - 100) > 15) {
     alerts.push({
-      id: 'gender-equality',
-      type: 'info',
+      id: 'gender-equality', type: 'info',
       title: 'Écart Salarial H/F Notable',
-      description: `L'écart de ${genderPayGap}% dépasse les bonnes pratiques CSRD (<15%).`,
+      description: `Le ratio de rémunération H/F (${genderRatio}%) s'écarte de la parité.`,
       regulation: 'Directive CSRD - Égalité de genre',
       action: 'Analyser et corriger les écarts de rémunération.',
     });
   }
 
-  // Success alerts
+  // Success
   if (categoryScores.E >= 70) {
     alerts.push({
-      id: 'env-performance',
-      type: 'success',
+      id: 'env-performance', type: 'success',
       title: 'Performance Environnementale Excellente',
       description: `Score E de ${categoryScores.E.toFixed(0)}/100 - Éligible aux crédits verts BCT.`,
       regulation: 'Circulaire BCT 2023-08',
@@ -313,14 +371,10 @@ export function generateComplianceAlerts(data: ESGData, categoryScores: Record<s
 }
 
 /**
- * Generate sector benchmarks for Tunisia
+ * Sector benchmarks for Tunisia
  */
 export function getSectorBenchmarks(): Record<string, {
-  avgScore: number;
-  topScore: number;
-  eScore: number;
-  sScore: number;
-  gScore: number;
+  avgScore: number; topScore: number; eScore: number; sScore: number; gScore: number;
 }> {
   return {
     textile: { avgScore: 52, topScore: 78, eScore: 48, sScore: 55, gScore: 54 },

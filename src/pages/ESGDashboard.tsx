@@ -44,7 +44,8 @@ import {
   calculateAutomaticKPIs, 
   calculateTotalScore, 
   generateMaterialityMatrix,
-  generateComplianceAlerts
+  generateComplianceAlerts,
+  autoPopulateFromCalculator
 } from '@/lib/esg/scoringEngine';
 
 const ESGDashboard: React.FC = () => {
@@ -104,6 +105,25 @@ const ESGDashboard: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('esg-dashboard-data', JSON.stringify(esgData));
   }, [esgData]);
+
+  // Auto-populate from calculator on mount and when storage changes
+  useEffect(() => {
+    const populateFromCalc = () => {
+      setEsgData(prev => ({
+        ...prev,
+        categories: autoPopulateFromCalculator(prev.categories),
+      }));
+    };
+    populateFromCalc();
+    
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'emissions-data' || e.key === 'calculation-section-details') {
+        populateFromCalc();
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
 
   // Recalculate scores when data or weighting changes
   useEffect(() => {

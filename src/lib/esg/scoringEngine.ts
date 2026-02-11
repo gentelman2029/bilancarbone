@@ -57,67 +57,137 @@ const INDICATOR_BENCHMARKS: Record<string, { min: number; max: number; optimal: 
  */
 export function autoPopulateFromCalculator(categories: ESGCategory[]): ESGCategory[] {
   try {
-    // Read emissions from localStorage (same keys used by the calculator)
-    const emissionsRaw = localStorage.getItem('emissions-data');
-    const emissions = emissionsRaw ? JSON.parse(emissionsRaw) : null;
-
-    // Also check calculation-section-details
+    // Read section details (main data source)
     const detailsRaw = localStorage.getItem('calculation-section-details');
     const details = detailsRaw ? JSON.parse(detailsRaw) : null;
 
+    // Read advanced scope 3 calculations
+    const advancedRaw = localStorage.getItem('scope3-advanced-calculations');
+    const advancedCalcs = advancedRaw ? JSON.parse(advancedRaw) : [];
+
+    // Read calculator form data
+    const scope3FormRaw = localStorage.getItem('calculator-scope3');
+    const scope3Form = scope3FormRaw ? JSON.parse(scope3FormRaw) : {};
+
+    // Read company data
+    const chiffreAffairesRaw = localStorage.getItem('calculator-chiffre-affaires');
+    const chiffreAffaires = chiffreAffairesRaw ? JSON.parse(chiffreAffairesRaw) : 0;
+    const nombrePersonnelsRaw = localStorage.getItem('calculator-nombre-personnels');
+    const nombrePersonnels = nombrePersonnelsRaw ? JSON.parse(nombrePersonnelsRaw) : 0;
+    const objectifSBTIRaw = localStorage.getItem('calculator-objectif-sbti');
+    const objectifSBTI = objectifSBTIRaw ? JSON.parse(objectifSBTIRaw) : 0;
+    const emissionsPrevRaw = localStorage.getItem('calculator-emissions-annee-precedente');
+    const emissionsAnneePrecedente = emissionsPrevRaw ? JSON.parse(emissionsPrevRaw) : 0;
+
+    // Check for carbon actions (reduction plan indicator)
+    const actionsRaw = localStorage.getItem('carbon-actions');
+    const hasActions = actionsRaw ? JSON.parse(actionsRaw).length > 0 : false;
+
     let scope1 = 0, scope2 = 0, scope3 = 0;
-
-    if (emissions) {
-      scope1 = parseFloat(emissions.scope1) || 0;
-      scope2 = parseFloat(emissions.scope2) || 0;
-      scope3 = parseFloat(emissions.scope3) || 0;
-    }
-
-    // Fallback: check detailed entries
-    if (details && Array.isArray(details)) {
-      const s1 = details.filter((d: any) => d.scope === 'scope1' || d.scope === 'Scope 1');
-      const s2 = details.filter((d: any) => d.scope === 'scope2' || d.scope === 'Scope 2');
-      const s3 = details.filter((d: any) => d.scope === 'scope3' || d.scope === 'Scope 3');
-      
-      const sumEntries = (entries: any[]) => entries.reduce((sum, e) => {
-        const val = parseFloat(e.emissions) || parseFloat(e.total) || 0;
-        return sum + val;
-      }, 0);
-
-      if (scope1 === 0 && s1.length > 0) scope1 = sumEntries(s1);
-      if (scope2 === 0 && s2.length > 0) scope2 = sumEntries(s2);
-      if (scope3 === 0 && s3.length > 0) scope3 = sumEntries(s3);
-    }
-
-    // Try to extract energy consumption from Scope 2 electricity entries
     let totalEnergyKWh = 0;
-    if (details && Array.isArray(details)) {
-      details.forEach((d: any) => {
-        const cat = (d.category || d.categoryName || '').toLowerCase();
+    let energyExternal = 0;
+    let wasteTotal = 0;
+    let materialsTotal = 0;
+    let waterConsumption = 0;
+
+    // Parse section details for emissions and environmental data
+    if (details) {
+      const allEntries: any[] = [
+        ...(details.scope1 || []),
+        ...(details.scope2 || []),
+        ...(details.scope3 || []),
+      ];
+
+      // Sum emissions per scope
+      scope1 = (details.scope1 || []).reduce((s: number, d: any) => s + (d.emissions || 0), 0);
+      scope2 = (details.scope2 || []).reduce((s: number, d: any) => s + (d.emissions || 0), 0);
+      scope3 = (details.scope3 || []).reduce((s: number, d: any) => s + (d.emissions || 0), 0);
+
+      // Add advanced scope 3
+      if (Array.isArray(advancedCalcs)) {
+        scope3 += advancedCalcs.reduce((s: number, c: any) => s + (c.emissions || 0), 0);
+      }
+
+      allEntries.forEach((d: any) => {
+        const cat = (d.category || d.categoryName || d.type || d.description || '').toLowerCase();
         const unit = (d.unit || '').toLowerCase();
+        const qty = parseFloat(d.quantity) || 0;
+
+        // Energy (E1.1 internal)
         if (unit.includes('kwh') || unit.includes('mwh') || cat.includes('lectricit') || cat.includes('nergi') || cat.includes('energy')) {
-          let qty = parseFloat(d.quantity) || 0;
-          if (unit.includes('mwh')) qty *= 1000; // convert MWh to kWh
-          totalEnergyKWh += qty;
+          const scope = (d.scope || '').toLowerCase();
+          let energyKWh = qty;
+          if (unit.includes('mwh')) energyKWh *= 1000;
+          if (scope.includes('3') || cat.includes('scope 3')) {
+            energyExternal += energyKWh;
+          } else {
+            totalEnergyKWh += energyKWh;
+          }
+        }
+
+        // Water (E4.1)
+        if (cat.includes('eau') || cat.includes('water') || unit.includes('m³') || unit.includes('m3')) {
+          waterConsumption += qty;
+        }
+
+        // Waste (E9)
+        if (cat.includes('déchet') || cat.includes('dechet') || cat.includes('waste') || cat.includes('déchets')) {
+          let wasteTonnes = qty;
+          if (unit.includes('kg')) wasteTonnes /= 1000;
+          wasteTotal += wasteTonnes;
+        }
+
+        // Materials (E10)
+        if (cat.includes('matéri') || cat.includes('materi') || cat.includes('matière') || cat.includes('material') || cat.includes('emballage') || cat.includes('packaging')) {
+          let matTonnes = qty;
+          if (unit.includes('kg')) matTonnes /= 1000;
+          materialsTotal += matTonnes;
         }
       });
     }
 
-    const autoValues: Record<string, number> = {
-      scope1, scope2, scope3,
-    };
-
-    // Add energy consumption if detected
-    if (totalEnergyKWh > 0) {
-      autoValues['energyTotal'] = totalEnergyKWh;
+    // Also check scope3 form data for waste and materials
+    if (scope3Form.dechetQuantity) {
+      const wQty = parseFloat(scope3Form.dechetQuantity) || 0;
+      if (wQty > 0 && wasteTotal === 0) wasteTotal = wQty;
     }
+    if (scope3Form.materiauQuantity) {
+      const mQty = parseFloat(scope3Form.materiauQuantity) || 0;
+      if (mQty > 0 && materialsTotal === 0) materialsTotal = mQty;
+    }
+
+    // Calculate carbon intensity if revenue available
+    let carbonIntensity = 0;
+    if (chiffreAffaires > 0) {
+      const revenueInMillions = (chiffreAffaires * 1000) / 1000000; // kTND → millions TND
+      if (revenueInMillions > 0) {
+        carbonIntensity = (scope1 + scope2) / revenueInMillions;
+      }
+    }
+
+    // Determine if a reduction plan exists (SBT target set or carbon actions exist)
+    const hasReductionPlan = objectifSBTI > 0 || hasActions || emissionsAnneePrecedente > 0;
+
+    // Build autoValues map
+    const autoValues: Record<string, number | boolean> = {};
+    if (scope1 > 0) autoValues['scope1'] = scope1;
+    if (scope2 > 0) autoValues['scope2'] = scope2;
+    if (scope3 > 0) autoValues['scope3'] = scope3;
+    if (totalEnergyKWh > 0) autoValues['energyTotal'] = totalEnergyKWh;
+    if (energyExternal > 0) autoValues['energyExternal'] = energyExternal;
+    if (waterConsumption > 0) autoValues['waterConsumption'] = waterConsumption;
+    if (wasteTotal > 0) autoValues['wasteTotal'] = wasteTotal;
+    if (materialsTotal > 0) autoValues['materialsTotal'] = materialsTotal;
+    if (carbonIntensity > 0) autoValues['carbonIntensity'] = carbonIntensity;
+    if (nombrePersonnels > 0) autoValues['totalEmployees'] = nombrePersonnels;
+    if (hasReductionPlan) autoValues['hasReductionPlan'] = true;
 
     return categories.map(category => ({
       ...category,
       indicators: category.indicators.map(indicator => {
         if (!indicator.autoPopulate) return indicator;
         const autoVal = autoValues[indicator.autoPopulate];
-        if (autoVal !== undefined && autoVal > 0) {
+        if (autoVal !== undefined && autoVal !== 0 && autoVal !== false) {
           return { ...indicator, value: autoVal };
         }
         return indicator;

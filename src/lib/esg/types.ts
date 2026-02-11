@@ -97,7 +97,7 @@ export const BVMT_ESG_SCHEMA: ESGCategory[] = [
   {
     id: 'E',
     label: 'Environnement',
-    weight: 0.40,
+    weight: 0.35,
     indicators: [
       // E1 - Consommation Énergétique (GRI 302-1)
       {
@@ -109,7 +109,8 @@ export const BVMT_ESG_SCHEMA: ESGCategory[] = [
       {
         id: 'E1.2', label: 'Consommation énergétique totale en dehors de l\'entreprise',
         unit: 'kWh', type: 'numeric', gri: 'GRI 302-1',
-        description: 'Consommation d\'énergie en dehors du périmètre opérationnel de l\'entreprise.'
+        description: 'Consommation d\'énergie en dehors du périmètre opérationnel de l\'entreprise.',
+        autoPopulate: 'energyExternal'
       },
       // E2 - Intensité Énergétique (GRI 302-3)
       {
@@ -132,7 +133,8 @@ export const BVMT_ESG_SCHEMA: ESGCategory[] = [
       {
         id: 'E4.1', label: 'Volume total d\'eau prélevé par source',
         unit: 'm³', type: 'numeric', gri: 'GRI 303',
-        description: 'Volume total d\'eau prélevé, par source.'
+        description: 'Volume total d\'eau prélevé, par source.',
+        autoPopulate: 'waterConsumption'
       },
       {
         id: 'E4.2', label: 'Pourcentage d\'eau recyclée et réutilisée',
@@ -161,7 +163,8 @@ export const BVMT_ESG_SCHEMA: ESGCategory[] = [
       {
         id: 'E5.4', label: 'Plan de réduction des émissions GES',
         unit: 'Oui/Non', type: 'binary', gri: 'GRI 305',
-        description: 'Existence d\'un plan d\'action de réduction des émissions GES.'
+        description: 'Existence d\'un plan d\'action de réduction des émissions GES.',
+        autoPopulate: 'hasReductionPlan'
       },
       // E6 - Intensité des émissions GES (GRI 305-4)
       {
@@ -191,13 +194,15 @@ export const BVMT_ESG_SCHEMA: ESGCategory[] = [
       {
         id: 'E9', label: 'Poids total des déchets (dangereux et non dangereux)',
         unit: 'tonnes', type: 'numeric', gri: 'GRI 306',
-        description: 'Le poids total des déchets dangereux et non dangereux en fonction des modes de traitement.'
+        description: 'Le poids total des déchets dangereux et non dangereux en fonction des modes de traitement.',
+        autoPopulate: 'wasteTotal'
       },
       // E10 - Matières (GRI 301-1)
       {
         id: 'E10', label: 'Poids/volume total de matières utilisées',
         unit: 'tonnes', type: 'numeric', gri: 'GRI 301-1',
-        description: 'Matières utilisées pour produire et emballer les produits, en distinguant renouvelables et non renouvelables.'
+        description: 'Matières utilisées pour produire et emballer les produits, en distinguant renouvelables et non renouvelables.',
+        autoPopulate: 'materialsTotal'
       },
       // E11 - Biodiversité (GRI 304)
       {
@@ -215,7 +220,7 @@ export const BVMT_ESG_SCHEMA: ESGCategory[] = [
   {
     id: 'S',
     label: 'Social',
-    weight: 0.30,
+    weight: 0.35,
     indicators: [
       // S1 - Rémunération H/F (GRI 405)
       {
@@ -227,7 +232,8 @@ export const BVMT_ESG_SCHEMA: ESGCategory[] = [
       {
         id: 'S2.1', label: 'Répartition des effectifs par type de contrat',
         unit: 'employés', type: 'numeric', gri: 'GRI 401 / GRI 102-8',
-        description: 'Répartition des effectifs par type de contrat (CDI, CDD, à plein temps, en temps partiel, en télétravail).'
+        description: 'Répartition des effectifs par type de contrat (CDI, CDD, à plein temps, en temps partiel, en télétravail).',
+        autoPopulate: 'totalEmployees'
       },
       {
         id: 'S2.2', label: 'Nombre de contrats d\'insertion',

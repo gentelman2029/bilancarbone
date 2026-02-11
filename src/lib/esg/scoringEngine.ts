@@ -89,9 +89,28 @@ export function autoPopulateFromCalculator(categories: ESGCategory[]): ESGCatego
       if (scope3 === 0 && s3.length > 0) scope3 = sumEntries(s3);
     }
 
+    // Try to extract energy consumption from Scope 2 electricity entries
+    let totalEnergyKWh = 0;
+    if (details && Array.isArray(details)) {
+      details.forEach((d: any) => {
+        const cat = (d.category || d.categoryName || '').toLowerCase();
+        const unit = (d.unit || '').toLowerCase();
+        if (unit.includes('kwh') || unit.includes('mwh') || cat.includes('lectricit') || cat.includes('nergi') || cat.includes('energy')) {
+          let qty = parseFloat(d.quantity) || 0;
+          if (unit.includes('mwh')) qty *= 1000; // convert MWh to kWh
+          totalEnergyKWh += qty;
+        }
+      });
+    }
+
     const autoValues: Record<string, number> = {
       scope1, scope2, scope3,
     };
+
+    // Add energy consumption if detected
+    if (totalEnergyKWh > 0) {
+      autoValues['energyTotal'] = totalEnergyKWh;
+    }
 
     return categories.map(category => ({
       ...category,

@@ -103,7 +103,8 @@ export const BVMT_ESG_SCHEMA: ESGCategory[] = [
       {
         id: 'E1.1', label: 'Consommation énergétique totale au sein de l\'entreprise',
         unit: 'kWh', type: 'numeric', gri: 'GRI 302-1',
-        description: 'Consommation totale d\'énergie (en joules ou multiples), ainsi que les types de combustibles utilisés.'
+        description: 'Consommation totale d\'énergie (en joules ou multiples), ainsi que les types de combustibles utilisés.',
+        autoPopulate: 'energyTotal'
       },
       {
         id: 'E1.2', label: 'Consommation énergétique totale en dehors de l\'entreprise',

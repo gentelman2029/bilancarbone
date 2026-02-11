@@ -11,6 +11,9 @@ interface ESGScoreGaugesProps {
   grade: string;
   gradeColor: string;
   gradeLabel: string;
+  eWeight?: number;
+  sWeight?: number;
+  gWeight?: number;
 }
 
 const RadialGauge: React.FC<{
@@ -77,6 +80,9 @@ export const ESGScoreGauges: React.FC<ESGScoreGaugesProps> = ({
   grade,
   gradeColor,
   gradeLabel,
+  eWeight = 35,
+  sWeight = 35,
+  gWeight = 30,
 }) => {
   return (
     <Card className="border-border/50">
@@ -137,13 +143,13 @@ export const ESGScoreGauges: React.FC<ESGScoreGaugesProps> = ({
           {/* Weight indication */}
           <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-2">
             <span className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-emerald-500" /> E: 40%
+              <div className="w-2 h-2 rounded-full bg-emerald-500" /> E: {eWeight.toFixed(0)}%
             </span>
             <span className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-blue-500" /> S: 30%
+              <div className="w-2 h-2 rounded-full bg-blue-500" /> S: {sWeight.toFixed(0)}%
             </span>
             <span className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-purple-500" /> G: 30%
+              <div className="w-2 h-2 rounded-full bg-purple-500" /> G: {gWeight.toFixed(0)}%
             </span>
           </div>
         </div>

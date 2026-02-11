@@ -358,6 +358,9 @@ const ESGDashboard: React.FC = () => {
                 grade={scores.grade}
                 gradeColor={scores.gradeColor}
                 gradeLabel={scores.gradeLabel}
+                eWeight={weightingConfig.environmentWeight}
+                sWeight={weightingConfig.socialWeight}
+                gWeight={weightingConfig.governanceWeight}
               />
               <ESGSectorBenchmark
                 sector={esgData.sector}

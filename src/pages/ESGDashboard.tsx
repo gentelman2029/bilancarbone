@@ -116,13 +116,26 @@ const ESGDashboard: React.FC = () => {
     };
     populateFromCalc();
     
+    const syncKeys = [
+      'emissions-data', 'calculation-section-details', 'scope3-advanced-calculations',
+      'calculator-scope3', 'calculator-chiffre-affaires', 'calculator-nombre-personnels',
+      'calculator-objectif-sbti', 'calculator-emissions-annee-precedente', 'carbon-actions'
+    ];
+    
     const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'emissions-data' || e.key === 'calculation-section-details') {
+      if (!e.key || syncKeys.includes(e.key)) {
         populateFromCalc();
       }
     };
     window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+    
+    // Poll for same-page changes (calculator updates don't trigger StorageEvent)
+    const interval = setInterval(populateFromCalc, 2000);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      clearInterval(interval);
+    };
   }, []);
 
   // Recalculate scores when data or weighting changes

@@ -176,7 +176,10 @@ export const ESGIndicatorForm: React.FC<ESGIndicatorFormProps> = ({
                         <div className="flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-sm font-medium">{indicator.label}</span>
-                            {indicator.autoPopulate && typeof indicator.value === 'number' && indicator.value > 0 && (
+                            {indicator.autoPopulate && (
+                              (typeof indicator.value === 'number' && indicator.value > 0) ||
+                              (typeof indicator.value === 'boolean' && indicator.value === true)
+                            ) && (
                               <Badge className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[10px]">
                                 Auto-alimenté
                               </Badge>

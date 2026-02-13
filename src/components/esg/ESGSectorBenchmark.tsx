@@ -24,22 +24,13 @@ export const ESGSectorBenchmark: React.FC<ESGSectorBenchmarkProps> = ({
 
   // Initialize benchmark config from localStorage or defaults
   const [benchmarkConfig, setBenchmarkConfig] = useState<BenchmarkConfig>(() => {
-    if (!defaultSectorBenchmark) {
-      return {
-        avgScore: 50,
-        topScore: 80,
-        eScore: 50,
-        sScore: 50,
-        gScore: 50,
-        source: '',
-      };
-    }
+    const sectorData = defaultSectorBenchmark || { avgScore: 50, topScore: 75, eScore: 45, sScore: 52, gScore: 50 };
     return getBenchmarkConfig(sector, {
-      avgScore: defaultSectorBenchmark.avgScore,
-      topScore: defaultSectorBenchmark.topScore,
-      eScore: defaultSectorBenchmark.eScore,
-      sScore: defaultSectorBenchmark.sScore,
-      gScore: defaultSectorBenchmark.gScore,
+      avgScore: sectorData.avgScore,
+      topScore: sectorData.topScore,
+      eScore: sectorData.eScore,
+      sScore: sectorData.sScore,
+      gScore: sectorData.gScore,
       source: '',
     });
   });
@@ -59,7 +50,7 @@ export const ESGSectorBenchmark: React.FC<ESGSectorBenchmarkProps> = ({
     }
   }, [sector]);
 
-  if (!defaultSectorBenchmark) return null;
+  if (!defaultSectorBenchmark && !benchmarkConfig) return null;
 
   const comparison = userScore - benchmarkConfig.avgScore;
   const isAboveAvg = comparison > 0;
@@ -94,7 +85,7 @@ export const ESGSectorBenchmark: React.FC<ESGSectorBenchmarkProps> = ({
       fill: 'hsl(var(--muted-foreground))',
     },
     {
-      name: 'Top 10% Secteur',
+      name: 'Top 10 Secteur',
       value: benchmarkConfig.topScore,
       fill: 'hsl(152, 69%, 41%)',
     },

@@ -83,7 +83,7 @@ export function autoPopulateFromCalculator(categories: ESGCategory[]): ESGCatego
     const actionsRaw = localStorage.getItem('carbon-actions');
     const hasActions = actionsRaw ? JSON.parse(actionsRaw).length > 0 : false;
 
-    let scope1 = 0, scope2 = 0, scope3 = 0;
+    let scope1Kg = 0, scope2Kg = 0, scope3Kg = 0;
     let totalEnergyKWh = 0;
     let energyExternal = 0;
     let wasteTotal = 0;
@@ -98,14 +98,14 @@ export function autoPopulateFromCalculator(categories: ESGCategory[]): ESGCatego
         ...(details.scope3 || []),
       ];
 
-      // Sum emissions per scope
-      scope1 = (details.scope1 || []).reduce((s: number, d: any) => s + (d.emissions || 0), 0);
-      scope2 = (details.scope2 || []).reduce((s: number, d: any) => s + (d.emissions || 0), 0);
-      scope3 = (details.scope3 || []).reduce((s: number, d: any) => s + (d.emissions || 0), 0);
+      // Sum emissions per scope (values are in kgCO₂e in localStorage)
+      scope1Kg = (details.scope1 || []).reduce((s: number, d: any) => s + (d.emissions || 0), 0);
+      scope2Kg = (details.scope2 || []).reduce((s: number, d: any) => s + (d.emissions || 0), 0);
+      scope3Kg = (details.scope3 || []).reduce((s: number, d: any) => s + (d.emissions || 0), 0);
 
-      // Add advanced scope 3
+      // Add advanced scope 3 (also in kgCO₂e)
       if (Array.isArray(advancedCalcs)) {
-        scope3 += advancedCalcs.reduce((s: number, c: any) => s + (c.emissions || 0), 0);
+        scope3Kg += advancedCalcs.reduce((s: number, c: any) => s + (c.emissions || 0), 0);
       }
 
       allEntries.forEach((d: any) => {
@@ -156,19 +156,24 @@ export function autoPopulateFromCalculator(categories: ESGCategory[]): ESGCatego
       if (mQty > 0 && materialsTotal === 0) materialsTotal = mQty;
     }
 
-    // Calculate carbon intensity if revenue available
+    // Convert kgCO₂e → tCO₂e (the calculator stores in kg)
+    const scope1 = scope1Kg / 1000;
+    const scope2 = scope2Kg / 1000;
+    const scope3 = scope3Kg / 1000;
+
+    // Calculate carbon intensity: total GES (tCO₂e) / CA (MTND)
     let carbonIntensity = 0;
     if (chiffreAffaires > 0) {
-      const revenueInMillions = (chiffreAffaires * 1000) / 1000000; // kTND → millions TND
+      const revenueInMillions = chiffreAffaires / 1000; // kTND → MTND
       if (revenueInMillions > 0) {
-        carbonIntensity = (scope1 + scope2) / revenueInMillions;
+        carbonIntensity = (scope1 + scope2 + scope3) / revenueInMillions;
       }
     }
 
     // Determine if a reduction plan exists (SBT target set or carbon actions exist)
     const hasReductionPlan = objectifSBTI > 0 || hasActions || emissionsAnneePrecedente > 0;
 
-    // Build autoValues map
+    // Build autoValues map (all emissions now in tCO₂e)
     const autoValues: Record<string, number | boolean> = {};
     if (scope1 > 0) autoValues['scope1'] = scope1;
     if (scope2 > 0) autoValues['scope2'] = scope2;
@@ -220,8 +225,9 @@ export function calculateAutomaticKPIs(categories: ESGCategory[], revenue: numbe
       if (indicator.id === 'E6') {
         const scope1 = getVal('E5.1');
         const scope2 = getVal('E5.2');
-        const revenueInMillions = (revenue * 1000) / 1000000; // kTND to millions TND
-        return { ...indicator, value: revenueInMillions > 0 ? (scope1 + scope2) / revenueInMillions : 0 };
+        const scope3 = getVal('E5.3');
+        const revenueInMillions = revenue / 1000; // kTND → MTND
+        return { ...indicator, value: revenueInMillions > 0 ? (scope1 + scope2 + scope3) / revenueInMillions : 0 };
       }
       return indicator;
     });
@@ -465,7 +471,8 @@ export function generateComplianceAlerts(data: ESGData, categoryScores: Record<s
 export function getSectorBenchmarks(): Record<string, {
   avgScore: number; topScore: number; eScore: number; sScore: number; gScore: number;
 }> {
-  return {
+  const defaultBenchmark = { avgScore: 50, topScore: 75, eScore: 45, sScore: 52, gScore: 50 };
+  const benchmarks: Record<string, { avgScore: number; topScore: number; eScore: number; sScore: number; gScore: number }> = {
     textile: { avgScore: 52, topScore: 78, eScore: 48, sScore: 55, gScore: 54 },
     agroalimentaire: { avgScore: 55, topScore: 82, eScore: 52, sScore: 58, gScore: 56 },
     chimie: { avgScore: 48, topScore: 75, eScore: 42, sScore: 52, gScore: 50 },
@@ -476,5 +483,29 @@ export function getSectorBenchmarks(): Record<string, {
     banque: { avgScore: 65, topScore: 90, eScore: 70, sScore: 65, gScore: 62 },
     energie: { avgScore: 42, topScore: 70, eScore: 35, sScore: 48, gScore: 45 },
     tourisme: { avgScore: 53, topScore: 79, eScore: 50, sScore: 56, gScore: 54 },
+    transport: { avgScore: 47, topScore: 74, eScore: 40, sScore: 52, gScore: 50 },
+    telecom: { avgScore: 60, topScore: 86, eScore: 58, sScore: 62, gScore: 61 },
+    immobilier: { avgScore: 49, topScore: 75, eScore: 44, sScore: 52, gScore: 51 },
+    sante: { avgScore: 56, topScore: 82, eScore: 50, sScore: 60, gScore: 58 },
+    education: { avgScore: 58, topScore: 84, eScore: 54, sScore: 62, gScore: 58 },
+    agriculture: { avgScore: 44, topScore: 71, eScore: 38, sScore: 48, gScore: 46 },
+    mines: { avgScore: 40, topScore: 68, eScore: 32, sScore: 46, gScore: 44 },
+    petrole: { avgScore: 38, topScore: 65, eScore: 30, sScore: 44, gScore: 42 },
+    assurance: { avgScore: 63, topScore: 88, eScore: 66, sScore: 64, gScore: 60 },
+    commerce: { avgScore: 54, topScore: 80, eScore: 50, sScore: 56, gScore: 55 },
+    btp: { avgScore: 43, topScore: 70, eScore: 36, sScore: 48, gScore: 46 },
+    cuir: { avgScore: 48, topScore: 74, eScore: 42, sScore: 52, gScore: 50 },
+    artisanat: { avgScore: 46, topScore: 72, eScore: 40, sScore: 50, gScore: 48 },
+    automobile: { avgScore: 51, topScore: 77, eScore: 46, sScore: 54, gScore: 53 },
+    aeronautique: { avgScore: 55, topScore: 82, eScore: 50, sScore: 58, gScore: 57 },
+    plasturgie: { avgScore: 44, topScore: 71, eScore: 38, sScore: 48, gScore: 46 },
+    autre: { avgScore: 50, topScore: 75, eScore: 45, sScore: 52, gScore: 50 },
   };
+
+  // Return with fallback for any missing sector
+  return new Proxy(benchmarks, {
+    get(target, prop: string) {
+      return target[prop] || defaultBenchmark;
+    }
+  }) as Record<string, { avgScore: number; topScore: number; eScore: number; sScore: number; gScore: number }>;
 }

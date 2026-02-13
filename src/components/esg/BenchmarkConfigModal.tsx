@@ -113,7 +113,7 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="topScore">Score Top 10%</Label>
+                <Label htmlFor="topScore">Score Top 10</Label>
                 <Input
                   id="topScore"
                   type="number"

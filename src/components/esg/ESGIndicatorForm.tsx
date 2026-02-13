@@ -16,8 +16,8 @@ const CALCULATED_KPI_FORMULAS: Record<string, { formula: string; explanation: st
     explanation: 'Intensité Énergétique = Consommation totale d\'énergie interne (kWh) ÷ Chiffre d\'affaires (kTND).'
   },
   'E6': {
-    formula: '(E5.1 + E5.2) / (CA en millions TND)',
-    explanation: 'Intensité Carbone = (Scope 1 + Scope 2) ÷ CA en millions TND. Indicateur clé pour le MACF européen.'
+    formula: '(E5.1 + E5.2 + E5.3) / (CA en MTND)',
+    explanation: 'Intensité Carbone = (Scope 1 + Scope 2 + Scope 3) en tCO₂e ÷ CA en millions TND.'
   }
 };
 

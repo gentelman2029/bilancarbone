@@ -1,17 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { Calculator, Download, RotateCcw, Factory, Car, Zap, Trash2, Building, Plane, Ship, TreePine, Flame, Save, X, CheckCircle2, Sparkles, TrendingUp, Globe, ArrowDown, ArrowUp, Calendar, FileText, AlertTriangle } from "lucide-react";
+import { Calculator, Download, RotateCcw, Factory, Zap, Building, Save, CheckCircle2, Sparkles, FileText, Flame, Globe } from "lucide-react";
 import { useEmissions } from '@/contexts/EmissionsContext';
 import { useCarbonReports } from '@/hooks/useCarbonReports';
 import { useTranslation } from 'react-i18next';
@@ -20,235 +14,237 @@ import { useCalculationDetails, CalculationDetail } from '@/hooks/useCalculation
 import { CalculationDetailsSection } from '@/components/CalculationDetailsSection';
 import { Scope3AdvancedModule } from '@/components/scope3/Scope3AdvancedModule';
 import { ScopeDetailModal } from '@/components/ScopeDetailModal';
+import { GHGDashboardHeader } from '@/components/ghg/GHGDashboardHeader';
+import { Scope1Form } from '@/components/ghg/Scope1Form';
+import { Scope2Form } from '@/components/ghg/Scope2Form';
+import { Scope3StandardForm } from '@/components/ghg/Scope3StandardForm';
+import { CompanyDataSection } from '@/components/ghg/CompanyDataSection';
+import { baseCarbone, getEmissionFactor } from '@/lib/ghg/emissionFactors';
+import { safeGetJSON, safeSetJSON, safeRemove } from '@/lib/ghg/safeStorage';
+import { validateQuantity } from '@/lib/ghg/unitConverter';
 
-// Base Carbone® ADEME - Facteurs d'émissions complets (kg CO2e par unité)
-const baseCarbone = {
-  // SCOPE 1 - Émissions directes
-  scope1: {
-    combustibles: {
-      // Combustibles fossiles liquides
-      diesel: { unite: "litre", facteur: 2.68, description: "Gazole/Diesel" },
-      essence: { unite: "litre", facteur: 2.31, description: "Essence" },
-      fioulLourd: { unite: "litre", facteur: 3.17, description: "Fioul lourd" },
-      fioulDomestique: { unite: "litre", facteur: 2.69, description: "Fioul domestique" },
-      gpl: { unite: "litre", facteur: 1.64, description: "GPL" },
-      // Combustibles gazeux
-      gazNaturel: { unite: "kWh PCI", facteur: 0.227, description: "Gaz naturel" },
-      propane: { unite: "kg", facteur: 2.94, description: "Propane" },
-      butane: { unite: "kg", facteur: 2.93, description: "Butane" },
-      // Combustibles solides
-      charbon: { unite: "kg", facteur: 2.42, description: "Charbon" },
-      coke: { unite: "kg", facteur: 3.11, description: "Coke de pétrole" },
-      lignite: { unite: "kg", facteur: 1.17, description: "Lignite" },
-      // Biomasse
-      boisBuche: { unite: "kg", facteur: 0.013, description: "Bois bûche" },
-      granulesBois: { unite: "kg", facteur: 0.024, description: "Granulés de bois" },
-      plaquettesBois: { unite: "kg", facteur: 0.015, description: "Plaquettes de bois" }
-    },
-    refrigerants: {
-      // Hydrofluorocarbures (HFC)
-      r134a: { unite: "kg", facteur: 1430, description: "R-134a (Tétrafluoroéthane)" },
-      r404a: { unite: "kg", facteur: 3922, description: "R-404A" },
-      r410a: { unite: "kg", facteur: 2088, description: "R-410A" },
-      r407c: { unite: "kg", facteur: 1774, description: "R-407C" },
-      r32: { unite: "kg", facteur: 675, description: "R-32" },
-      // Chlorofluorocarbures (CFC)
-      r11: { unite: "kg", facteur: 4750, description: "R-11 (CFC-11)" },
-      r12: { unite: "kg", facteur: 10900, description: "R-12 (CFC-12)" },
-      // Hydrochlorofluorocarbures (HCFC)
-      r22: { unite: "kg", facteur: 1810, description: "R-22 (HCFC-22)" }
-    },
-    vehicules: {
-      // Véhicules particuliers
-      voitureEssence: { unite: "km", facteur: 0.193, description: "Voiture essence (moyenne)" },
-      voitureDiesel: { unite: "km", facteur: 0.166, description: "Voiture diesel (moyenne)" },
-      voitureElectrique: { unite: "km", facteur: 0.020, description: "Voiture électrique" },
-      voitureHybride: { unite: "km", facteur: 0.110, description: "Voiture hybride" },
-      // Véhicules utilitaires
-      utilitaireDiesel: { unite: "km", facteur: 0.218, description: "Véhicule utilitaire diesel" },
-      utilitaireEssence: { unite: "km", facteur: 0.251, description: "Véhicule utilitaire essence" },
-      // Poids lourds
-      camion12t: { unite: "km", facteur: 0.390, description: "Camion 12-14t" },
-      camion20t: { unite: "km", facteur: 0.580, description: "Camion 16-32t" },
-      camion40t: { unite: "km", facteur: 0.790, description: "Camion >32t" },
-      // Équipements mobiles
-      tracteurAgricole: { unite: "heure", facteur: 12.5, description: "Tracteur agricole" },
-      chariotElevateur: { unite: "heure", facteur: 8.2, description: "Chariot élévateur" }
-    }
-  },
-
-  // SCOPE 2 - Émissions indirectes liées à l'énergie
-  scope2: {
-    electricite: {
-      // Mix électrique par pays (kg CO2e/kWh)
-      france: { unite: "kWh", facteur: 0.057, description: "Électricité France (mix national)" },
-      tunisie: { unite: "kWh", facteur: 0.474, description: "Électricité Tunisie" },
-      allemagne: { unite: "kWh", facteur: 0.401, description: "Électricité Allemagne" },
-      espagne: { unite: "kWh", facteur: 0.256, description: "Électricité Espagne" },
-      italie: { unite: "kWh", facteur: 0.359, description: "Électricité Italie" },
-      royaumeUni: { unite: "kWh", facteur: 0.233, description: "Électricité Royaume-Uni" },
-      moyenneEurope: { unite: "kWh", facteur: 0.276, description: "Électricité moyenne européenne" },
-      // Sources renouvelables
-      solaire: { unite: "kWh", facteur: 0.044, description: "Électricité solaire" },
-      eolien: { unite: "kWh", facteur: 0.015, description: "Électricité éolienne" },
-      hydraulique: { unite: "kWh", facteur: 0.006, description: "Électricité hydraulique" }
-    },
-    vapeur: {
-      vapeurIndustrielle: { unite: "kWh", facteur: 0.090, description: "Vapeur industrielle" },
-      eauChaude: { unite: "kWh", facteur: 0.227, description: "Eau chaude (réseau de chaleur)" }
-    }
-  },
-
-  // SCOPE 3 - Autres émissions indirectes
-  scope3: {
-    transport: {
-      // Transport de marchandises
-      routierPoidsMoyen: { unite: "t.km", facteur: 0.171, description: "Transport routier poids moyen" },
-      routierPoidsLourd: { unite: "t.km", facteur: 0.111, description: "Transport routier poids lourd" },
-      ferroviaire: { unite: "t.km", facteur: 0.033, description: "Transport ferroviaire" },
-      maritime: { unite: "t.km", facteur: 0.015, description: "Transport maritime" },
-      aerien: { unite: "t.km", facteur: 1.47, description: "Transport aérien cargo" },
-      fluvial: { unite: "t.km", facteur: 0.037, description: "Transport fluvial" },
-      // Transport de personnes
-      avionCourtCourrier: { unite: "passager.km", facteur: 0.230, description: "Avion court-courrier" },
-      avionMoyenCourrier: { unite: "passager.km", facteur: 0.187, description: "Avion moyen-courrier" },
-      avionLongCourrier: { unite: "passager.km", facteur: 0.152, description: "Avion long-courrier" },
-      tgv: { unite: "passager.km", facteur: 0.0032, description: "TGV" },
-      ter: { unite: "passager.km", facteur: 0.0295, description: "TER" },
-      metro: { unite: "passager.km", facteur: 0.0038, description: "Métro" },
-      bus: { unite: "passager.km", facteur: 0.103, description: "Bus" },
-      tramway: { unite: "passager.km", facteur: 0.0044, description: "Tramway" }
-    },
-    materiaux: {
-      // Matériaux de construction
-      acier: { unite: "kg", facteur: 1.46, description: "Acier" },
-      aluminium: { unite: "kg", facteur: 8.24, description: "Aluminium primaire" },
-      beton: { unite: "kg", facteur: 0.152, description: "Béton" },
-      ciment: { unite: "kg", facteur: 0.918, description: "Ciment" },
-      bois: { unite: "kg", facteur: 0.72, description: "Bois (construction)" },
-      verre: { unite: "kg", facteur: 0.85, description: "Verre plat" },
-      plastiquePET: { unite: "kg", facteur: 2.28, description: "Plastique PET" },
-      plastiquePP: { unite: "kg", facteur: 1.95, description: "Plastique PP" },
-      papier: { unite: "kg", facteur: 0.92, description: "Papier/carton" },
-      cuivre: { unite: "kg", facteur: 4.20, description: "Cuivre" }
-    },
-    dechets: {
-      // Traitement des déchets
-      incineration: { unite: "kg", facteur: 0.78, description: "Incinération avec récupération d'énergie" },
-      enfouissement: { unite: "kg", facteur: 0.48, description: "Enfouissement" },
-      recyclage: { unite: "kg", facteur: 0.025, description: "Recyclage" },
-      compostage: { unite: "kg", facteur: 0.015, description: "Compostage" },
-      methanisation: { unite: "kg", facteur: 0.022, description: "Méthanisation" }
-    },
-    alimentation: {
-      // Produits alimentaires (kg CO2e/kg)
-      boeuf: { unite: "kg", facteur: 25.2, description: "Bœuf" },
-      porc: { unite: "kg", facteur: 4.6, description: "Porc" },
-      agneau: { unite: "kg", facteur: 22.9, description: "Agneau" },
-      volaille: { unite: "kg", facteur: 2.9, description: "Volaille" },
-      poisson: { unite: "kg", facteur: 5.1, description: "Poisson" },
-      lait: { unite: "litre", facteur: 1.32, description: "Lait" },
-      fromage: { unite: "kg", facteur: 8.5, description: "Fromage" },
-      oeuf: { unite: "kg", facteur: 1.8, description: "Œufs" },
-      legumes: { unite: "kg", facteur: 0.4, description: "Légumes" },
-      fruits: { unite: "kg", facteur: 0.6, description: "Fruits" },
-      cereales: { unite: "kg", facteur: 1.1, description: "Céréales" }
-    },
-    numerique: {
-      // Services numériques
-      emailSimple: { unite: "email", facteur: 0.004, description: "Email simple" },
-      emailPieceJointe: { unite: "email", facteur: 0.035, description: "Email avec pièce jointe" },
-      rechercheWeb: { unite: "recherche", facteur: 0.007, description: "Recherche web" },
-      streamingVideo: { unite: "heure", facteur: 0.036, description: "Streaming vidéo HD" },
-      visioconference: { unite: "heure", facteur: 0.150, description: "Visioconférence" },
-      stockageCloud: { unite: "Go.an", facteur: 0.5, description: "Stockage cloud" }
-    }
-  }
-};
-
-interface CalculationResult {
-  category: string;
-  subcategory: string;
-  quantity: number;
-  unit: string;
-  emissionFactor: number;
-  emissions: number;
-  description: string;
-}
+// ============================================================
+// SOURCE DE VÉRITÉ UNIQUE: sectionDetails (useCalculationDetails)
+// L'ancien état `calculations` est supprimé.
+// Tous les totaux sont dérivés de sectionDetails.
+// ============================================================
 
 export const AdvancedGHGCalculator = () => {
   const { toast } = useToast();
-  const { updateEmissions, emissions: emissionsContext } = useEmissions();
+  const { updateEmissions } = useEmissions();
   const { createReport } = useCarbonReports();
-  const [calculations, setCalculations] = useState<CalculationResult[]>([]);
   const [activeTab, setActiveTab] = useState("scope1");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAdvancedMode, setIsAdvancedMode] = useState(() => {
-    const saved = localStorage.getItem('calculator-advanced-mode');
-    return saved ? JSON.parse(saved) : false;
-  });
-  
-  // États pour les modales de détail des scopes
-  const [openScopeModal, setOpenScopeModal] = useState<1 | 2 | 3 | null>(null);
-  
-  // Fonction pour calculer le total Scope 3 avancé depuis localStorage
-  const getScope3AdvancedTotalFromStorage = (): number => {
-    const savedCalculations = localStorage.getItem('scope3-advanced-calculations');
-    if (savedCalculations) {
-      try {
-        const calculations = JSON.parse(savedCalculations);
-        return calculations.reduce((sum: number, c: any) => sum + (c.emissions || 0), 0);
-      } catch {
-        return 0;
-      }
-    }
-    return 0;
-  };
+  const [isAdvancedMode, setIsAdvancedMode] = useState(() => safeGetJSON('calculator-advanced-mode', false));
 
-  // État Scope 3 avancé avec initialisation depuis localStorage
-  const [scope3AdvancedTotal, setScope3AdvancedTotal] = useState(getScope3AdvancedTotalFromStorage);
-  
-  // Synchroniser le Scope 3 avancé à chaque changement du localStorage
+  // Modale de détail des scopes
+  const [openScopeModal, setOpenScopeModal] = useState<1 | 2 | 3 | null>(null);
+
+  // ============================================================
+  // SOURCE UNIQUE: useCalculationDetails
+  // ============================================================
+  const {
+    sectionDetails,
+    setSectionDetails,
+    addCalculationDetail,
+    removeCalculationDetail,
+    clearSectionDetails,
+    clearAllDetails,
+  } = useCalculationDetails();
+
+  // ============================================================
+  // Scope 3 avancé: callback au lieu de polling localStorage
+  // ============================================================
+  const [scope3AdvancedTotal, setScope3AdvancedTotal] = useState(() => {
+    const calcs = safeGetJSON<any[]>('scope3-advanced-calculations', []);
+    return calcs.reduce((sum, c) => sum + (c.emissions || 0), 0);
+  });
+
+  // Sync Scope 3 avancé depuis localStorage (pour changements cross-tab)
   useEffect(() => {
     const handleStorageChange = () => {
-      const newTotal = getScope3AdvancedTotalFromStorage();
+      const calcs = safeGetJSON<any[]>('scope3-advanced-calculations', []);
+      const newTotal = calcs.reduce((sum: number, c: any) => sum + (c.emissions || 0), 0);
       setScope3AdvancedTotal(newTotal);
     };
-    
+
     window.addEventListener('storage', handleStorageChange);
-    
-    // Vérifier aussi périodiquement (pour les changements dans la même page)
-    const interval = setInterval(() => {
-      const currentStorageTotal = getScope3AdvancedTotalFromStorage();
-      if (currentStorageTotal !== scope3AdvancedTotal) {
-        setScope3AdvancedTotal(currentStorageTotal);
-      }
-    }, 500);
-    
+    // Polling réduit à 1s (fallback pour même tab)
+    const interval = setInterval(handleStorageChange, 1000);
+
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(interval);
     };
-  }, [scope3AdvancedTotal]);
-  
-  // Hook pour les détails de calcul par section
-  const { 
-    sectionDetails, 
-    setSectionDetails,
-    addCalculationDetail, 
-    removeCalculationDetail, 
-    clearSectionDetails, 
-    clearAllDetails,
-    getTotalEmissionsBySection 
-  } = useCalculationDetails();
+  }, []);
 
-  // Convertir les sectionDetails en entrées pour les modales
-  // Pour Scope 3, inclure aussi les calculs du module avancé
-  const getScopeEntries = (scopeNumber: 1 | 2 | 3) => {
+  // ============================================================
+  // Formulaires avec persistance sécurisée
+  // ============================================================
+  const [scope1Data, setScope1Data] = useState(() => safeGetJSON('calculator-scope1', {
+    combustibleType: "", combustibleQuantity: "", combustibleUnit: "kg",
+    refrigerantType: "", refrigerantQuantity: "", refrigerantUnit: "kg",
+    vehiculeType: "", vehiculeQuantity: "", vehiculeUnit: "km"
+  }));
+
+  const [scope2Data, setScope2Data] = useState(() => safeGetJSON('calculator-scope2', {
+    electriciteType: "", electriciteQuantity: "", electriciteUnit: "kWh",
+    vapeurType: "", vapeurQuantity: "", vapeurUnit: "kWh"
+  }));
+
+  const [scope3Data, setScope3Data] = useState(() => safeGetJSON('calculator-scope3', {
+    transportType: "", transportQuantity: "", materiauType: "", materiauQuantity: "",
+    dechetType: "", dechetQuantity: "", alimentationType: "", alimentationQuantity: "",
+    numeriqueType: "", numeriqueQuantity: ""
+  }));
+
+  // Données d'entreprise
+  const [companyData, setCompanyData] = useState(() => safeGetJSON('calculator-company-data', {
+    chiffreAffaires: 1000,
+    nombrePersonnels: 50,
+    emissionsAnneePrecedente: 0,
+    objectifSBTI: 0,
+    objectifsSBTParAnnee: {} as Record<string, number>,
+    emissionsReelles: 0,
+    moyenneSectorielle: 0,
+    leadersSecteur: 0,
+    positionClassement: 0,
+    benchmarkSectorName: '',
+    benchmarkSectorAverage: 0,
+    benchmarkSectorTop10: 0,
+    benchmarkSectorCritical: 0,
+  }));
+
+  // ============================================================
+  // Auth check
+  // ============================================================
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => setIsAuthenticated(!!user));
+  }, []);
+
+  // ============================================================
+  // Persistence - formulaires
+  // ============================================================
+  useEffect(() => { safeSetJSON('calculator-advanced-mode', isAdvancedMode); }, [isAdvancedMode]);
+  useEffect(() => { safeSetJSON('calculator-scope1', scope1Data); }, [scope1Data]);
+  useEffect(() => { safeSetJSON('calculator-scope2', scope2Data); }, [scope2Data]);
+  useEffect(() => { safeSetJSON('calculator-scope3', scope3Data); }, [scope3Data]);
+
+  // Persistence - données d'entreprise + sync contexte
+  useEffect(() => {
+    safeSetJSON('calculator-company-data', companyData);
+    // Also write individual keys for backward compat with other modules
+    safeSetJSON('calculator-chiffre-affaires', companyData.chiffreAffaires);
+    safeSetJSON('calculator-nombre-personnels', companyData.nombrePersonnels);
+    safeSetJSON('calculator-emissions-annee-precedente', companyData.emissionsAnneePrecedente);
+    safeSetJSON('calculator-objectif-sbti', companyData.objectifSBTI);
+    safeSetJSON('calculator-objectifs-sbt-par-annee', companyData.objectifsSBTParAnnee);
+    safeSetJSON('calculator-emissions-reelles', companyData.emissionsReelles);
+    safeSetJSON('calculator-moyenne-sectorielle', companyData.moyenneSectorielle);
+    safeSetJSON('calculator-leaders-secteur', companyData.leadersSecteur);
+    safeSetJSON('calculator-position-classement', companyData.positionClassement);
+    safeSetJSON('calculator-benchmark-sector-name', companyData.benchmarkSectorName);
+    safeSetJSON('calculator-benchmark-sector-average', companyData.benchmarkSectorAverage);
+    safeSetJSON('calculator-benchmark-sector-top10', companyData.benchmarkSectorTop10);
+    safeSetJSON('calculator-benchmark-sector-critical', companyData.benchmarkSectorCritical);
+
+    updateEmissions({
+      chiffreAffaires: companyData.chiffreAffaires,
+      nombrePersonnels: companyData.nombrePersonnels,
+      emissionsAnneePrecedente: companyData.emissionsAnneePrecedente,
+      objectifSBTI: companyData.objectifSBTI,
+      objectifsSBTParAnnee: companyData.objectifsSBTParAnnee,
+      emissionsReelles: companyData.emissionsReelles,
+      moyenneSectorielle: companyData.moyenneSectorielle,
+      leadersSecteur: companyData.leadersSecteur,
+      positionClassement: companyData.positionClassement,
+      benchmarkSectorName: companyData.benchmarkSectorName,
+      benchmarkSectorAverage: companyData.benchmarkSectorAverage,
+      benchmarkSectorTop10: companyData.benchmarkSectorTop10,
+      benchmarkSectorCritical: companyData.benchmarkSectorCritical,
+    });
+  }, [companyData, updateEmissions]);
+
+  // ============================================================
+  // CALCUL DES TOTAUX (source unique: sectionDetails)
+  // ============================================================
+  const scope1Total = useMemo(
+    () => sectionDetails.scope1.reduce((sum, d) => sum + d.emissions, 0),
+    [sectionDetails.scope1]
+  );
+
+  const scope2Total = useMemo(
+    () => sectionDetails.scope2.reduce((sum, d) => sum + d.emissions, 0),
+    [sectionDetails.scope2]
+  );
+
+  const scope3StandardTotal = useMemo(
+    () => sectionDetails.scope3.reduce((sum, d) => sum + d.emissions, 0),
+    [sectionDetails.scope3]
+  );
+
+  const scope3TotalWithAdvanced = useMemo(
+    () => scope3StandardTotal + (isAdvancedMode ? scope3AdvancedTotal : 0),
+    [scope3StandardTotal, scope3AdvancedTotal, isAdvancedMode]
+  );
+
+  const totalGlobal = scope1Total + scope2Total + scope3TotalWithAdvanced;
+
+  // Count total entries for display
+  const totalEntries = sectionDetails.scope1.length + sectionDetails.scope2.length + sectionDetails.scope3.length;
+
+  // ============================================================
+  // Sync totaux → EmissionsContext
+  // ============================================================
+  useEffect(() => {
+    updateEmissions({
+      scope1: scope1Total,
+      scope2: scope2Total,
+      scope3: scope3TotalWithAdvanced,
+    });
+  }, [scope1Total, scope2Total, scope3TotalWithAdvanced, updateEmissions]);
+
+  // ============================================================
+  // AJOUT DE CALCUL (source unique: sectionDetails)
+  // ============================================================
+  const addCalculation = useCallback((scope: string, category: string, subcategory: string, quantity: number) => {
+    const validated = validateQuantity(quantity);
+    if (validated === null || validated === 0) {
+      toast({ title: "Quantité invalide", description: "La quantité doit être un nombre positif", variant: "destructive" });
+      return;
+    }
+
+    const factor = getEmissionFactor(scope, category, subcategory);
+    if (!factor) {
+      toast({ title: "Facteur introuvable", description: `Aucun facteur d'émission pour ${subcategory}`, variant: "destructive" });
+      return;
+    }
+
+    const emissions = validated * factor.facteur;
+
+    addCalculationDetail(scope as 'scope1' | 'scope2' | 'scope3', {
+      type: category,
+      description: factor.description,
+      quantity: validated,
+      unit: factor.unite,
+      emissionFactor: factor.facteur,
+      emissions,
+      formuleDetail: `${validated} ${factor.unite} × ${factor.facteur} kg CO₂e/${factor.unite} = ${emissions.toFixed(2)} kg CO₂e`
+    });
+
+    toast({
+      title: "Calcul ajouté ✅",
+      description: `${emissions.toFixed(2)} kg CO₂e ajoutés au ${scope.toUpperCase()}`,
+    });
+  }, [addCalculationDetail, toast]);
+
+  // ============================================================
+  // SCOPE ENTRIES pour les modales
+  // ============================================================
+  const getScopeEntries = useCallback((scopeNumber: 1 | 2 | 3) => {
     const scopeKey = `scope${scopeNumber}` as keyof typeof sectionDetails;
     const details = sectionDetails[scopeKey];
-    
-    // Convertir les sectionDetails existants
+
     const entriesFromDetails = details.map(detail => ({
       id: detail.id,
       source: detail.description,
@@ -257,54 +253,43 @@ export const AdvancedGHGCalculator = () => {
       emissionFactor: detail.emissionFactor,
       total: detail.emissions
     }));
-    
-    // Pour Scope 3, ajouter aussi les calculs du module avancé (GHG Protocol 15 catégories)
-    if (scopeNumber === 3 && isAdvancedMode) {
-      try {
-        const savedAdvanced = localStorage.getItem('scope3-advanced-calculations');
-        if (savedAdvanced) {
-          const advancedCalcs = JSON.parse(savedAdvanced);
-          const entriesFromAdvanced = advancedCalcs.map((calc: any) => {
-            const quantity = calc.quantity || 0;
-            const emissions = calc.emissions || 0;
-            const factor = quantity > 0 ? emissions / quantity : 0;
-            return {
-              id: calc.id || `scope3-adv-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-              source: `${calc.categoryName || 'Catégorie'} - ${calc.subcategoryName || calc.method || 'Calcul avancé'}`,
-              quantity: quantity,
-              unit: calc.unit || 'unités',
-              emissionFactor: factor,
-              total: emissions
-            };
-          });
-          return [...entriesFromDetails, ...entriesFromAdvanced];
-        }
-      } catch (e) {
-        console.error('Erreur lecture Scope3 avancé:', e);
-      }
-    }
-    
-    return entriesFromDetails;
-  };
 
-  // Mettre à jour les sectionDetails depuis les entrées modifiées dans la modale
-  const handleScopeEntriesChange = (scopeNumber: 1 | 2 | 3, entries: { id: string; source: string; quantity: number; unit: string; emissionFactor: number; total: number }[]) => {
+    // Pour Scope 3, ajouter les calculs du module avancé
+    if (scopeNumber === 3 && isAdvancedMode) {
+      const advancedCalcs = safeGetJSON<any[]>('scope3-advanced-calculations', []);
+      const entriesFromAdvanced = advancedCalcs.map((calc: any) => {
+        const quantity = calc.quantity || 0;
+        const emissions = calc.emissions || 0;
+        const factor = quantity > 0 ? emissions / quantity : 0;
+        return {
+          id: calc.id || `scope3-adv-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          source: `${calc.categoryName || 'Catégorie'} - ${calc.subcategoryName || 'Calcul avancé'}`,
+          quantity, unit: calc.unit || 'unités', emissionFactor: factor, total: emissions
+        };
+      });
+      return [...entriesFromDetails, ...entriesFromAdvanced];
+    }
+
+    return entriesFromDetails;
+  }, [sectionDetails, isAdvancedMode]);
+
+  // ============================================================
+  // HANDLER: mise à jour depuis la modale
+  // ============================================================
+  const handleScopeEntriesChange = useCallback((scopeNumber: 1 | 2 | 3, entries: { id: string; source: string; quantity: number; unit: string; emissionFactor: number; total: number }[]) => {
     const scopeKey = `scope${scopeNumber}` as 'scope1' | 'scope2' | 'scope3';
-    
-    // Séparer les entrées standard des entrées du module avancé Scope 3
-    const isAdvancedEntry = (entry: { id: string; source: string }) => 
-      entry.id.startsWith('scope3-adv-') || entry.source.includes(' - ');
-    
-    // Pour Scope 3 en mode avancé, séparer les entrées
+
+    const isAdvancedEntry = (entry: { id: string }) => entry.id.startsWith('scope3-adv-');
+
     let standardEntries = entries;
     let advancedEntries: typeof entries = [];
-    
+
     if (scopeNumber === 3 && isAdvancedMode) {
       standardEntries = entries.filter(e => !isAdvancedEntry(e));
       advancedEntries = entries.filter(e => isAdvancedEntry(e));
     }
-    
-    // Convertir les entrées standard en format CalculationDetail
+
+    // Sync standard entries → sectionDetails
     const newDetails = standardEntries.map(entry => ({
       id: entry.id,
       type: entry.source.toLowerCase().replace(/\s+/g, '-'),
@@ -312,478 +297,87 @@ export const AdvancedGHGCalculator = () => {
       quantity: entry.quantity,
       unit: entry.unit,
       emissionFactor: entry.emissionFactor,
-      emissions: entry.total, // Utiliser le total recalculé (quantity * emissionFactor)
+      emissions: entry.total,
       timestamp: new Date().toLocaleString('fr-FR'),
       formuleDetail: `${entry.quantity} ${entry.unit} × ${entry.emissionFactor} kg CO₂e/${entry.unit}`
     }));
-    
-    // Mettre à jour sectionDetails avec les entrées standard uniquement
+
     setSectionDetails(scopeKey, newDetails);
-    
-    // Pour le mode avancé Scope 3, synchroniser le localStorage avec les entrées avancées
+
+    // Sync advanced Scope3 entries → localStorage
     if (scopeNumber === 3 && isAdvancedMode) {
-      try {
-        const savedAdvanced = localStorage.getItem('scope3-advanced-calculations');
-        if (savedAdvanced) {
-          const originalAdvanced = JSON.parse(savedAdvanced);
-          
-          // Filtrer pour ne garder que les entrées qui sont encore présentes
-          const remainingAdvancedIds = advancedEntries.map(e => e.id);
-          
-          // Mettre à jour les entrées avancées avec les nouvelles valeurs
-          const updatedAdvanced = originalAdvanced
-            .filter((calc: any) => remainingAdvancedIds.includes(calc.id))
-            .map((calc: any) => {
-              const matchingEntry = advancedEntries.find(e => e.id === calc.id);
-              if (matchingEntry) {
-                return { 
-                  ...calc, 
-                  quantity: matchingEntry.quantity, 
-                  emissions: matchingEntry.total 
-                };
-              }
-              return calc;
-            });
-          
-          localStorage.setItem('scope3-advanced-calculations', JSON.stringify(updatedAdvanced));
-          const newAdvancedTotal = updatedAdvanced.reduce((sum: number, c: any) => sum + (c.emissions || 0), 0);
-          setScope3AdvancedTotal(newAdvancedTotal);
-        }
-      } catch (e) {
-        console.error('Erreur mise à jour Scope3 avancé:', e);
-      }
+      const originalAdvanced = safeGetJSON<any[]>('scope3-advanced-calculations', []);
+      const remainingIds = advancedEntries.map(e => e.id);
+      const updatedAdvanced = originalAdvanced
+        .filter((calc: any) => remainingIds.includes(calc.id))
+        .map((calc: any) => {
+          const match = advancedEntries.find(e => e.id === calc.id);
+          return match ? { ...calc, quantity: match.quantity, emissions: match.total } : calc;
+        });
+      safeSetJSON('scope3-advanced-calculations', updatedAdvanced);
+      setScope3AdvancedTotal(updatedAdvanced.reduce((sum: number, c: any) => sum + (c.emissions || 0), 0));
     }
-    
-    // Forcer la mise à jour du contexte global avec les nouvelles valeurs
-    const scope1Total = scopeKey === 'scope1' 
-      ? newDetails.reduce((sum, d) => sum + d.emissions, 0)
-      : sectionDetails.scope1.reduce((sum, d) => sum + d.emissions, 0);
-    
-    const scope2Total = scopeKey === 'scope2'
-      ? newDetails.reduce((sum, d) => sum + d.emissions, 0)
-      : sectionDetails.scope2.reduce((sum, d) => sum + d.emissions, 0);
-    
-    // Pour Scope 3, calculer le total combiné (standard + avancé)
-    let scope3Total: number;
-    if (scopeKey === 'scope3') {
-      const standardScope3Total = newDetails.reduce((sum, d) => sum + d.emissions, 0);
-      const advancedScope3Total = isAdvancedMode 
-        ? advancedEntries.reduce((sum, e) => sum + e.total, 0)
-        : 0;
-      scope3Total = standardScope3Total + advancedScope3Total;
-    } else {
-      const standardScope3 = sectionDetails.scope3.reduce((sum, d) => sum + d.emissions, 0);
-      scope3Total = isAdvancedMode ? standardScope3 + scope3AdvancedTotal : standardScope3;
-    }
-    
-    updateEmissions({
-      scope1: scope1Total,
-      scope2: scope2Total,
-      scope3: scope3Total
+  }, [setSectionDetails, isAdvancedMode]);
+
+  // ============================================================
+  // RESET
+  // ============================================================
+  const resetCalculations = useCallback(() => {
+    safeRemove('calculator-scope1');
+    safeRemove('calculator-scope2');
+    safeRemove('calculator-scope3');
+
+    setScope1Data({
+      combustibleType: "", combustibleQuantity: "", combustibleUnit: "kg",
+      refrigerantType: "", refrigerantQuantity: "", refrigerantUnit: "kg",
+      vehiculeType: "", vehiculeQuantity: "", vehiculeUnit: "km"
     });
-  };
-
-  // États pour les formulaires avec persistance
-  const [scope1Data, setScope1Data] = useState(() => {
-    const saved = localStorage.getItem('calculator-scope1');
-    return saved ? JSON.parse(saved) : {
-      combustibleType: "",
-      combustibleQuantity: "",
-      combustibleUnit: "kg", // kg ou tonne
-      refrigerantType: "",
-      refrigerantQuantity: "",
-      refrigerantUnit: "kg",
-      vehiculeType: "",
-      vehiculeQuantity: "",
-      vehiculeUnit: "km" // km ou 1000km
-    };
-  });
-
-  const [scope2Data, setScope2Data] = useState(() => {
-    const saved = localStorage.getItem('calculator-scope2');
-    return saved ? JSON.parse(saved) : {
-      electriciteType: "",
-      electriciteQuantity: "",
-      electriciteUnit: "kWh", // kWh ou MWh
-      vapeurType: "",
-      vapeurQuantity: "",
-      vapeurUnit: "kWh"
-    };
-  });
-
-  const [scope3Data, setScope3Data] = useState(() => {
-    const saved = localStorage.getItem('calculator-scope3');
-    return saved ? JSON.parse(saved) : {
-      transportType: "",
-      transportQuantity: "",
-      materiauType: "",
-      materiauQuantity: "",
-      dechetType: "",
-      dechetQuantity: "",
-      alimentationType: "",
-      alimentationQuantity: "",
-      numeriqueType: "",
-      numeriqueQuantity: ""
-    };
-  });
-
-  // États pour les données d'entreprise avec persistance
-  const [chiffreAffaires, setChiffreAffaires] = useState(() => {
-    const saved = localStorage.getItem('calculator-chiffre-affaires');
-    return saved ? JSON.parse(saved) : 1000;
-  });
-
-  const [nombrePersonnels, setNombrePersonnels] = useState(() => {
-    const saved = localStorage.getItem('calculator-nombre-personnels');
-    return saved ? JSON.parse(saved) : 50;
-  });
-
-  const [emissionsAnneePrecedente, setEmissionsAnneePrecedente] = useState(() => {
-    const saved = localStorage.getItem('calculator-emissions-annee-precedente');
-    return saved ? JSON.parse(saved) : 0;
-  });
-
-  const [objectifSBTI, setObjectifSBTI] = useState(() => {
-    const saved = localStorage.getItem('calculator-objectif-sbti');
-    return saved ? JSON.parse(saved) : 0;
-  });
-
-  const [objectifsSBTParAnnee, setObjectifsSBTParAnnee] = useState(() => {
-    const saved = localStorage.getItem('calculator-objectifs-sbt-par-annee');
-    return saved ? JSON.parse(saved) : {};
-  });
-
-  const [emissionsReelles, setEmissionsReelles] = useState(() => {
-    const saved = localStorage.getItem('calculator-emissions-reelles');
-    return saved ? JSON.parse(saved) : 0;
-  });
-
-  // États pour les benchmarks sectoriels avec persistance
-  const [moyenneSectorielle, setMoyenneSectorielle] = useState(() => {
-    const saved = localStorage.getItem('calculator-moyenne-sectorielle');
-    return saved ? JSON.parse(saved) : 0;
-  });
-
-  const [leadersSecteur, setLeadersSecteur] = useState(() => {
-    const saved = localStorage.getItem('calculator-leaders-secteur');
-    return saved ? JSON.parse(saved) : 0;
-  });
-
-  const [positionClassement, setPositionClassement] = useState(() => {
-    const saved = localStorage.getItem('calculator-position-classement');
-    return saved ? JSON.parse(saved) : 0;
-  });
-  
-  // Nouveaux états pour les benchmarks sectoriels dynamiques (Analyse Comparative)
-  const [benchmarkSectorName, setBenchmarkSectorName] = useState(() => {
-    const saved = localStorage.getItem('calculator-benchmark-sector-name');
-    return saved ? JSON.parse(saved) : '';
-  });
-  
-  const [benchmarkSectorAverage, setBenchmarkSectorAverage] = useState(() => {
-    const saved = localStorage.getItem('calculator-benchmark-sector-average');
-    return saved ? JSON.parse(saved) : 0;
-  });
-  
-  const [benchmarkSectorTop10, setBenchmarkSectorTop10] = useState(() => {
-    const saved = localStorage.getItem('calculator-benchmark-sector-top10');
-    return saved ? JSON.parse(saved) : 0;
-  });
-  
-  const [benchmarkSectorCritical, setBenchmarkSectorCritical] = useState(() => {
-    const saved = localStorage.getItem('calculator-benchmark-sector-critical');
-    return saved ? JSON.parse(saved) : 0;
-  });
-
-  // Vérifier l'authentification et charger les calculs sauvegardés
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setIsAuthenticated(!!user);
-    };
-    
-    checkAuth();
-    
-    const savedCalculations = localStorage.getItem('calculator-calculations');
-    if (savedCalculations) {
-      setCalculations(JSON.parse(savedCalculations));
-    }
-  }, []);
-
-  // Sauvegarder le mode avancé
-  useEffect(() => {
-    localStorage.setItem('calculator-advanced-mode', JSON.stringify(isAdvancedMode));
-  }, [isAdvancedMode]);
-
-  // Sauvegarder les formulaires
-  useEffect(() => {
-    localStorage.setItem('calculator-scope1', JSON.stringify(scope1Data));
-  }, [scope1Data]);
-
-  useEffect(() => {
-    localStorage.setItem('calculator-scope2', JSON.stringify(scope2Data));
-  }, [scope2Data]);
-
-  useEffect(() => {
-    localStorage.setItem('calculator-scope3', JSON.stringify(scope3Data));
-  }, [scope3Data]);
-
-  // Sauvegarder les données d'entreprise ET mettre à jour le contexte
-  useEffect(() => {
-    localStorage.setItem('calculator-chiffre-affaires', JSON.stringify(chiffreAffaires));
-    updateEmissions({ chiffreAffaires });
-  }, [chiffreAffaires, updateEmissions]);
-
-  useEffect(() => {
-    localStorage.setItem('calculator-nombre-personnels', JSON.stringify(nombrePersonnels));
-    updateEmissions({ nombrePersonnels });
-  }, [nombrePersonnels, updateEmissions]);
-
-  useEffect(() => {
-    localStorage.setItem('calculator-emissions-annee-precedente', JSON.stringify(emissionsAnneePrecedente));
-    updateEmissions({ emissionsAnneePrecedente });
-  }, [emissionsAnneePrecedente, updateEmissions]);
-
-  useEffect(() => {
-    localStorage.setItem('calculator-objectif-sbti', JSON.stringify(objectifSBTI));
-    updateEmissions({ objectifSBTI });
-  }, [objectifSBTI, updateEmissions]);
-
-  useEffect(() => {
-    localStorage.setItem('calculator-objectifs-sbt-par-annee', JSON.stringify(objectifsSBTParAnnee));
-    updateEmissions({ objectifsSBTParAnnee });
-  }, [objectifsSBTParAnnee, updateEmissions]);
-
-  useEffect(() => {
-    localStorage.setItem('calculator-emissions-reelles', JSON.stringify(emissionsReelles));
-    updateEmissions({ emissionsReelles });
-  }, [emissionsReelles, updateEmissions]);
-
-  // Sauvegarder les benchmarks sectoriels
-  useEffect(() => {
-    localStorage.setItem('calculator-moyenne-sectorielle', JSON.stringify(moyenneSectorielle));
-    updateEmissions({ moyenneSectorielle });
-  }, [moyenneSectorielle, updateEmissions]);
-
-  useEffect(() => {
-    localStorage.setItem('calculator-leaders-secteur', JSON.stringify(leadersSecteur));
-    updateEmissions({ leadersSecteur });
-  }, [leadersSecteur, updateEmissions]);
-
-  useEffect(() => {
-    localStorage.setItem('calculator-position-classement', JSON.stringify(positionClassement));
-    updateEmissions({ positionClassement });
-  }, [positionClassement, updateEmissions]);
-  
-  // Sauvegarder les nouveaux benchmarks sectoriels dynamiques
-  useEffect(() => {
-    localStorage.setItem('calculator-benchmark-sector-name', JSON.stringify(benchmarkSectorName));
-    updateEmissions({ benchmarkSectorName });
-  }, [benchmarkSectorName, updateEmissions]);
-  
-  useEffect(() => {
-    localStorage.setItem('calculator-benchmark-sector-average', JSON.stringify(benchmarkSectorAverage));
-    updateEmissions({ benchmarkSectorAverage });
-  }, [benchmarkSectorAverage, updateEmissions]);
-  
-  useEffect(() => {
-    localStorage.setItem('calculator-benchmark-sector-top10', JSON.stringify(benchmarkSectorTop10));
-    updateEmissions({ benchmarkSectorTop10 });
-  }, [benchmarkSectorTop10, updateEmissions]);
-  
-  useEffect(() => {
-    localStorage.setItem('calculator-benchmark-sector-critical', JSON.stringify(benchmarkSectorCritical));
-    updateEmissions({ benchmarkSectorCritical });
-  }, [benchmarkSectorCritical, updateEmissions]);
-
-  // Calculer le total Scope 3 réel
-  // Calculer le total Scope 3 en sommant toujours les deux sources (standard + avancé si activé)
-  // Cela garantit la cohérence avec getScope3CombinedDetails()
-  const scope3TotalCalculated = useMemo(() => {
-    // Toujours inclure les calculs standard
-    const scope3FromSections = sectionDetails.scope3.reduce((sum, d) => sum + d.emissions, 0);
-    
-    // En mode avancé, ajouter aussi les calculs du module avancé
-    if (isAdvancedMode) {
-      return scope3FromSections + scope3AdvancedTotal;
-    }
-    
-    // En mode standard, seulement les sectionDetails
-    return scope3FromSections;
-  }, [sectionDetails.scope3, scope3AdvancedTotal, isAdvancedMode]);
-
-  // Sauvegarder les calculs et mettre à jour le contexte (incluant Scope 3 avancé)
-  useEffect(() => {
-    localStorage.setItem('calculator-calculations', JSON.stringify(calculations));
-  }, [calculations]);
-
-  // Effet séparé pour la synchronisation des totaux (évite les dépendances circulaires)
-  useEffect(() => {
-    const scope1Total = sectionDetails.scope1.reduce((sum, d) => sum + d.emissions, 0);
-    const scope2Total = sectionDetails.scope2.reduce((sum, d) => sum + d.emissions, 0);
-    
-    // Utiliser TOUJOURS le scope3TotalCalculated pour garantir la cohérence
-    updateEmissions({
-      scope1: scope1Total,
-      scope2: scope2Total,
-      scope3: scope3TotalCalculated
+    setScope2Data({
+      electriciteType: "", electriciteQuantity: "", electriciteUnit: "kWh",
+      vapeurType: "", vapeurQuantity: "", vapeurUnit: "kWh"
     });
-  }, [sectionDetails.scope1, sectionDetails.scope2, scope3TotalCalculated, updateEmissions]);
-
-  const addCalculation = (scope: string, category: string, subcategory: string, quantity: number) => {
-    const scopeData = baseCarbone[scope as keyof typeof baseCarbone] as any;
-    if (!scopeData) return;
-
-    const categoryData = scopeData[category];
-    if (!categoryData) return;
-
-    const item = categoryData[subcategory];
-    if (!item) return;
-
-    const emissions = quantity * item.facteur;
-    
-    const newCalculation: CalculationResult = {
-      category: scope,
-      subcategory,
-      quantity,
-      unit: item.unite,
-      emissionFactor: item.facteur,
-      emissions,
-      description: item.description
-    };
-
-    setCalculations(prev => [...prev, newCalculation]);
-    
-    // Ajouter aux détails de section pour la traçabilité
-    const formuleDetail = `${quantity} ${item.unite} × ${item.facteur} kg CO₂e/${item.unite} = ${emissions.toFixed(2)} kg CO₂e`;
-    
-    addCalculationDetail(scope as 'scope1' | 'scope2' | 'scope3', {
-      type: category,
-      description: item.description,
-      quantity,
-      unit: item.unite,
-      emissionFactor: item.facteur,
-      emissions,
-      formuleDetail
+    setScope3Data({
+      transportType: "", transportQuantity: "", materiauType: "", materiauQuantity: "",
+      dechetType: "", dechetQuantity: "", alimentationType: "", alimentationQuantity: "",
+      numeriqueType: "", numeriqueQuantity: ""
     });
-    
-    toast({
-      title: "Calcul ajouté ✅",
-      description: `${emissions.toFixed(2)} kg CO₂e ajoutés au ${scope.toUpperCase()}`,
-    });
-  };
 
-  const getTotalEmissions = () => {
-    return calculations.reduce((total, calc) => total + calc.emissions, 0);
-  };
-
-  const getEmissionsByScope = () => {
-    // Les sectionDetails sont la source de vérité pour les totaux
-    // Ils sont synchronisés avec les calculations via addCalculation
-    const scope1 = sectionDetails.scope1.reduce((sum, d) => sum + d.emissions, 0);
-    const scope2 = sectionDetails.scope2.reduce((sum, d) => sum + d.emissions, 0);
-    // Pour Scope 3, utiliser uniquement les sectionDetails standard
-    // Le module avancé est ajouté séparément via scope3TotalCalculated
-    const scope3 = sectionDetails.scope3.reduce((sum, d) => sum + d.emissions, 0);
-    return { scope1, scope2, scope3 };
-  };
-
-  const resetCalculations = () => {
-    setCalculations([]);
-    localStorage.removeItem('calculator-calculations');
-    localStorage.removeItem('calculator-scope1');
-    localStorage.removeItem('calculator-scope2');
-    localStorage.removeItem('calculator-scope3');
-    
-    const initialScope1 = {
-      combustibleType: "",
-      combustibleQuantity: "",
-      combustibleUnit: "kg",
-      refrigerantType: "",
-      refrigerantQuantity: "",
-      refrigerantUnit: "kg",
-      vehiculeType: "",
-      vehiculeQuantity: "",
-      vehiculeUnit: "km"
-    };
-    
-    const initialScope2 = {
-      electriciteType: "",
-      electriciteQuantity: "",
-      electriciteUnit: "kWh",
-      vapeurType: "",
-      vapeurQuantity: "",
-      vapeurUnit: "kWh"
-    };
-    
-    const initialScope3 = {
-      transportType: "",
-      transportQuantity: "",
-      materiauType: "",
-      materiauQuantity: "",
-      dechetType: "",
-      dechetQuantity: "",
-      alimentationType: "",
-      alimentationQuantity: "",
-      numeriqueType: "",
-      numeriqueQuantity: ""
-    };
-    
-    setScope1Data(initialScope1);
-    setScope2Data(initialScope2);
-    setScope3Data(initialScope3);
-    
-    // Réinitialiser les détails de calcul par section
     clearAllDetails();
-    
     updateEmissions({ scope1: 0, scope2: 0, scope3: 0 });
-    
-    toast({
-      title: "Calculs réinitialisés ✅",
-      description: "Tous les calculs et détails ont été supprimés",
-    });
-  };
 
-  // Sauvegarder les calculs dans la base de données
-  const saveToDatabase = async () => {
+    toast({ title: "Calculs réinitialisés ✅", description: "Tous les calculs et détails ont été supprimés" });
+  }, [clearAllDetails, updateEmissions, toast]);
+
+  // ============================================================
+  // SAUVEGARDE DB
+  // ============================================================
+  const saveToDatabase = useCallback(async () => {
     if (!isAuthenticated) {
-      toast({
-        title: "Authentification requise",
-        description: "Connectez-vous pour sauvegarder vos calculs dans le dashboard",
-        variant: "destructive",
-      });
+      toast({ title: "Authentification requise", description: "Connectez-vous pour sauvegarder", variant: "destructive" });
       return;
     }
-
-    if (calculations.length === 0) {
-      toast({
-        title: "Aucun calcul",
-        description: "Ajoutez au moins un calcul avant de sauvegarder",
-        variant: "destructive",
-      });
+    if (totalEntries === 0) {
+      toast({ title: "Aucun calcul", description: "Ajoutez au moins un calcul avant de sauvegarder", variant: "destructive" });
       return;
     }
-
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Utilisateur non authentifié');
 
-      // Créer un calcul d'émissions d'abord
       const { data: calculationData, error: calcError } = await supabase
         .from('emissions_calculations')
         .insert({
           user_id: user.id,
-          scope1: emissions.scope1,
-          scope2: emissions.scope2,
-          scope3: emissions.scope3,
-          total: getTotalEmissions(),
-          carbon_intensity: getTotalEmissions() / 1000 / chiffreAffaires,
+          scope1: scope1Total,
+          scope2: scope2Total,
+          scope3: scope3TotalWithAdvanced,
+          total: totalGlobal,
+          carbon_intensity: totalGlobal / 1000 / companyData.chiffreAffaires,
           calculation_data: JSON.stringify({
-            chiffre_affaires: chiffreAffaires,
-            nombre_personnels: nombrePersonnels,
-            emissions_annee_precedente: emissionsAnneePrecedente,
-            objectif_sbti: objectifSBTI,
-            calculations: calculations
+            chiffre_affaires: companyData.chiffreAffaires,
+            nombre_personnels: companyData.nombrePersonnels,
+            emissions_annee_precedente: companyData.emissionsAnneePrecedente,
+            objectif_sbti: companyData.objectifSBTI,
           }) as any
         })
         .select()
@@ -791,313 +385,98 @@ export const AdvancedGHGCalculator = () => {
 
       if (calcError) throw calcError;
 
-      // Sauvegarder les données détaillées d'émissions
-      const emissionsData = calculations.map(calc => ({
-        calculation_id: calculationData.id,
-        category: calc.subcategory,
-        subcategory: calc.description,
-        scope_type: calc.category,
-        value: calc.quantity,
-        unit: calc.unit,
-        emission_factor: calc.emissionFactor,
-        co2_equivalent: calc.emissions
-      }));
-
-      const { error: emissionsError } = await supabase
-        .from('emissions_data')
-        .insert(emissionsData);
-
-      if (emissionsError) throw emissionsError;
-
-      // Créer un rapport carbone
       await createReport({
         report_name: `Bilan Carbone ${new Date().toLocaleDateString('fr-FR')}`,
         period: `Année ${new Date().getFullYear()}`,
-        total_co2e: getTotalEmissions() / 1000, // Conversion en tonnes
-        scope1_total: emissions.scope1 / 1000,
-        scope2_total: emissions.scope2 / 1000,
-        scope3_total: emissions.scope3 / 1000,
-        carbon_intensity: getTotalEmissions() / 1000 / chiffreAffaires,
+        total_co2e: totalGlobal / 1000,
+        scope1_total: scope1Total / 1000,
+        scope2_total: scope2Total / 1000,
+        scope3_total: scope3TotalWithAdvanced / 1000,
+        carbon_intensity: totalGlobal / 1000 / companyData.chiffreAffaires,
         company_info: {
-          chiffre_affaires: chiffreAffaires,
-          nombre_personnels: nombrePersonnels,
-          emissions_annee_precedente: emissionsAnneePrecedente,
-          objectif_sbti: objectifSBTI,
+          chiffre_affaires: companyData.chiffreAffaires,
+          nombre_personnels: companyData.nombrePersonnels,
+          emissions_annee_precedente: companyData.emissionsAnneePrecedente,
+          objectif_sbti: companyData.objectifSBTI,
           date_calcul: new Date().toISOString()
         },
         calculation_id: calculationData.id
       });
 
-      toast({
-        title: "Données sauvegardées",
-        description: "Vos calculs ont été sauvegardés et sont maintenant visibles sur le dashboard",
-      });
-
+      toast({ title: "Données sauvegardées", description: "Vos calculs sont maintenant visibles sur le dashboard" });
     } catch (error: any) {
-      console.error('Erreur lors de la sauvegarde:', error);
-      toast({
-        title: "Erreur de sauvegarde",
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error('Erreur sauvegarde:', error);
+      toast({ title: "Erreur de sauvegarde", description: error.message, variant: "destructive" });
     }
-  };
+  }, [isAuthenticated, totalEntries, scope1Total, scope2Total, scope3TotalWithAdvanced, totalGlobal, companyData, createReport, toast]);
 
-  const exportToCSV = () => {
-    const headers = ['Scope', 'Catégorie', 'Description', 'Quantité', 'Unité', 'Facteur d\'émission', 'Émissions (kg CO2e)'];
+  // ============================================================
+  // EXPORT CSV
+  // ============================================================
+  const exportToCSV = useCallback(() => {
+    const allDetails = [
+      ...sectionDetails.scope1.map(d => ({ ...d, scope: 'SCOPE1' })),
+      ...sectionDetails.scope2.map(d => ({ ...d, scope: 'SCOPE2' })),
+      ...sectionDetails.scope3.map(d => ({ ...d, scope: 'SCOPE3' })),
+    ];
+
+    const headers = ['Scope', 'Description', 'Quantité', 'Unité', "Facteur d'émission", 'Émissions (kg CO2e)'];
     const csvContent = [
       headers.join(','),
-      ...calculations.map(calc => [
-        calc.category.toUpperCase(),
-        calc.subcategory,
-        calc.description,
-        calc.quantity,
-        calc.unit,
-        calc.emissionFactor,
-        calc.emissions.toFixed(3)
+      ...allDetails.map(d => [
+        d.scope, d.description, d.quantity, d.unit, d.emissionFactor, d.emissions.toFixed(3)
       ].join(','))
     ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `bilan-carbone-detaille-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
+    link.href = URL.createObjectURL(blob);
+    link.download = `bilan-carbone-detaille-${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
-    document.body.removeChild(link);
-  };
+  }, [sectionDetails]);
 
-  const emissions = getEmissionsByScope();
-  
-  // Utiliser scope3TotalCalculated qui contient déjà la somme correcte (sectionDetails + module avancé)
-  const scope3TotalWithAdvanced = scope3TotalCalculated;
-  const totalGlobal = emissions.scope1 + emissions.scope2 + scope3TotalWithAdvanced;
-
-  // Créer la liste combinée des détails Scope 3 (standard + module avancé)
-  const getScope3CombinedDetails = (): CalculationDetail[] => {
+  // ============================================================
+  // Scope 3 combined details (standard + avancé)
+  // ============================================================
+  const scope3CombinedDetails = useMemo((): CalculationDetail[] => {
     const standardDetails = sectionDetails.scope3;
-    
-    // Si mode avancé activé, ajouter les calculs du module avancé
-    if (isAdvancedMode) {
-      try {
-        const savedAdvanced = localStorage.getItem('scope3-advanced-calculations');
-        if (savedAdvanced) {
-          const advancedCalcs = JSON.parse(savedAdvanced);
-          const advancedDetails: CalculationDetail[] = advancedCalcs.map((calc: any) => ({
-            id: calc.id || `scope3-adv-${Date.now()}-${Math.random()}`,
-            type: 'ghg-protocol-advanced',
-            description: `${calc.categoryName || 'Catégorie'} - ${calc.subcategoryName || calc.method || 'Calcul avancé'}`,
-            quantity: calc.quantity || 0,
-            unit: calc.unit || 'unités',
-            emissionFactor: calc.quantity > 0 ? (calc.emissions / calc.quantity) : 0,
-            emissions: calc.emissions || 0,
-            timestamp: new Date().toLocaleString('fr-FR'),
-            formuleDetail: `${calc.quantity || 0} ${calc.unit || 'unités'} × ${calc.quantity > 0 ? (calc.emissions / calc.quantity).toFixed(4) : 0} kg CO₂e/${calc.unit || 'unités'}`
-          }));
-          return [...standardDetails, ...advancedDetails];
-        }
-      } catch (e) {
-        console.error('Erreur lecture Scope3 avancé pour détails:', e);
-      }
-    }
-    
-    return standardDetails;
-  };
+    if (!isAdvancedMode) return standardDetails;
 
-  const scope3CombinedDetails = getScope3CombinedDetails();
+    const advancedCalcs = safeGetJSON<any[]>('scope3-advanced-calculations', []);
+    const advancedDetails: CalculationDetail[] = advancedCalcs.map((calc: any) => ({
+      id: calc.id || `scope3-adv-${Date.now()}-${Math.random()}`,
+      type: 'ghg-protocol-advanced',
+      description: `${calc.categoryName || 'Catégorie'} - ${calc.subcategoryName || 'Calcul avancé'}`,
+      quantity: calc.quantity || 0,
+      unit: calc.unit || 'unités',
+      emissionFactor: calc.quantity > 0 ? (calc.emissions / calc.quantity) : 0,
+      emissions: calc.emissions || 0,
+      timestamp: new Date().toLocaleString('fr-FR'),
+      formuleDetail: `${calc.quantity || 0} ${calc.unit || 'unités'} × ${calc.quantity > 0 ? (calc.emissions / calc.quantity).toFixed(4) : 0} kg CO₂e/${calc.unit || 'unités'}`
+    }));
+    return [...standardDetails, ...advancedDetails];
+  }, [sectionDetails.scope3, isAdvancedMode, scope3AdvancedTotal]);
 
+  const hasAnyData = totalEntries > 0 || (isAdvancedMode && scope3AdvancedTotal > 0);
+
+  // ============================================================
+  // RENDER
+  // ============================================================
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {/* Dashboard Global - Toujours visible en premier */}
-      <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-background to-accent/5">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <CardTitle className="text-xl flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
-                Résultat Global des Émissions GES
-              </CardTitle>
-              <Badge variant="outline" className="text-sm font-medium">
-                <Calendar className="h-3 w-3 mr-1" />
-                Année 2025
-              </Badge>
-              {/* Indicateur de variation par rapport à l'année précédente */}
-              {emissionsAnneePrecedente > 0 && totalGlobal > 0 && (
-                (() => {
-                  const currentTotal = totalGlobal / 1000;
-                  const variation = ((currentTotal - emissionsAnneePrecedente) / emissionsAnneePrecedente) * 100;
-                  const isReduction = variation < 0;
-                  return (
-                    <Badge 
-                      className={`flex items-center gap-1 ${
-                        isReduction 
-                          ? 'bg-red-100 text-red-700 hover:bg-red-200 border-red-300' 
-                          : 'bg-green-100 text-green-700 hover:bg-green-200 border-green-300'
-                      }`}
-                      variant="outline"
-                    >
-                      {isReduction ? (
-                        <ArrowDown className="h-3 w-3" />
-                      ) : (
-                        <ArrowUp className="h-3 w-3" />
-                      )}
-                      {Math.abs(variation).toFixed(1)}% vs 2024
-                    </Badge>
-                  );
-                })()
-              )}
-            </div>
-            {isAdvancedMode && (
-              <Badge className="bg-green-600 hover:bg-green-700 text-white">
-                <CheckCircle2 className="h-3 w-3 mr-1" />
-                GHG Protocol - 15 catégories
-              </Badge>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {/* Scope 1 - Cliquable */}
-            <Card 
-              className="p-4 bg-red-500/10 border-red-500/30 cursor-pointer hover:bg-red-500/20 hover:border-red-500/50 transition-all duration-200 hover:shadow-md"
-              onClick={() => setOpenScopeModal(1)}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <Flame className="h-4 w-4 text-red-500" />
-                <span className="text-sm font-medium text-muted-foreground">Scope 1</span>
-              </div>
-              <div className="text-2xl font-bold text-red-600">
-                {(emissions.scope1 / 1000).toFixed(2)}
-              </div>
-              <div className="text-xs text-muted-foreground">tCO₂e</div>
-            </Card>
-
-            {/* Scope 2 - Cliquable */}
-            <Card 
-              className="p-4 bg-amber-500/10 border-amber-500/30 cursor-pointer hover:bg-amber-500/20 hover:border-amber-500/50 transition-all duration-200 hover:shadow-md"
-              onClick={() => setOpenScopeModal(2)}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <Zap className="h-4 w-4 text-amber-500" />
-                <span className="text-sm font-medium text-muted-foreground">Scope 2</span>
-              </div>
-              <div className="text-2xl font-bold text-amber-600">
-                {(emissions.scope2 / 1000).toFixed(2)}
-              </div>
-              <div className="text-xs text-muted-foreground">tCO₂e</div>
-            </Card>
-
-            {/* Scope 3 - Cliquable */}
-            <Card 
-              className="p-4 bg-blue-500/10 border-blue-500/30 cursor-pointer hover:bg-blue-500/20 hover:border-blue-500/50 transition-all duration-200 hover:shadow-md"
-              onClick={() => setOpenScopeModal(3)}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <Globe className="h-4 w-4 text-blue-500" />
-                <span className="text-sm font-medium text-muted-foreground">Scope 3</span>
-              </div>
-              <div className="text-2xl font-bold text-blue-600">
-                {(scope3TotalWithAdvanced / 1000).toFixed(2)}
-              </div>
-              <div className="text-xs text-muted-foreground">tCO₂e</div>
-            </Card>
-
-            {/* Séparateur visuel */}
-            <div className="hidden md:flex items-center justify-center">
-              <div className="text-3xl font-bold text-muted-foreground">=</div>
-            </div>
-
-            {/* Total Global */}
-            <Card className="p-4 bg-gradient-to-br from-primary/20 to-accent/20 border-primary/50 col-span-2 md:col-span-1">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                <span className="text-sm font-bold text-foreground">TOTAL</span>
-              </div>
-              <div className="text-3xl font-bold text-primary">
-                {(totalGlobal / 1000).toFixed(2)}
-              </div>
-              <div className="text-xs text-muted-foreground">tCO₂e</div>
-            </Card>
-          </div>
-
-          {/* Barre de répartition */}
-          {totalGlobal > 0 && (
-            <div className="mt-4 space-y-2">
-              <div className="flex h-4 rounded-full overflow-hidden bg-muted">
-                <div 
-                  className="bg-red-500 transition-all duration-500"
-                  style={{ width: `${(emissions.scope1 / totalGlobal) * 100}%` }}
-                />
-                <div 
-                  className="bg-amber-500 transition-all duration-500"
-                  style={{ width: `${(emissions.scope2 / totalGlobal) * 100}%` }}
-                />
-                <div 
-                  className="bg-blue-500 transition-all duration-500"
-                  style={{ width: `${(scope3TotalWithAdvanced / totalGlobal) * 100}%` }}
-                />
-              </div>
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full bg-red-500" />
-                  Scope 1: {((emissions.scope1 / totalGlobal) * 100).toFixed(1)}%
-                </span>
-                <span className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full bg-amber-500" />
-                  Scope 2: {((emissions.scope2 / totalGlobal) * 100).toFixed(1)}%
-                </span>
-                <span className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  Scope 3: {((scope3TotalWithAdvanced / totalGlobal) * 100).toFixed(1)}%
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Intensité carbone et CA */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-border/50">
-            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-              <span className="text-sm text-muted-foreground">Intensité carbone</span>
-              <span className="text-lg font-bold text-destructive">
-                {chiffreAffaires > 0 ? (totalGlobal / 1000 / chiffreAffaires).toFixed(3) : '0.000'} tCO₂e/k€
-              </span>
-            </div>
-            <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-              <span className="text-sm text-muted-foreground">CA:</span>
-              <Input
-                type="number"
-                value={chiffreAffaires}
-                onChange={(e) => setChiffreAffaires(Number(e.target.value) || 1000)}
-                className="w-24 text-center font-bold h-8"
-              />
-              <span className="text-sm font-medium">k€</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-              <span className="text-sm text-muted-foreground">Par employé</span>
-              <span className="text-lg font-bold">
-                {nombrePersonnels > 0 ? (totalGlobal / 1000 / nombrePersonnels).toFixed(2) : '0.00'} tCO₂e
-              </span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Alerte Sanity Check - si Scope 1 > 500 tonnes */}
-      {emissions.scope1 / 1000 > 500 && (
-        <Alert variant="destructive" className="border-2 border-destructive/50 bg-destructive/10">
-          <AlertTriangle className="h-5 w-5" />
-          <AlertTitle className="text-lg font-bold">Attention - Valeur anormalement élevée</AlertTitle>
-          <AlertDescription className="text-base">
-            Le Scope 1 affiche <strong>{(emissions.scope1 / 1000).toFixed(1)} tCO₂e</strong>, ce qui semble très élevé.
-            <br />
-            <strong>Avez-vous saisi des kg au lieu de tonnes ?</strong> Les facteurs d'émission Base Carbone® sont en <strong>kg CO₂e par unité</strong>.
-            <br />
-            Vérifiez vos quantités saisies ou utilisez le sélecteur d'unité approprié dans les formulaires.
-          </AlertDescription>
-        </Alert>
-      )}
+      {/* Dashboard Global */}
+      <GHGDashboardHeader
+        scope1={scope1Total}
+        scope2={scope2Total}
+        scope3Total={scope3TotalWithAdvanced}
+        totalGlobal={totalGlobal}
+        chiffreAffaires={companyData.chiffreAffaires}
+        nombrePersonnels={companyData.nombrePersonnels}
+        emissionsAnneePrecedente={companyData.emissionsAnneePrecedente}
+        isAdvancedMode={isAdvancedMode}
+        onChiffreAffairesChange={(v) => setCompanyData(prev => ({ ...prev, chiffreAffaires: v }))}
+        onScopeClick={setOpenScopeModal}
+      />
 
       {/* Header with mode toggle */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -1106,23 +485,17 @@ export const AdvancedGHGCalculator = () => {
             Calculateur GES {isAdvancedMode ? 'Avancé' : 'Standard'} - Base Carbone® ADEME
           </h1>
           <p className="text-muted-foreground max-w-2xl">
-            {isAdvancedMode 
+            {isAdvancedMode
               ? 'Calculateur expert avec 15 catégories Scope 3 conformes au GHG Protocol.'
-              : 'Calculateur basé sur les facteurs d\'émissions officiels de la Base Carbone® ADEME.'
-            }
+              : 'Calculateur basé sur les facteurs d\'émissions officiels de la Base Carbone® ADEME.'}
           </p>
         </div>
-
-        {/* Mode Toggle */}
         <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg border">
           <div className="flex items-center gap-2">
             <Calculator className="h-5 w-5 text-muted-foreground" />
             <span className="text-sm font-medium">Standard</span>
           </div>
-          <Switch
-            checked={isAdvancedMode}
-            onCheckedChange={setIsAdvancedMode}
-          />
+          <Switch checked={isAdvancedMode} onCheckedChange={setIsAdvancedMode} />
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
             <span className="text-sm font-medium">Avancé</span>
@@ -1130,233 +503,17 @@ export const AdvancedGHGCalculator = () => {
         </div>
       </div>
 
-      {/* Anciens métriques masquées - remplacées par le dashboard global */}
-      {calculations.length > 0 && (
-        <div>
-
-        {/* Nouveaux champs d'entreprise */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <Card className="p-6">
-            <div className="text-center space-y-2">
-              <div className="text-lg text-muted-foreground mb-2">Nombre de personnels</div>
-              <div className="flex items-center justify-center gap-2">
-                <Input
-                  type="number"
-                  value={nombrePersonnels}
-                  onChange={(e) => setNombrePersonnels(Number(e.target.value) || 50)}
-                  className="w-24 text-center text-2xl font-bold"
-                />
-                <span className="text-lg font-medium">pers.</span>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6">
-            <div className="text-center space-y-2">
-              <div className="text-lg text-muted-foreground mb-2">Émissions année précédente (2024)</div>
-              <div className="flex items-center justify-center gap-2">
-                <Input
-                  type="number"
-                  value={emissionsAnneePrecedente}
-                  onChange={(e) => setEmissionsAnneePrecedente(Number(e.target.value) || 0)}
-                  className="w-24 text-center text-2xl font-bold"
-                  step="0.1"
-                />
-                <span className="text-lg font-medium">tCO2e</span>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6">
-            <div className="text-center space-y-2">
-              <div className="text-lg text-muted-foreground mb-2">Émissions Réelles (2025)</div>
-              <div className="flex items-center justify-center gap-2">
-                <span className="text-3xl font-bold text-primary">
-                  {(totalGlobal / 1000).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-                <span className="text-lg font-medium">tCO₂e</span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Calculé automatiquement (Scope 1 + 2 + 3)
-              </p>
-            </div>
-          </Card>
-        </div>
-
-        {/* Objectifs SBT par année */}
-        <Card className="p-6 mb-6">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl">Objectifs Science Based Targets (SBT) par année</CardTitle>
-            <CardDescription>
-              Saisissez vos objectifs de réduction d'émissions pour chaque année de 2023 à 2030 (en tCO2e)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map(year => (
-                <div key={year} className="space-y-2">
-                  <Label className="text-sm font-medium">{year}</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      value={objectifsSBTParAnnee[year] || ''}
-                      onChange={(e) => {
-                        const newObjectifs = { ...objectifsSBTParAnnee };
-                        if (e.target.value === '') {
-                          delete newObjectifs[year];
-                        } else {
-                          newObjectifs[year] = Number(e.target.value) || 0;
-                        }
-                        setObjectifsSBTParAnnee(newObjectifs);
-                      }}
-                      className="text-center"
-                      step="0.1"
-                      placeholder="0"
-                    />
-                    <span className="text-sm text-muted-foreground">tCO2e</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Champs de benchmarks sectoriels pour le Dashboard ESG */}
-        <Card className="p-6 mb-6">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl">Benchmarks Sectoriels (ESG)</CardTitle>
-            <CardDescription>
-              Valeurs de référence par employé pour le widget "Benchmark Sectoriel"
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center space-y-2">
-                <div className="text-lg text-muted-foreground mb-2">Moyenne sectorielle</div>
-                <div className="flex items-center justify-center gap-2">
-                  <Input
-                    type="number"
-                    value={moyenneSectorielle}
-                    onChange={(e) => setMoyenneSectorielle(Number(e.target.value) || 0)}
-                    className="w-24 text-center text-xl font-bold"
-                    step="0.1"
-                    placeholder="0.0"
-                  />
-                  <span className="text-lg font-medium">tCO2e/employé</span>
-                </div>
-              </div>
-
-              <div className="text-center space-y-2">
-                <div className="text-lg text-muted-foreground mb-2">Leaders du secteur</div>
-                <div className="flex items-center justify-center gap-2">
-                  <Input
-                    type="number"
-                    value={leadersSecteur}
-                    onChange={(e) => setLeadersSecteur(Number(e.target.value) || 0)}
-                    className="w-24 text-center text-xl font-bold"
-                    step="0.1"
-                    placeholder="0.0"
-                  />
-                  <span className="text-lg font-medium">tCO2e/employé</span>
-                </div>
-              </div>
-
-              <div className="text-center space-y-2">
-                <div className="text-lg text-muted-foreground mb-2">Position (classement)</div>
-                <div className="flex items-center justify-center gap-2">
-                  <Input
-                    type="number"
-                    value={positionClassement}
-                    onChange={(e) => setPositionClassement(Number(e.target.value) || 0)}
-                    className="w-24 text-center text-xl font-bold"
-                    placeholder="0"
-                  />
-                  <span className="text-lg font-medium">ème</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* Nouveaux champs pour Analyse Comparative Sectorielle (Dashboard) */}
-        <Card className="p-6 mb-6 border-primary/30 bg-primary/5">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl flex items-center gap-2">
-              <Globe className="h-5 w-5 text-primary" />
-              Benchmarks pour l'Analyse Comparative Sectorielle
-            </CardTitle>
-            <CardDescription>
-              Ces valeurs alimentent le graphique "Analyse Comparative Sectorielle" du Tableau de Bord (intensité carbone en tCO₂e/k€)
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Secteur d'activité</Label>
-              <Input
-                type="text"
-                value={benchmarkSectorName}
-                onChange={(e) => setBenchmarkSectorName(e.target.value)}
-                className="max-w-md"
-                placeholder="Ex: Services, Industrie manufacturière, Transport..."
-              />
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Moyenne sectorielle</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    value={benchmarkSectorAverage || ''}
-                    onChange={(e) => setBenchmarkSectorAverage(Number(e.target.value) || 0)}
-                    className="text-center text-lg font-bold"
-                    step="0.1"
-                    placeholder="12.5"
-                  />
-                  <span className="text-sm font-medium whitespace-nowrap">tCO₂e/k€</span>
-                </div>
-                <p className="text-xs text-muted-foreground">Intensité carbone moyenne du secteur</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Seuil Top 10% (Best-in-class)</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    value={benchmarkSectorTop10 || ''}
-                    onChange={(e) => setBenchmarkSectorTop10(Number(e.target.value) || 0)}
-                    className="text-center text-lg font-bold"
-                    step="0.1"
-                    placeholder="6.2"
-                  />
-                  <span className="text-sm font-medium whitespace-nowrap">tCO₂e/k€</span>
-                </div>
-                <p className="text-xs text-muted-foreground">Objectif d'excellence sectorielle</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Seuil critique</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    value={benchmarkSectorCritical || ''}
-                    onChange={(e) => setBenchmarkSectorCritical(Number(e.target.value) || 0)}
-                    className="text-center text-lg font-bold"
-                    step="0.1"
-                    placeholder="20.0"
-                  />
-                  <span className="text-sm font-medium whitespace-nowrap">tCO₂e/k€</span>
-                </div>
-                <p className="text-xs text-muted-foreground">Au-delà : performance critique</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        </div>
+      {/* Company Data Section - visible when data exists */}
+      {hasAnyData && (
+        <CompanyDataSection
+          data={companyData}
+          totalGlobal={totalGlobal}
+          onChange={(updates) => setCompanyData(prev => ({ ...prev, ...updates }))}
+        />
       )}
 
       {/* Résumé des émissions par scope */}
-      {calculations.length > 0 && (
+      {hasAnyData && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -1367,32 +524,22 @@ export const AdvancedGHGCalculator = () => {
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-destructive">
-                  {(emissions.scope1 / 1000).toFixed(1)}
-                </div>
+                <div className="text-2xl font-bold text-destructive">{(scope1Total / 1000).toFixed(1)}</div>
                 <div className="text-sm text-muted-foreground">Scope 1 (tCO2e)</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-orange-500">
-                  {(emissions.scope2 / 1000).toFixed(1)}
-                </div>
+                <div className="text-2xl font-bold text-orange-500">{(scope2Total / 1000).toFixed(1)}</div>
                 <div className="text-sm text-muted-foreground">Scope 2 (tCO2e)</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-500">
-                  {(scope3TotalWithAdvanced / 1000).toFixed(1)}
-                </div>
+                <div className="text-2xl font-bold text-blue-500">{(scope3TotalWithAdvanced / 1000).toFixed(1)}</div>
                 <div className="text-sm text-muted-foreground">Scope 3 (tCO2e)</div>
                 {isAdvancedMode && scope3AdvancedTotal > 0 && (
-                  <div className="text-xs text-muted-foreground mt-1">
-                    (incl. {(scope3AdvancedTotal / 1000).toFixed(1)}t avancé)
-                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">(incl. {(scope3AdvancedTotal / 1000).toFixed(1)}t avancé)</div>
                 )}
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-primary">
-                  {(totalGlobal / 1000).toFixed(1)}
-                </div>
+                <div className="text-3xl font-bold text-primary">{(totalGlobal / 1000).toFixed(1)}</div>
                 <div className="text-sm text-muted-foreground">Total (tCO2e)</div>
               </div>
             </div>
@@ -1414,655 +561,53 @@ export const AdvancedGHGCalculator = () => {
         </Card>
       )}
 
-
+      {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="scope1" className="flex items-center gap-2">
-            <Factory className="h-4 w-4" />
-            Scope 1
+            <Factory className="h-4 w-4" />Scope 1
           </TabsTrigger>
           <TabsTrigger value="scope2" className="flex items-center gap-2">
-            <Zap className="h-4 w-4" />
-            Scope 2
+            <Zap className="h-4 w-4" />Scope 2
           </TabsTrigger>
           <TabsTrigger value="scope3" className="flex items-center gap-2">
-            <Building className="h-4 w-4" />
-            Scope 3
+            <Building className="h-4 w-4" />Scope 3
           </TabsTrigger>
           <TabsTrigger value="details" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Détails calcul
+            <FileText className="h-4 w-4" />Détails calcul
           </TabsTrigger>
         </TabsList>
 
-        {/* SCOPE 1 */}
         <TabsContent value="scope1" className="space-y-6">
-          {/* Info sur les unités */}
-          <Alert className="border-blue-200 bg-blue-50">
-            <AlertTriangle className="h-4 w-4 text-blue-600" />
-            <AlertDescription className="text-blue-800">
-              <strong>Important :</strong> Les facteurs d'émission Base Carbone® ADEME sont en <strong>kg CO₂e</strong> par unité.
-              Les résultats sont automatiquement convertis en tonnes (tCO₂e) pour l'affichage dans le dashboard.
-            </AlertDescription>
-          </Alert>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Flame className="h-5 w-5" />
-                Combustibles
-              </CardTitle>
-              <CardDescription>
-                Combustion de combustibles fossiles et biomasse dans vos installations
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <Label>Type de combustible</Label>
-                  <Select 
-                    value={scope1Data.combustibleType} 
-                    onValueChange={(value) => setScope1Data(prev => ({...prev, combustibleType: value}))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(baseCarbone.scope1.combustibles).map(([key, value]) => (
-                        <SelectItem key={key} value={key}>
-                          {value.description} ({value.unite})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Quantité</Label>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={scope1Data.combustibleQuantity}
-                    onChange={(e) => setScope1Data(prev => ({...prev, combustibleQuantity: e.target.value}))}
-                  />
-                </div>
-                <div>
-                  <Label>Unité saisie</Label>
-                  <Select 
-                    value={scope1Data.combustibleUnit || "standard"} 
-                    onValueChange={(value) => setScope1Data(prev => ({...prev, combustibleUnit: value}))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Unité..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="standard">Unité standard (facteur ADEME)</SelectItem>
-                      <SelectItem value="tonne">Tonne → auto-conversion ×1000</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-end">
-                  <Button 
-                    onClick={() => {
-                      const qty = Number(scope1Data.combustibleQuantity);
-                      const finalQty = scope1Data.combustibleUnit === "tonne" ? qty * 1000 : qty;
-                      addCalculation('scope1', 'combustibles', scope1Data.combustibleType, finalQty);
-                    }}
-                    disabled={!scope1Data.combustibleType || !scope1Data.combustibleQuantity}
-                  >
-                    Ajouter
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Car className="h-5 w-5" />
-                Véhicules d'entreprise
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <Label>Type de véhicule</Label>
-                  <Select 
-                    value={scope1Data.vehiculeType} 
-                    onValueChange={(value) => setScope1Data(prev => ({...prev, vehiculeType: value}))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(baseCarbone.scope1.vehicules).map(([key, value]) => (
-                        <SelectItem key={key} value={key}>
-                          {value.description} ({value.unite})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Distance/Quantité</Label>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={scope1Data.vehiculeQuantity}
-                    onChange={(e) => setScope1Data(prev => ({...prev, vehiculeQuantity: e.target.value}))}
-                  />
-                </div>
-                <div>
-                  <Label>Unité saisie</Label>
-                  <Select 
-                    value={scope1Data.vehiculeUnit || "km"} 
-                    onValueChange={(value) => setScope1Data(prev => ({...prev, vehiculeUnit: value}))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Unité..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="km">Kilomètres (km)</SelectItem>
-                      <SelectItem value="1000km">Milliers km → ×1000</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-end">
-                  <Button 
-                    onClick={() => {
-                      const qty = Number(scope1Data.vehiculeQuantity);
-                      const finalQty = scope1Data.vehiculeUnit === "1000km" ? qty * 1000 : qty;
-                      addCalculation('scope1', 'vehicules', scope1Data.vehiculeType, finalQty);
-                    }}
-                    disabled={!scope1Data.vehiculeType || !scope1Data.vehiculeQuantity}
-                  >
-                    Ajouter
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Réfrigérants</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <Label>Type de réfrigérant</Label>
-                  <Select 
-                    value={scope1Data.refrigerantType} 
-                    onValueChange={(value) => setScope1Data(prev => ({...prev, refrigerantType: value}))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(baseCarbone.scope1.refrigerants).map(([key, value]) => (
-                        <SelectItem key={key} value={key}>
-                          {value.description} ({value.unite})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Quantité</Label>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={scope1Data.refrigerantQuantity}
-                    onChange={(e) => setScope1Data(prev => ({...prev, refrigerantQuantity: e.target.value}))}
-                  />
-                </div>
-                <div>
-                  <Label>Unité saisie</Label>
-                  <Select 
-                    value={scope1Data.refrigerantUnit || "kg"} 
-                    onValueChange={(value) => setScope1Data(prev => ({...prev, refrigerantUnit: value}))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Unité..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="kg">Kilogrammes (kg)</SelectItem>
-                      <SelectItem value="tonne">Tonnes → ×1000 kg</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-end">
-                  <Button 
-                    onClick={() => {
-                      const qty = Number(scope1Data.refrigerantQuantity);
-                      const finalQty = scope1Data.refrigerantUnit === "tonne" ? qty * 1000 : qty;
-                      addCalculation('scope1', 'refrigerants', scope1Data.refrigerantType, finalQty);
-                    }}
-                    disabled={!scope1Data.refrigerantType || !scope1Data.refrigerantQuantity}
-                  >
-                    Ajouter
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <Scope1Form
+            data={scope1Data}
+            onChange={(updates) => setScope1Data(prev => ({ ...prev, ...updates }))}
+            onAddCalculation={addCalculation}
+          />
         </TabsContent>
 
-        {/* SCOPE 2 */}
         <TabsContent value="scope2" className="space-y-6">
-          <ScrollArea className="h-[600px] pr-4">
-            <div className="space-y-6 pb-4">
-              {/* Info sur les unités */}
-              <Alert className="border-blue-200 bg-blue-50">
-                <AlertTriangle className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-blue-800">
-                  <strong>Important :</strong> Les facteurs d'émission sont en kg CO₂e par kWh. 
-                  Si vous avez des MWh, utilisez le sélecteur d'unité pour une conversion automatique (×1000).
-                </AlertDescription>
-              </Alert>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Zap className="h-5 w-5" />
-                    Électricité
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                      <Label>Mix électrique</Label>
-                      <Select 
-                        value={scope2Data.electriciteType} 
-                        onValueChange={(value) => setScope2Data(prev => ({...prev, electriciteType: value}))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(baseCarbone.scope2.electricite).map(([key, value]) => (
-                            <SelectItem key={key} value={key}>
-                              {value.description} ({value.unite})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Consommation</Label>
-                      <Input
-                        type="number"
-                        placeholder="0"
-                        value={scope2Data.electriciteQuantity}
-                        onChange={(e) => setScope2Data(prev => ({...prev, electriciteQuantity: e.target.value}))}
-                      />
-                    </div>
-                    <div>
-                      <Label>Unité saisie</Label>
-                      <Select 
-                        value={scope2Data.electriciteUnit || "kWh"} 
-                        onValueChange={(value) => setScope2Data(prev => ({...prev, electriciteUnit: value}))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Unité..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="kWh">Kilowattheure (kWh)</SelectItem>
-                          <SelectItem value="MWh">Mégawattheure (MWh) → ×1000</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex items-end">
-                      <Button 
-                        onClick={() => {
-                          const qty = Number(scope2Data.electriciteQuantity);
-                          const finalQty = scope2Data.electriciteUnit === "MWh" ? qty * 1000 : qty;
-                          addCalculation('scope2', 'electricite', scope2Data.electriciteType, finalQty);
-                        }}
-                        disabled={!scope2Data.electriciteType || !scope2Data.electriciteQuantity}
-                      >
-                        Ajouter
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Vapeur et chaleur</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                      <Label>Type d'énergie thermique</Label>
-                      <Select 
-                        value={scope2Data.vapeurType} 
-                        onValueChange={(value) => setScope2Data(prev => ({...prev, vapeurType: value}))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(baseCarbone.scope2.vapeur).map(([key, value]) => (
-                            <SelectItem key={key} value={key}>
-                              {value.description} ({value.unite})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Quantité</Label>
-                      <Input
-                        type="number"
-                        placeholder="0"
-                        value={scope2Data.vapeurQuantity}
-                        onChange={(e) => setScope2Data(prev => ({...prev, vapeurQuantity: e.target.value}))}
-                      />
-                    </div>
-                    <div>
-                      <Label>Unité saisie</Label>
-                      <Select 
-                        value={scope2Data.vapeurUnit || "kWh"} 
-                        onValueChange={(value) => setScope2Data(prev => ({...prev, vapeurUnit: value}))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Unité..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="kWh">Kilowattheure (kWh)</SelectItem>
-                          <SelectItem value="MWh">Mégawattheure (MWh) → ×1000</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex items-end">
-                      <Button 
-                        onClick={() => {
-                          const qty = Number(scope2Data.vapeurQuantity);
-                          const finalQty = scope2Data.vapeurUnit === "MWh" ? qty * 1000 : qty;
-                          addCalculation('scope2', 'vapeur', scope2Data.vapeurType, finalQty);
-                        }}
-                        disabled={!scope2Data.vapeurType || !scope2Data.vapeurQuantity}
-                      >
-                        Ajouter
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </ScrollArea>
+          <Scope2Form
+            data={scope2Data}
+            onChange={(updates) => setScope2Data(prev => ({ ...prev, ...updates }))}
+            onAddCalculation={addCalculation}
+          />
         </TabsContent>
 
-        {/* SCOPE 3 */}
         <TabsContent value="scope3" className="space-y-6">
           {isAdvancedMode ? (
-            /* Mode Avancé: 15 catégories GHG Protocol */
-            <Scope3AdvancedModule 
-              onTotalChange={setScope3AdvancedTotal}
-            />
+            <Scope3AdvancedModule onTotalChange={setScope3AdvancedTotal} />
           ) : (
-            /* Mode Standard: catégories simplifiées */
-            <>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Transport */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Plane className="h-5 w-5" />
-                      Transport
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      <div>
-                        <Label>Mode de transport</Label>
-                        <Select 
-                          value={scope3Data.transportType} 
-                          onValueChange={(value) => setScope3Data(prev => ({...prev, transportType: value}))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(baseCarbone.scope3.transport).map(([key, value]) => (
-                              <SelectItem key={key} value={key}>
-                                {value.description} ({value.unite})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label>Quantité</Label>
-                        <Input
-                          type="number"
-                          placeholder="0"
-                          value={scope3Data.transportQuantity}
-                          onChange={(e) => setScope3Data(prev => ({...prev, transportQuantity: e.target.value}))}
-                        />
-                      </div>
-                      <Button 
-                        onClick={() => addCalculation('scope3', 'transport', scope3Data.transportType, Number(scope3Data.transportQuantity))}
-                        disabled={!scope3Data.transportType || !scope3Data.transportQuantity}
-                        className="w-full"
-                      >
-                        Ajouter
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Matériaux */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Matériaux</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      <div>
-                        <Label>Type de matériau</Label>
-                        <Select 
-                          value={scope3Data.materiauType} 
-                          onValueChange={(value) => setScope3Data(prev => ({...prev, materiauType: value}))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(baseCarbone.scope3.materiaux).map(([key, value]) => (
-                              <SelectItem key={key} value={key}>
-                                {value.description} ({value.unite})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label>Quantité (kg)</Label>
-                        <Input
-                          type="number"
-                          placeholder="0"
-                          value={scope3Data.materiauQuantity}
-                          onChange={(e) => setScope3Data(prev => ({...prev, materiauQuantity: e.target.value}))}
-                        />
-                      </div>
-                      <Button 
-                        onClick={() => addCalculation('scope3', 'materiaux', scope3Data.materiauType, Number(scope3Data.materiauQuantity))}
-                        disabled={!scope3Data.materiauType || !scope3Data.materiauQuantity}
-                        className="w-full"
-                      >
-                        Ajouter
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Déchets */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Trash2 className="h-5 w-5" />
-                      Déchets
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      <div>
-                        <Label>Mode de traitement</Label>
-                        <Select 
-                          value={scope3Data.dechetType} 
-                          onValueChange={(value) => setScope3Data(prev => ({...prev, dechetType: value}))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(baseCarbone.scope3.dechets).map(([key, value]) => (
-                              <SelectItem key={key} value={key}>
-                                {value.description} ({value.unite})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label>Quantité (kg)</Label>
-                        <Input
-                          type="number"
-                          placeholder="0"
-                          value={scope3Data.dechetQuantity}
-                          onChange={(e) => setScope3Data(prev => ({...prev, dechetQuantity: e.target.value}))}
-                        />
-                      </div>
-                      <Button 
-                        onClick={() => addCalculation('scope3', 'dechets', scope3Data.dechetType, Number(scope3Data.dechetQuantity))}
-                        disabled={!scope3Data.dechetType || !scope3Data.dechetQuantity}
-                        className="w-full"
-                      >
-                        Ajouter
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Alimentation */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Alimentation</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      <div>
-                        <Label>Produit alimentaire</Label>
-                        <Select 
-                          value={scope3Data.alimentationType} 
-                          onValueChange={(value) => setScope3Data(prev => ({...prev, alimentationType: value}))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(baseCarbone.scope3.alimentation).map(([key, value]) => (
-                              <SelectItem key={key} value={key}>
-                                {value.description} ({value.unite})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label>Quantité</Label>
-                        <Input
-                          type="number"
-                          placeholder="0"
-                          value={scope3Data.alimentationQuantity}
-                          onChange={(e) => setScope3Data(prev => ({...prev, alimentationQuantity: e.target.value}))}
-                        />
-                      </div>
-                      <Button 
-                        onClick={() => addCalculation('scope3', 'alimentation', scope3Data.alimentationType, Number(scope3Data.alimentationQuantity))}
-                        disabled={!scope3Data.alimentationType || !scope3Data.alimentationQuantity}
-                        className="w-full"
-                      >
-                        Ajouter
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Numérique */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Services numériques</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      <div>
-                        <Label>Service numérique</Label>
-                        <Select 
-                          value={scope3Data.numeriqueType} 
-                          onValueChange={(value) => setScope3Data(prev => ({...prev, numeriqueType: value}))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(baseCarbone.scope3.numerique).map(([key, value]) => (
-                              <SelectItem key={key} value={key}>
-                                {value.description} ({value.unite})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label>Quantité</Label>
-                        <Input
-                          type="number"
-                          placeholder="0"
-                          value={scope3Data.numeriqueQuantity}
-                          onChange={(e) => setScope3Data(prev => ({...prev, numeriqueQuantity: e.target.value}))}
-                        />
-                      </div>
-                      <Button 
-                        onClick={() => addCalculation('scope3', 'numerique', scope3Data.numeriqueType, Number(scope3Data.numeriqueQuantity))}
-                        disabled={!scope3Data.numeriqueType || !scope3Data.numeriqueQuantity}
-                        className="w-full"
-                      >
-                        Ajouter
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-              
-              {/* Invitation vers mode avancé */}
-              <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
-                <CardContent className="py-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <Sparkles className="h-8 w-8 text-primary" />
-                      <div>
-                        <h3 className="font-semibold">Besoin d'une couverture complète Scope 3 ?</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Activez le mode avancé pour accéder aux 15 catégories du GHG Protocol
-                        </p>
-                      </div>
-                    </div>
-                    <Button onClick={() => setIsAdvancedMode(true)} variant="default">
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Activer le mode avancé
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </>
+            <Scope3StandardForm
+              data={scope3Data}
+              onChange={(updates) => setScope3Data(prev => ({ ...prev, ...updates }))}
+              onAddCalculation={addCalculation}
+              onEnableAdvanced={() => setIsAdvancedMode(true)}
+            />
           )}
         </TabsContent>
 
-        {/* DÉTAILS DE CALCUL - Onglet unifié pour les 3 scopes */}
+        {/* Détails de calcul */}
         <TabsContent value="details" className="space-y-6">
           <Card>
             <CardHeader className="pb-2">
@@ -2074,17 +619,10 @@ export const AdvancedGHGCalculator = () => {
                 <div className="flex items-center gap-3">
                   <Badge variant="outline" className="text-sm">
                     <Calculator className="h-3 w-3 mr-1" />
-                    {calculations.length} calcul{calculations.length > 1 ? 's' : ''} enregistré{calculations.length > 1 ? 's' : ''}
+                    {totalEntries + (isAdvancedMode ? safeGetJSON<any[]>('scope3-advanced-calculations', []).length : 0)} calcul(s)
                   </Badge>
-                  <Button 
-                    onClick={resetCalculations} 
-                    variant="outline" 
-                    size="sm"
-                    className="h-8"
-                    disabled={calculations.length === 0}
-                  >
-                    <RotateCcw className="h-4 w-4 mr-1" />
-                    Réinitialiser tout
+                  <Button onClick={resetCalculations} variant="outline" size="sm" className="h-8" disabled={!hasAnyData}>
+                    <RotateCcw className="h-4 w-4 mr-1" />Réinitialiser tout
                   </Button>
                 </div>
               </div>
@@ -2094,11 +632,11 @@ export const AdvancedGHGCalculator = () => {
               <div className="grid grid-cols-4 gap-4 mb-6 p-4 bg-muted/30 rounded-lg">
                 <div className="text-center border-r border-border/50">
                   <div className="text-sm text-muted-foreground">Scope 1</div>
-                  <div className="text-xl font-bold text-red-600">{(emissions.scope1 / 1000).toFixed(2)} tCO₂e</div>
+                  <div className="text-xl font-bold text-red-600">{(scope1Total / 1000).toFixed(2)} tCO₂e</div>
                 </div>
                 <div className="text-center border-r border-border/50">
                   <div className="text-sm text-muted-foreground">Scope 2</div>
-                  <div className="text-xl font-bold text-amber-600">{(emissions.scope2 / 1000).toFixed(2)} tCO₂e</div>
+                  <div className="text-xl font-bold text-amber-600">{(scope2Total / 1000).toFixed(2)} tCO₂e</div>
                 </div>
                 <div className="text-center border-r border-border/50">
                   <div className="text-sm text-muted-foreground">Scope 3</div>
@@ -2112,136 +650,58 @@ export const AdvancedGHGCalculator = () => {
 
               {/* Sections de détails par scope */}
               <div className="space-y-6">
-                {/* Scope 1 */}
                 <CalculationDetailsSection
                   title="Scope 1 - Émissions Directes"
                   icon={<Flame className="h-5 w-5 text-red-500" />}
                   details={sectionDetails.scope1}
                   sectionColor="destructive"
-                  onRemoveDetail={(detailId) => removeCalculationDetail('scope1', detailId)}
+                  onRemoveDetail={(id) => removeCalculationDetail('scope1', id)}
                   onClearSection={() => clearSectionDetails('scope1')}
                 />
-
-                {/* Scope 2 */}
                 <CalculationDetailsSection
                   title="Scope 2 - Émissions Indirectes Énergie"
                   icon={<Zap className="h-5 w-5 text-amber-500" />}
                   details={sectionDetails.scope2}
                   sectionColor="default"
-                  onRemoveDetail={(detailId) => removeCalculationDetail('scope2', detailId)}
+                  onRemoveDetail={(id) => removeCalculationDetail('scope2', id)}
                   onClearSection={() => clearSectionDetails('scope2')}
                 />
-
-                {/* Scope 3 - utilise scope3CombinedDetails pour inclure le module avancé */}
                 <CalculationDetailsSection
                   title="Scope 3 - Autres Émissions Indirectes"
                   icon={<Globe className="h-5 w-5 text-blue-500" />}
                   details={scope3CombinedDetails}
                   sectionColor="secondary"
                   onRemoveDetail={(detailId) => {
-                    // Si c'est un calcul avancé, le supprimer du localStorage
-                    if (detailId.startsWith('scope3-adv-') || isAdvancedMode) {
-                      try {
-                        const savedAdvanced = localStorage.getItem('scope3-advanced-calculations');
-                        if (savedAdvanced) {
-                          const advancedCalcs = JSON.parse(savedAdvanced);
-                          const filtered = advancedCalcs.filter((calc: any) => calc.id !== detailId);
-                          localStorage.setItem('scope3-advanced-calculations', JSON.stringify(filtered));
-                          setScope3AdvancedTotal(filtered.reduce((sum: number, c: any) => sum + (c.emissions || 0), 0));
-                          window.dispatchEvent(new Event('storage'));
-                        }
-                      } catch (e) {
-                        console.error('Erreur suppression calcul avancé:', e);
-                      }
+                    if (detailId.startsWith('scope3-adv-')) {
+                      const advancedCalcs = safeGetJSON<any[]>('scope3-advanced-calculations', []);
+                      const filtered = advancedCalcs.filter((calc: any) => calc.id !== detailId);
+                      safeSetJSON('scope3-advanced-calculations', filtered);
+                      setScope3AdvancedTotal(filtered.reduce((sum: number, c: any) => sum + (c.emissions || 0), 0));
+                      window.dispatchEvent(new Event('storage'));
                     }
                     removeCalculationDetail('scope3', detailId);
                   }}
                   onClearSection={() => {
                     clearSectionDetails('scope3');
-                    // Effacer aussi les calculs avancés
                     if (isAdvancedMode) {
-                      localStorage.setItem('scope3-advanced-calculations', JSON.stringify([]));
+                      safeSetJSON('scope3-advanced-calculations', []);
                       setScope3AdvancedTotal(0);
                       window.dispatchEvent(new Event('storage'));
                     }
                   }}
                 />
 
-                {/* Message si aucun détail */}
-                {sectionDetails.scope1.length === 0 && sectionDetails.scope2.length === 0 && scope3CombinedDetails.length === 0 && calculations.length === 0 && (
+                {!hasAnyData && (
                   <div className="text-center py-12 text-muted-foreground">
                     <Calculator className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p className="text-lg font-medium">Aucun calcul enregistré</p>
                     <p className="text-sm">Ajoutez des données dans les onglets Scope 1, 2 ou 3 pour voir les détails ici</p>
                   </div>
                 )}
-
-                {/* Tableau récapitulatif si calculs présents */}
-                {calculations.length > 0 && (
-                  <Card className="border-primary/20">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <Calculator className="h-5 w-5" />
-                        Tableau Récapitulatif
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="overflow-x-auto">
-                        <table className="w-full border-collapse">
-                          <thead>
-                            <tr className="border-b bg-muted/50">
-                              <th className="text-left p-3 font-medium">Scope</th>
-                              <th className="text-left p-3 font-medium">Description</th>
-                              <th className="text-right p-3 font-medium">Quantité</th>
-                              <th className="text-right p-3 font-medium">Facteur d'émission</th>
-                              <th className="text-right p-3 font-medium">Émissions (kg CO₂e)</th>
-                              <th className="text-center p-3 font-medium">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {calculations.map((calc, index) => (
-                              <tr key={index} className="border-b hover:bg-muted/30">
-                                <td className="p-3">
-                                  <Badge variant={calc.category === 'scope1' ? 'destructive' : calc.category === 'scope2' ? 'default' : 'secondary'}>
-                                    {calc.category.toUpperCase()}
-                                  </Badge>
-                                </td>
-                                <td className="p-3">{calc.description}</td>
-                                <td className="text-right p-3">{calc.quantity.toLocaleString('fr-FR')} {calc.unit}</td>
-                                <td className="text-right p-3 text-muted-foreground">{calc.emissionFactor} kg CO₂e/{calc.unit}</td>
-                                <td className="text-right p-3 font-semibold">{calc.emissions.toLocaleString('fr-FR', { maximumFractionDigits: 2 })}</td>
-                                <td className="text-center p-3">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      const newCalculations = calculations.filter((_, i) => i !== index);
-                                      setCalculations(newCalculations);
-                                    }}
-                                    className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                          <tfoot>
-                            <tr className="bg-primary/5 font-bold">
-                              <td className="p-3" colSpan={4}>TOTAL GÉNÉRAL (Année 2025)</td>
-                              <td className="text-right p-3 text-primary">{totalGlobal.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} kg CO₂e</td>
-                              <td></td>
-                            </tr>
-                          </tfoot>
-                        </table>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
               </div>
 
               {/* Actions d'export */}
-              {calculations.length > 0 && (
+              {hasAnyData && (
                 <div className="flex gap-3 mt-6 pt-4 border-t">
                   <Button onClick={saveToDatabase} variant="default">
                     <Save className="h-4 w-4 mr-2" />
@@ -2283,7 +743,6 @@ export const AdvancedGHGCalculator = () => {
         entries={getScopeEntries(3)}
         onEntriesChange={(entries) => handleScopeEntriesChange(3, entries)}
       />
-
     </div>
   );
 };

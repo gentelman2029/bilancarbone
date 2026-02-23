@@ -10,7 +10,6 @@ import {
   ArrowDownRight, 
   CheckCircle2, 
   AlertTriangle,
-  Download,
   Trash2,
   FileSpreadsheet,
   Building,
@@ -24,6 +23,7 @@ import {
   CalculationMethod 
 } from '@/lib/ghg/scope3Categories';
 import { Scope3CategoryCard } from './Scope3CategoryCard';
+import { safeGetJSON, safeSetJSON } from '@/lib/ghg/safeStorage';
 
 interface Scope3Calculation {
   id: string;
@@ -59,35 +59,28 @@ export const Scope3AdvancedModule: React.FC<Scope3AdvancedModuleProps> = ({
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('upstream');
   const [enabledCategories, setEnabledCategories] = useState<Record<string, boolean>>(() => {
-    const saved = localStorage.getItem('scope3-enabled-categories');
-    if (saved) return JSON.parse(saved);
-    // By default, enable first 5 most common categories
-    return {
+    return safeGetJSON('scope3-enabled-categories', {
       'purchased_goods_services': true,
       'business_travel': true,
       'employee_commuting': true,
       'waste_generated': true,
       'upstream_transport': true
-    };
+    });
   });
   const [calculations, setCalculations] = useState<Scope3Calculation[]>(() => {
-    const saved = localStorage.getItem('scope3-advanced-calculations');
-    return saved ? JSON.parse(saved) : [];
+    return safeGetJSON<Scope3Calculation[]>('scope3-advanced-calculations', []);
   });
 
   // Save to localStorage
   useEffect(() => {
-    localStorage.setItem('scope3-enabled-categories', JSON.stringify(enabledCategories));
+    safeSetJSON('scope3-enabled-categories', enabledCategories);
   }, [enabledCategories]);
 
   useEffect(() => {
-    localStorage.setItem('scope3-advanced-calculations', JSON.stringify(calculations));
+    safeSetJSON('scope3-advanced-calculations', calculations);
     onCalculationsChange?.(calculations);
     const total = getTotalEmissions();
     onTotalChange?.(total);
-    
-    // Déclencher un événement storage pour notifier les autres composants
-    window.dispatchEvent(new Event('storage'));
   }, [calculations]);
 
   const handleToggleCategory = (categoryId: string, enabled: boolean) => {

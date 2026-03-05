@@ -52,7 +52,7 @@ export const Header = () => {
   
   const navItems = [
     { path: "/", label: t("navigation.home"), icon: Leaf },
-    { path: "/data", label: t("navigation.simple_calculator"), icon: Users },
+    // { path: "/data", label: t("navigation.simple_calculator"), icon: Users },
     { path: "/calculator", label: t("navigation.advanced_calculator"), icon: Calculator },
     { path: "/dashboard", label: t("navigation.dashboard"), icon: BarChart3 },
     { path: "/actions", label: t("navigation.actions"), icon: Settings },

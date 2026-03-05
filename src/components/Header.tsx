@@ -13,7 +13,9 @@ import {
   UserPlus,
   FileText,
   Target,
-  ClipboardList
+  ClipboardList,
+  Activity,
+  ScanLine
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -58,6 +60,8 @@ export const Header = () => {
     { path: "/esg", label: "ESG Tunisie", icon: Target },
     { path: "/rse-pilotage", label: "Pilotage RSE", icon: ClipboardList },
     { path: "/cbam", label: t("navigation.cbam_module"), icon: ShieldCheck },
+    { path: "/digital-twin", label: "Jumeau Numérique", icon: Activity },
+    { path: "/data-ocr", label: "Collecte Carbone", icon: ScanLine },
   ];
 
   const handleSignOut = async () => {

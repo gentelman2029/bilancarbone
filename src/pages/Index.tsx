@@ -2,7 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Leaf, BarChart3, Target, Shield, Users, Zap, TrendingDown, CheckCircle, Building, Eye, Search, FileText, Calculator, DollarSign, ClipboardCheck, ChevronDown } from "lucide-react";
+import { 
+  Leaf, BarChart3, Target, Shield, Users, Zap, TrendingDown, CheckCircle, 
+  Building, Eye, Search, FileText, Calculator, DollarSign, ClipboardCheck,
+  Activity, Gauge, Globe, Scale, Landmark, Factory, BrainCircuit, ArrowRight,
+  ScanLine, Layers
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import heroImage from "@/assets/hero-carbon.jpg";
@@ -11,32 +16,77 @@ import { QuickCarbonCalculator } from "@/components/QuickCarbonCalculator";
 import { CBAMChecker } from "@/components/CBAMChecker";
 import { CSRDChecker } from "@/components/CSRDChecker";
 
+const modules = [
+  {
+    icon: BarChart3,
+    title: "Bilan Carbone",
+    subtitle: "Scopes 1, 2, 3 & Trajectoire 1.5°C",
+    description: "Calculez et suivez vos émissions GES selon le GHG Protocol. Modélisez votre trajectoire de décarbonation alignée sur les objectifs SBTi.",
+    link: "/calculator",
+    color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    borderColor: "hover:border-emerald-500/40",
+    tag: "Mesure",
+  },
+  {
+    icon: FileText,
+    title: "Module CSRD",
+    subtitle: "Double matérialité & Reporting extra-financier",
+    description: "Préparez votre reporting de durabilité conforme à la directive européenne CSRD avec l'analyse de double matérialité intégrée.",
+    link: "/esg",
+    color: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+    borderColor: "hover:border-blue-500/40",
+    tag: "Réglementation",
+  },
+  {
+    icon: Scale,
+    title: "Module CBAM / MACF",
+    subtitle: "Conformité taxe carbone frontières",
+    description: "Gérez vos obligations CBAM : déclarations trimestrielles, calcul des émissions intrinsèques et suivi des certificats carbone.",
+    link: "/cbam",
+    color: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    borderColor: "hover:border-amber-500/40",
+    tag: "Réglementation",
+  },
+  {
+    icon: Users,
+    title: "Pilotage RSE",
+    subtitle: "Indicateurs Sociaux & Gouvernance",
+    description: "Pilotez vos indicateurs ESG, cartographiez vos parties prenantes et suivez votre plan d'actions RSE avec des KPIs en temps réel.",
+    link: "/rse-pilotage",
+    color: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+    borderColor: "hover:border-violet-500/40",
+    tag: "Action",
+  },
+  {
+    icon: Gauge,
+    title: "Pilotage Énergétique",
+    subtitle: "Suivi des consommations temps réel",
+    description: "Surveillez vos consommations énergétiques en temps réel grâce au jumeau numérique et simulez des scénarios de réduction.",
+    link: "/digital-twin",
+    color: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
+    borderColor: "hover:border-orange-500/40",
+    tag: "Mesure",
+  },
+  {
+    icon: ScanLine,
+    title: "Collecte Automatisée",
+    subtitle: "OCR & Import intelligent de données",
+    description: "Automatisez la collecte de vos données carbone par OCR sur factures, import comptable CSV et extraction intelligente de documents.",
+    link: "/data-ocr",
+    color: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400",
+    borderColor: "hover:border-cyan-500/40",
+    tag: "Mesure",
+  },
+];
+
+const tagColors: Record<string, string> = {
+  "Mesure": "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
+  "Réglementation": "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
+  "Action": "bg-violet-500/10 text-violet-700 dark:text-violet-400 border-violet-500/20",
+};
 
 const Index = () => {
   const { t } = useTranslation();
-  
-  const features = [
-    {
-      icon: BarChart3,
-      title: t('home.features.bilan_title'),
-      description: t('home.features.bilan_desc')
-    },
-    {
-      icon: Target,
-      title: t('home.features.pilotage_title'),
-      description: t('home.features.pilotage_desc')
-    },
-    {
-      icon: Shield,
-      title: t('home.features.conformite_title'),
-      description: t('home.features.conformite_desc')
-    },
-    {
-      icon: Users,
-      title: t('home.features.collaboration_title'),
-      description: t('home.features.collaboration_desc')
-    }
-  ];
 
   const stats = [
     { value: "1000+", label: t('home.stats.clients') },
@@ -47,29 +97,29 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
+      {/* Hero Section — ESG Platform */}
       <section className="relative py-20 lg:py-32 bg-gradient-eco overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8 animate-fade-in">
               <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/15">
-                <Leaf className="w-4 h-4 mr-2" />
-                {t('home.hero.badge')}
+                <Layers className="w-4 h-4 mr-2" />
+                Plateforme multi-modules ESG
               </Badge>
               
               <div className="space-y-6">
                 <h1 className="text-4xl lg:text-6xl font-bold text-foreground leading-tight">
-                  {t('home.hero.title')} <span className="text-primary">{t('home.hero.title_highlight')}</span> {t('home.hero.title_end')}
+                  Plateforme de <span className="text-primary">Pilotage ESG</span> & Conformité
                 </h1>
                 <p className="text-xl text-muted-foreground leading-relaxed">
-                  {t('home.hero.subtitle')}
+                  Centralisez la mesure carbone, la conformité réglementaire (CSRD, CBAM) et le pilotage RSE dans une seule plateforme. Données environnementales, sociales et de gouvernance unifiées.
                 </p>
               </div>
 
               <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
                 <Button variant="hero" size="lg" asChild>
                   <Link to="/trial">
-                    <BarChart3 className="w-5 h-5 mr-2" />
+                    <Zap className="w-5 h-5 mr-2" />
                     {t('home.hero.cta_trial')}
                   </Link>
                 </Button>
@@ -80,16 +130,69 @@ const Index = () => {
                   </Link>
                 </Button>
               </div>
+
+              {/* Stats inline */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
+                {stats.map((s, i) => (
+                  <div key={i} className="text-center">
+                    <div className="text-2xl font-bold text-primary">{s.value}</div>
+                    <div className="text-xs text-muted-foreground">{s.label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="relative animate-scale-in">
               <div className="absolute inset-0 bg-gradient-primary rounded-2xl blur-3xl opacity-20 animate-float"></div>
               <img 
                 src={heroImage} 
-                alt="Bilan Carbone Dashboard"
+                alt="Plateforme ESG GreenInsight - Dashboard de pilotage"
                 className="relative w-full rounded-2xl shadow-glow"
               />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Modules Grid Section */}
+      <section className="py-20 bg-card">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
+              <BrainCircuit className="w-4 h-4 mr-2" />
+              Écosystème complet
+            </Badge>
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
+              6 modules intégrés pour votre stratégie ESG
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Données environnementales, sociales et financières dans une plateforme unifiée
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {modules.map((mod, index) => (
+              <Link key={index} to={mod.link} className="group">
+                <Card className={`p-6 h-full bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300 ${mod.borderColor} animate-fade-in`}
+                  style={{ animationDelay: `${index * 0.08}s` }}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`p-3 rounded-xl ${mod.color}`}>
+                      <mod.icon className="w-6 h-6" />
+                    </div>
+                    <Badge variant="outline" className={`text-xs ${tagColors[mod.tag] || ""}`}>
+                      {mod.tag}
+                    </Badge>
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground mb-1">{mod.title}</h3>
+                  <p className="text-sm font-medium text-primary mb-3">{mod.subtitle}</p>
+                  <p className="text-sm text-muted-foreground mb-4">{mod.description}</p>
+                  <div className="flex items-center text-sm font-medium text-primary group-hover:translate-x-1 transition-transform">
+                    Accéder au module <ArrowRight className="w-4 h-4 ml-1" />
+                  </div>
+                </Card>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
@@ -115,25 +218,17 @@ const Index = () => {
               <div className="bg-card p-6 rounded-lg border shadow-sm">
                 <div className="text-2xl mb-2">🔥</div>
                 <div className="text-sm font-semibold text-foreground">{t('home.alert.cards.warming_title')}</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  {t('home.alert.cards.warming_desc')}
-                </div>
+                <div className="text-xs text-muted-foreground mt-1">{t('home.alert.cards.warming_desc')}</div>
               </div>
-              
               <div className="bg-card p-6 rounded-lg border shadow-sm">
                 <div className="text-2xl mb-2">⚖️</div>
                 <div className="text-sm font-semibold text-foreground">{t('home.alert.cards.regulation_title')}</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  {t('home.alert.cards.regulation_desc')}
-                </div>
+                <div className="text-xs text-muted-foreground mt-1">{t('home.alert.cards.regulation_desc')}</div>
               </div>
-              
               <div className="bg-card p-6 rounded-lg border shadow-sm">
                 <div className="text-2xl mb-2">💚</div>
                 <div className="text-sm font-semibold text-foreground">{t('home.alert.cards.business_title')}</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  {t('home.alert.cards.business_desc')}
-                </div>
+                <div className="text-xs text-muted-foreground mt-1">{t('home.alert.cards.business_desc')}</div>
               </div>
             </div>
             
@@ -142,102 +237,6 @@ const Index = () => {
                 {t('home.alert.cta_badge')}
               </Badge>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-20 bg-gradient-eco">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
-              {t('home.features.badge')}
-            </Badge>
-            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              {t('home.features.title')}
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              {t('home.features.subtitle')}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {features.map((feature, index) => (
-              <Card 
-                key={index} 
-                className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300 animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="flex items-start space-x-4">
-                  <div className="p-3 bg-primary/10 rounded-lg">
-                    <feature.icon className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-foreground mb-2">{feature.title}</h3>
-                    <p className="text-muted-foreground">{feature.description}</p>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Process Section */}
-      <section className="py-20 bg-card">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              {t('home.process.title')}
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              {t('home.process.subtitle')}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center space-y-4 animate-fade-in">
-              <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto shadow-glow">
-                <Zap className="w-8 h-8 text-primary-foreground" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground">{t('home.process.step1_title')}</h3>
-              <p className="text-muted-foreground">
-                {t('home.process.step1_desc')}
-              </p>
-            </div>
-
-            <div className="text-center space-y-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto shadow-glow">
-                <BarChart3 className="w-8 h-8 text-primary-foreground" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground">{t('home.process.step2_title')}</h3>
-              <p className="text-muted-foreground">
-                {t('home.process.step2_desc')}
-              </p>
-            </div>
-
-            <div className="text-center space-y-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto shadow-glow">
-                <TrendingDown className="w-8 h-8 text-primary-foreground" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground">{t('home.process.step3_title')}</h3>
-              <p className="text-muted-foreground">
-                {t('home.process.step3_desc')}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Image équipe durabilité */}
-      <section className="py-20 bg-card">
-        <div className="container mx-auto px-4">
-          <div className="rounded-2xl overflow-hidden shadow-xl">
-            <img 
-              src={teamSustainabilityImage} 
-              alt="Équipe professionnelle travaillant sur l'analyse de l'empreinte carbone et le développement durable"
-              className="w-full h-[400px] object-cover"
-            />
           </div>
         </div>
       </section>
@@ -266,7 +265,6 @@ const Index = () => {
                   <p className="text-sm text-muted-foreground">Secteur automobile • Chiffre d'affaires 25M€</p>
                 </div>
               </div>
-              
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center p-4 bg-secondary/20 rounded-lg">
@@ -278,11 +276,9 @@ const Index = () => {
                     <div className="text-sm text-muted-foreground">tCO2e après</div>
                   </div>
                 </div>
-                
                 <div className="p-4 bg-primary/10 rounded-lg">
                   <div className="text-lg font-bold text-primary text-center">-35% d'émissions en 18 mois</div>
                 </div>
-                
                 <div className="space-y-2">
                   <h4 className="font-semibold text-foreground">Actions mises en place :</h4>
                   <ul className="text-sm text-muted-foreground space-y-1">
@@ -292,11 +288,8 @@ const Index = () => {
                     <li>• Formation éco-gestes équipes (-100 tCO2e)</li>
                   </ul>
                 </div>
-                
                 <div className="pt-4 border-t border-border">
-                  <div className="text-sm text-primary font-semibold">
-                    💰 Économies générées : 78 000€/an
-                  </div>
+                  <div className="text-sm text-primary font-semibold">💰 Économies générées : 78 000€/an</div>
                 </div>
               </div>
             </Card>
@@ -309,7 +302,6 @@ const Index = () => {
                   <p className="text-sm text-muted-foreground">Conseil IT • Chiffre d'affaires 12M€</p>
                 </div>
               </div>
-              
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center p-4 bg-secondary/20 rounded-lg">
@@ -321,11 +313,9 @@ const Index = () => {
                     <div className="text-sm text-muted-foreground">tCO2e après</div>
                   </div>
                 </div>
-                
                 <div className="p-4 bg-primary/10 rounded-lg">
                   <div className="text-lg font-bold text-primary text-center">-48% d'émissions en 12 mois</div>
                 </div>
-                
                 <div className="space-y-2">
                   <h4 className="font-semibold text-foreground">Actions mises en place :</h4>
                   <ul className="text-sm text-muted-foreground space-y-1">
@@ -335,11 +325,8 @@ const Index = () => {
                     <li>• Matériel IT reconditionné (-20 tCO2e)</li>
                   </ul>
                 </div>
-                
                 <div className="pt-4 border-t border-border">
-                  <div className="text-sm text-primary font-semibold">
-                    💰 Économies générées : 32 000€/an
-                  </div>
+                  <div className="text-sm text-primary font-semibold">💰 Économies générées : 32 000€/an</div>
                 </div>
               </div>
             </Card>
@@ -347,7 +334,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Proposition de valeur renforcée */}
+      {/* Pourquoi GreenInsight */}
       <section className="py-20 bg-card">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
@@ -399,182 +386,21 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Nouvelles sections demandées */}
-      
-      {/* Visualisation Section */}
-      <section className="py-20 bg-gradient-eco">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
-              <Eye className="w-4 h-4 mr-2" />
-              {t('home.visualization.badge')}
-            </Badge>
-            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              {t('home.visualization.title')}
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              {t('home.visualization.subtitle')}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
-              <div className="flex items-start space-x-4">
-                <div className="p-3 bg-primary/10 rounded-lg">
-                  <BarChart3 className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">{t('home.visualization.dashboards_title')}</h3>
-                  <p className="text-muted-foreground">
-                    {t('home.visualization.dashboards_desc')}
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
-              <div className="flex items-start space-x-4">
-                <div className="p-3 bg-primary/10 rounded-lg">
-                  <Users className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">{t('home.visualization.engagement_title')}</h3>
-                  <p className="text-muted-foreground">
-                    {t('home.visualization.engagement_desc')}
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
-              <div className="flex items-start space-x-4">
-                <div className="p-3 bg-primary/10 rounded-lg">
-                  <TrendingDown className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">{t('home.visualization.trends_title')}</h3>
-                  <p className="text-muted-foreground">
-                    {t('home.visualization.trends_desc')}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Identification points chauds Section */}
+      {/* Image équipe */}
       <section className="py-20 bg-card">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
-              <Search className="w-4 h-4 mr-2" />
-              {t('home.hotspots.badge')}
-            </Badge>
-            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              {t('home.hotspots.title')}
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              {t('home.hotspots.subtitle')}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
-              <div className="flex items-start space-x-4">
-                <div className="p-3 bg-primary/10 rounded-lg">
-                  <Building className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">{t('home.hotspots.breakdown_title')}</h3>
-                  <p className="text-muted-foreground">
-                    {t('home.hotspots.breakdown_desc')}
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
-              <div className="flex items-start space-x-4">
-                <div className="p-3 bg-primary/10 rounded-lg">
-                  <Target className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">{t('home.hotspots.optimization_title')}</h3>
-                  <p className="text-muted-foreground">
-                    {t('home.hotspots.optimization_desc')}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Transparence Section */}
-      <section className="py-20 bg-gradient-eco">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
-              <Shield className="w-4 h-4 mr-2" />
-              {t('home.transparency.badge')}
-            </Badge>
-            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              {t('home.transparency.title')}
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              {t('home.transparency.subtitle')}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
-              <div className="flex items-start space-x-4">
-                <div className="p-3 bg-primary/10 rounded-lg">
-                  <FileText className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">{t('home.transparency.centralization_title')}</h3>
-                  <p className="text-muted-foreground">
-                    {t('home.transparency.centralization_desc')}
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
-              <div className="flex items-start space-x-4">
-                <div className="p-3 bg-primary/10 rounded-lg">
-                  <Building className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">{t('home.transparency.organization_title')}</h3>
-                  <p className="text-muted-foreground">
-                    {t('home.transparency.organization_desc')}
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-8 bg-gradient-card border shadow-card hover:shadow-eco transition-all duration-300">
-              <div className="flex items-start space-x-4">
-                <div className="p-3 bg-primary/10 rounded-lg">
-                  <CheckCircle className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">{t('home.transparency.audit_title')}</h3>
-                  <p className="text-muted-foreground">
-                    {t('home.transparency.audit_desc')}
-                  </p>
-                </div>
-              </div>
-            </Card>
+          <div className="rounded-2xl overflow-hidden shadow-xl">
+            <img 
+              src={teamSustainabilityImage} 
+              alt="Équipe professionnelle travaillant sur la stratégie ESG et le développement durable"
+              className="w-full h-[400px] object-cover"
+            />
           </div>
         </div>
       </section>
 
       {/* Ressources Section */}
-      <section className="py-20 bg-card">
+      <section className="py-20 bg-gradient-eco">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
@@ -596,9 +422,7 @@ const Index = () => {
                   <Calculator className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold text-foreground">{t('home.resources.quick_calc_title')}</h3>
-                <p className="text-muted-foreground">
-                  {t('home.resources.quick_calc_desc')}
-                </p>
+                <p className="text-muted-foreground">{t('home.resources.quick_calc_desc')}</p>
                 <QuickCarbonCalculator />
               </div>
             </Card>
@@ -609,9 +433,7 @@ const Index = () => {
                   <DollarSign className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold text-foreground">{t('home.resources.cbam_title')}</h3>
-                <p className="text-muted-foreground">
-                  {t('home.resources.cbam_desc')}
-                </p>
+                <p className="text-muted-foreground">{t('home.resources.cbam_desc')}</p>
                 <CBAMChecker />
               </div>
             </Card>
@@ -622,9 +444,7 @@ const Index = () => {
                   <ClipboardCheck className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold text-foreground">{t('home.resources.csrd_title')}</h3>
-                <p className="text-muted-foreground">
-                  {t('home.resources.csrd_desc')}
-                </p>
+                <p className="text-muted-foreground">{t('home.resources.csrd_desc')}</p>
                 <CSRDChecker />
               </div>
             </Card>
@@ -633,7 +453,7 @@ const Index = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 bg-gradient-eco">
+      <section className="py-20 bg-card">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
@@ -649,59 +469,16 @@ const Index = () => {
 
           <div className="max-w-4xl mx-auto">
             <Accordion type="single" collapsible className="space-y-4">
-              <AccordionItem value="item-1" className="bg-gradient-card border shadow-card rounded-lg px-6">
-                <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
-                  {t('home.faq.q1_title')}
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pt-4">
-                  {t('home.faq.q1_answer')}
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-2" className="bg-gradient-card border shadow-card rounded-lg px-6">
-                <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
-                  {t('home.faq.q2_title')}
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pt-4">
-                  {t('home.faq.q2_answer')}
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-3" className="bg-gradient-card border shadow-card rounded-lg px-6">
-                <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
-                  {t('home.faq.q3_title')}
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pt-4">
-                  {t('home.faq.q3_answer')}
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-4" className="bg-gradient-card border shadow-card rounded-lg px-6">
-                <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
-                  {t('home.faq.q4_title')}
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pt-4">
-                  {t('home.faq.q4_answer')}
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-5" className="bg-gradient-card border shadow-card rounded-lg px-6">
-                <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
-                  {t('home.faq.q5_title')}
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pt-4">
-                  {t('home.faq.q5_answer')}
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-6" className="bg-gradient-card border shadow-card rounded-lg px-6">
-                <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
-                  {t('home.faq.q6_title')}
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pt-4">
-                  {t('home.faq.q6_answer')}
-                </AccordionContent>
-              </AccordionItem>
+              {[1,2,3,4,5,6].map(i => (
+                <AccordionItem key={i} value={`item-${i}`} className="bg-gradient-card border shadow-card rounded-lg px-6">
+                  <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
+                    {t(`home.faq.q${i}_title`)}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground pt-4">
+                    {t(`home.faq.q${i}_answer`)}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
             </Accordion>
           </div>
         </div>
@@ -746,7 +523,6 @@ const Index = () => {
           </div>
         </div>
       </section>
-      
     </div>
   );
 };

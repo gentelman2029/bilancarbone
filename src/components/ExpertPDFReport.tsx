@@ -1286,7 +1286,7 @@ const ExpertPDFDocument: React.FC<ExpertPDFReportProps> = ({
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>Document confidentiel - Généré par GreenInsight</Text>
-          <Text style={styles.pageNumber}>5 / 5</Text>
+          <Text style={styles.pageNumber}>5 / 6</Text>
         </View>
       </Page>
     </Document>

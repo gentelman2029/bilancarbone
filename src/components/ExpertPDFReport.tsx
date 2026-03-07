@@ -959,34 +959,34 @@ const ExpertPDFDocument: React.FC<ExpertPDFReportProps> = ({
           <Text style={styles.sectionTitle}>Tableau Récapitulatif des Émissions</Text>
           <View style={styles.table}>
             <View style={styles.tableHeader}>
-              <Text style={[styles.tableHeaderCell, { flex: 2.5 }]}>Catégorie</Text>
+              <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Catégorie</Text>
               <Text style={[styles.tableHeaderCell, { textAlign: 'center' }]}>Émissions (tCO₂e)</Text>
               <Text style={[styles.tableHeaderCell, { textAlign: 'center' }]}>Part (%)</Text>
-              <Text style={[styles.tableHeaderCell, { textAlign: 'center' }]}>Priorité</Text>
+              <Text style={[styles.tableHeaderCell, { flex: 1.5, textAlign: 'center' }]}>Source FE</Text>
             </View>
             <View style={styles.tableRow}>
-              <Text style={[styles.tableCell, styles.tableCellBold, { flex: 2.5 }]}>Scope 1 - Émissions directes</Text>
+              <Text style={[styles.tableCell, styles.tableCellBold, { flex: 2 }]}>Scope 1 - Émissions directes</Text>
               <Text style={[styles.tableCell, { textAlign: 'center' }]}>{scope1Tonnes.toFixed(2)}</Text>
               <Text style={[styles.tableCell, { textAlign: 'center' }]}>{scope1Percent.toFixed(1)}%</Text>
-              <Text style={[styles.tableCell, { textAlign: 'center', color: colors.red }]}>Haute</Text>
+              <Text style={[styles.tableCell, { flex: 1.5, textAlign: 'center', fontSize: 7 }]}>Base Empreinte® ADEME</Text>
             </View>
             <View style={[styles.tableRow, styles.tableRowAlt]}>
-              <Text style={[styles.tableCell, styles.tableCellBold, { flex: 2.5 }]}>Scope 2 - Énergie indirecte</Text>
+              <Text style={[styles.tableCell, styles.tableCellBold, { flex: 2 }]}>Scope 2 - Énergie indirecte</Text>
               <Text style={[styles.tableCell, { textAlign: 'center' }]}>{scope2Tonnes.toFixed(2)}</Text>
               <Text style={[styles.tableCell, { textAlign: 'center' }]}>{scope2Percent.toFixed(1)}%</Text>
-              <Text style={[styles.tableCell, { textAlign: 'center', color: colors.orange }]}>Moyenne</Text>
+              <Text style={[styles.tableCell, { flex: 1.5, textAlign: 'center', fontSize: 7 }]}>ADEME / AIE (mix élec.)</Text>
             </View>
             <View style={styles.tableRow}>
-              <Text style={[styles.tableCell, styles.tableCellBold, { flex: 2.5 }]}>Scope 3 - Chaîne de valeur</Text>
+              <Text style={[styles.tableCell, styles.tableCellBold, { flex: 2 }]}>Scope 3 - Chaîne de valeur</Text>
               <Text style={[styles.tableCell, { textAlign: 'center' }]}>{scope3Tonnes.toFixed(2)}</Text>
               <Text style={[styles.tableCell, { textAlign: 'center' }]}>{scope3Percent.toFixed(1)}%</Text>
-              <Text style={[styles.tableCell, { textAlign: 'center', color: colors.blue }]}>Standard</Text>
+              <Text style={[styles.tableCell, { flex: 1.5, textAlign: 'center', fontSize: 7 }]}>Ecoinvent / DEFRA</Text>
             </View>
             <View style={[styles.tableRow, styles.tableRowTotal]}>
-              <Text style={[styles.tableCell, styles.tableCellBold, { flex: 2.5 }]}>TOTAL</Text>
+              <Text style={[styles.tableCell, styles.tableCellBold, { flex: 2 }]}>TOTAL</Text>
               <Text style={[styles.tableCell, styles.tableCellBold, { textAlign: 'center' }]}>{totalTonnes.toFixed(2)}</Text>
               <Text style={[styles.tableCell, styles.tableCellBold, { textAlign: 'center' }]}>100%</Text>
-              <Text style={[styles.tableCell, { textAlign: 'center' }]}>-</Text>
+              <Text style={[styles.tableCell, { flex: 1.5, textAlign: 'center' }]}>-</Text>
             </View>
           </View>
         </View>

@@ -792,6 +792,10 @@ const ExpertPDFDocument: React.FC<ExpertPDFReportProps> = ({
               <Text style={styles.tocText}>4. Plan d'Action Stratégique</Text>
               <Text style={styles.tocPage}>5</Text>
             </View>
+            <View style={styles.tocItem}>
+              <Text style={styles.tocText}>5. Sources et Méthodologie</Text>
+              <Text style={styles.tocPage}>6</Text>
+            </View>
           </View>
         </View>
         <View style={styles.coverFooter}>

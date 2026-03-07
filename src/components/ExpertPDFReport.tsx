@@ -759,9 +759,13 @@ const ExpertPDFDocument: React.FC<ExpertPDFReportProps> = ({
               <Text style={styles.coverInfoLabel}>Date de génération :</Text>
               <Text style={styles.coverInfoValue}>{reportDate}</Text>
             </View>
-            <View style={styles.coverInfoRow}>
+             <View style={styles.coverInfoRow}>
               <Text style={styles.coverInfoLabel}>Référentiel :</Text>
               <Text style={styles.coverInfoValue}>GHG Protocol / CSRD</Text>
+            </View>
+            <View style={styles.coverInfoRow}>
+              <Text style={styles.coverInfoLabel}>Bases de données :</Text>
+              <Text style={styles.coverInfoValue}>Base Empreinte® ADEME, Ecoinvent v3.9, DEFRA 2024</Text>
             </View>
             <View style={styles.coverInfoRow}>
               <Text style={styles.coverInfoLabel}>Secteur d'activité :</Text>
